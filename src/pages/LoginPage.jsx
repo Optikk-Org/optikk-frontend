@@ -46,11 +46,11 @@ export default function LoginPage() {
               ObserveX
             </Title>
           </div>
-          
+
           <Title level={3} style={{ color: '#fff', marginBottom: 16 }}>
             Modern Observability Platform
           </Title>
-          
+
           <Text style={{ fontSize: 16, color: 'rgba(255,255,255,0.7)' }}>
             Monitor, analyze, and optimize your distributed systems with real-time insights.
           </Text>
@@ -108,7 +108,7 @@ export default function LoginPage() {
               >
                 <Input
                   prefix={<Mail size={16} style={{ color: '#666' }} />}
-                  placeholder="demo@observex.io"
+                  placeholder="frontend.demo@observability.local"
                   size="large"
                 />
               </Form.Item>
@@ -140,7 +140,7 @@ export default function LoginPage() {
 
             <div className="login-demo-info">
               <Text type="secondary" style={{ fontSize: 12 }}>
-                Demo credentials: <strong>demo@observex.io</strong> / any password
+                Demo credentials: <strong>frontend.demo@observability.local</strong> / Demo@12345
               </Text>
             </div>
           </Space>
