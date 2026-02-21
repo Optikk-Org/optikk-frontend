@@ -34,7 +34,7 @@ function tsLabel(ts) {
 }
 
 function copyToClipboard(text) {
-  navigator.clipboard?.writeText(text).catch(() => {});
+  navigator.clipboard?.writeText(text).catch(() => { });
 }
 
 // ─── log level badge ─────────────────────────────────────────────────────────
@@ -111,14 +111,12 @@ function LogDetailPanel({ log, contextLogs, navigate }) {
   ].filter((f) => f.v);
 
   const tabStyle = (t) => ({
-    padding: '4px 10px',
-    fontSize: 12,
+    padding: '4px 8px',
     cursor: 'pointer',
-    borderBottom: tab === t ? '2px solid #5E60CE' : '2px solid transparent',
-    color: tab === t ? '#5E60CE' : 'var(--text-muted)',
+    opacity: tab === t ? 1 : 0.6,
     background: 'none',
     border: 'none',
-    borderBottom: tab === t ? '2px solid #5E60CE' : '2px solid transparent',
+    borderBottom: tab === t ? '2px solid var(--primary-color)' : '2px solid transparent',
   });
 
   return (

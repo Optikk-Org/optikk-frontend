@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, Row, Col, Drawer, Descriptions, Tag } from 'antd';
 import { useQuery } from '@tanstack/react-query';
 import { Server, CheckCircle2, AlertTriangle, XCircle, Box } from 'lucide-react';
-import { useTimeRange } from '@hooks/useTimeRangeQuery';
+import { useTimeRange, useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
 import { v1Service } from '@services/v1Service';
 import { formatNumber, formatTimestamp } from '@utils/formatters';
 import PageHeader from '@components/common/PageHeader';
@@ -18,28 +18,27 @@ function deriveNodeStatus(errorRate) {
 }
 
 const STATUS_CONFIG = {
-  healthy:   { label: 'Healthy',   color: '#73C991', icon: <CheckCircle2 size={14} /> },
-  degraded:  { label: 'Degraded',  color: '#F79009', icon: <AlertTriangle size={14} /> },
+  healthy: { label: 'Healthy', color: '#73C991', icon: <CheckCircle2 size={14} /> },
+  degraded: { label: 'Degraded', color: '#F79009', icon: <AlertTriangle size={14} /> },
   unhealthy: { label: 'Unhealthy', color: '#F04438', icon: <XCircle size={14} /> },
 };
 
 export default function NodesPage() {
-  const { selectedTeamId, startTime, endTime, refreshKey } = useTimeRange();
+  const { selectedTeamId } = useTimeRange();
   const [hostFilter, setHostFilter] = useState('');
   const [selectedNode, setSelectedNode] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const { data: nodesData, isLoading } = useQuery({
-    queryKey: ['nodes', selectedTeamId, startTime, endTime, refreshKey],
-    queryFn: () => v1Service.getNodeHealth(selectedTeamId, startTime, endTime),
-    enabled: !!selectedTeamId,
-  });
+  const { data: nodesData, isLoading } = useTimeRangeQuery(
+    'nodes',
+    (teamId, start, end) => v1Service.getNodeHealth(teamId, start, end)
+  );
 
-  const { data: nodeServicesData, isLoading: servicesLoading } = useQuery({
-    queryKey: ['node-services', selectedTeamId, selectedNode?.host, startTime, endTime],
-    queryFn: () => v1Service.getNodeServices(selectedTeamId, selectedNode.host, startTime, endTime),
-    enabled: !!selectedTeamId && !!selectedNode?.host && drawerOpen,
-  });
+  const { data: nodeServicesData, isLoading: servicesLoading } = useTimeRangeQuery(
+    'node-services',
+    (teamId, start, end) => v1Service.getNodeServices(teamId, selectedNode.host, start, end),
+    { extraKeys: [selectedNode?.host], enabled: !!selectedNode?.host && drawerOpen }
+  );
 
   const nodes = (nodesData || []).filter((n) =>
     !hostFilter || n.host?.toLowerCase().includes(hostFilter.toLowerCase())
