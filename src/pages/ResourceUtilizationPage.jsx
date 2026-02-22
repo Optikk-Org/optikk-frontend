@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Row, Col, Card } from 'antd';
-import { Cpu, HardDrive, Network, Database } from 'lucide-react';
+import { Cpu, HardDrive, Network, Database, Server } from 'lucide-react';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
 import { PageHeader, StatCard, DataTable } from '@components/common';
+import RequestChart from '@components/charts/RequestChart';
 import { v1Service } from '@services/v1Service';
+import './ResourceUtilizationStyle.css';
 
 const pct = (v) => (v == null || Number.isNaN(Number(v)) ? 0 : Number(v));
 
@@ -50,6 +52,72 @@ export default function ResourceUtilizationPage() {
     { title: 'Conn Pool %', dataIndex: 'avg_connection_pool_util', key: 'avg_connection_pool_util', render: (v) => pct(v).toFixed(2) },
   ];
 
+  const ts = Array.isArray(data?.timeseries) ? data.timeseries : [];
+
+  const cpuMap = useMemo(() => {
+    const map = {};
+    for (const r of ts) {
+      if (r.avg_cpu_util != null) {
+        if (!map[r.pod]) map[r.pod] = [];
+        map[r.pod].push(r);
+      }
+    }
+    return map;
+  }, [ts]);
+
+  const memMap = useMemo(() => {
+    const map = {};
+    for (const r of ts) {
+      if (r.avg_memory_util != null) {
+        if (!map[r.pod]) map[r.pod] = [];
+        map[r.pod].push(r);
+      }
+    }
+    return map;
+  }, [ts]);
+
+  const renderLegend = (seriesMap, key) => {
+    const rows = [];
+    Object.entries(seriesMap).forEach(([pod, points]) => {
+      const vals = points.map(p => Number(p[key] || 0));
+      if (vals.length === 0) return;
+      const max = Math.max(...vals);
+      const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+      const last = vals[vals.length - 1];
+      rows.push({ pod, max, mean, last });
+    });
+
+    if (rows.length === 0) return null;
+
+    return (
+      <div className="ru-legend-area">
+        <table className="ru-legend-table">
+          <thead>
+            <tr>
+              <th style={{ width: '55%' }}>Name</th>
+              <th style={{ textAlign: 'right' }}>Max <span style={{ fontSize: 9 }}>▼</span></th>
+              <th style={{ textAlign: 'right' }}>Mean</th>
+              <th style={{ textAlign: 'right' }}>Last <span style={{ color: '#00a', fontSize: 10 }}>*</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.sort((a, b) => b.max - a.max).map((r, i) => (
+              <tr key={i}>
+                <td>
+                  <div className="ru-legend-color-box" />
+                  <span className="ru-legend-name">{r.pod}</span>
+                </td>
+                <td style={{ textAlign: 'right' }}>{r.max.toFixed(1)}%</td>
+                <td style={{ textAlign: 'right' }}>{r.mean.toFixed(1)}%</td>
+                <td style={{ textAlign: 'right' }}>{r.last.toFixed(1)}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   return (
     <div>
       <PageHeader title="Resource Utilization" icon={<Cpu size={24} />} subtitle="CPU, memory, disk, network and connection pool utilization by service/instance" />
@@ -59,6 +127,24 @@ export default function ResourceUtilizationPage() {
         <Col xs={24} sm={12} lg={6}><StatCard title="Avg Memory" value={`${stats.memory.toFixed(1)}%`} icon={<HardDrive size={18} />} loading={isLoading} /></Col>
         <Col xs={24} sm={12} lg={6}><StatCard title="Avg Network" value={`${stats.network.toFixed(1)}%`} icon={<Network size={18} />} loading={isLoading} /></Col>
         <Col xs={24} sm={12} lg={6}><StatCard title="Avg Conn Pool" value={`${stats.connPool.toFixed(1)}%`} icon={<Database size={18} />} loading={isLoading} /></Col>
+      </Row>
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+        <Col xs={24} lg={12}>
+          <Card title={<><Cpu size={16} /> CPU Usage Percentage <span className="ru-info-icon">i</span></>} className="ru-chart-card">
+            <div style={{ height: 260 }}>
+              <RequestChart serviceTimeseriesMap={cpuMap} valueKey="avg_cpu_util" datasetLabel="CPU Util" />
+            </div>
+            {renderLegend(cpuMap, 'avg_cpu_util')}
+          </Card>
+        </Col>
+        <Col xs={24} lg={12}>
+          <Card title={<><HardDrive size={16} /> Memory Usage Percentage <span className="ru-info-icon">i</span></>} className="ru-chart-card">
+            <div style={{ height: 260 }}>
+              <RequestChart serviceTimeseriesMap={memMap} valueKey="avg_memory_util" datasetLabel="Mem Util" />
+            </div>
+            {renderLegend(memMap, 'avg_memory_util')}
+          </Card>
+        </Col>
       </Row>
 
       <Card title="By Service" style={{ marginBottom: 16 }}>

@@ -9,7 +9,15 @@ function tsKey(ts) {
   return String(ts).replace('T', ' ').replace('Z', '').substring(0, 16);
 }
 
-export default function LatencyChart({ data = [], endpoints = [], selectedEndpoints = [], serviceTimeseriesMap = {} }) {
+export default function LatencyChart({
+  data = [],
+  endpoints = [],
+  selectedEndpoints = [],
+  serviceTimeseriesMap = {},
+  targetThreshold = null,
+  datasetLabel = 'Avg Latency (ms)',
+  color = '#5E60CE'
+}) {
   const hasServiceData = Object.keys(serviceTimeseriesMap).length > 0;
   const { timeBuckets, labels } = useChartTimeBuckets();
 
@@ -63,22 +71,43 @@ export default function LatencyChart({ data = [], endpoints = [], selectedEndpoi
         return createLineDataset(svcName, values, getChartColor(idx), false);
       });
     } else {
-      // Show P50/P95/P99 lines mapped onto full-range buckets
-      const p50Map = {}, p95Map = {}, p99Map = {};
-      for (const d of data) {
-        const key = tsKey(d.timestamp);
-        p50Map[key] = d.p50 ?? 0;
-        p95Map[key] = d.p95 ?? 0;
-        p99Map[key] = d.p99 ?? 0;
+      if (data.length > 0 && data[0].value !== undefined) {
+        // Show single line if `value` is present rather than percentiles
+        const dataMap = {};
+        for (const d of data) dataMap[tsKey(d.timestamp)] = d.value;
+        datasets = [createLineDataset(datasetLabel, timeBuckets.map(ts => dataMap[tsKey(ts)] ?? 0), color, true)];
+      } else {
+        // Show P50/P95/P99 lines mapped onto full-range buckets
+        const p50Map = {}, p95Map = {}, p99Map = {};
+        for (const d of data) {
+          const key = tsKey(d.timestamp);
+          p50Map[key] = d.p50 ?? 0;
+          p95Map[key] = d.p95 ?? 0;
+          p99Map[key] = d.p99 ?? 0;
+        }
+        datasets = [
+          createLineDataset('P50', timeBuckets.map(ts => p50Map[tsKey(ts)] ?? 0), '#73C991', false),
+          createLineDataset('P95', timeBuckets.map(ts => p95Map[tsKey(ts)] ?? 0), '#F79009', false),
+          createLineDataset('P99', timeBuckets.map(ts => p99Map[tsKey(ts)] ?? 0), '#F04438', false),
+        ];
       }
-      datasets = [
-        createLineDataset('P50', timeBuckets.map(ts => p50Map[tsKey(ts)] ?? 0), '#73C991', false),
-        createLineDataset('P95', timeBuckets.map(ts => p95Map[tsKey(ts)] ?? 0), '#F79009', false),
-        createLineDataset('P99', timeBuckets.map(ts => p99Map[tsKey(ts)] ?? 0), '#F04438', false),
-      ];
     }
+
+    if (targetThreshold !== null) {
+      datasets.push({
+        label: `Target (${targetThreshold}ms)`,
+        data: timeBuckets.map(() => targetThreshold),
+        borderColor: '#F79009',
+        borderDash: [6, 3],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
+        tension: 0,
+      });
+    }
+
     return { labels, datasets };
-  }, [data, endpoints, selectedEndpoints, serviceTimeseriesMap, hasServiceData, timeBuckets, labels]);
+  }, [data, endpoints, selectedEndpoints, serviceTimeseriesMap, hasServiceData, targetThreshold, timeBuckets, labels]);
 
   const options = createChartOptions({
     plugins: {
@@ -106,14 +135,14 @@ export default function LatencyChart({ data = [], endpoints = [], selectedEndpoi
 
   if (data.length === 0 && timeBuckets.length === 0) {
     return (
-      <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ height: '100%', minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Empty description="No latency data in selected time range" image={Empty.PRESENTED_IMAGE_SIMPLE} />
       </div>
     );
   }
 
   return (
-    <div style={{ height: '300px' }}>
+    <div style={{ position: 'relative', height: '100%', minHeight: '200px' }}>
       <Line data={chartData} options={options} />
     </div>
   );

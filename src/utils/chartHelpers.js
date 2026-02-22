@@ -7,11 +7,13 @@ import { CHART_COLORS, UI_CONFIG } from '@config/constants';
 export const BASE_CHART_OPTIONS = {
   responsive: true,
   maintainAspectRatio: false,
+  interaction: {
+    mode: 'index',
+    intersect: false,
+  },
   plugins: {
     legend: { display: false },
     tooltip: {
-      mode: 'index',
-      intersect: false,
       backgroundColor: '#1A1A1A',
       borderColor: '#2D2D2D',
       borderWidth: 1,
@@ -25,7 +27,7 @@ export const BASE_CHART_OPTIONS = {
   scales: {
     x: {
       grid: { color: 'rgba(255, 255, 255, 0.05)', tickLength: 0 },
-      ticks: { color: '#8e8e8e', maxRotation: 0, maxTicksLimit: 12, autoSkip: true, font: { size: 11 } },
+      ticks: { color: '#8e8e8e', maxRotation: 0, maxTicksLimit: 6, autoSkip: true, font: { size: 11 } },
       border: { display: false },
     },
     y: {
@@ -163,14 +165,7 @@ export function generateTimeBuckets(startMs, endMs) {
   const alignedStart = Math.floor(startMs / stepMs) * stepMs;
   const buckets = [];
   for (let t = alignedStart; t <= endMs; t += stepMs) {
-    const d = new Date(t);
-    const iso = d.getFullYear() +
-      '-' + String(d.getMonth() + 1).padStart(2, '0') +
-      '-' + String(d.getDate()).padStart(2, '0') +
-      ' ' + String(d.getHours()).padStart(2, '0') +
-      ':' + String(d.getMinutes()).padStart(2, '0') +
-      ':00';
-    buckets.push(iso);
+    buckets.push(new Date(t).toISOString());
   }
   return buckets;
 }

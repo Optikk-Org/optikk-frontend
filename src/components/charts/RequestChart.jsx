@@ -11,7 +11,15 @@ function tsKey(ts) {
   return String(ts).replace('T', ' ').replace('Z', '').substring(0, 16); // "YYYY-MM-DD HH:mm"
 }
 
-export default function RequestChart({ data = [], endpoints = [], selectedEndpoints = [], serviceTimeseriesMap = {} }) {
+export default function RequestChart({
+  data = [],
+  endpoints = [],
+  selectedEndpoints = [],
+  serviceTimeseriesMap = {},
+  datasetLabel = 'Requests/min',
+  color = '#5E60CE',
+  valueKey = 'request_count'
+}) {
   const hasServiceData = Object.keys(serviceTimeseriesMap).length > 0;
   const { timeBuckets, labels } = useChartTimeBuckets();
 
@@ -29,7 +37,7 @@ export default function RequestChart({ data = [], endpoints = [], selectedEndpoi
       // Build lookup by normalized timestamp key
       const tsMap = {};
       for (const row of svcTimeseries) {
-        tsMap[tsKey(row.timestamp)] = Number(row.request_count || 0);
+        tsMap[tsKey(row.timestamp)] = Number(row[valueKey] || 0);
       }
       const values = timeBuckets.map(d => tsMap[tsKey(d)] ?? 0);
       return createLineDataset(svcName, values, getChartColor(idx), false);
@@ -50,12 +58,12 @@ export default function RequestChart({ data = [], endpoints = [], selectedEndpoi
         datasets = buildServiceDatasets(list);
       } else {
         // Proportional split fallback — map onto full-range buckets
-        const totalReqs = endpoints.reduce((sum, ep) => sum + (Number(ep.request_count) || 0), 0) || 1;
+        const totalReqs = endpoints.reduce((sum, ep) => sum + (Number(ep[valueKey]) || 0), 0) || 1;
         const dataMap = {};
         for (const d of data) dataMap[tsKey(d.timestamp)] = d.value || 0;
 
         datasets = list.map((ep, idx) => {
-          const share = (Number(ep.request_count) || 0) / totalReqs;
+          const share = (Number(ep[valueKey]) || 0) / totalReqs;
           return createLineDataset(
             `${ep.http_method || 'N/A'} ${ep.operation_name || ep.endpoint_name || 'Unknown'}`,
             timeBuckets.map(ts => (dataMap[tsKey(ts)] || 0) * share),
@@ -68,7 +76,7 @@ export default function RequestChart({ data = [], endpoints = [], selectedEndpoi
       // No endpoint filter — show one line per service
       datasets = Object.entries(serviceTimeseriesMap).slice(0, 10).map(([svcName, rows], idx) => {
         const tsMap = {};
-        for (const row of rows) tsMap[tsKey(row.timestamp)] = Number(row.request_count || 0);
+        for (const row of rows) tsMap[tsKey(row.timestamp)] = Number(row[valueKey] || 0);
         const values = timeBuckets.map(d => tsMap[tsKey(d)] ?? 0);
         return createLineDataset(svcName, values, getChartColor(idx), false);
       });
@@ -76,7 +84,7 @@ export default function RequestChart({ data = [], endpoints = [], selectedEndpoi
       // Map data values onto full-range buckets
       const dataMap = {};
       for (const d of data) dataMap[tsKey(d.timestamp)] = d.value;
-      datasets = [createLineDataset('Requests/min', timeBuckets.map(ts => dataMap[tsKey(ts)] ?? 0), '#5E60CE', true)];
+      datasets = [createLineDataset(datasetLabel, timeBuckets.map(ts => dataMap[tsKey(ts)] ?? 0), color, true)];
     }
 
     return { labels, datasets };
@@ -117,14 +125,14 @@ export default function RequestChart({ data = [], endpoints = [], selectedEndpoi
 
   if (data.length === 0 && timeBuckets.length === 0) {
     return (
-      <div style={{ height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ height: '100%', minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Empty description="No request data in selected time range" image={Empty.PRESENTED_IMAGE_SIMPLE} />
       </div>
     );
   }
 
   return (
-    <div style={{ height: '250px' }}>
+    <div style={{ position: 'relative', height: '100%', minHeight: '200px' }}>
       <Line data={chartData} options={options} />
     </div>
   );

@@ -5,7 +5,8 @@ import { Target, ShieldCheck, Gauge, AlertTriangle, CheckCircle, TrendingDown } 
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
 import { PageHeader, StatCard } from '@components/common';
 import { v1Service } from '@services/v1Service';
-import { createChartOptions, createLineDataset } from '@utils/chartHelpers';
+import ErrorRateChart from '@components/charts/ErrorRateChart';
+import LatencyChart from '@components/charts/LatencyChart';
 
 const n = (v) => (v == null || Number.isNaN(Number(v)) ? 0 : Number(v));
 
@@ -79,7 +80,7 @@ export default function SloSliDashboardPage() {
   const objectives = data?.objectives || {};
   const timeseries = useMemo(() =>
     Array.isArray(data?.timeseries) ? data.timeseries : []
-  , [data]);
+    , [data]);
 
   const availabilityPct = n(status.availabilityPercent);
   const p95Ms = n(status.p95LatencyMs);
@@ -91,111 +92,12 @@ export default function SloSliDashboardPage() {
     ? ((timeseries.length - breachedCount) / timeseries.length * 100).toFixed(1)
     : '100.0';
 
-  // Chart labels
   const chartLabels = useMemo(() =>
     timeseries.map((r) => {
       const d = new Date(r.timestamp);
       return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
     })
-  , [timeseries]);
-
-  const availabilityChartData = useMemo(() => ({
-    labels: chartLabels,
-    datasets: [
-      createLineDataset('Availability %', timeseries.map(r => n(r.availability_percent)), '#12B76A', true),
-      {
-        label: `Target (${AVAILABILITY_TARGET}%)`,
-        data: timeseries.map(() => AVAILABILITY_TARGET),
-        borderColor: '#F04438',
-        borderDash: [6, 3],
-        borderWidth: 1.5,
-        pointRadius: 0,
-        fill: false,
-        tension: 0,
-      },
-    ],
-  }), [timeseries, chartLabels]);
-
-  const latencyChartData = useMemo(() => ({
-    labels: chartLabels,
-    datasets: [
-      createLineDataset('Avg Latency (ms)', timeseries.map(r => n(r.avg_latency_ms)), '#5E60CE', true),
-      {
-        label: `P95 Target (${P95_TARGET_MS}ms)`,
-        data: timeseries.map(() => P95_TARGET_MS),
-        borderColor: '#F79009',
-        borderDash: [6, 3],
-        borderWidth: 1.5,
-        pointRadius: 0,
-        fill: false,
-        tension: 0,
-      },
-    ],
-  }), [timeseries, chartLabels]);
-
-  const errorBudgetChartData = useMemo(() => ({
-    labels: chartLabels,
-    datasets: [
-      {
-        ...createLineDataset('Error Rate %', timeseries.map(r => 100 - n(r.availability_percent)), '#F04438', true),
-        fill: true,
-      },
-      {
-        label: `Budget Limit (${(100 - AVAILABILITY_TARGET).toFixed(1)}%)`,
-        data: timeseries.map(() => 100 - AVAILABILITY_TARGET),
-        borderColor: '#F79009',
-        borderDash: [6, 3],
-        borderWidth: 1.5,
-        pointRadius: 0,
-        fill: false,
-        tension: 0,
-      },
-    ],
-  }), [timeseries, chartLabels]);
-
-  const availChartOpts = createChartOptions({
-    plugins: {
-      legend: { display: true, labels: { color: '#666', font: { size: 11 }, boxWidth: 20, padding: 12 } },
-      tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(3)}%` } },
-    },
-    scales: {
-      y: {
-        ticks: { color: '#666', callback: (v) => `${v.toFixed(1)}%` },
-        grid: { color: '#2D2D2D' },
-        min: timeseries.length > 0
-          ? Math.max(0, Math.min(...timeseries.map(r => n(r.availability_percent))) - 0.5)
-          : 99,
-      },
-    },
-  });
-
-  const latencyChartOpts = createChartOptions({
-    plugins: {
-      legend: { display: true, labels: { color: '#666', font: { size: 11 }, boxWidth: 20, padding: 12 } },
-      tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}ms` } },
-    },
-    scales: {
-      y: {
-        ticks: { color: '#666', callback: (v) => `${v}ms` },
-        grid: { color: '#2D2D2D' },
-        beginAtZero: true,
-      },
-    },
-  });
-
-  const errorBudgetOpts = createChartOptions({
-    plugins: {
-      legend: { display: true, labels: { color: '#666', font: { size: 11 }, boxWidth: 20, padding: 12 } },
-      tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(3)}%` } },
-    },
-    scales: {
-      y: {
-        ticks: { color: '#666', callback: (v) => `${v.toFixed(2)}%` },
-        grid: { color: '#2D2D2D' },
-        beginAtZero: true,
-      },
-    },
-  });
+    , [timeseries]);
 
   const complianceColumns = [
     {
@@ -361,7 +263,7 @@ export default function SloSliDashboardPage() {
 
       {/* Trend Charts */}
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} lg={12}>
+        <Col xs={24} lg={8}>
           <Card title={<span><ShieldCheck size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Availability Over Time</span>}>
             {isLoading ? (
               <Skeleton active paragraph={{ rows: 4 }} />
@@ -371,12 +273,17 @@ export default function SloSliDashboardPage() {
               </div>
             ) : (
               <div style={{ height: 220 }}>
-                <Line data={availabilityChartData} options={availChartOpts} />
+                <ErrorRateChart
+                  data={timeseries.map(r => ({ timestamp: r.timestamp, value: n(r.availability_percent) }))}
+                  targetThreshold={AVAILABILITY_TARGET}
+                  datasetLabel="Availability %"
+                  color="#12B76A"
+                />
               </div>
             )}
           </Card>
         </Col>
-        <Col xs={24} lg={12}>
+        <Col xs={24} lg={8}>
           <Card title={<span><Gauge size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Latency vs Target</span>}>
             {isLoading ? (
               <Skeleton active paragraph={{ rows: 4 }} />
@@ -386,25 +293,28 @@ export default function SloSliDashboardPage() {
               </div>
             ) : (
               <div style={{ height: 220 }}>
-                <Line data={latencyChartData} options={latencyChartOpts} />
+                <LatencyChart
+                  data={timeseries.map(r => ({ timestamp: r.timestamp, value: n(r.avg_latency_ms) }))}
+                  targetThreshold={P95_TARGET_MS}
+                />
               </div>
             )}
           </Card>
         </Col>
-      </Row>
-
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24}>
+        <Col xs={24} lg={8}>
           <Card title={<span><TrendingDown size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Error Budget Burn</span>}>
             {isLoading ? (
               <Skeleton active paragraph={{ rows: 3 }} />
             ) : timeseries.length === 0 ? (
-              <div style={{ height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+              <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
                 No data in selected time range
               </div>
             ) : (
-              <div style={{ height: 180 }}>
-                <Line data={errorBudgetChartData} options={errorBudgetOpts} />
+              <div style={{ height: 220 }}>
+                <ErrorRateChart
+                  data={timeseries.map(r => ({ timestamp: r.timestamp, value: 100 - n(r.availability_percent) }))}
+                  targetThreshold={100 - AVAILABILITY_TARGET}
+                />
               </div>
             )}
           </Card>

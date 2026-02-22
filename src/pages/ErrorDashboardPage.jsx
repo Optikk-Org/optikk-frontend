@@ -2,20 +2,17 @@ import { useMemo, useState } from 'react';
 import { Row, Col, Card, Select, Tag, Table, Skeleton, Empty, Tooltip } from 'antd';
 import { AlertCircle, ExternalLink, Clock, Server } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Line } from 'react-chartjs-2';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
-import { useChartTimeBuckets } from '@hooks/useChartTimeBuckets';
 import { v1Service } from '@services/v1Service';
 import PageHeader from '@components/common/PageHeader';
 import StatCard from '@components/common/StatCard';
+import ErrorRateChart from '@components/charts/ErrorRateChart';
 import { formatNumber, formatRelativeTime } from '@utils/formatters';
-import { createChartOptions, createLineDataset, getChartColor } from '@utils/chartHelpers';
 import './ErrorDashboardPage.css';
 
 export default function ErrorDashboardPage() {
   const navigate = useNavigate();
   const [selectedService, setSelectedService] = useState(null);
-  const { timeBuckets, labels } = useChartTimeBuckets();
 
   // Cross-service error groups
   const { data: errorGroupsRaw, isLoading: groupsLoading } = useTimeRangeQuery(
@@ -80,54 +77,19 @@ export default function ErrorDashboardPage() {
     return { totalErrors: 0, uniqueServices: 0, uniqueOperations: 0, topErrorCount: 0 };
   }, [errorGroups, errorTimeseriesRaw]);
 
-  // Build chart.js multi-line dataset from per-service error timeseries.
-  // Uses the full requested time window for x-axis labels so the axis always
-  // reflects the selected range, even if data only exists for a subset.
-  const errorRateChartData = useMemo(() => {
+  // Build generic serviceTimeseriesMap for the common ErrorRateChart
+  const serviceTimeseriesMap = useMemo(() => {
     const raw = Array.isArray(errorTimeseriesRaw) ? errorTimeseriesRaw : [];
-    const svcSet = new Set();
-    for (const row of raw) {
-      svcSet.add(row.service_name || 'unknown');
-    }
-    const svcNames = Array.from(svcSet);
-
-    // Build lookup: service → timestamp → error_rate
-    const lookup = {};
+    const map = {};
     for (const row of raw) {
       const svc = row.service_name || 'unknown';
-      if (!lookup[svc]) lookup[svc] = {};
-      lookup[svc][row.timestamp] = Number(row.error_rate || 0);
+      if (!map[svc]) map[svc] = [];
+      map[svc].push(row);
     }
+    return map;
+  }, [errorTimeseriesRaw]);
 
-    const datasets = svcNames.map((svc, i) =>
-      createLineDataset(
-        svc,
-        timeBuckets.map((ts) => lookup[svc]?.[ts] ?? 0),
-        getChartColor(i),
-        true
-      )
-    );
-
-    return { labels, datasets };
-  }, [errorTimeseriesRaw, timeBuckets, labels]);
-
-  const errorRateOptions = createChartOptions({
-    plugins: {
-      legend: { display: true, labels: { color: '#666', font: { size: 11 } } },
-      tooltip: {
-        callbacks: {
-          label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%`,
-        },
-      },
-    },
-    scales: {
-      y: {
-        ticks: { color: '#666', callback: (v) => `${v}%` },
-        grid: { color: '#2D2D2D' },
-        beginAtZero: true,
-      },
-    },
-  });
+  const hasChartData = Object.keys(serviceTimeseriesMap).length > 0;
 
   const statusColor = (code) => {
     const n = Number(code);
@@ -224,8 +186,6 @@ export default function ErrorDashboardPage() {
     },
   ];
 
-  const hasChartData = errorRateChartData.datasets.length > 0;
-
   return (
     <div className="error-dashboard-page">
       <PageHeader
@@ -295,9 +255,7 @@ export default function ErrorDashboardPage() {
             ) : !hasChartData ? (
               <Empty description="No error data in selected time range" />
             ) : (
-              <div style={{ height: 280 }}>
-                <Line data={errorRateChartData} options={errorRateOptions} />
-              </div>
+              <ErrorRateChart data={[]} serviceTimeseriesMap={serviceTimeseriesMap} />
             )}
           </Card>
         </Col>

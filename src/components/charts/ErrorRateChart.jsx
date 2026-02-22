@@ -10,7 +10,15 @@ function tsKey(ts) {
   return String(ts).replace('T', ' ').replace('Z', '').substring(0, 16);
 }
 
-export default function ErrorRateChart({ data = [], endpoints = [], selectedEndpoints = [], serviceTimeseriesMap = {} }) {
+export default function ErrorRateChart({
+  data = [],
+  endpoints = [],
+  selectedEndpoints = [],
+  serviceTimeseriesMap = {},
+  targetThreshold = null,
+  datasetLabel = 'Error Rate %',
+  color = '#F04438'
+}) {
   const hasServiceData = Object.keys(serviceTimeseriesMap).length > 0;
   const { timeBuckets, labels } = useChartTimeBuckets();
 
@@ -26,7 +34,7 @@ export default function ErrorRateChart({ data = [], endpoints = [], selectedEndp
       for (const row of svcTimeseries) {
         const total = Number(row.request_count || 0);
         const errors = Number(row.error_count || 0);
-        tsMap[tsKey(row.timestamp)] = total > 0 ? (errors / total * 100) : 0;
+        tsMap[tsKey(row.timestamp)] = row.error_rate !== undefined ? Number(row.error_rate) : (total > 0 ? (errors / total * 100) : 0);
       }
       const values = timeBuckets.map(d => tsMap[tsKey(d)] ?? 0);
       return createLineDataset(svcName, values, getChartColor(idx), false);
@@ -50,7 +58,7 @@ export default function ErrorRateChart({ data = [], endpoints = [], selectedEndp
         datasets = buildServiceDatasets(list);
       } else {
         datasets = list.map((ep, idx) => {
-          const errorRate = ep.request_count > 0 ? (ep.error_count / ep.request_count) * 100 : 0;
+          const errorRate = ep.error_rate !== undefined ? Number(ep.error_rate) : (ep.request_count > 0 ? (ep.error_count / ep.request_count) * 100 : 0);
           return createLineDataset(
             `${ep.http_method || 'N/A'} ${ep.operation_name || ep.endpoint_name || 'Unknown'}`,
             timeBuckets.map(() => errorRate),
@@ -65,7 +73,7 @@ export default function ErrorRateChart({ data = [], endpoints = [], selectedEndp
         for (const row of rows) {
           const total = Number(row.request_count || 0);
           const errors = Number(row.error_count || 0);
-          tsMap[tsKey(row.timestamp)] = total > 0 ? (errors / total * 100) : 0;
+          tsMap[tsKey(row.timestamp)] = row.error_rate !== undefined ? Number(row.error_rate) : (total > 0 ? (errors / total * 100) : 0);
         }
         const values = timeBuckets.map(d => tsMap[tsKey(d)] ?? 0);
         return createLineDataset(svcName, values, getChartColor(idx), false);
@@ -74,12 +82,30 @@ export default function ErrorRateChart({ data = [], endpoints = [], selectedEndp
       // Map data values onto full-range buckets
       const dataMap = {};
       for (const d of data) dataMap[tsKey(d.timestamp)] = d.value;
-      datasets = [createLineDataset('Error Rate %', timeBuckets.map(ts => dataMap[tsKey(ts)] ?? 0), '#F04438', true)];
+      datasets = [createLineDataset(datasetLabel, timeBuckets.map(ts => dataMap[tsKey(ts)] ?? 0), color, true)];
     }
-    return { labels, datasets };
-  }, [data, endpoints, selectedEndpoints, serviceTimeseriesMap, hasServiceData, timeBuckets, labels]);
 
-  const maxVal = Math.max(...data.map(d => d.value || 0), 1);
+    // Add target threshold line if provided
+    if (targetThreshold !== null) {
+      const formattedLimit = Number.isInteger(Number(targetThreshold)) ? targetThreshold : Number(targetThreshold).toFixed(2).replace(/\.?0+$/, '');
+      datasets.push({
+        label: `Limit (${formattedLimit}%)`,
+        data: timeBuckets.map(() => targetThreshold),
+        borderColor: '#F79009',
+        borderDash: [6, 3],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
+        tension: 0,
+      });
+    }
+
+    return { labels, datasets };
+  }, [data, endpoints, selectedEndpoints, serviceTimeseriesMap, hasServiceData, targetThreshold, timeBuckets, labels]);
+
+  const maxDataVal = Math.max(...data.map(d => d.value || 0), targetThreshold || 0);
+  const maxVal = Math.max(maxDataVal, 1);
+  const yAxisMax = datasetLabel.includes('%') && maxVal <= 100 ? 100 : Math.ceil(maxVal * 1.2);
 
   const options = createChartOptions({
     plugins: {
@@ -98,24 +124,30 @@ export default function ErrorRateChart({ data = [], endpoints = [], selectedEndp
     },
     scales: {
       y: {
-        ticks: { color: '#666', callback: (v) => `${v}%` },
+        ticks: {
+          color: '#666',
+          callback: (v) => {
+            const num = Number(v);
+            return Number.isInteger(num) ? `${num}%` : `${num.toFixed(1)}%`;
+          }
+        },
         grid: { color: '#2D2D2D' },
         beginAtZero: true,
-        max: maxVal * 1.2,
+        max: yAxisMax,
       },
     },
   });
 
   if (data.length === 0 && timeBuckets.length === 0) {
     return (
-      <div style={{ height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ height: '100%', minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Empty description="No error data in selected time range" image={Empty.PRESENTED_IMAGE_SIMPLE} />
       </div>
     );
   }
 
   return (
-    <div style={{ height: '250px' }}>
+    <div style={{ position: 'relative', height: '100%', minHeight: '200px' }}>
       <Line data={chartData} options={options} />
     </div>
   );

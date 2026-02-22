@@ -3,13 +3,12 @@ import { Row, Col, Card, Select, Tag, Table, Skeleton, Empty, Progress, Tooltip 
 import {
   Gauge, Database, Radio, Cpu, GitPullRequest,
 } from 'lucide-react';
-import { Line } from 'react-chartjs-2';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
 import { v1Service } from '@services/v1Service';
 import PageHeader from '@components/common/PageHeader';
 import StatCard from '@components/common/StatCard';
+import RequestChart from '@components/charts/RequestChart';
 import { formatNumber, formatDuration } from '@utils/formatters';
-import { createChartOptions, createLineDataset, getChartColor } from '@utils/chartHelpers';
 import './SaturationPage.css';
 
 function pct(v) {
@@ -38,58 +37,6 @@ function SatGauge({ label, value, max, color }) {
     </div>
   );
 }
-
-// Build a chart.js Line dataset from a pivoted timeseries map
-function buildLineChartData(timeseriesRaw, metricKey, selectedService) {
-  const raw = Array.isArray(timeseriesRaw) ? timeseriesRaw : [];
-  const filtered = selectedService ? raw.filter((r) => r.service_name === selectedService) : raw;
-
-  const tsSet = new Set();
-  const svcSet = new Set();
-  for (const row of filtered) {
-    if (row[metricKey] != null && row[metricKey] !== '') {
-      tsSet.add(row.timestamp);
-      svcSet.add(row.service_name || 'unknown');
-    }
-  }
-
-  const timestamps = Array.from(tsSet).sort((a, b) => new Date(a) - new Date(b));
-  const svcNames = Array.from(svcSet);
-
-  const lookup = {};
-  for (const row of filtered) {
-    const svc = row.service_name || 'unknown';
-    if (!lookup[svc]) lookup[svc] = {};
-    if (row[metricKey] != null && row[metricKey] !== '') {
-      lookup[svc][row.timestamp] = pct(row[metricKey]);
-    }
-  }
-
-  const labels = timestamps.map((ts) => {
-    const d = new Date(ts);
-    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-  });
-
-  const datasets = svcNames.map((svc, i) =>
-    createLineDataset(
-      svc,
-      timestamps.map((ts) => lookup[svc]?.[ts] ?? null),
-      getChartColor(i),
-      false
-    )
-  );
-
-  return { labels, datasets, hasData: datasets.length > 0 };
-}
-
-const lineOptions = createChartOptions({
-  plugins: {
-    legend: { display: true, labels: { color: '#666', font: { size: 11 } } },
-  },
-  scales: {
-    y: { ticks: { color: '#666' }, grid: { color: '#2D2D2D' }, beginAtZero: true },
-  },
-});
 
 export default function SaturationPage() {
   const [selectedService, setSelectedService] = useState(null);
@@ -128,19 +75,25 @@ export default function SaturationPage() {
     return { maxDbPool, maxLag, maxThread, maxQueue };
   }, [metrics]);
 
-  const lagChart = useMemo(
-    () => buildLineChartData(timeseriesRaw, 'avg_consumer_lag', selectedService),
-    [timeseriesRaw, selectedService]
-  );
-  const threadChart = useMemo(
-    () => buildLineChartData(timeseriesRaw, 'avg_thread_active', selectedService),
-    [timeseriesRaw, selectedService]
-  );
-  const queueChart = useMemo(
-    () => buildLineChartData(timeseriesRaw, 'avg_queue_depth', selectedService),
-    [timeseriesRaw, selectedService]
-  );
+  const serviceTimeseriesMap = useMemo(() => {
+    const raw = Array.isArray(timeseriesRaw) ? timeseriesRaw : [];
+    const filtered = selectedService ? raw.filter((r) => r.service_name === selectedService) : raw;
+    const map = {};
+    for (const row of filtered) {
+      const svc = row.service_name || 'unknown';
+      if (!map[svc]) map[svc] = [];
+      map[svc].push(row);
+    }
+    return map;
+  }, [timeseriesRaw, selectedService]);
 
+  const hasMetricData = (key) => {
+    const raw = Array.isArray(timeseriesRaw) ? timeseriesRaw : [];
+    return raw.some(r => r[key] != null && r[key] !== '');
+  };
+  const hasLag = hasMetricData('avg_consumer_lag');
+  const hasThread = hasMetricData('avg_thread_active');
+  const hasQueue = hasMetricData('avg_queue_depth');
   const tableColumns = [
     {
       title: 'Service',
@@ -325,11 +278,11 @@ export default function SaturationPage() {
           <Card title="Consumer Lag (avg, per service)" className="sat-chart-card">
             {tsLoading ? (
               <Skeleton active paragraph={{ rows: 4 }} />
-            ) : !lagChart.hasData ? (
+            ) : !hasLag ? (
               <NoData icon={<Radio size={32} style={{ color: 'var(--text-muted)' }} />} attr="messaging.kafka.consumer.lag" />
             ) : (
               <div style={{ height: 220 }}>
-                <Line data={lagChart} options={lineOptions} />
+                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_consumer_lag" datasetLabel="Lag" />
               </div>
             )}
           </Card>
@@ -339,11 +292,11 @@ export default function SaturationPage() {
           <Card title="Thread Pool Active (avg, per service)" className="sat-chart-card">
             {tsLoading ? (
               <Skeleton active paragraph={{ rows: 4 }} />
-            ) : !threadChart.hasData ? (
+            ) : !hasThread ? (
               <NoData icon={<Cpu size={32} style={{ color: 'var(--text-muted)' }} />} attr="thread.pool.active" />
             ) : (
               <div style={{ height: 220 }}>
-                <Line data={threadChart} options={lineOptions} />
+                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_thread_active" datasetLabel="Active Threads" />
               </div>
             )}
           </Card>
@@ -353,11 +306,11 @@ export default function SaturationPage() {
           <Card title="Queue Depth (avg, per service)" className="sat-chart-card">
             {tsLoading ? (
               <Skeleton active paragraph={{ rows: 4 }} />
-            ) : !queueChart.hasData ? (
+            ) : !hasQueue ? (
               <NoData icon={<GitPullRequest size={32} style={{ color: 'var(--text-muted)' }} />} attr="queue.depth" />
             ) : (
               <div style={{ height: 220 }}>
-                <Line data={queueChart} options={lineOptions} />
+                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_queue_depth" datasetLabel="Queue Depth" />
               </div>
             )}
           </Card>
