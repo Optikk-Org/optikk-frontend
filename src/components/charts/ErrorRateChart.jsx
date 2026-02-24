@@ -23,21 +23,39 @@ export default function ErrorRateChart({
   const { timeBuckets, labels } = useChartTimeBuckets();
 
   const buildServiceDatasets = (endpointList) => {
-    const serviceMap = {};
+    const targetMap = {};
     for (const ep of endpointList) {
-      const svc = ep.service_name || ep.service || '';
-      if (!serviceMap[svc]) serviceMap[svc] = ep;
+      const key = ep.key || ep.service_name || ep.service || '';
+      const label = ep.endpoint || ep.service_name || ep.service || key;
+      if (!targetMap[key]) targetMap[key] = { label };
     }
-    return Object.entries(serviceMap).map(([svcName], idx) => {
-      const svcTimeseries = serviceTimeseriesMap[svcName] || [];
+    const stepMs = timeBuckets.length >= 2 ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime() : 60000;
+
+    return Object.entries(targetMap).map(([key, info], idx) => {
+      const tsData = serviceTimeseriesMap[key] || [];
       const tsMap = {};
-      for (const row of svcTimeseries) {
+      for (const row of tsData) {
+        if (!row.timestamp) continue;
+        const rowTime = new Date(row.timestamp).getTime();
+        const alignedTimeMs = Math.floor(rowTime / stepMs) * stepMs;
+        const bucketKey = tsKey(new Date(alignedTimeMs).toISOString());
+
         const total = Number(row.request_count || 0);
         const errors = Number(row.error_count || 0);
-        tsMap[tsKey(row.timestamp)] = row.error_rate !== undefined ? Number(row.error_rate) : (total > 0 ? (errors / total * 100) : 0);
+
+        if (!tsMap[bucketKey]) {
+          tsMap[bucketKey] = { total: 0, errors: 0 };
+        }
+        tsMap[bucketKey].total += total;
+        tsMap[bucketKey].errors += errors;
       }
-      const values = timeBuckets.map(d => tsMap[tsKey(d)] ?? 0);
-      return createLineDataset(svcName, values, getChartColor(idx), false);
+
+      const values = timeBuckets.map(d => {
+        const bucket = tsMap[tsKey(d)];
+        if (!bucket || bucket.total === 0) return 0;
+        return (bucket.errors / bucket.total) * 100;
+      });
+      return createLineDataset(info.label, values, getChartColor(idx), false);
     });
   };
 
@@ -46,36 +64,54 @@ export default function ErrorRateChart({
     if (endpoints.length > 0) {
       const list = selectedEndpoints.length > 0
         ? endpoints.filter(ep => {
-          const key = ep.key || `${ep.http_method || 'N/A'}_${ep.operation_name || ep.endpoint_name || 'Unknown'}_${ep.service_name || ''}`;
+          const key = ep.key || (() => {
+            const method = (ep.http_method || '').toUpperCase();
+            const op = ep.operation_name || ep.endpoint_name || 'Unknown';
+            const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
+            return `${method} ${cleanOp}_${ep.service_name || ''}`;
+          })();
           return selectedEndpoints.includes(key);
         })
-        : endpoints.filter(ep => {
-          const rate = ep.request_count > 0 ? (ep.error_count / ep.request_count) * 100 : 0;
-          return rate > 0;
-        }).slice(0, 10);
+        : endpoints;
 
       if (hasServiceData) {
         datasets = buildServiceDatasets(list);
       } else {
+        // Fallback to plotting zeros if no data available yet
         datasets = list.map((ep, idx) => {
-          const errorRate = ep.error_rate !== undefined ? Number(ep.error_rate) : (ep.request_count > 0 ? (ep.error_count / ep.request_count) * 100 : 0);
           return createLineDataset(
             `${ep.http_method || 'N/A'} ${ep.operation_name || ep.endpoint_name || 'Unknown'}`,
-            timeBuckets.map(() => errorRate),
+            timeBuckets.map(() => 0),
             getChartColor(idx),
             false
           );
         });
       }
     } else if (hasServiceData) {
+      const stepMs = timeBuckets.length >= 2 ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime() : 60000;
       datasets = Object.entries(serviceTimeseriesMap).slice(0, 10).map(([svcName, rows], idx) => {
         const tsMap = {};
         for (const row of rows) {
+          if (!row.timestamp) continue;
+          const rowTime = new Date(row.timestamp).getTime();
+          const alignedTimeMs = Math.floor(rowTime / stepMs) * stepMs;
+          const bucketKey = tsKey(new Date(alignedTimeMs).toISOString());
+
           const total = Number(row.request_count || 0);
           const errors = Number(row.error_count || 0);
-          tsMap[tsKey(row.timestamp)] = row.error_rate !== undefined ? Number(row.error_rate) : (total > 0 ? (errors / total * 100) : 0);
+
+          if (!tsMap[bucketKey]) {
+            tsMap[bucketKey] = { total: 0, errors: 0 };
+          }
+          tsMap[bucketKey].total += total;
+          tsMap[bucketKey].errors += errors;
         }
-        const values = timeBuckets.map(d => tsMap[tsKey(d)] ?? 0);
+
+        const values = timeBuckets.map(d => {
+          const bucket = tsMap[tsKey(d)];
+          if (!bucket || bucket.total === 0) return 0;
+          return (bucket.errors / bucket.total) * 100;
+        });
         return createLineDataset(svcName, values, getChartColor(idx), false);
       });
     } else {
@@ -103,9 +139,27 @@ export default function ErrorRateChart({
     return { labels, datasets };
   }, [data, endpoints, selectedEndpoints, serviceTimeseriesMap, hasServiceData, targetThreshold, timeBuckets, labels]);
 
-  const maxDataVal = Math.max(...data.map(d => d.value || 0), targetThreshold || 0);
-  const maxVal = Math.max(maxDataVal, 1);
-  const yAxisMax = datasetLabel.includes('%') && maxVal <= 100 ? 100 : Math.ceil(maxVal * 1.2);
+  // Compute max from all data sources for relative Y-axis scaling
+  const allDataValues = useMemo(() => {
+    const vals = data.map(d => d.value || 0);
+    if (Object.keys(serviceTimeseriesMap).length > 0) {
+      Object.values(serviceTimeseriesMap).forEach(rows => {
+        rows.forEach(r => {
+          const total = Number(r.request_count || 0);
+          const errors = Number(r.error_count || 0);
+          if (total > 0) vals.push((errors / total) * 100);
+        });
+      });
+    }
+    endpoints.forEach(ep => {
+      const rate = ep.error_rate !== undefined ? Number(ep.error_rate)
+        : (ep.request_count > 0 ? (ep.error_count / ep.request_count) * 100 : 0);
+      if (rate > 0) vals.push(rate);
+    });
+    return vals;
+  }, [data, serviceTimeseriesMap, endpoints]);
+  const maxDataVal = Math.max(...allDataValues, targetThreshold || 0, 0);
+  const yAxisMax = Math.max(Math.ceil(maxDataVal * 2.0), 1);
 
   const options = createChartOptions({
     plugins: {
@@ -130,7 +184,7 @@ export default function ErrorRateChart({
         },
         grid: { color: '#2D2D2D' },
         beginAtZero: true,
-        max: yAxisMax,
+        max: Math.max(yAxisMax, targetThreshold ? targetThreshold * 1.5 : 0),
       },
     },
   });

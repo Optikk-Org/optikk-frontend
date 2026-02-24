@@ -22,19 +22,27 @@ export default function LatencyChart({
   const { timeBuckets, labels } = useChartTimeBuckets();
 
   const buildServiceDatasets = (endpointList) => {
-    const serviceMap = {};
+    const targetMap = {};
     for (const ep of endpointList) {
-      const svc = ep.service_name || ep.service || '';
-      if (!serviceMap[svc]) serviceMap[svc] = ep;
+      const key = ep.key || ep.service_name || ep.service || '';
+      const label = ep.endpoint || ep.service_name || ep.service || key;
+      if (!targetMap[key]) targetMap[key] = { label };
     }
-    return Object.entries(serviceMap).map(([svcName], idx) => {
-      const svcTimeseries = serviceTimeseriesMap[svcName] || [];
+    const stepMs = timeBuckets.length >= 2 ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime() : 60000;
+
+    return Object.entries(targetMap).map(([key, info], idx) => {
+      const tsData = serviceTimeseriesMap[key] || [];
       const tsMap = {};
-      for (const row of svcTimeseries) {
-        tsMap[tsKey(row.timestamp)] = Number(row.avg_latency || 0);
+      for (const row of tsData) {
+        if (!row.timestamp) continue;
+        const rowTime = new Date(row.timestamp).getTime();
+        const alignedTimeMs = Math.floor(rowTime / stepMs) * stepMs;
+        const bucketKey = tsKey(new Date(alignedTimeMs).toISOString());
+
+        tsMap[bucketKey] = Math.max(tsMap[bucketKey] || 0, Number(row.avg_latency || 0));
       }
       const values = timeBuckets.map(d => tsMap[tsKey(d)] ?? 0);
-      return createLineDataset(svcName, values, getChartColor(idx), false);
+      return createLineDataset(info.label, values, getChartColor(idx), false);
     });
   };
 
@@ -43,30 +51,39 @@ export default function LatencyChart({
     if (endpoints.length > 0) {
       const list = selectedEndpoints.length > 0
         ? endpoints.filter(ep => {
-          const key = ep.key || `${ep.http_method || 'N/A'}_${ep.operation_name || ep.endpoint_name || 'Unknown'}_${ep.service_name || ''}`;
+          const key = ep.key || (() => {
+            const method = (ep.http_method || '').toUpperCase();
+            const op = ep.operation_name || ep.endpoint_name || 'Unknown';
+            const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
+            return `${method} ${cleanOp}_${ep.service_name || ''}`;
+          })();
           return selectedEndpoints.includes(key);
         })
-        : endpoints
-          .sort((a, b) => (b.avg_latency || b.p95_latency || 0) - (a.avg_latency || a.p95_latency || 0))
-          .slice(0, 10);
+        : endpoints;
 
       if (hasServiceData) {
         datasets = buildServiceDatasets(list);
       } else {
         datasets = list.map((ep, idx) => {
-          const latency = ep.avg_latency || ep.p95_latency || 0;
           return createLineDataset(
             `${ep.http_method || 'N/A'} ${ep.operation_name || ep.endpoint_name || 'Unknown'}`,
-            timeBuckets.map(() => latency),
+            timeBuckets.map(() => 0),
             getChartColor(idx),
             false
           );
         });
       }
     } else if (hasServiceData) {
+      const stepMs = timeBuckets.length >= 2 ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime() : 60000;
       datasets = Object.entries(serviceTimeseriesMap).slice(0, 10).map(([svcName, rows], idx) => {
         const tsMap = {};
-        for (const row of rows) tsMap[tsKey(row.timestamp)] = Number(row.avg_latency || 0);
+        for (const row of rows) {
+          if (!row.timestamp) continue;
+          const rowTime = new Date(row.timestamp).getTime();
+          const alignedTimeMs = Math.floor(rowTime / stepMs) * stepMs;
+          const bucketKey = tsKey(new Date(alignedTimeMs).toISOString());
+          tsMap[bucketKey] = Math.max(tsMap[bucketKey] || 0, Number(row.avg_latency || 0));
+        }
         const values = timeBuckets.map(d => tsMap[tsKey(d)] ?? 0);
         return createLineDataset(svcName, values, getChartColor(idx), false);
       });

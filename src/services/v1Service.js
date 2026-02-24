@@ -18,6 +18,10 @@ export const v1Service = {
     return api.get(`${BASE}/endpoints/metrics`, { params: { startTime, endTime, serviceName } });
   },
 
+  async getEndpointTimeSeries(teamId, startTime, endTime, serviceName) {
+    return api.get(`${BASE}/endpoints/timeseries`, { params: { startTime, endTime, serviceName } });
+  },
+
   async getMetricsTimeSeries(teamId, startTime, endTime, serviceName, interval) {
     return api.get(`${BASE}/metrics/timeseries`, { params: { startTime, endTime, serviceName, interval } });
   },
@@ -104,8 +108,8 @@ export const v1Service = {
     return api.get(`${BASE}/insights/resource-utilization`, { params: { startTime, endTime } });
   },
 
-  async getSloSli(teamId, startTime, endTime, interval = '5m') {
-    return api.get(`${BASE}/insights/slo-sli`, { params: { startTime, endTime, interval } });
+  async getSloSli(teamId, startTime, endTime, serviceName, interval = '5m') {
+    return api.get(`${BASE}/insights/slo-sli`, { params: { startTime, endTime, serviceName, interval } });
   },
 
   async getLogsStreamInsights(teamId, startTime, endTime, interval = '1m', limit = 200) {

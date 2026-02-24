@@ -1,12 +1,15 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Row, Col, Card, Progress, Tag, Table, Alert, Skeleton } from 'antd';
 import { Line } from 'react-chartjs-2';
 import { Target, ShieldCheck, Gauge, AlertTriangle, CheckCircle, TrendingDown } from 'lucide-react';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
-import { PageHeader, StatCard } from '@components/common';
+import { PageHeader, StatCard, FilterBar } from '@components/common';
 import { v1Service } from '@services/v1Service';
 import ErrorRateChart from '@components/charts/ErrorRateChart';
 import LatencyChart from '@components/charts/LatencyChart';
+import { useAppStore } from '@store/appStore';
+import { dashboardService } from '@services/dashboardService';
+import { useQuery } from '@tanstack/react-query';
 
 const n = (v) => (v == null || Number.isNaN(Number(v)) ? 0 : Number(v));
 
@@ -71,9 +74,33 @@ function SloGauge({ title, value, target, unit = '%', description }) {
 }
 
 export default function SloSliDashboardPage() {
+  const [selectedService, setSelectedService] = useState(null);
+  const { selectedTeamId, timeRange, refreshKey } = useAppStore();
+
+  const getTimeRange = () => {
+    const endTime = Date.now();
+    const startTime = endTime - timeRange.minutes * 60 * 1000;
+    return { startTime, endTime };
+  };
+
+  const { data: servicesData } = useQuery({
+    queryKey: ['services', selectedTeamId, timeRange.value, refreshKey],
+    queryFn: () => {
+      const { startTime, endTime } = getTimeRange();
+      return dashboardService.getServices(selectedTeamId, startTime, endTime);
+    },
+    enabled: !!selectedTeamId,
+  });
+
+  const services = servicesData || [];
+  const serviceOptions = [
+    { label: 'All Services', value: null },
+    ...services.map((s) => ({ label: s.name || s.service_name || s.serviceName, value: s.name || s.service_name || s.serviceName })),
+  ];
+
   const { data, isLoading } = useTimeRangeQuery(
-    'slo-sli-insights',
-    (teamId, start, end) => v1Service.getSloSli(teamId, start, end, '5m')
+    `slo-sli-insights-${selectedService || 'all'}`,
+    (teamId, start, end) => v1Service.getSloSli(teamId, start, end, selectedService, '5m')
   );
 
   const status = data?.status || {};
@@ -185,6 +212,20 @@ export default function SloSliDashboardPage() {
         title="SLO / SLI Dashboard"
         icon={<Target size={24} />}
         subtitle="Service Level Objectives — availability targets, error budgets, and historical compliance"
+      />
+
+      <FilterBar
+        filters={[
+          {
+            type: 'select',
+            key: 'service',
+            placeholder: 'All Services',
+            options: serviceOptions,
+            value: selectedService,
+            onChange: setSelectedService,
+            width: 200,
+          },
+        ]}
       />
 
       {/* Compliance banner */}

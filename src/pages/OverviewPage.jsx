@@ -32,10 +32,10 @@ export default function OverviewPage() {
     (teamId, start, end) => v1Service.getMetricsTimeSeries(teamId, start, end, null, '5m')
   );
 
-  // Per-service timeseries from spans table
-  const { data: serviceTimeseriesRaw } = useTimeRangeQuery(
-    'service-timeseries',
-    (teamId, start, end) => v1Service.getServiceTimeSeries(teamId, start, end, '5m')
+  // Per-endpoint timeseries from backend (replaces serviceTimeseriesRaw)
+  const { data: endpointTimeseriesRaw } = useTimeRangeQuery(
+    'endpoints-timeseries',
+    (teamId, start, end) => v1Service.getEndpointTimeSeries(teamId, start, end)
   );
 
   // Service metrics for health grid - returns raw array
@@ -78,17 +78,21 @@ export default function OverviewPage() {
     return Array.isArray(timeseriesRaw) ? timeseriesRaw : [];
   }, [timeseriesRaw]);
 
-  // Per-service timeseries: group flat array into Map<serviceName, [{timestamp, request_count, error_count, avg_latency}]>
-  const serviceTimeseriesMap = useMemo(() => {
-    const raw = Array.isArray(serviceTimeseriesRaw) ? serviceTimeseriesRaw : [];
+  // Per-endpoint timeseries: group flat array into Map<key, [{timestamp, request_count, error_count, avg_latency}]>
+  const endpointTimeseriesMap = useMemo(() => {
+    const raw = Array.isArray(endpointTimeseriesRaw) ? endpointTimeseriesRaw : [];
     const map = {};
     for (const row of raw) {
-      const svc = row.service_name || '';
-      if (!map[svc]) map[svc] = [];
-      map[svc].push(row);
+      const method = (row.http_method || '').toUpperCase();
+      const op = row.operation_name || row.endpoint_name || 'Unknown';
+      const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
+      const key = `${method} ${cleanOp}_${row.service_name || ''}`;
+
+      if (!map[key]) map[key] = [];
+      map[key].push(row);
     }
     return map;
-  }, [serviceTimeseriesRaw]);
+  }, [endpointTimeseriesRaw]);
 
   // Build chart-ready timeseries data
   const requestsTimeseries = useMemo(
@@ -143,12 +147,17 @@ export default function OverviewPage() {
     return [...endpointMetrics]
       .sort((a, b) => (b.request_count || 0) - (a.request_count || 0))
       .slice(0, 10)
-      .map(ep => ({
-        ...ep,
-        endpoint: `${ep.http_method || 'N/A'} ${ep.operation_name || ep.endpoint_name || 'Unknown'}`,
-        service: ep.service_name,
-        key: `${ep.http_method || 'N/A'}_${ep.operation_name || ep.endpoint_name || 'Unknown'}_${ep.service_name || ''}`,
-      }));
+      .map(ep => {
+        const method = (ep.http_method || '').toUpperCase();
+        const op = ep.operation_name || ep.endpoint_name || 'Unknown';
+        const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
+        return {
+          ...ep,
+          endpoint: `${method} ${cleanOp}`,
+          service: ep.service_name,
+          key: `${method} ${cleanOp}_${ep.service_name || ''}`,
+        };
+      });
   }, [endpointMetrics]);
 
   const handleEndpointToggleRequests = (endpointKey) => {
@@ -171,12 +180,17 @@ export default function OverviewPage() {
       .filter(ep => ep.errorRate > 0)
       .sort((a, b) => b.errorRate - a.errorRate)
       .slice(0, 10)
-      .map(ep => ({
-        ...ep,
-        endpoint: `${ep.http_method || 'N/A'} ${ep.operation_name || ep.endpoint_name || 'Unknown'}`,
-        service: ep.service_name,
-        key: `${ep.http_method || 'N/A'}_${ep.operation_name || ep.endpoint_name || 'Unknown'}_${ep.service_name || ''}`,
-      }));
+      .map(ep => {
+        const method = (ep.http_method || '').toUpperCase();
+        const op = ep.operation_name || ep.endpoint_name || 'Unknown';
+        const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
+        return {
+          ...ep,
+          endpoint: `${method} ${cleanOp}`,
+          service: ep.service_name,
+          key: `${method} ${cleanOp}_${ep.service_name || ''}`,
+        };
+      });
   }, [endpointMetrics]);
 
   const handleEndpointToggleErrorRate = (endpointKey) => {
@@ -194,13 +208,18 @@ export default function OverviewPage() {
     return [...endpointMetrics]
       .sort((a, b) => (b.avg_latency || b.p95_latency || 0) - (a.avg_latency || a.p95_latency || 0))
       .slice(0, 10)
-      .map(ep => ({
-        ...ep,
-        endpoint: `${ep.http_method || 'N/A'} ${ep.operation_name || ep.endpoint_name || 'Unknown'}`,
-        service: ep.service_name,
-        latency: ep.avg_latency || ep.p95_latency || 0,
-        key: `${ep.http_method || 'N/A'}_${ep.operation_name || ep.endpoint_name || 'Unknown'}_${ep.service_name || ''}`,
-      }));
+      .map(ep => {
+        const method = (ep.http_method || '').toUpperCase();
+        const op = ep.operation_name || ep.endpoint_name || 'Unknown';
+        const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
+        return {
+          ...ep,
+          endpoint: `${method} ${cleanOp}`,
+          service: ep.service_name,
+          latency: ep.avg_latency || ep.p95_latency || 0,
+          key: `${method} ${cleanOp}_${ep.service_name || ''}`,
+        };
+      });
   }, [endpointMetrics]);
 
   const handleEndpointToggleLatency = (endpointKey) => {
@@ -399,7 +418,7 @@ export default function OverviewPage() {
               data={requestsTimeseries}
               endpoints={topEndpointsByRequests}
               selectedEndpoints={selectedEndpointsRequests}
-              serviceTimeseriesMap={serviceTimeseriesMap}
+              serviceTimeseriesMap={endpointTimeseriesMap}
             />
             <TopEndpointsList
               title="Requests"
@@ -416,7 +435,7 @@ export default function OverviewPage() {
               data={errorsTimeseries}
               endpoints={topEndpointsByErrorRate}
               selectedEndpoints={selectedEndpointsErrorRate}
-              serviceTimeseriesMap={serviceTimeseriesMap}
+              serviceTimeseriesMap={endpointTimeseriesMap}
             />
             <TopEndpointsList
               title="Error Rate"
@@ -433,7 +452,7 @@ export default function OverviewPage() {
               data={latencyTimeseries}
               endpoints={topEndpointsByLatency}
               selectedEndpoints={selectedEndpointsLatency}
-              serviceTimeseriesMap={serviceTimeseriesMap}
+              serviceTimeseriesMap={endpointTimeseriesMap}
             />
             <TopEndpointsList
               title="Latency"

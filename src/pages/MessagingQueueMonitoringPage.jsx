@@ -1,5 +1,5 @@
 import { Row, Col, Card, Spin } from 'antd';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Network, Activity, AlertTriangle, ArrowUpRight, ArrowDownRight, Layers, Clock } from 'lucide-react';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
 import { PageHeader, StatCard, QueueMetricsList } from '@components/common';
@@ -8,13 +8,13 @@ import RequestChart from '@components/charts/RequestChart';
 
 const n = (v) => (v == null || Number.isNaN(Number(v)) ? 0 : Number(v));
 
-
-
 export default function MessagingQueueMonitoringPage() {
   const { data, isLoading } = useTimeRangeQuery(
     'messaging-queue-insights',
     (teamId, start, end) => v1Service.getMessagingQueueInsights(teamId, start, end, '5m')
   );
+
+  const [selectedQueues, setSelectedQueues] = useState([]);
 
   const summary = data?.summary || {};
   const ts = Array.isArray(data?.timeseries) ? data.timeseries : [];
@@ -53,6 +53,12 @@ export default function MessagingQueueMonitoringPage() {
     return [...topQueues].sort((a, b) => b.avg_receive_rate - a.avg_receive_rate);
   }, [topQueues]);
 
+  const handleToggleQueue = (qKey) => {
+    setSelectedQueues(prev =>
+      prev.includes(qKey) ? prev.filter(k => k !== qKey) : [...prev, qKey]
+    );
+  };
+
   return (
     <div>
       <PageHeader
@@ -81,33 +87,33 @@ export default function MessagingQueueMonitoringPage() {
           <Col xs={24} lg={12}>
             <Card title={<span><ArrowUpRight size={16} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Production Rate (msg/s)</span>} className="chart-card" styles={{ body: { padding: '8px' } }}>
               <div style={{ height: 280 }}>
-                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_publish_rate" />
+                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_publish_rate" selectedEndpoints={selectedQueues} endpoints={topQueues} />
               </div>
-              <QueueMetricsList type="productionRate" title="Production Rate" queues={topQueuesSortedByPublish} />
+              <QueueMetricsList type="productionRate" title="Production Rate" queues={topQueuesSortedByPublish} selectedQueues={selectedQueues} onToggle={handleToggleQueue} />
             </Card>
           </Col>
           <Col xs={24} lg={12}>
             <Card title={<span><ArrowDownRight size={16} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Consumption Rate (msg/s)</span>} className="chart-card" styles={{ body: { padding: '8px' } }}>
               <div style={{ height: 280 }}>
-                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_receive_rate" />
+                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_receive_rate" selectedEndpoints={selectedQueues} endpoints={topQueues} />
               </div>
-              <QueueMetricsList type="consumptionRate" title="Consumption Rate" queues={topQueuesSortedByReceive} />
+              <QueueMetricsList type="consumptionRate" title="Consumption Rate" queues={topQueuesSortedByReceive} selectedQueues={selectedQueues} onToggle={handleToggleQueue} />
             </Card>
           </Col>
           <Col xs={24} lg={12}>
             <Card title={<span><Clock size={16} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Consumer Group Lag</span>} className="chart-card" styles={{ body: { padding: '8px' } }}>
               <div style={{ height: 280 }}>
-                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_consumer_lag" />
+                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_consumer_lag" selectedEndpoints={selectedQueues} endpoints={topQueues} />
               </div>
-              <QueueMetricsList type="consumerLag" title="Max Lag" queues={topQueuesSortedByLag} />
+              <QueueMetricsList type="consumerLag" title="Max Lag" queues={topQueuesSortedByLag} selectedQueues={selectedQueues} onToggle={handleToggleQueue} />
             </Card>
           </Col>
           <Col xs={24} lg={12}>
             <Card title={<span><Layers size={16} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Topic Lag (Queue Depth)</span>} className="chart-card" styles={{ body: { padding: '8px' } }}>
               <div style={{ height: 280 }}>
-                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_queue_depth" />
+                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_queue_depth" selectedEndpoints={selectedQueues} endpoints={topQueues} />
               </div>
-              <QueueMetricsList type="depth" title="Avg Depth" queues={topQueuesSortedByDepth} />
+              <QueueMetricsList type="depth" title="Avg Depth" queues={topQueuesSortedByDepth} selectedQueues={selectedQueues} onToggle={handleToggleQueue} />
             </Card>
           </Col>
         </Row>

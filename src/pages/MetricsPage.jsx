@@ -84,11 +84,37 @@ export default function MetricsPage() {
     enabled: !!selectedTeamId,
   });
 
+  const { data: endpointTimeSeriesData } = useQuery({
+    queryKey: ['endpoints-timeseries', selectedTeamId, timeRange.value, selectedService, refreshKey],
+    queryFn: () => {
+      const { startTime, endTime } = getTimeRange();
+      return v1Service.getEndpointTimeSeries(selectedTeamId, startTime, endTime, selectedService);
+    },
+    enabled: !!selectedTeamId && activeTab === 'overview',
+  });
+
   const services = servicesData || [];
   const metrics = showErrorsOnly ? metricsData?.filter(m => m.error_count > 0) || [] : metricsData || [];
   const summary = summaryData || {};
   const serviceMetrics = serviceMetricsData || [];
   const endpointMetrics = Array.isArray(endpointMetricsData) ? endpointMetricsData : [];
+
+  const endpointTimeseriesMap = useMemo(() => {
+    if (!endpointTimeSeriesData) return {};
+    const map = {};
+    for (const d of endpointTimeSeriesData) {
+      const method = (d.http_method || '').toUpperCase();
+      const op = d.operation_name || d.endpoint_name || 'Unknown';
+      const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
+
+      // Explicitly match the key format generated for `ep.key`
+      const key = `${method} ${cleanOp}_${d.service_name || ''}`;
+
+      if (!map[key]) map[key] = [];
+      map[key].push(d);
+    }
+    return map;
+  }, [endpointTimeSeriesData]);
 
   // Top endpoints sorted by request count
   const topEndpointsByRequests = useMemo(() => {
@@ -97,9 +123,19 @@ export default function MetricsPage() {
       .slice(0, 10)
       .map(ep => ({
         ...ep,
-        endpoint: `${ep.http_method || 'N/A'} ${ep.operation_name || ep.endpoint_name || 'Unknown'}`,
+        endpoint: (() => {
+          const method = (ep.http_method || '').toUpperCase();
+          const op = ep.operation_name || ep.endpoint_name || 'Unknown';
+          const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
+          return `${method} ${cleanOp}`;
+        })(),
         service: ep.service_name,
-        key: `${ep.http_method || 'N/A'}_${ep.operation_name || ep.endpoint_name || 'Unknown'}_${ep.service_name || ''}`,
+        key: (() => {
+          const method = (ep.http_method || '').toUpperCase();
+          const op = ep.operation_name || ep.endpoint_name || 'Unknown';
+          const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
+          return `${method} ${cleanOp}_${ep.service_name || ''}`;
+        })(),
       }));
   }, [endpointMetrics]);
 
@@ -125,9 +161,19 @@ export default function MetricsPage() {
       .slice(0, 10)
       .map(ep => ({
         ...ep,
-        endpoint: `${ep.http_method || 'N/A'} ${ep.operation_name || ep.endpoint_name || 'Unknown'}`,
+        endpoint: (() => {
+          const method = (ep.http_method || '').toUpperCase();
+          const op = ep.operation_name || ep.endpoint_name || 'Unknown';
+          const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
+          return `${method} ${cleanOp}`;
+        })(),
         service: ep.service_name,
-        key: `${ep.http_method || 'N/A'}_${ep.operation_name || ep.endpoint_name || 'Unknown'}_${ep.service_name || ''}`,
+        key: (() => {
+          const method = (ep.http_method || '').toUpperCase();
+          const op = ep.operation_name || ep.endpoint_name || 'Unknown';
+          const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
+          return `${method} ${cleanOp}_${ep.service_name || ''}`;
+        })(),
       }));
   }, [endpointMetrics]);
 
@@ -148,10 +194,20 @@ export default function MetricsPage() {
       .slice(0, 10)
       .map(ep => ({
         ...ep,
-        endpoint: `${ep.http_method || 'N/A'} ${ep.operation_name || ep.endpoint_name || 'Unknown'}`,
+        endpoint: (() => {
+          const method = (ep.http_method || '').toUpperCase();
+          const op = ep.operation_name || ep.endpoint_name || 'Unknown';
+          const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
+          return `${method} ${cleanOp}`;
+        })(),
         service: ep.service_name,
         latency: ep.avg_latency || ep.p95_latency || 0,
-        key: `${ep.http_method || 'N/A'}_${ep.operation_name || ep.endpoint_name || 'Unknown'}_${ep.service_name || ''}`,
+        key: (() => {
+          const method = (ep.http_method || '').toUpperCase();
+          const op = ep.operation_name || ep.endpoint_name || 'Unknown';
+          const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
+          return `${method} ${cleanOp}_${ep.service_name || ''}`;
+        })(),
       }));
   }, [endpointMetrics]);
 
@@ -192,7 +248,7 @@ export default function MetricsPage() {
 
   const serviceOptions = [
     { label: 'All Services', value: null },
-    ...services.map((s) => ({ label: s.service_name || s.serviceName, value: s.service_name || s.serviceName })),
+    ...services.map((s) => ({ label: s.name || s.service_name || s.serviceName, value: s.name || s.service_name || s.serviceName })),
   ];
 
   const onTabChange = (tabKey) => {
@@ -326,6 +382,7 @@ export default function MetricsPage() {
                             data={metrics}
                             endpoints={topEndpointsByRequests}
                             selectedEndpoints={selectedEndpointsRequests}
+                            serviceTimeseriesMap={endpointTimeseriesMap}
                           />
                           <TopEndpointsList
                             title="Requests"
@@ -345,6 +402,7 @@ export default function MetricsPage() {
                             }))}
                             endpoints={topEndpointsByErrorRate}
                             selectedEndpoints={selectedEndpointsErrorRate}
+                            serviceTimeseriesMap={endpointTimeseriesMap}
                           />
                           <TopEndpointsList
                             title="Error Rate"
@@ -361,6 +419,7 @@ export default function MetricsPage() {
                             data={metrics}
                             endpoints={topEndpointsByLatency}
                             selectedEndpoints={selectedEndpointsLatency}
+                            serviceTimeseriesMap={endpointTimeseriesMap}
                           />
                           <TopEndpointsList
                             title="Latency"
@@ -387,7 +446,7 @@ export default function MetricsPage() {
                       : 0;
                     return (
                       <Col xs={24} sm={12} md={8} lg={6} key={service.service_name}>
-                        <Card size="small" className="chart-card">
+                        <Card size="small" className="chart-card" style={{ cursor: 'pointer' }} onClick={() => { setSelectedService(service.service_name); setActiveTab('overview'); }}>
                           <div style={{ marginBottom: 12 }}>
                             <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 8 }}>
                               {service.service_name}

@@ -6,6 +6,7 @@ import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
 import { v1Service } from '@services/v1Service';
 import PageHeader from '@components/common/PageHeader';
 import StatCard from '@components/common/StatCard';
+import TopEndpointsList from '@components/common/TopEndpointsList';
 import ErrorRateChart from '@components/charts/ErrorRateChart';
 import { formatNumber, formatRelativeTime } from '@utils/formatters';
 import './ErrorDashboardPage.css';
@@ -22,15 +23,15 @@ export default function ErrorDashboardPage() {
     { extraKeys: [selectedService] }
   );
 
-  // Error timeseries by service
-  const { data: errorTimeseriesRaw, isLoading: tsLoading } = useTimeRangeQuery(
-    'error-timeseries',
+  // Service timeseries for chart
+  const { data: serviceTimeseriesRaw, isLoading: tsLoading } = useTimeRangeQuery(
+    'service-timeseries-charts',
     (teamId, start, end) =>
-      v1Service.getErrorTimeSeries(teamId, start, end, '5m', selectedService),
+      v1Service.getServiceTimeSeries(teamId, start, end, '5m'),
     { extraKeys: [selectedService] }
   );
 
-  // Service metrics for the filter dropdown
+  // Service metrics for the filter dropdown and breakdown list
   const { data: serviceMetricsRaw } = useTimeRangeQuery(
     'services-metrics-err',
     (teamId, start, end) => v1Service.getServiceMetrics(teamId, start, end)
@@ -46,8 +47,8 @@ export default function ErrorDashboardPage() {
     return raw.map((s) => s.service_name).filter(Boolean);
   }, [serviceMetricsRaw]);
 
+  // Derive stats from error groups
   const stats = useMemo(() => {
-    // Primary source: error groups (from /errors/groups endpoint)
     if (errorGroups.length > 0) {
       const totalErrors = errorGroups.reduce((sum, g) => sum + Number(g.error_count || 0), 0);
       const uniqueServices = new Set(errorGroups.map((g) => g.service_name)).size;
@@ -55,31 +56,12 @@ export default function ErrorDashboardPage() {
       const topErrorCount = errorGroups[0]?.error_count || 0;
       return { totalErrors, uniqueServices, uniqueOperations, topErrorCount };
     }
-
-    // Fallback: derive stats from error timeseries (same data source as the chart)
-    const tsRaw = Array.isArray(errorTimeseriesRaw) ? errorTimeseriesRaw : [];
-    if (tsRaw.length > 0) {
-      // Aggregate per service
-      const svcAgg = {};
-      for (const row of tsRaw) {
-        const svc = row.service_name || '';
-        if (!svcAgg[svc]) svcAgg[svc] = { errors: 0, operations: new Set() };
-        svcAgg[svc].errors += Number(row.error_count || 0);
-        if (row.operation_name) svcAgg[svc].operations.add(row.operation_name);
-      }
-      const totalErrors = Object.values(svcAgg).reduce((sum, s) => sum + s.errors, 0);
-      const uniqueServices = Object.keys(svcAgg).length;
-      const uniqueOperations = Object.values(svcAgg).reduce((sum, s) => sum + s.operations.size, 0);
-      const topErrorCount = Math.max(...Object.values(svcAgg).map(s => s.errors), 0);
-      return { totalErrors, uniqueServices, uniqueOperations, topErrorCount };
-    }
-
     return { totalErrors: 0, uniqueServices: 0, uniqueOperations: 0, topErrorCount: 0 };
-  }, [errorGroups, errorTimeseriesRaw]);
+  }, [errorGroups]);
 
   // Build generic serviceTimeseriesMap for the common ErrorRateChart
   const serviceTimeseriesMap = useMemo(() => {
-    const raw = Array.isArray(errorTimeseriesRaw) ? errorTimeseriesRaw : [];
+    const raw = Array.isArray(serviceTimeseriesRaw) ? serviceTimeseriesRaw : [];
     const map = {};
     for (const row of raw) {
       const svc = row.service_name || '';
@@ -87,9 +69,40 @@ export default function ErrorDashboardPage() {
       map[svc].push(row);
     }
     return map;
-  }, [errorTimeseriesRaw]);
+  }, [serviceTimeseriesRaw]);
 
   const hasChartData = Object.keys(serviceTimeseriesMap).length > 0;
+
+  const [selectedServicesErrorRate, setSelectedServicesErrorRate] = useState([]);
+
+  // Break down services by error rate for the list below the chart
+  const topServicesByErrorRate = useMemo(() => {
+    const raw = Array.isArray(serviceMetricsRaw) ? serviceMetricsRaw : [];
+    return [...raw]
+      .map(svc => {
+        const errorRate = svc.request_count > 0 ? (svc.error_count / svc.request_count) * 100 : 0;
+        return { ...svc, errorRate };
+      })
+      .filter(svc => svc.errorRate > 0)
+      .sort((a, b) => b.errorRate - a.errorRate)
+      .slice(0, 10)
+      .map(svc => ({
+        ...svc,
+        endpoint: svc.service_name,
+        service: svc.service_name,
+        key: svc.service_name,
+      }));
+  }, [serviceMetricsRaw]);
+
+  const handleServiceToggleErrorRate = (serviceKey) => {
+    setSelectedServicesErrorRate(prev => {
+      if (prev.includes(serviceKey)) {
+        return prev.filter(key => key !== serviceKey);
+      } else {
+        return [...prev, serviceKey];
+      }
+    });
+  };
 
   const statusColor = (code) => {
     const n = Number(code);
@@ -255,7 +268,21 @@ export default function ErrorDashboardPage() {
             ) : !hasChartData ? (
               <Empty description="No error data in selected time range" />
             ) : (
-              <ErrorRateChart data={[]} serviceTimeseriesMap={serviceTimeseriesMap} />
+              <>
+                <ErrorRateChart
+                  data={[]}
+                  endpoints={topServicesByErrorRate}
+                  selectedEndpoints={selectedServicesErrorRate}
+                  serviceTimeseriesMap={serviceTimeseriesMap}
+                />
+                <TopEndpointsList
+                  title="Error Rate"
+                  type="errorRate"
+                  endpoints={topServicesByErrorRate}
+                  selectedEndpoints={selectedServicesErrorRate}
+                  onToggle={handleServiceToggleErrorRate}
+                />
+              </>
             )}
           </Card>
         </Col>

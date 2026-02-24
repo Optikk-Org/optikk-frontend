@@ -26,6 +26,7 @@ const HISTOGRAM_BUCKETS = [
 ];
 
 function bucketColor(label) {
+  if (typeof label !== 'string') return '#F04438';
   if (label.startsWith('0-') || label.startsWith('10-') || label.startsWith('25-')) return '#73C991';
   if (label.startsWith('50-') || label.startsWith('100-')) return '#06AED5';
   if (label.startsWith('250-') || label.startsWith('500')) return '#F79009';
@@ -162,7 +163,7 @@ export default function LatencyAnalysisPage({ embedded = false }) {
             columns={percentileColumns}
             data={histogram}
             loading={histLoading}
-            rowKey="bucket"
+            rowKey={(record, idx) => record?.bucket || `row-${idx}`}
             pagination={false}
           />
         </Card>

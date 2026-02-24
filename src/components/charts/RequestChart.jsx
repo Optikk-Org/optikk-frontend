@@ -11,6 +11,17 @@ function tsKey(ts) {
   return String(ts).replace('T', ' ').replace('Z', '').substring(0, 16); // "YYYY-MM-DD HH:mm"
 }
 
+// Parse timestamp values robustly across API formats.
+// If timezone is missing (e.g. "2026-02-24 10:25:00"), treat as UTC.
+function tsMs(ts) {
+  if (!ts) return NaN;
+  const raw = String(ts).trim();
+  const normalized = raw.includes('T') ? raw : raw.replace(' ', 'T');
+  const hasTimezone = /([zZ]|[+-]\d{2}:\d{2})$/.test(normalized);
+  const ms = new Date(hasTimezone ? normalized : `${normalized}Z`).getTime();
+  return Number.isNaN(ms) ? NaN : ms;
+}
+
 export default function RequestChart({
   data = [],
   endpoints = [],
@@ -23,24 +34,38 @@ export default function RequestChart({
   const hasServiceData = Object.keys(serviceTimeseriesMap).length > 0;
   const { timeBuckets, labels } = useChartTimeBuckets();
 
-  // Build per-service datasets using real timeseries data
+  // Build per-item datasets using real timeseries data
   const buildServiceDatasets = (endpointList) => {
-    // Deduplicate by service name
-    const serviceMap = {};
+    const targetMap = {};
     for (const ep of endpointList) {
-      const svc = ep.service_name || ep.service || '';
-      if (!serviceMap[svc]) serviceMap[svc] = ep;
+      const key = ep.key || ep.service_name || ep.service || '';
+      const label = ep.endpoint || ep.service_name || ep.service || key;
+      if (!targetMap[key]) targetMap[key] = { label };
     }
 
-    return Object.entries(serviceMap).map(([svcName], idx) => {
-      const svcTimeseries = serviceTimeseriesMap[svcName] || [];
-      // Build lookup by normalized timestamp key
+    // Determine stepMs from the generated buckets to floor backend timestamps
+    const stepMs = timeBuckets.length >= 2
+      ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime()
+      : 60000;
+
+    return Object.entries(targetMap).map(([key, info], idx) => {
+      const tsData = serviceTimeseriesMap[key] || [];
       const tsMap = {};
-      for (const row of svcTimeseries) {
-        tsMap[tsKey(row.timestamp)] = Number(row[valueKey] || 0);
+
+      for (const row of tsData) {
+        if (!row.timestamp) continue;
+        const rowTime = tsMs(row.timestamp);
+        if (Number.isNaN(rowTime)) continue;
+        // Floor to nearest bucket using stepMs
+        const alignedTimeMs = Math.floor(rowTime / stepMs) * stepMs;
+        const bucketKey = tsKey(new Date(alignedTimeMs).toISOString());
+
+        // Sum values if multiple rows fall into the same bucket (e.g. 1m data in 5m buckets)
+        tsMap[bucketKey] = (tsMap[bucketKey] || 0) + Number(row[valueKey] || 0);
       }
+
       const values = timeBuckets.map(d => tsMap[tsKey(d)] ?? 0);
-      return createLineDataset(svcName, values, getChartColor(idx), false);
+      return createLineDataset(info.label, values, getChartColor(idx), false);
     });
   };
 
@@ -49,24 +74,24 @@ export default function RequestChart({
     if (endpoints.length > 0) {
       const list = selectedEndpoints.length > 0
         ? endpoints.filter(ep => {
-          const key = ep.key || `${ep.http_method || 'N/A'}_${ep.operation_name || ep.endpoint_name || 'Unknown'}_${ep.service_name || ''}`;
+          const key = ep.key || (() => {
+            const method = (ep.http_method || '').toUpperCase();
+            const op = ep.operation_name || ep.endpoint_name || 'Unknown';
+            const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
+            return `${method} ${cleanOp}_${ep.service_name || ''}`;
+          })();
           return selectedEndpoints.includes(key);
         })
-        : endpoints.slice(0, 10);
+        : endpoints;
 
       if (hasServiceData) {
         datasets = buildServiceDatasets(list);
       } else {
-        // Proportional split fallback — map onto full-range buckets
-        const totalReqs = endpoints.reduce((sum, ep) => sum + (Number(ep[valueKey]) || 0), 0) || 1;
-        const dataMap = {};
-        for (const d of data) dataMap[tsKey(d.timestamp)] = d.value || 0;
-
+        // Fallback to plotting zeros if no data available yet
         datasets = list.map((ep, idx) => {
-          const share = (Number(ep[valueKey]) || 0) / totalReqs;
           return createLineDataset(
             `${ep.http_method || 'N/A'} ${ep.operation_name || ep.endpoint_name || 'Unknown'}`,
-            timeBuckets.map(ts => (dataMap[tsKey(ts)] || 0) * share),
+            timeBuckets.map(() => 0),
             getChartColor(idx),
             false
           );
@@ -74,21 +99,39 @@ export default function RequestChart({
       }
     } else if (hasServiceData) {
       // No endpoint filter — show one line per service
+      const stepMs = timeBuckets.length >= 2 ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime() : 60000;
       datasets = Object.entries(serviceTimeseriesMap).slice(0, 10).map(([svcName, rows], idx) => {
         const tsMap = {};
-        for (const row of rows) tsMap[tsKey(row.timestamp)] = Number(row[valueKey] || 0);
+        for (const row of rows) {
+          if (!row.timestamp) continue;
+          const rowTime = tsMs(row.timestamp);
+          if (Number.isNaN(rowTime)) continue;
+          const alignedTimeMs = Math.floor(rowTime / stepMs) * stepMs;
+          const bucketKey = tsKey(new Date(alignedTimeMs).toISOString());
+          tsMap[bucketKey] = (tsMap[bucketKey] || 0) + Number(row[valueKey] || 0);
+        }
         const values = timeBuckets.map(d => tsMap[tsKey(d)] ?? 0);
         return createLineDataset(svcName, values, getChartColor(idx), false);
       });
     } else {
       // Map data values onto full-range buckets
       const dataMap = {};
-      for (const d of data) dataMap[tsKey(d.timestamp)] = d.value;
+      for (const d of data) dataMap[tsKey(d.timestamp)] = d[valueKey] !== undefined ? d[valueKey] : d.value;
       datasets = [createLineDataset(datasetLabel, timeBuckets.map(ts => dataMap[tsKey(ts)] ?? 0), color, true)];
     }
 
     return { labels, datasets };
   }, [data, endpoints, selectedEndpoints, serviceTimeseriesMap, hasServiceData, timeBuckets, labels]);
+
+  // Compute maximum value for relative Y-axis scaling
+  const yAxisMax = useMemo(() => {
+    let maxVal = 0;
+    chartData.datasets.forEach(ds => {
+      const dsMax = Math.max(...ds.data.map(v => Number(v) || 0), 0);
+      if (dsMax > maxVal) maxVal = dsMax;
+    });
+    return Math.max(Math.ceil(maxVal * 1.5), 1);
+  }, [chartData]);
 
   const options = createChartOptions({
     plugins: {
@@ -116,6 +159,7 @@ export default function RequestChart({
         },
         grid: { color: '#2D2D2D' },
         beginAtZero: true,
+        max: yAxisMax,
       },
     },
   });

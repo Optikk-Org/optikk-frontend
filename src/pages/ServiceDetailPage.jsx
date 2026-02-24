@@ -142,6 +142,31 @@ export default function ServiceDetailPage() {
     }));
   }, [timeSeries]);
 
+  const endpointsWithKeys = useMemo(() => {
+    return endpoints.map(ep => ({
+      ...ep,
+      key: `${ep.http_method || 'N/A'}_${ep.operation_name || 'Unknown'}_${ep.service_name || ''}`
+    }));
+  }, [endpoints]);
+
+  const handleEndpointToggleRequests = (key) => {
+    setSelectedEndpointsRequests(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    );
+  };
+
+  const handleEndpointToggleErrorRate = (key) => {
+    setSelectedEndpointsErrorRate(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    );
+  };
+
+  const handleEndpointToggleLatency = (key) => {
+    setSelectedEndpointsLatency(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    );
+  };
+
   const endpointColumns = [
     {
       title: 'Operation',
