@@ -498,6 +498,18 @@
   flex-shrink: 0;
 }
 
+.log-row__td {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-light, #1A1A1A);
+  padding: 0 8px 0 0;
+  margin-right: 8px;
+  box-sizing: border-box;
+}
+
 .log-row__dot {
   width: 6px;
   height: 6px;
