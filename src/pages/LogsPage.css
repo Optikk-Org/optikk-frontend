@@ -405,7 +405,6 @@
   font-size: 11px;
   font-weight: 600;
   color: var(--text-muted, #666);
-  gap: 12px;
   position: sticky;
   top: 0;
   background: var(--bg-primary, #0A0A0A);
@@ -419,10 +418,11 @@
   align-items: center;
   flex-shrink: 0;
   border-right: 1px solid var(--border-color, #2D2D2D);
-  padding-right: 8px;
+  padding: 0 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  box-sizing: border-box;
 }
 
 .logs-raw__table-resizer {
@@ -467,10 +467,8 @@
 .log-row {
   display: flex;
   align-items: baseline;
-  gap: 12px;
   cursor: pointer;
   padding: 5px 8px;
-  border-left: 3px solid transparent;
   border-bottom: 1px solid var(--border-light, #1A1A1A);
   transition: background 0.08s ease, border-color 0.08s ease;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
@@ -481,23 +479,6 @@
   background: var(--bg-tertiary, #1A1A1A);
 }
 
-.log-row--expanded {
-  background: rgba(94, 96, 206, 0.08);
-  border-left-color: var(--color-primary, #5E60CE);
-}
-
-.log-row--expanded:hover {
-  background: rgba(94, 96, 206, 0.12);
-}
-
-.log-row__indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  flex-shrink: 0;
-}
-
 .log-row__td {
   display: inline-block;
   white-space: nowrap;
@@ -505,8 +486,7 @@
   text-overflow: ellipsis;
   flex-shrink: 0;
   border-right: 1px solid var(--border-light, #1A1A1A);
-  padding: 0 8px 0 0;
-  margin-right: 8px;
+  padding: 0 8px;
   box-sizing: border-box;
 }
 

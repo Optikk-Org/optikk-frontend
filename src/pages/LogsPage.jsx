@@ -135,27 +135,9 @@ export default function LogsPage() {
       ? `${log.trace_id}-${log.span_id}-${log.timestamp}`
       : `log-${i}-${log.timestamp}`;
 
-  const expandedKeys = useMemo(() => {
-    const allKeys = new Set(allLogs.map((log, i) => rowKey(log, i)));
-    collapsedKeys.forEach((k) => allKeys.delete(k));
-    return allKeys;
-  }, [allLogs, collapsedKeys]);
-
-  const toggleRow = useCallback((key, log) => {
-    setCollapsedKeys((prev) => {
-      const next = new Set(prev);
-      if (prev.has(key)) {
-        next.delete(key);
-        setSelectedLog(log);
-      } else {
-        next.add(key);
-        if (selectedLog?.trace_id === log.trace_id && selectedLog?.timestamp === log.timestamp) {
-          setSelectedLog(null);
-        }
-      }
-      return next;
-    });
-  }, [selectedLog]);
+  const handleRowClick = useCallback((log) => {
+    setSelectedLog(log);
+  }, []);
 
   const handleCloseDetail = useCallback(() => {
     setSelectedLog(null);
@@ -164,7 +146,6 @@ export default function LogsPage() {
   const handleClearAll = useCallback(() => {
     setFilters([]);
     setSearchText('');
-    setCollapsedKeys(new Set());
     setSelectedLog(null);
   }, []);
 
@@ -201,8 +182,7 @@ export default function LogsPage() {
           isLoading={isLoading}
           serverTotal={serverTotal}
           wrap={false}
-          expandedKeys={expandedKeys}
-          toggleRow={toggleRow}
+          onRowClick={handleRowClick}
           navigate={navigate}
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
