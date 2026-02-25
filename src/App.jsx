@@ -20,7 +20,6 @@ import LogsHubPage from '@pages/LogsHubPage';
 import InfrastructureHubPage from '@pages/InfrastructureHubPage';
 import SaturationHubPage from '@pages/SaturationHubPage';
 import ExplorePage from '@pages/ExplorePage';
-import SharedDashboardPage from '@pages/SharedDashboardPage';
 
 function ProtectedRoute({ children }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -86,7 +85,6 @@ function App() {
         <Route path="deployments" element={<Navigate to="/infrastructure?tab=deployments" replace />} />
         <Route path="latency" element={<Navigate to="/metrics?tab=latency" replace />} />
         <Route path="health-checks" element={<Navigate to="/infrastructure?tab=health-checks" replace />} />
-        <Route path="shared/:shareId" element={<ErrorBoundary><SharedDashboardPage /></ErrorBoundary>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
