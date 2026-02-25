@@ -9,10 +9,36 @@ import { PageHeader, FilterBar, DataTable, StatusBadge, StatCard, StatCardsGrid 
 import { TRACE_STATUSES } from '@config/constants';
 import { formatTimestamp, formatDuration, formatNumber } from '@utils/formatters';
 import LatencyHistogram from '@components/charts/LatencyHistogram';
+import { useDashboardConfig } from '@hooks/useDashboardConfig';
+import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
+import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
+
 
 export default function TracesPage() {
   const navigate = useNavigate();
   const { selectedTeamId, timeRange, refreshKey } = useAppStore();
+
+  const { config: dashboardConfig } = useDashboardConfig('traces');
+
+  // Data for configurable charts
+  const { data: metricsTimeseriesRaw } = useTimeRangeQuery(
+    'metrics-timeseries-traces',
+    (teamId, start, end) => v1Service.getMetricsTimeSeries(teamId, start, end, null, '5m')
+  );
+  const { data: endpointTimeseriesRaw } = useTimeRangeQuery(
+    'endpoints-timeseries-traces',
+    (teamId, start, end) => v1Service.getEndpointTimeSeries(teamId, start, end)
+  );
+  const { data: endpointMetricsRaw } = useTimeRangeQuery(
+    'endpoints-metrics-traces',
+    (teamId, start, end) => v1Service.getEndpointMetrics(teamId, start, end)
+  );
+
+  const chartDataSources = useMemo(() => ({
+    'metrics-timeseries': Array.isArray(metricsTimeseriesRaw) ? metricsTimeseriesRaw : [],
+    'endpoints-timeseries': Array.isArray(endpointTimeseriesRaw) ? endpointTimeseriesRaw : [],
+    'endpoints-metrics': Array.isArray(endpointMetricsRaw) ? endpointMetricsRaw : [],
+  }), [metricsTimeseriesRaw, endpointTimeseriesRaw, endpointMetricsRaw]);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -169,6 +195,16 @@ export default function TracesPage() {
           { title: "P99 Duration", value: summary.p99_duration || 0, formatter: (val) => formatDuration(val || 0), icon: <Clock size={20} />, iconColor: "#F59E0B" }
         ]}
       />
+
+      {/* Configurable Charts — latency & error trends */}
+      {dashboardConfig && (
+        <div style={{ marginBottom: 16 }}>
+          <ConfigurableDashboard
+            config={dashboardConfig}
+            dataSources={chartDataSources}
+          />
+        </div>
+      )}
 
       {/* Latency Histogram */}
       {traces.length > 0 && (

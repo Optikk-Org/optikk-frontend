@@ -6,18 +6,17 @@ import {
 import {
   Brain, Zap, DollarSign, Shield, Clock, TrendingUp,
   AlertTriangle, CheckCircle, ShieldAlert, ShieldCheck,
-  Activity, BarChart2, Eye,
+  Activity, Eye,
 } from 'lucide-react';
-import { Line, Bar } from 'react-chartjs-2';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
+import { useDashboardConfig } from '@hooks/useDashboardConfig';
 import { v1Service } from '@services/v1Service';
 import PageHeader from '@components/common/PageHeader';
 import StatCard from '@components/common/StatCard';
+import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
 import { formatNumber, formatDuration } from '@utils/formatters';
-import {
-  createChartOptions, createLineDataset, createBarDataset, getChartColor,
-} from '@utils/chartHelpers';
 import './AiObservabilityPage.css';
+
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -40,129 +39,6 @@ function naSpan(v) {
   return <span style={{ color: 'var(--text-muted)' }}>N/A</span>;
 }
 
-/** Build a multi-line Chart.js dataset from timeseries rows keyed by `groupKey`. */
-function buildTimeseries(raw, metricKey, groupKey = 'model_name', filterValue = null) {
-  const rows = Array.isArray(raw) ? raw : [];
-  const filtered = filterValue ? rows.filter((r) => r[groupKey] === filterValue) : rows;
-
-  const tsSet = new Set();
-  const groupSet = new Set();
-  for (const row of filtered) {
-    if (row[metricKey] != null && row[metricKey] !== '' && row[metricKey] !== 0) {
-      tsSet.add(row.timestamp);
-      groupSet.add(row[groupKey] || 'unknown');
-    }
-  }
-
-  const timestamps = Array.from(tsSet).sort((a, b) => new Date(a) - new Date(b));
-  const groups = Array.from(groupSet);
-
-  const lookup = {};
-  for (const row of filtered) {
-    const g = row[groupKey] || 'unknown';
-    if (!lookup[g]) lookup[g] = {};
-    lookup[g][row.timestamp] = n(row[metricKey]);
-  }
-
-  const labels = timestamps.map((ts) => {
-    const d = new Date(ts);
-    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-  });
-
-  const datasets = groups.map((g, i) =>
-    createLineDataset(g, timestamps.map((ts) => lookup[g]?.[ts] ?? null), getChartColor(i), false)
-  );
-
-  return { labels, datasets, hasData: datasets.length > 0 };
-}
-
-function buildStackedBar(rows, labelKey, ...valueKeys) {
-  if (!rows?.length) return null;
-  const labels = rows.map((r) => r[labelKey] || 'unknown');
-  const datasets = valueKeys.map((vk, i) => ({
-    label: vk.replace(/_/g, ' '),
-    data: rows.map((r) => n(r[vk]) ?? 0),
-    backgroundColor: `${getChartColor(i)}CC`,
-    borderColor: getChartColor(i),
-    borderWidth: 1,
-    borderRadius: 2,
-  }));
-  return { labels, datasets };
-}
-
-// ─── chart option presets ────────────────────────────────────────────────────
-
-const lineOpts = createChartOptions({
-  plugins: { legend: { display: true, labels: { color: '#666', font: { size: 11 } } } },
-  scales: { y: { ticks: { color: '#666' }, grid: { color: '#2D2D2D' }, beginAtZero: true } },
-});
-
-const costLineOpts = createChartOptions({
-  plugins: { legend: { display: true, labels: { color: '#666', font: { size: 11 } } } },
-  scales: {
-    y: {
-      ticks: { color: '#666', callback: (v) => `$${Number(v).toFixed(4)}` },
-      grid: { color: '#2D2D2D' }, beginAtZero: true,
-    },
-  },
-});
-
-const stackedBarOpts = createChartOptions({
-  plugins: { legend: { display: true, labels: { color: '#666', font: { size: 11 } } } },
-  scales: {
-    x: { stacked: true, ticks: { color: '#666' }, grid: { color: '#2D2D2D' } },
-    y: { stacked: true, ticks: { color: '#666' }, grid: { color: '#2D2D2D' }, beginAtZero: true },
-  },
-});
-
-const barOpts = createChartOptions({
-  plugins: { legend: { display: false } },
-  scales: {
-    x: { ticks: { color: '#666' }, grid: { color: '#2D2D2D' } },
-    y: { ticks: { color: '#666' }, grid: { color: '#2D2D2D' }, beginAtZero: true },
-  },
-});
-
-const costBarOpts = createChartOptions({
-  plugins: { legend: { display: false } },
-  scales: {
-    x: { ticks: { color: '#666' }, grid: { color: '#2D2D2D' } },
-    y: {
-      ticks: { color: '#666', callback: (v) => `$${Number(v).toFixed(4)}` },
-      grid: { color: '#2D2D2D' }, beginAtZero: true,
-    },
-  },
-});
-
-// ─── sub-components ──────────────────────────────────────────────────────────
-
-function ChartCard({ title, loading, hasData, noDataAttr, noDataIcon, height = 220, children }) {
-  return (
-    <Card title={title} className="ai-chart-card">
-      {loading ? (
-        <Skeleton active paragraph={{ rows: 4 }} />
-      ) : !hasData ? (
-        <div className="ai-no-data">
-          {noDataIcon}
-          <div>No data</div>
-          {noDataAttr && (
-            <div className="ai-no-data-hint">
-              Instrument spans with <code>{noDataAttr}</code>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div style={{ height }}>{children}</div>
-      )}
-    </Card>
-  );
-}
-
-function StatusDot({ ok }) {
-  return ok
-    ? <span style={{ color: '#73C991', fontWeight: 700 }}>●</span>
-    : <span style={{ color: '#F04438', fontWeight: 700 }}>●</span>;
-}
 
 // ─── colour helpers ───────────────────────────────────────────────────────────
 
@@ -171,14 +47,7 @@ const rateColor = (r) => r > 5 ? '#F04438' : r > 1 ? '#F79009' : '#73C991';
 
 // ─── OVERVIEW TAB ────────────────────────────────────────────────────────────
 
-function OverviewTab({ summary, summaryLoading, perfTS, costTS, secTS, tsLoading, selectedModel }) {
-  const qpsChart = useMemo(() => buildTimeseries(perfTS, 'qps', 'model_name', selectedModel), [perfTS, selectedModel]);
-  const latChart = useMemo(() => buildTimeseries(perfTS, 'avg_latency_ms', 'model_name', selectedModel), [perfTS, selectedModel]);
-  const tokenChart = useMemo(() => buildTimeseries(perfTS, 'tokens_per_sec', 'model_name', selectedModel), [perfTS, selectedModel]);
-  const costChart = useMemo(() => buildTimeseries(costTS, 'cost_per_interval', 'model_name', selectedModel), [costTS, selectedModel]);
-  const piiChart = useMemo(() => buildTimeseries(secTS, 'pii_count', 'model_name', selectedModel), [secTS, selectedModel]);
-  const guardrailChart = useMemo(() => buildTimeseries(secTS, 'guardrail_count', 'model_name', selectedModel), [secTS, selectedModel]);
-
+function OverviewTab({ summary, summaryLoading, config, dataSources, selectedModel }) {
   const s = summary || {};
 
   return (
@@ -198,7 +67,7 @@ function OverviewTab({ summary, summaryLoading, perfTS, costTS, secTS, tsLoading
         ))}
       </Row>
 
-      <div className="ai-section-label" style={{ marginTop: 20 }}>Cost</div>
+      <div className="ai-section-label" style={{ marginTop: 16 }}>Cost</div>
       <Row gutter={[16, 16]}>
         {[
           { title: 'Total Requests', value: formatNumber(n(s.total_requests) ?? 0), icon: <Activity size={20} />, color: '#73C991', desc: 'AI model calls in window' },
@@ -212,7 +81,7 @@ function OverviewTab({ summary, summaryLoading, perfTS, costTS, secTS, tsLoading
         ))}
       </Row>
 
-      <div className="ai-section-label" style={{ marginTop: 20 }}>Security</div>
+      <div className="ai-section-label" style={{ marginTop: 16 }}>Security</div>
       <Row gutter={[16, 16]}>
         {[
           { title: 'Timeouts', value: formatNumber(n(s.timeout_count) ?? 0), icon: <AlertTriangle size={20} />, color: (n(s.timeout_count) ?? 0) > 0 ? '#F04438' : '#73C991', desc: 'Timed-out requests' },
@@ -226,72 +95,21 @@ function OverviewTab({ summary, summaryLoading, perfTS, costTS, secTS, tsLoading
         ))}
       </Row>
 
-      {/* Timeseries charts */}
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24} lg={12}>
-          <ChartCard title="QPS per model" loading={tsLoading} hasData={qpsChart.hasData} noDataAttr="ai.model.name" noDataIcon={<TrendingUp size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={qpsChart} options={lineOpts} />
-          </ChartCard>
-        </Col>
-        <Col xs={24} lg={12}>
-          <ChartCard title="Avg Latency ms per model" loading={tsLoading} hasData={latChart.hasData} noDataAttr="ai.latency.ms" noDataIcon={<Clock size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={latChart} options={lineOpts} />
-          </ChartCard>
-        </Col>
-        <Col xs={24} lg={12}>
-          <ChartCard title="Tokens / sec per model" loading={tsLoading} hasData={tokenChart.hasData} noDataAttr="ai.tokens.completion" noDataIcon={<Zap size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={tokenChart} options={lineOpts} />
-          </ChartCard>
-        </Col>
-        <Col xs={24} lg={12}>
-          <ChartCard title="Cost per interval (USD)" loading={tsLoading} hasData={costChart.hasData} noDataAttr="ai.cost.usd" noDataIcon={<DollarSign size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={costChart} options={costLineOpts} />
-          </ChartCard>
-        </Col>
-        <Col xs={24} lg={12}>
-          <ChartCard title="PII Detections per model" loading={tsLoading} hasData={piiChart.hasData} noDataAttr="ai.pii.detected" noDataIcon={<Shield size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={piiChart} options={lineOpts} />
-          </ChartCard>
-        </Col>
-        <Col xs={24} lg={12}>
-          <ChartCard title="Guardrail Blocks per model" loading={tsLoading} hasData={guardrailChart.hasData} noDataAttr="ai.guardrail.blocked" noDataIcon={<ShieldAlert size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={guardrailChart} options={lineOpts} />
-          </ChartCard>
-        </Col>
-      </Row>
+      {/* Configurable charts — driven by backend YAML */}
+      <div style={{ marginTop: 16 }}>
+        <ConfigurableDashboard
+          config={config}
+          dataSources={dataSources}
+          extraContext={{ selectedModel }}
+        />
+      </div>
     </>
   );
 }
 
 // ─── PERFORMANCE TAB ─────────────────────────────────────────────────────────
 
-function PerformanceTab({ perfMetrics, metricsLoading, perfTS, histRaw, tsLoading, selectedModel }) {
-  const qpsChart = useMemo(() => buildTimeseries(perfTS, 'qps', 'model_name', selectedModel), [perfTS, selectedModel]);
-  const latChart = useMemo(() => buildTimeseries(perfTS, 'avg_latency_ms', 'model_name', selectedModel), [perfTS, selectedModel]);
-  const p95Chart = useMemo(() => buildTimeseries(perfTS, 'p95_latency_ms', 'model_name', selectedModel), [perfTS, selectedModel]);
-  const tokChart = useMemo(() => buildTimeseries(perfTS, 'tokens_per_sec', 'model_name', selectedModel), [perfTS, selectedModel]);
-  const timeoutChart = useMemo(() => buildTimeseries(perfTS, 'timeout_count', 'model_name', selectedModel), [perfTS, selectedModel]);
-  const errChart = useMemo(() => buildTimeseries(perfTS, 'error_count', 'model_name', selectedModel), [perfTS, selectedModel]);
-
-  // Latency histogram per model (stacked bar by bucket)
-  const histData = useMemo(() => {
-    const raw = Array.isArray(histRaw) ? histRaw : [];
-    const filtered = selectedModel ? raw.filter((r) => r.model_name === selectedModel) : raw;
-    if (!filtered.length) return null;
-    const groups = {};
-    for (const row of filtered) {
-      const m = row.model_name || 'unknown';
-      if (!groups[m]) groups[m] = {};
-      groups[m][row.bucket_ms] = n(row.request_count) ?? 0;
-    }
-    const allBuckets = Array.from(new Set(filtered.map((r) => r.bucket_ms))).sort((a, b) => a - b);
-    const labels = allBuckets.map((b) => `${b}ms`);
-    const datasets = Object.keys(groups).map((m, i) =>
-      createBarDataset(m, allBuckets.map((b) => groups[m][b] ?? 0), getChartColor(i))
-    );
-    return { labels, datasets, hasData: datasets.length > 0 };
-  }, [histRaw, selectedModel]);
-
+function PerformanceTab({ perfMetrics, metricsLoading, config, dataSources, selectedModel }) {
   const tableColumns = [
     { title: 'Model', dataIndex: 'model_name', key: 'model_name', render: (v) => <Tag className="ai-model-tag">{v || 'unknown'}</Tag> },
     { title: 'Provider', dataIndex: 'model_provider', key: 'model_provider', render: (v) => v ? <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{v}</span> : naSpan() },
@@ -302,31 +120,9 @@ function PerformanceTab({ perfMetrics, metricsLoading, perfTS, histRaw, tsLoadin
     { title: 'P50', dataIndex: 'p50_latency_ms', key: 'p50_latency_ms', render: (v) => { const x = n(v); return x == null ? naSpan() : formatDuration(x); }, sorter: (a, b) => (n(a.p50_latency_ms) ?? -1) - (n(b.p50_latency_ms) ?? -1), align: 'right' },
     { title: 'P95', dataIndex: 'p95_latency_ms', key: 'p95_latency_ms', render: (v) => { const x = n(v); return x == null ? naSpan() : <span style={{ color: latColor(x), fontWeight: 600 }}>{formatDuration(x)}</span>; }, sorter: (a, b) => (n(a.p95_latency_ms) ?? -1) - (n(b.p95_latency_ms) ?? -1), align: 'right' },
     { title: 'P99', dataIndex: 'p99_latency_ms', key: 'p99_latency_ms', render: (v) => { const x = n(v); return x == null ? naSpan() : <span style={{ color: latColor(x * 1.2) }}>{formatDuration(x)}</span>; }, sorter: (a, b) => (n(a.p99_latency_ms) ?? -1) - (n(b.p99_latency_ms) ?? -1), align: 'right' },
-    {
-      title: 'Tokens/sec', dataIndex: 'avg_tokens_per_sec', key: 'avg_tokens_per_sec',
-      render: (v) => { const x = n(v); return x == null ? naSpan() : <span style={{ fontWeight: 600, color: '#9E77ED' }}>{x.toFixed(1)}</span>; },
-      sorter: (a, b) => (n(a.avg_tokens_per_sec) ?? -1) - (n(b.avg_tokens_per_sec) ?? -1), align: 'right',
-    },
-    {
-      title: 'Timeouts', dataIndex: 'timeout_count', key: 'timeout_count',
-      render: (v) => { const x = n(v) ?? 0; return <span style={{ color: x > 0 ? '#F04438' : '#73C991', fontWeight: 600 }}>{formatNumber(x)}</span>; },
-      sorter: (a, b) => (n(a.timeout_count) ?? 0) - (n(b.timeout_count) ?? 0), align: 'right',
-    },
-    {
-      title: 'Timeout Rate', dataIndex: 'timeout_rate', key: 'timeout_rate',
-      render: (v) => { const x = n(v); return x == null ? naSpan() : <span style={{ color: rateColor(x), fontWeight: 600 }}>{x.toFixed(2)}%</span>; },
-      sorter: (a, b) => (n(a.timeout_rate) ?? -1) - (n(b.timeout_rate) ?? -1), align: 'right',
-    },
-    {
-      title: 'Error Rate', dataIndex: 'error_rate', key: 'error_rate',
-      render: (v) => { const x = n(v); return x == null ? naSpan() : <span style={{ color: rateColor(x), fontWeight: 600 }}>{x.toFixed(2)}%</span>; },
-      sorter: (a, b) => (n(a.error_rate) ?? -1) - (n(b.error_rate) ?? -1), align: 'right',
-    },
-    {
-      title: 'Avg Retries', dataIndex: 'avg_retry_count', key: 'avg_retry_count',
-      render: (v) => { const x = n(v); return x == null ? naSpan() : x.toFixed(1); },
-      sorter: (a, b) => (n(a.avg_retry_count) ?? -1) - (n(b.avg_retry_count) ?? -1), align: 'right',
-    },
+    { title: 'Tokens/sec', dataIndex: 'avg_tokens_per_sec', key: 'avg_tokens_per_sec', render: (v) => { const x = n(v); return x == null ? naSpan() : <span style={{ fontWeight: 600, color: '#9E77ED' }}>{x.toFixed(1)}</span>; }, sorter: (a, b) => (n(a.avg_tokens_per_sec) ?? -1) - (n(b.avg_tokens_per_sec) ?? -1), align: 'right' },
+    { title: 'Timeouts', dataIndex: 'timeout_count', key: 'timeout_count', render: (v) => { const x = n(v) ?? 0; return <span style={{ color: x > 0 ? '#F04438' : '#73C991', fontWeight: 600 }}>{formatNumber(x)}</span>; }, sorter: (a, b) => (n(a.timeout_count) ?? 0) - (n(b.timeout_count) ?? 0), align: 'right' },
+    { title: 'Error Rate', dataIndex: 'error_rate', key: 'error_rate', render: (v) => { const x = n(v); return x == null ? naSpan() : <span style={{ color: rateColor(x), fontWeight: 600 }}>{x.toFixed(2)}%</span>; }, sorter: (a, b) => (n(a.error_rate) ?? -1) - (n(b.error_rate) ?? -1), align: 'right' },
   ];
 
   const data = useMemo(() => {
@@ -336,46 +132,7 @@ function PerformanceTab({ perfMetrics, metricsLoading, perfTS, histRaw, tsLoadin
 
   return (
     <>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={12}>
-          <ChartCard title="QPS over time" loading={tsLoading} hasData={qpsChart.hasData} noDataAttr="ai.model.name" noDataIcon={<TrendingUp size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={qpsChart} options={lineOpts} />
-          </ChartCard>
-        </Col>
-        <Col xs={24} lg={12}>
-          <ChartCard title="Tokens / sec generated" loading={tsLoading} hasData={tokChart.hasData} noDataAttr="ai.tokens.completion" noDataIcon={<Zap size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={tokChart} options={lineOpts} />
-          </ChartCard>
-        </Col>
-        <Col xs={24} lg={12}>
-          <ChartCard title="Avg Latency (ms)" loading={tsLoading} hasData={latChart.hasData} noDataAttr="ai.latency.ms" noDataIcon={<Clock size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={latChart} options={lineOpts} />
-          </ChartCard>
-        </Col>
-        <Col xs={24} lg={12}>
-          <ChartCard title="P95 Latency (ms)" loading={tsLoading} hasData={p95Chart.hasData} noDataAttr="ai.latency.ms" noDataIcon={<Clock size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={p95Chart} options={lineOpts} />
-          </ChartCard>
-        </Col>
-        <Col xs={24} lg={12}>
-          <ChartCard title="Model Timeouts over time" loading={tsLoading} hasData={timeoutChart.hasData} noDataAttr="ai.timeout" noDataIcon={<AlertTriangle size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={timeoutChart} options={lineOpts} />
-          </ChartCard>
-        </Col>
-        <Col xs={24} lg={12}>
-          <ChartCard title="Errors over time" loading={tsLoading} hasData={errChart.hasData} noDataAttr="ai.model.name" noDataIcon={<AlertTriangle size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={errChart} options={lineOpts} />
-          </ChartCard>
-        </Col>
-        {histData && (
-          <Col xs={24}>
-            <ChartCard title="Latency Distribution (histogram by 100ms bucket)" loading={tsLoading} hasData={histData.hasData} height={260} noDataIcon={<BarChart2 size={28} style={{ color: 'var(--text-muted)' }} />}>
-              <Bar data={histData} options={barOpts} />
-            </ChartCard>
-          </Col>
-        )}
-      </Row>
-
+      <ConfigurableDashboard config={config} dataSources={dataSources} extraContext={{ selectedModel }} />
       <Card title="Per-Model Performance" className="ai-chart-card" style={{ marginTop: 16 }}>
         {metricsLoading ? <Skeleton active paragraph={{ rows: 6 }} /> : data.length === 0 ? <Empty description="No data" /> : (
           <Table dataSource={data.map((r, i) => ({ ...r, key: i }))} columns={tableColumns} size="small" pagination={{ pageSize: 20 }} scroll={{ x: 1600 }} />
@@ -385,32 +142,14 @@ function PerformanceTab({ perfMetrics, metricsLoading, perfTS, histRaw, tsLoadin
   );
 }
 
+
 // ─── COST TAB ────────────────────────────────────────────────────────────────
 
-function CostTab({ costMetrics, costLoading, costTS, tokenBreakdown, tsLoading, selectedModel }) {
-  const costTSChart = useMemo(() => buildTimeseries(costTS, 'cost_per_interval', 'model_name', selectedModel), [costTS, selectedModel]);
-  const promptTSChart = useMemo(() => buildTimeseries(costTS, 'prompt_tokens', 'model_name', selectedModel), [costTS, selectedModel]);
-  const completionTSChart = useMemo(() => buildTimeseries(costTS, 'completion_tokens', 'model_name', selectedModel), [costTS, selectedModel]);
-
+function CostTab({ costMetrics, costLoading, config, dataSources, selectedModel }) {
   const data = useMemo(() => {
     const raw = Array.isArray(costMetrics) ? costMetrics : [];
     return selectedModel ? raw.filter((r) => r.model_name === selectedModel) : raw;
   }, [costMetrics, selectedModel]);
-
-  // Cost bar chart per model
-  const costBarData = useMemo(() => {
-    if (!data.length) return null;
-    return {
-      labels: data.map((r) => r.model_name || 'unknown'),
-      datasets: [createBarDataset('Total Cost (USD)', data.map((r) => n(r.total_cost_usd) ?? 0), '#F79009')],
-    };
-  }, [data]);
-
-  // Token stacked bar
-  const tokenStackData = useMemo(() => buildStackedBar(
-    Array.isArray(tokenBreakdown) ? tokenBreakdown : [],
-    'model_name', 'prompt_tokens', 'completion_tokens', 'system_tokens', 'cache_tokens'
-  ), [tokenBreakdown]);
 
   const tableColumns = [
     { title: 'Model', dataIndex: 'model_name', key: 'model_name', render: (v) => <Tag className="ai-model-tag">{v || 'unknown'}</Tag> },
@@ -418,69 +157,18 @@ function CostTab({ costMetrics, costLoading, costTS, tokenBreakdown, tsLoading, 
     { title: 'Requests', dataIndex: 'total_requests', key: 'total_requests', render: (v) => formatNumber(Number(v)), sorter: (a, b) => Number(a.total_requests) - Number(b.total_requests), align: 'right' },
     { title: 'Total Cost', dataIndex: 'total_cost_usd', key: 'total_cost_usd', render: (v) => { const x = n(v); return x == null ? naSpan() : <span style={{ color: '#F79009', fontWeight: 700 }}>{dollar(x)}</span>; }, sorter: (a, b) => (n(a.total_cost_usd) ?? -1) - (n(b.total_cost_usd) ?? -1), align: 'right' },
     { title: 'Cost / Query', dataIndex: 'avg_cost_per_query', key: 'avg_cost_per_query', render: (v) => { const x = n(v); return x == null ? naSpan() : <span style={{ color: '#FDB022', fontWeight: 600 }}>{dollar(x, 5)}</span>; }, sorter: (a, b) => (n(a.avg_cost_per_query) ?? -1) - (n(b.avg_cost_per_query) ?? -1), align: 'right' },
-    { title: 'Max Cost/Query', dataIndex: 'max_cost_per_query', key: 'max_cost_per_query', render: (v) => { const x = n(v); return x == null ? naSpan() : dollar(x, 5); }, sorter: (a, b) => (n(a.max_cost_per_query) ?? -1) - (n(b.max_cost_per_query) ?? -1), align: 'right' },
     { title: 'Prompt Tokens', dataIndex: 'total_prompt_tokens', key: 'total_prompt_tokens', render: (v) => { const x = n(v); return x == null ? naSpan() : formatNumber(x); }, sorter: (a, b) => (n(a.total_prompt_tokens) ?? -1) - (n(b.total_prompt_tokens) ?? -1), align: 'right' },
     { title: 'Completion Tokens', dataIndex: 'total_completion_tokens', key: 'total_completion_tokens', render: (v) => { const x = n(v); return x == null ? naSpan() : formatNumber(x); }, sorter: (a, b) => (n(a.total_completion_tokens) ?? -1) - (n(b.total_completion_tokens) ?? -1), align: 'right' },
     { title: 'Total Tokens', dataIndex: 'total_tokens', key: 'total_tokens', render: (v) => { const x = n(v); return x == null ? naSpan() : <span style={{ fontWeight: 600, color: '#9E77ED' }}>{formatNumber(x)}</span>; }, sorter: (a, b) => (n(a.total_tokens) ?? -1) - (n(b.total_tokens) ?? -1), align: 'right' },
-    { title: 'Avg Prompt Tokens', dataIndex: 'avg_prompt_tokens', key: 'avg_prompt_tokens', render: (v) => { const x = n(v); return x == null ? naSpan() : x.toFixed(0); }, sorter: (a, b) => (n(a.avg_prompt_tokens) ?? -1) - (n(b.avg_prompt_tokens) ?? -1), align: 'right' },
-    { title: 'Avg Completion Tokens', dataIndex: 'avg_completion_tokens', key: 'avg_completion_tokens', render: (v) => { const x = n(v); return x == null ? naSpan() : x.toFixed(0); }, sorter: (a, b) => (n(a.avg_completion_tokens) ?? -1) - (n(b.avg_completion_tokens) ?? -1), align: 'right' },
-    {
-      title: 'Cache Hit %', dataIndex: 'cache_hit_rate', key: 'cache_hit_rate',
-      render: (v) => {
-        const x = n(v);
-        if (x == null) return naSpan();
-        const color = x > 70 ? '#73C991' : x > 30 ? '#F79009' : '#F04438';
-        return (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Progress percent={Math.min(x, 100)} size="small" showInfo={false} strokeColor={color} style={{ width: 60 }} />
-            <span style={{ color, fontWeight: 600, fontSize: 12 }}>{x.toFixed(1)}%</span>
-          </div>
-        );
-      },
-      sorter: (a, b) => (n(a.cache_hit_rate) ?? -1) - (n(b.cache_hit_rate) ?? -1),
-    },
-    { title: 'Cache Tokens', dataIndex: 'total_cache_tokens', key: 'total_cache_tokens', render: (v) => { const x = n(v); return x == null ? naSpan() : formatNumber(x); }, sorter: (a, b) => (n(a.total_cache_tokens) ?? -1) - (n(b.total_cache_tokens) ?? -1), align: 'right' },
+    { title: 'Cache Hit %', dataIndex: 'cache_hit_rate', key: 'cache_hit_rate', render: (v) => { const x = n(v); if (x == null) return naSpan(); const color = x > 70 ? '#73C991' : x > 30 ? '#F79009' : '#F04438'; return <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Progress percent={Math.min(x, 100)} size="small" showInfo={false} strokeColor={color} style={{ width: 60 }} /><span style={{ color, fontWeight: 600, fontSize: 12 }}>{x.toFixed(1)}%</span></div>; }, sorter: (a, b) => (n(a.cache_hit_rate) ?? -1) - (n(b.cache_hit_rate) ?? -1) },
   ];
 
   return (
     <>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={12}>
-          <ChartCard title="Cost over time (USD per interval)" loading={tsLoading} hasData={costTSChart.hasData} noDataAttr="ai.cost.usd" noDataIcon={<DollarSign size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={costTSChart} options={costLineOpts} />
-          </ChartCard>
-        </Col>
-        <Col xs={24} lg={12}>
-          {costBarData ? (
-            <ChartCard title="Total Cost by Model (USD)" loading={costLoading} hasData={!!costBarData} noDataIcon={<DollarSign size={28} style={{ color: 'var(--text-muted)' }} />}>
-              <Bar data={costBarData} options={costBarOpts} />
-            </ChartCard>
-          ) : (
-            <ChartCard title="Total Cost by Model (USD)" loading={costLoading} hasData={false} noDataAttr="ai.cost.usd" noDataIcon={<DollarSign size={28} style={{ color: 'var(--text-muted)' }} />}><></></ChartCard>
-          )}
-        </Col>
-        <Col xs={24} lg={12}>
-          <ChartCard title="Prompt Tokens over time" loading={tsLoading} hasData={promptTSChart.hasData} noDataAttr="ai.tokens.prompt" noDataIcon={<Zap size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={promptTSChart} options={lineOpts} />
-          </ChartCard>
-        </Col>
-        <Col xs={24} lg={12}>
-          <ChartCard title="Completion Tokens over time" loading={tsLoading} hasData={completionTSChart.hasData} noDataAttr="ai.tokens.completion" noDataIcon={<Zap size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={completionTSChart} options={lineOpts} />
-          </ChartCard>
-        </Col>
-        {tokenStackData && (
-          <Col xs={24}>
-            <ChartCard title="Token Breakdown by Model (prompt / completion / system / cache)" loading={costLoading} hasData={tokenStackData.datasets.length > 0} height={260} noDataIcon={<Zap size={28} style={{ color: 'var(--text-muted)' }} />}>
-              <Bar data={tokenStackData} options={stackedBarOpts} />
-            </ChartCard>
-          </Col>
-        )}
-      </Row>
-
+      <ConfigurableDashboard config={config} dataSources={dataSources} extraContext={{ selectedModel }} />
       <Card title="Per-Model Cost Breakdown" className="ai-chart-card" style={{ marginTop: 16 }}>
         {costLoading ? <Skeleton active paragraph={{ rows: 6 }} /> : data.length === 0 ? <Empty description="No data" /> : (
-          <Table dataSource={data.map((r, i) => ({ ...r, key: i }))} columns={tableColumns} size="small" pagination={{ pageSize: 20 }} scroll={{ x: 1600 }} />
+          <Table dataSource={data.map((r, i) => ({ ...r, key: i }))} columns={tableColumns} size="small" pagination={{ pageSize: 20 }} scroll={{ x: 1400 }} />
         )}
       </Card>
     </>
@@ -489,118 +177,28 @@ function CostTab({ costMetrics, costLoading, costTS, tokenBreakdown, tsLoading, 
 
 // ─── SECURITY TAB ─────────────────────────────────────────────────────────────
 
-function SecurityTab({ secMetrics, secLoading, secTS, piiCategories, tsLoading, selectedModel }) {
-  const piiTSChart = useMemo(() => buildTimeseries(secTS, 'pii_count', 'model_name', selectedModel), [secTS, selectedModel]);
-  const guardrailTSChart = useMemo(() => buildTimeseries(secTS, 'guardrail_count', 'model_name', selectedModel), [secTS, selectedModel]);
-  const contentPolicyTSChart = useMemo(() => buildTimeseries(secTS, 'content_policy_count', 'model_name', selectedModel), [secTS, selectedModel]);
-
+function SecurityTab({ secMetrics, secLoading, config, dataSources, selectedModel }) {
   const data = useMemo(() => {
     const raw = Array.isArray(secMetrics) ? secMetrics : [];
     return selectedModel ? raw.filter((r) => r.model_name === selectedModel) : raw;
   }, [secMetrics, selectedModel]);
 
-  // PII category bar chart
-  const piiCatData = useMemo(() => {
-    const raw = Array.isArray(piiCategories) ? piiCategories : [];
-    const filtered = selectedModel ? raw.filter((r) => r.model_name === selectedModel) : raw;
-    if (!filtered.length) return null;
-    const labels = filtered.map((r) => r.pii_categories || 'unknown');
-    return {
-      labels,
-      datasets: [createBarDataset('Detections', filtered.map((r) => n(r.detection_count) ?? 0), '#F04438')],
-    };
-  }, [piiCategories, selectedModel]);
-
   const tableColumns = [
     { title: 'Model', dataIndex: 'model_name', key: 'model_name', render: (v) => <Tag className="ai-model-tag">{v || 'unknown'}</Tag> },
-    { title: 'Provider', dataIndex: 'model_provider', key: 'model_provider', render: (v) => v ? <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{v}</span> : naSpan() },
-    { title: 'Requests', dataIndex: 'total_requests', key: 'total_requests', render: (v) => formatNumber(Number(v)), sorter: (a, b) => Number(a.total_requests) - Number(b.total_requests), align: 'right' },
-    {
-      title: 'PII Detected', dataIndex: 'pii_detected_count', key: 'pii_detected_count',
-      render: (v) => { const x = n(v) ?? 0; return <Tooltip title={`${x} requests with PII`}><span style={{ color: x > 0 ? '#F04438' : '#73C991', fontWeight: 600 }}>{formatNumber(x)}</span></Tooltip>; },
-      sorter: (a, b) => (n(a.pii_detected_count) ?? 0) - (n(b.pii_detected_count) ?? 0), align: 'right',
-    },
-    {
-      title: 'PII Rate', dataIndex: 'pii_detection_rate', key: 'pii_detection_rate',
-      render: (v) => {
-        const x = n(v);
-        if (x == null) return naSpan();
-        const color = rateColor(x);
-        return (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Progress percent={Math.min(x, 100)} size="small" showInfo={false} strokeColor={color} style={{ width: 60 }} />
-            <span style={{ color, fontWeight: 600, fontSize: 12 }}>{x.toFixed(2)}%</span>
-          </div>
-        );
-      },
-      sorter: (a, b) => (n(a.pii_detection_rate) ?? -1) - (n(b.pii_detection_rate) ?? -1),
-    },
-    {
-      title: 'Guardrail Blocks', dataIndex: 'guardrail_blocked_count', key: 'guardrail_blocked_count',
-      render: (v) => { const x = n(v) ?? 0; return <span style={{ color: x > 0 ? '#F79009' : '#73C991', fontWeight: 600 }}>{formatNumber(x)}</span>; },
-      sorter: (a, b) => (n(a.guardrail_blocked_count) ?? 0) - (n(b.guardrail_blocked_count) ?? 0), align: 'right',
-    },
-    {
-      title: 'Block Rate', dataIndex: 'guardrail_block_rate', key: 'guardrail_block_rate',
-      render: (v) => { const x = n(v); return x == null ? naSpan() : <span style={{ color: rateColor(x), fontWeight: 600 }}>{x.toFixed(2)}%</span>; },
-      sorter: (a, b) => (n(a.guardrail_block_rate) ?? -1) - (n(b.guardrail_block_rate) ?? -1), align: 'right',
-    },
-    {
-      title: 'Content Policy', dataIndex: 'content_policy_count', key: 'content_policy_count',
-      render: (v) => { const x = n(v) ?? 0; return <span style={{ color: x > 0 ? '#F04438' : '#73C991', fontWeight: 600 }}>{formatNumber(x)}</span>; },
-      sorter: (a, b) => (n(a.content_policy_count) ?? 0) - (n(b.content_policy_count) ?? 0), align: 'right',
-    },
-    {
-      title: 'Policy Rate', dataIndex: 'content_policy_rate', key: 'content_policy_rate',
-      render: (v) => { const x = n(v); return x == null ? naSpan() : <span style={{ color: rateColor(x), fontWeight: 600 }}>{x.toFixed(2)}%</span>; },
-      sorter: (a, b) => (n(a.content_policy_rate) ?? -1) - (n(b.content_policy_rate) ?? -1), align: 'right',
-    },
-    {
-      title: 'Overall Safety',
-      key: 'safety',
-      render: (_, r) => {
-        const piiRate = n(r.pii_detection_rate) ?? 0;
-        const blockRate = n(r.guardrail_block_rate) ?? 0;
-        const ok = piiRate < 1 && blockRate < 1;
-        return (
-          <Tooltip title={`PII ${piiRate.toFixed(2)}%, Blocks ${blockRate.toFixed(2)}%`}>
-            <Badge status={ok ? 'success' : 'error'} text={ok ? 'Healthy' : 'Attention'} />
-          </Tooltip>
-        );
-      },
-    },
+    { title: 'Requests', dataIndex: 'total_requests', key: 'total_requests', render: (v) => formatNumber(Number(v)), align: 'right' },
+    { title: 'PII Detected', dataIndex: 'pii_detected_count', key: 'pii_detected_count', render: (v) => { const x = n(v) ?? 0; return <Tooltip title={`${x} requests with PII`}><span style={{ color: x > 0 ? '#F04438' : '#73C991', fontWeight: 600 }}>{formatNumber(x)}</span></Tooltip>; }, align: 'right' },
+    { title: 'PII Rate', dataIndex: 'pii_detection_rate', key: 'pii_detection_rate', render: (v) => { const x = n(v); if (x == null) return naSpan(); const color = rateColor(x); return <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Progress percent={Math.min(x, 100)} size="small" showInfo={false} strokeColor={color} style={{ width: 60 }} /><span style={{ color, fontWeight: 600, fontSize: 12 }}>{x.toFixed(2)}%</span></div>; } },
+    { title: 'Guardrail Blocks', dataIndex: 'guardrail_blocked_count', key: 'guardrail_blocked_count', render: (v) => { const x = n(v) ?? 0; return <span style={{ color: x > 0 ? '#F79009' : '#73C991', fontWeight: 600 }}>{formatNumber(x)}</span>; }, align: 'right' },
+    { title: 'Block Rate', dataIndex: 'guardrail_block_rate', key: 'guardrail_block_rate', render: (v) => { const x = n(v); return x == null ? naSpan() : <span style={{ color: rateColor(x), fontWeight: 600 }}>{x.toFixed(2)}%</span>; }, align: 'right' },
+    { title: 'Overall Safety', key: 'safety', render: (_, r) => { const piiRate = n(r.pii_detection_rate) ?? 0; const blockRate = n(r.guardrail_block_rate) ?? 0; const ok = piiRate < 1 && blockRate < 1; return <Tooltip title={`PII ${piiRate.toFixed(2)}%, Blocks ${blockRate.toFixed(2)}%`}><Badge status={ok ? 'success' : 'error'} text={ok ? 'Healthy' : 'Attention'} /></Tooltip>; } },
   ];
 
   return (
     <>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={12}>
-          <ChartCard title="PII Detections over time" loading={tsLoading} hasData={piiTSChart.hasData} noDataAttr="ai.pii.detected" noDataIcon={<Shield size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={piiTSChart} options={lineOpts} />
-          </ChartCard>
-        </Col>
-        <Col xs={24} lg={12}>
-          <ChartCard title="Guardrail Blocks over time" loading={tsLoading} hasData={guardrailTSChart.hasData} noDataAttr="ai.guardrail.blocked" noDataIcon={<ShieldAlert size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={guardrailTSChart} options={lineOpts} />
-          </ChartCard>
-        </Col>
-        <Col xs={24} lg={12}>
-          <ChartCard title="Content Policy Triggers over time" loading={tsLoading} hasData={contentPolicyTSChart.hasData} noDataAttr="ai.content.policy.triggered" noDataIcon={<ShieldCheck size={28} style={{ color: 'var(--text-muted)' }} />}>
-            <Line data={contentPolicyTSChart} options={lineOpts} />
-          </ChartCard>
-        </Col>
-        {piiCatData && (
-          <Col xs={24} lg={12}>
-            <ChartCard title="PII Category Breakdown" loading={secLoading} hasData={piiCatData.datasets[0].data.some((v) => v > 0)} height={220} noDataIcon={<Eye size={28} style={{ color: 'var(--text-muted)' }} />}>
-              <Bar data={piiCatData} options={barOpts} />
-            </ChartCard>
-          </Col>
-        )}
-      </Row>
-
+      <ConfigurableDashboard config={config} dataSources={dataSources} extraContext={{ selectedModel }} />
       <Card title="Per-Model Security" className="ai-chart-card" style={{ marginTop: 16 }}>
         {secLoading ? <Skeleton active paragraph={{ rows: 6 }} /> : data.length === 0 ? <Empty description="No data" /> : (
-          <Table dataSource={data.map((r, i) => ({ ...r, key: i }))} columns={tableColumns} size="small" pagination={{ pageSize: 20 }} scroll={{ x: 1300 }} />
+          <Table dataSource={data.map((r, i) => ({ ...r, key: i }))} columns={tableColumns} size="small" pagination={{ pageSize: 20 }} scroll={{ x: 1000 }} />
         )}
       </Card>
     </>
@@ -673,6 +271,8 @@ export default function AiObservabilityPage() {
   const [selectedModel, setSelectedModel] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
 
+  const { config } = useDashboardConfig('ai-observability');
+
   // ── Data fetching ──────────────────────────────────────────────────────────
   const { data: summary, isLoading: summaryLoading } = useTimeRangeQuery(
     'ai-summary', (tid, s, e) => v1Service.getAiSummary(tid, s, e)
@@ -690,7 +290,7 @@ export default function AiObservabilityPage() {
     'ai-perf-ts', (tid, s, e) => v1Service.getAiPerformanceTimeSeries(tid, s, e, '5m')
   );
 
-  const { data: histRaw, isLoading: histLoading } = useTimeRangeQuery(
+  const { data: histRaw } = useTimeRangeQuery(
     'ai-lat-hist', (tid, s, e) => v1Service.getAiLatencyHistogram(tid, s, e, selectedModel),
     { extraKeys: [selectedModel] }
   );
@@ -703,7 +303,7 @@ export default function AiObservabilityPage() {
     'ai-cost-ts', (tid, s, e) => v1Service.getAiCostTimeSeries(tid, s, e, '5m')
   );
 
-  const { data: tokenBreakdown, isLoading: tokenLoading } = useTimeRangeQuery(
+  const { data: tokenBreakdown } = useTimeRangeQuery(
     'ai-token-breakdown', (tid, s, e) => v1Service.getAiTokenBreakdown(tid, s, e)
   );
 
@@ -715,17 +315,26 @@ export default function AiObservabilityPage() {
     'ai-sec-ts', (tid, s, e) => v1Service.getAiSecurityTimeSeries(tid, s, e, '5m')
   );
 
-  const { data: piiCategories, isLoading: piiLoading } = useTimeRangeQuery(
+  const { data: piiCategories } = useTimeRangeQuery(
     'ai-pii-cats', (tid, s, e) => v1Service.getAiPiiCategories(tid, s, e)
   );
+
+  // ── Build unified dataSources for ConfigurableDashboard ───────────────────
+  const dataSources = useMemo(() => ({
+    'ai-perf-ts': Array.isArray(perfTS) ? perfTS : [],
+    'ai-cost-ts': Array.isArray(costTS) ? costTS : [],
+    'ai-sec-ts': Array.isArray(secTS) ? secTS : [],
+    'ai-lat-hist': Array.isArray(histRaw) ? histRaw : [],
+    'ai-cost-metrics': Array.isArray(costMetrics) ? costMetrics : [],
+    'ai-token-breakdown': Array.isArray(tokenBreakdown) ? tokenBreakdown : [],
+    'ai-pii-cats': Array.isArray(piiCategories) ? piiCategories : [],
+  }), [perfTS, costTS, secTS, histRaw, costMetrics, tokenBreakdown, piiCategories]);
 
   // ── Model options for the filter dropdown ─────────────────────────────────
   const modelOptions = useMemo(() => {
     const raw = Array.isArray(models) ? models : [];
     return raw.map((r) => ({ label: r.model_name || 'unknown', value: r.model_name }));
   }, [models]);
-
-  const tsLoading = perfTsLoading || costTsLoading || secTsLoading;
 
   const tabItems = [
     {
@@ -735,10 +344,8 @@ export default function AiObservabilityPage() {
         <OverviewTab
           summary={summary}
           summaryLoading={summaryLoading}
-          perfTS={perfTS}
-          costTS={costTS}
-          secTS={secTS}
-          tsLoading={tsLoading}
+          config={config}
+          dataSources={dataSources}
           selectedModel={selectedModel}
         />
       ),
@@ -750,9 +357,8 @@ export default function AiObservabilityPage() {
         <PerformanceTab
           perfMetrics={perfMetrics}
           metricsLoading={perfMetricsLoading}
-          perfTS={perfTS}
-          histRaw={histRaw}
-          tsLoading={perfTsLoading || histLoading}
+          config={config}
+          dataSources={dataSources}
           selectedModel={selectedModel}
         />
       ),
@@ -763,10 +369,9 @@ export default function AiObservabilityPage() {
       children: (
         <CostTab
           costMetrics={costMetrics}
-          costLoading={costMetricsLoading || tokenLoading}
-          costTS={costTS}
-          tokenBreakdown={tokenBreakdown}
-          tsLoading={costTsLoading}
+          costLoading={costMetricsLoading}
+          config={config}
+          dataSources={dataSources}
           selectedModel={selectedModel}
         />
       ),
@@ -777,10 +382,9 @@ export default function AiObservabilityPage() {
       children: (
         <SecurityTab
           secMetrics={secMetrics}
-          secLoading={secMetricsLoading || piiLoading}
-          secTS={secTS}
-          piiCategories={piiCategories}
-          tsLoading={secTsLoading}
+          secLoading={secMetricsLoading}
+          config={config}
+          dataSources={dataSources}
           selectedModel={selectedModel}
         />
       ),

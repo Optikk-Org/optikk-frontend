@@ -309,7 +309,7 @@ export default function DeploymentTrackingPage() {
                 Loading impact analysis...
               </div>
             ) : diffData ? (
-              <Row gutter={[12, 12]}>
+              <Row gutter={[16, 16]}>
                 <Col span={12}>
                   <Card size="small" title="Before Deploy" styles={{ header: { background: 'var(--bg-secondary)' } }}>
                     <Statistic title="Avg Latency" value={`${(diffData.avg_latency_before || 0).toFixed(1)}ms`} />

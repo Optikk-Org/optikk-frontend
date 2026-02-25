@@ -6,19 +6,15 @@ import { v1Service } from '@services/v1Service';
 import { alertService } from '@services/alertService';
 import { formatNumber, formatDuration, formatRelativeTime } from '@utils/formatters';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
+import { useDashboardConfig } from '@hooks/useDashboardConfig';
 import { useAppStore } from '@store/appStore';
-import { PageHeader, StatCard, StatCardsGrid, TopEndpointsList, HealthIndicator } from '@components/common';
-import RequestChart from '@components/charts/RequestChart';
-import ErrorRateChart from '@components/charts/ErrorRateChart';
-import LatencyChart from '@components/charts/LatencyChart';
+import { PageHeader, StatCard, StatCardsGrid, HealthIndicator } from '@components/common';
+import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
 import './OverviewPage.css';
 
 export default function OverviewPage() {
   const navigate = useNavigate();
-  const { selectedTeamId, timeRange } = useAppStore();
-  const [selectedEndpointsRequests, setSelectedEndpointsRequests] = useState([]);
-  const [selectedEndpointsErrorRate, setSelectedEndpointsErrorRate] = useState([]);
-  const [selectedEndpointsLatency, setSelectedEndpointsLatency] = useState([]);
+  const { config } = useDashboardConfig('overview');
 
   // Metrics summary (primary source — spans table via v1 API)
   const { data: summaryRaw, isLoading: summaryLoading, error: summaryError } = useTimeRangeQuery(
@@ -32,13 +28,13 @@ export default function OverviewPage() {
     (teamId, start, end) => v1Service.getMetricsTimeSeries(teamId, start, end, null, '5m')
   );
 
-  // Per-endpoint timeseries from backend (replaces serviceTimeseriesRaw)
+  // Per-endpoint timeseries from backend
   const { data: endpointTimeseriesRaw } = useTimeRangeQuery(
     'endpoints-timeseries',
     (teamId, start, end) => v1Service.getEndpointTimeSeries(teamId, start, end)
   );
 
-  // Service metrics for health grid - returns raw array
+  // Service metrics for health grid
   const { data: servicesRaw } = useTimeRangeQuery(
     'services-metrics',
     (teamId, startTime, endTime) => v1Service.getServiceMetrics(teamId, startTime, endTime)
@@ -57,208 +53,55 @@ export default function OverviewPage() {
   );
 
   // === Normalize data shapes ===
-
-  // Summary from v1 API: flat {total_requests, error_rate, avg_latency, p95_latency, p99_latency}
   const summary = useMemo(() => {
     if (!summaryRaw) return {};
-    const raw = summaryRaw;
     return {
-      total_requests: raw.total_requests || 0,
-      error_count: raw.error_count || 0,
-      error_rate: raw.error_rate || 0,
-      avg_latency: raw.avg_latency || 0,
-      p95_latency: raw.p95_latency || 0,
-      p99_latency: raw.p99_latency || 0,
+      total_requests: summaryRaw.total_requests || 0,
+      error_count: summaryRaw.error_count || 0,
+      error_rate: summaryRaw.error_rate || 0,
+      avg_latency: summaryRaw.avg_latency || 0,
+      p95_latency: summaryRaw.p95_latency || 0,
+      p99_latency: summaryRaw.p99_latency || 0,
     };
   }, [summaryRaw]);
 
-  // Timeseries: v2 API returns array of {timestamp, request_count, error_count, avg_latency}
   const timeseries = useMemo(() => {
     if (!timeseriesRaw) return [];
     return Array.isArray(timeseriesRaw) ? timeseriesRaw : [];
   }, [timeseriesRaw]);
 
-  // Per-endpoint timeseries: group flat array into Map<key, [{timestamp, request_count, error_count, avg_latency}]>
-  const endpointTimeseriesMap = useMemo(() => {
-    const raw = Array.isArray(endpointTimeseriesRaw) ? endpointTimeseriesRaw : [];
-    const map = {};
-    for (const row of raw) {
-      const method = (row.http_method || '').toUpperCase();
-      const op = row.operation_name || row.endpoint_name || 'Unknown';
-      const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
-      const key = `${method} ${cleanOp}_${row.service_name || ''}`;
-
-      if (!map[key]) map[key] = [];
-      map[key].push(row);
-    }
-    return map;
-  }, [endpointTimeseriesRaw]);
-
-  // Build chart-ready timeseries data
-  const requestsTimeseries = useMemo(
-    () => timeseries.map((d) => ({
-      timestamp: d.timestamp,
-      value: Number(d.request_count || 0),
-    })),
+  // Build sparkline data from timeseries
+  const requestsSparkline = useMemo(
+    () => timeseries.map((d) => Number(d.request_count || 0)),
     [timeseries]
   );
-
-  const errorsTimeseries = useMemo(
+  const errorsSparkline = useMemo(
     () => timeseries.map((d) => {
       const total = Number(d.request_count || 0);
       const errors = Number(d.error_count || 0);
-      return {
-        timestamp: d.timestamp,
-        value: total > 0 ? (errors / total * 100) : 0,
-      };
+      return total > 0 ? (errors / total * 100) : 0;
     }),
     [timeseries]
   );
-
-  const latencyTimeseries = useMemo(
-    () => timeseries.map((d) => {
-      const avg = Number(d.avg_latency || 0);
-      return {
-        timestamp: d.timestamp,
-        value: avg,
-        // Use real backend percentiles when available (new dual-source backend), else approximate
-        p50: Number(d.p50_latency || 0) || avg * 0.7,
-        p95: Number(d.p95_latency || 0) || avg * 2.0,
-        p99: Number(d.p99_latency || 0) || avg * 3.5,
-      };
-    }),
+  const latencySparkline = useMemo(
+    () => timeseries.map((d) => Number(d.avg_latency || 0)),
     [timeseries]
   );
 
-  // Services: v2 API returns raw array
+  // Services
   const services = useMemo(() => {
     if (!servicesRaw) return [];
     return Array.isArray(servicesRaw) ? servicesRaw : [];
   }, [servicesRaw]);
-
-  // Endpoint metrics: v2 API returns raw array
-  const endpointMetrics = useMemo(() => {
-    if (!endpointMetricsRaw) return [];
-    return Array.isArray(endpointMetricsRaw) ? endpointMetricsRaw : [];
-  }, [endpointMetricsRaw]);
-
-  // Top endpoints sorted by request count
-  const topEndpointsByRequests = useMemo(() => {
-    return [...endpointMetrics]
-      .sort((a, b) => (b.request_count || 0) - (a.request_count || 0))
-      .slice(0, 10)
-      .map(ep => {
-        const method = (ep.http_method || '').toUpperCase();
-        const op = ep.operation_name || ep.endpoint_name || 'Unknown';
-        const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
-        return {
-          ...ep,
-          endpoint: `${method} ${cleanOp}`,
-          service: ep.service_name,
-          key: `${method} ${cleanOp}_${ep.service_name || ''}`,
-        };
-      });
-  }, [endpointMetrics]);
-
-  const handleEndpointToggleRequests = (endpointKey) => {
-    setSelectedEndpointsRequests(prev => {
-      if (prev.includes(endpointKey)) {
-        return prev.filter(key => key !== endpointKey);
-      } else {
-        return [...prev, endpointKey];
-      }
-    });
-  };
-
-  // Top endpoints sorted by error rate
-  const topEndpointsByErrorRate = useMemo(() => {
-    return [...endpointMetrics]
-      .map(ep => {
-        const errorRate = ep.request_count > 0 ? (ep.error_count / ep.request_count) * 100 : 0;
-        return { ...ep, errorRate };
-      })
-      .filter(ep => ep.errorRate > 0)
-      .sort((a, b) => b.errorRate - a.errorRate)
-      .slice(0, 10)
-      .map(ep => {
-        const method = (ep.http_method || '').toUpperCase();
-        const op = ep.operation_name || ep.endpoint_name || 'Unknown';
-        const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
-        return {
-          ...ep,
-          endpoint: `${method} ${cleanOp}`,
-          service: ep.service_name,
-          key: `${method} ${cleanOp}_${ep.service_name || ''}`,
-        };
-      });
-  }, [endpointMetrics]);
-
-  const handleEndpointToggleErrorRate = (endpointKey) => {
-    setSelectedEndpointsErrorRate(prev => {
-      if (prev.includes(endpointKey)) {
-        return prev.filter(key => key !== endpointKey);
-      } else {
-        return [...prev, endpointKey];
-      }
-    });
-  };
-
-  // Top endpoints sorted by latency
-  const topEndpointsByLatency = useMemo(() => {
-    return [...endpointMetrics]
-      .sort((a, b) => (b.avg_latency || b.p95_latency || 0) - (a.avg_latency || a.p95_latency || 0))
-      .slice(0, 10)
-      .map(ep => {
-        const method = (ep.http_method || '').toUpperCase();
-        const op = ep.operation_name || ep.endpoint_name || 'Unknown';
-        const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
-        return {
-          ...ep,
-          endpoint: `${method} ${cleanOp}`,
-          service: ep.service_name,
-          latency: ep.avg_latency || ep.p95_latency || 0,
-          key: `${method} ${cleanOp}_${ep.service_name || ''}`,
-        };
-      });
-  }, [endpointMetrics]);
-
-  const handleEndpointToggleLatency = (endpointKey) => {
-    setSelectedEndpointsLatency(prev => {
-      if (prev.includes(endpointKey)) {
-        return prev.filter(key => key !== endpointKey);
-      } else {
-        return [...prev, endpointKey];
-      }
-    });
-  };
-
-  const alerts = useMemo(() => {
-    const raw = Array.isArray(alertsData) ? alertsData : alertsData?.content || [];
-    return raw.slice(0, 5);
-  }, [alertsData]);
-
-  // Build sparkline data from timeseries
-  const requestsSparkline = useMemo(
-    () => requestsTimeseries.map((d) => d.value),
-    [requestsTimeseries]
-  );
-  const errorsSparkline = useMemo(
-    () => errorsTimeseries.map((d) => d.value),
-    [errorsTimeseries]
-  );
-  const latencySparkline = useMemo(
-    () => latencyTimeseries.map((d) => d.value),
-    [latencyTimeseries]
-  );
 
   // Compute SLO metrics
   const sloMetrics = useMemo(() => {
     const errorRate = summary.error_rate || 0;
     const availability = Math.max(0, 100 - errorRate);
     const p95 = summary.p95_latency || 0;
-    const p95Target = 500; // 500ms target
+    const p95Target = 500;
     const p95Score = p95 > 0 ? Math.min(100, (p95Target / p95) * 100) : 100;
-    const errorBudget = Math.max(0, (0.1 - errorRate / 100) / 0.1 * 100); // 99.9% SLO
+    const errorBudget = Math.max(0, (0.1 - errorRate / 100) / 0.1 * 100);
     return { availability, p95Score, errorBudget };
   }, [summary]);
 
@@ -269,15 +112,22 @@ export default function OverviewPage() {
       const errorCount = Number(s.error_count || 0);
       const errorRate = requestCount > 0 ? (errorCount / requestCount) * 100 : 0;
       const status = errorRate > 5 ? 'unhealthy' : errorRate > 1 ? 'degraded' : 'healthy';
-      return {
-        name: s.service_name,
-        status,
-        requestCount,
-        errorRate,
-        avgLatency: Number(s.avg_latency || 0),
-      };
+      return { name: s.service_name, status, requestCount, errorRate, avgLatency: Number(s.avg_latency || 0) };
     });
   }, [services]);
+
+  const alerts = useMemo(() => {
+    const raw = Array.isArray(alertsData) ? alertsData : alertsData?.content || [];
+    return raw.slice(0, 5);
+  }, [alertsData]);
+
+  // Data sources for ConfigurableDashboard
+  const dataSources = useMemo(() => ({
+    'metrics-summary': summaryRaw,
+    'metrics-timeseries': timeseries,
+    'endpoints-timeseries': Array.isArray(endpointTimeseriesRaw) ? endpointTimeseriesRaw : [],
+    'endpoints-metrics': Array.isArray(endpointMetricsRaw) ? endpointMetricsRaw : [],
+  }), [summaryRaw, timeseries, endpointTimeseriesRaw, endpointMetricsRaw]);
 
   if (summaryLoading && timeseries.length === 0) {
     return (
@@ -410,58 +260,14 @@ export default function OverviewPage() {
         </Col>
       </Row>
 
-      {/* Charts */}
+      {/* Charts — driven by YAML config */}
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24} lg={12}>
-          <Card title="Request Rate" className="chart-card" styles={{ body: { padding: '8px' } }}>
-            <RequestChart
-              data={requestsTimeseries}
-              endpoints={topEndpointsByRequests}
-              selectedEndpoints={selectedEndpointsRequests}
-              serviceTimeseriesMap={endpointTimeseriesMap}
-            />
-            <TopEndpointsList
-              title="Requests"
-              type="requests"
-              endpoints={topEndpointsByRequests}
-              selectedEndpoints={selectedEndpointsRequests}
-              onToggle={handleEndpointToggleRequests}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} lg={12}>
-          <Card title="Error Rate" className="chart-card" styles={{ body: { padding: '8px' } }}>
-            <ErrorRateChart
-              data={errorsTimeseries}
-              endpoints={topEndpointsByErrorRate}
-              selectedEndpoints={selectedEndpointsErrorRate}
-              serviceTimeseriesMap={endpointTimeseriesMap}
-            />
-            <TopEndpointsList
-              title="Error Rate"
-              type="errorRate"
-              endpoints={topEndpointsByErrorRate}
-              selectedEndpoints={selectedEndpointsErrorRate}
-              onToggle={handleEndpointToggleErrorRate}
-            />
-          </Card>
-        </Col>
         <Col xs={24}>
-          <Card title="Latency Distribution" className="chart-card" styles={{ body: { padding: '8px' } }}>
-            <LatencyChart
-              data={latencyTimeseries}
-              endpoints={topEndpointsByLatency}
-              selectedEndpoints={selectedEndpointsLatency}
-              serviceTimeseriesMap={endpointTimeseriesMap}
-            />
-            <TopEndpointsList
-              title="Latency"
-              type="latency"
-              endpoints={topEndpointsByLatency}
-              selectedEndpoints={selectedEndpointsLatency}
-              onToggle={handleEndpointToggleLatency}
-            />
-          </Card>
+          <ConfigurableDashboard
+            config={config}
+            dataSources={dataSources}
+            isLoading={summaryLoading}
+          />
         </Col>
       </Row>
 
@@ -470,7 +276,7 @@ export default function OverviewPage() {
         <Col xs={24} lg={12}>
           <Card title="Service Health" className="chart-card">
             {serviceHealth.length > 0 ? (
-              <Row gutter={[8, 8]}>
+              <Row gutter={[16, 16]}>
                 {serviceHealth.map((service) => (
                   <Col xs={12} sm={8} md={6} key={service.name}>
                     <div

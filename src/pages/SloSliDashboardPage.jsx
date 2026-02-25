@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Row, Col, Card, Progress, Tag, Table, Alert, Skeleton } from 'antd';
-import { Line } from 'react-chartjs-2';
 import { Target, ShieldCheck, Gauge, AlertTriangle, CheckCircle, TrendingDown } from 'lucide-react';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
+import { useDashboardConfig } from '@hooks/useDashboardConfig';
 import { PageHeader, StatCard, FilterBar } from '@components/common';
 import { v1Service } from '@services/v1Service';
-import ErrorRateChart from '@components/charts/ErrorRateChart';
-import LatencyChart from '@components/charts/LatencyChart';
+import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
 import { useAppStore } from '@store/appStore';
 import { dashboardService } from '@services/dashboardService';
 import { useQuery } from '@tanstack/react-query';
@@ -76,6 +75,7 @@ function SloGauge({ title, value, target, unit = '%', description }) {
 export default function SloSliDashboardPage() {
   const [selectedService, setSelectedService] = useState(null);
   const { selectedTeamId, timeRange, refreshKey } = useAppStore();
+  const { config } = useDashboardConfig('slo-sli');
 
   const getTimeRange = () => {
     const endTime = Date.now();
@@ -302,63 +302,16 @@ export default function SloSliDashboardPage() {
         </Col>
       </Row>
 
-      {/* Trend Charts */}
+      {/* Trend Charts — driven by YAML backend config */}
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} lg={8}>
-          <Card title={<span><ShieldCheck size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Availability Over Time</span>}>
-            {isLoading ? (
-              <Skeleton active paragraph={{ rows: 4 }} />
-            ) : timeseries.length === 0 ? (
-              <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                No data — ensure services are sending OTLP traces
-              </div>
-            ) : (
-              <div style={{ height: 220 }}>
-                <ErrorRateChart
-                  data={timeseries.map(r => ({ timestamp: r.timestamp, value: n(r.availability_percent) }))}
-                  targetThreshold={AVAILABILITY_TARGET}
-                  datasetLabel="Availability %"
-                  color="#12B76A"
-                />
-              </div>
-            )}
-          </Card>
-        </Col>
-        <Col xs={24} lg={8}>
-          <Card title={<span><Gauge size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Latency vs Target</span>}>
-            {isLoading ? (
-              <Skeleton active paragraph={{ rows: 4 }} />
-            ) : timeseries.length === 0 ? (
-              <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                No data — ensure services are sending OTLP traces
-              </div>
-            ) : (
-              <div style={{ height: 220 }}>
-                <LatencyChart
-                  data={timeseries.map(r => ({ timestamp: r.timestamp, value: n(r.avg_latency_ms) }))}
-                  targetThreshold={P95_TARGET_MS}
-                />
-              </div>
-            )}
-          </Card>
-        </Col>
-        <Col xs={24} lg={8}>
-          <Card title={<span><TrendingDown size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Error Budget Burn</span>}>
-            {isLoading ? (
-              <Skeleton active paragraph={{ rows: 3 }} />
-            ) : timeseries.length === 0 ? (
-              <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                No data in selected time range
-              </div>
-            ) : (
-              <div style={{ height: 220 }}>
-                <ErrorRateChart
-                  data={timeseries.map(r => ({ timestamp: r.timestamp, value: 100 - n(r.availability_percent) }))}
-                  targetThreshold={100 - AVAILABILITY_TARGET}
-                />
-              </div>
-            )}
-          </Card>
+        <Col xs={24}>
+          <ConfigurableDashboard
+            config={config}
+            dataSources={{
+              'slo-sli-insights': data,
+            }}
+            isLoading={isLoading}
+          />
         </Col>
       </Row>
 

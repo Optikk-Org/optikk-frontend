@@ -14,13 +14,16 @@ import {
   GitBranch,
 } from 'lucide-react';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
+import { useDashboardConfig } from '@hooks/useDashboardConfig';
 import { PageHeader, DataTable, StatCard, HealthIndicator, StatCardsGrid, FilterBar } from '@components/common';
 import SparklineChart from '@components/charts/SparklineChart';
 import ServiceGraph from '@components/charts/ServiceGraph';
+import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
 import { v1Service } from '@services/v1Service';
 import { serviceMapService } from '@services/serviceMapService';
 import { formatNumber, formatDuration } from '@utils/formatters';
 import './ServicesPage.css';
+
 
 function getServiceStatus(errorRate) {
   if (errorRate > 5) return 'unhealthy';
@@ -46,10 +49,23 @@ export default function ServicesPage() {
   const [sortField, setSortField] = useState(null);
   const [sortOrder, setSortOrder] = useState(null);
 
+  const { config: dashboardConfig } = useDashboardConfig('services');
+
   const { data, isLoading } = useTimeRangeQuery(
     'services-metrics',
     (teamId, startTime, endTime) => v1Service.getServiceMetrics(teamId, startTime, endTime)
   );
+
+  // Service timeseries for configurable charts
+  const { data: serviceTimeseriesRaw } = useTimeRangeQuery(
+    'service-timeseries-svc',
+    (teamId, start, end) => v1Service.getServiceTimeSeries(teamId, start, end, '5m')
+  );
+
+  const chartDataSources = useMemo(() => ({
+    'service-timeseries': Array.isArray(serviceTimeseriesRaw) ? serviceTimeseriesRaw : [],
+    'services-metrics': Array.isArray(data) ? data : [],
+  }), [serviceTimeseriesRaw, data]);
 
   const {
     data: topologyData,
@@ -541,6 +557,16 @@ export default function ServicesPage() {
         ]}
       />
 
+      {/* Configurable Charts — per-service request rate, error rate, latency */}
+      {dashboardConfig && (
+        <div style={{ marginBottom: 16 }}>
+          <ConfigurableDashboard
+            config={dashboardConfig}
+            dataSources={chartDataSources}
+          />
+        </div>
+      )}
+
       <FilterBar
         filters={[
           {
@@ -581,7 +607,7 @@ export default function ServicesPage() {
           />
         </Card>
       ) : (
-        <Row gutter={[12, 12]}>
+        <Row gutter={[16, 16]}>
           {tableData.map((service) => {
             const status = service.status;
             return (

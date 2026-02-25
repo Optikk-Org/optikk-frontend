@@ -2,20 +2,41 @@ import { useMemo, useState } from 'react';
 import { Row, Col, Card, Tag, Progress, Segmented } from 'antd';
 import { Server, Box, AlertCircle, Activity, List, LayoutGrid } from 'lucide-react';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
+import { useDashboardConfig } from '@hooks/useDashboardConfig';
 import { PageHeader, StatCard, DataTable } from '@components/common';
 import GaugeChart from '@components/charts/GaugeChart';
+import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
 import { infrastructureService } from '@services/infrastructureService';
+import { v1Service } from '@services/v1Service';
 import { formatNumber, formatDuration } from '@utils/formatters';
 import './InfrastructurePage.css';
 
+
 export default function InfrastructurePage() {
   const [viewMode, setViewMode] = useState('table');
+
+  const { config: dashboardConfig } = useDashboardConfig('infrastructure');
 
   const { data, isLoading } = useTimeRangeQuery(
     'infrastructure-metrics',
     (teamId, startTime, endTime) =>
       infrastructureService.getMetrics(teamId, startTime, endTime)
   );
+
+  // Service timeseries for configurable charts
+  const { data: serviceTimeseriesRaw } = useTimeRangeQuery(
+    'service-timeseries-infra',
+    (teamId, start, end) => v1Service.getServiceTimeSeries(teamId, start, end, '5m')
+  );
+  const { data: serviceMetricsRaw } = useTimeRangeQuery(
+    'services-metrics-infra',
+    (teamId, start, end) => v1Service.getServiceMetrics(teamId, start, end)
+  );
+
+  const chartDataSources = useMemo(() => ({
+    'service-timeseries': Array.isArray(serviceTimeseriesRaw) ? serviceTimeseriesRaw : [],
+    'services-metrics': Array.isArray(serviceMetricsRaw) ? serviceMetricsRaw : [],
+  }), [serviceTimeseriesRaw, serviceMetricsRaw]);
 
   const stats = useMemo(() => {
     if (!data || !Array.isArray(data)) {
@@ -212,6 +233,16 @@ export default function InfrastructurePage() {
         </Col>
       </Row>
 
+      {/* Configurable Charts — request rate & error rate */}
+      {dashboardConfig && (
+        <div style={{ marginBottom: 16 }}>
+          <ConfigurableDashboard
+            config={dashboardConfig}
+            dataSources={chartDataSources}
+          />
+        </div>
+      )}
+
       {viewMode === 'table' ? (
         <Card className="infrastructure-table-card">
           <DataTable
@@ -226,7 +257,7 @@ export default function InfrastructurePage() {
           />
         </Card>
       ) : (
-        <Row gutter={[12, 12]}>
+        <Row gutter={[16, 16]}>
           {tableData.map((item) => {
             const errorRate = item.spanCount > 0 ? (item.errorCount / item.spanCount) * 100 : 0;
             const loadPercent = (item.spanCount / maxRequests) * 100;

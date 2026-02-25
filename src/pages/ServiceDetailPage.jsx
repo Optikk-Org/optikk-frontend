@@ -7,9 +7,8 @@ import { useAppStore } from '@store/appStore';
 import PageHeader from '@components/common/PageHeader';
 import StatCard from '@components/common/StatCard';
 import DataTable from '@components/common/DataTable';
-import RequestChart from '@components/charts/RequestChart';
-import LatencyChart from '@components/charts/LatencyChart';
-import ErrorRateChart from '@components/charts/ErrorRateChart';
+import { useDashboardConfig } from '@hooks/useDashboardConfig';
+import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
 import { v1Service } from '@services/v1Service';
 import { formatNumber, formatDuration, formatTimestamp } from '@utils/formatters';
 import { LOG_LEVELS } from '@config/constants';
@@ -19,9 +18,7 @@ export default function ServiceDetailPage() {
   const navigate = useNavigate();
   const { selectedTeamId, timeRange, refreshKey } = useAppStore();
   const [activeTab, setActiveTab] = useState('overview');
-  const [selectedEndpointsRequests, setSelectedEndpointsRequests] = useState([]);
-  const [selectedEndpointsErrorRate, setSelectedEndpointsErrorRate] = useState([]);
-  const [selectedEndpointsLatency, setSelectedEndpointsLatency] = useState([]);
+  const { config } = useDashboardConfig('service-detail');
 
   const { data: endpointData, isLoading: endpointsLoading } = useQuery({
     queryKey: ['endpoint-breakdown', selectedTeamId, timeRange.value, serviceName, refreshKey],
@@ -133,39 +130,6 @@ export default function ServiceDetailPage() {
       return total > 0 ? (errors / total) * 100 : 0;
     });
   }, [timeSeries]);
-
-  // Build error rate timeseries for ErrorRateChart
-  const errorTimeSeries = useMemo(() => {
-    return (timeSeries || []).map((d) => ({
-      ...d,
-      value: d.error_rate || (d.request_count > 0 ? (d.error_count / d.request_count) * 100 : 0),
-    }));
-  }, [timeSeries]);
-
-  const endpointsWithKeys = useMemo(() => {
-    return endpoints.map(ep => ({
-      ...ep,
-      key: `${ep.http_method || 'N/A'}_${ep.operation_name || 'Unknown'}_${ep.service_name || ''}`
-    }));
-  }, [endpoints]);
-
-  const handleEndpointToggleRequests = (key) => {
-    setSelectedEndpointsRequests(prev =>
-      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
-    );
-  };
-
-  const handleEndpointToggleErrorRate = (key) => {
-    setSelectedEndpointsErrorRate(prev =>
-      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
-    );
-  };
-
-  const handleEndpointToggleLatency = (key) => {
-    setSelectedEndpointsLatency(prev =>
-      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
-    );
-  };
 
   const endpointColumns = [
     {
@@ -381,7 +345,7 @@ export default function ServiceDetailPage() {
     return (
       <div>
         <PageHeader title={serviceName} breadcrumbs={breadcrumbs} actions={headerActions} />
-        <Row gutter={16} style={{ marginBottom: 24 }}>
+        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
           {[1, 2, 3, 4].map((i) => (
             <Col xs={24} sm={12} lg={6} key={i}>
               <Card><Skeleton active paragraph={{ rows: 2 }} /></Card>
@@ -397,7 +361,7 @@ export default function ServiceDetailPage() {
       <PageHeader title={serviceName} breadcrumbs={breadcrumbs} actions={headerActions} />
 
       {/* Stats Cards */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             title="Total Requests"
@@ -448,243 +412,17 @@ export default function ServiceDetailPage() {
               label: 'Overview',
               children: (
                 <>
-                  {/* Charts */}
-                  <Row gutter={16} style={{ marginBottom: 24 }}>
-                    <Col xs={24} lg={8}>
-                      <Card title="Request Rate" className="chart-card" size="small" styles={{ body: { padding: '8px' } }}>
-                        {timeSeries.length > 0 ? (
-                          <>
-                            <RequestChart
-                              data={timeSeries}
-                              endpoints={endpointsWithKeys}
-                              selectedEndpoints={selectedEndpointsRequests}
-                            />
-                            {endpoints.length > 0 && (
-                              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border-color, #2D2D2D)' }}>
-                                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase' }}>
-                                  Top Endpoints
-                                </div>
-                                <div style={{
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  gap: 6,
-                                  maxHeight: '150px',
-                                  overflowY: 'auto',
-                                  paddingRight: 4,
-                                  scrollbarWidth: 'thin',
-                                  scrollbarColor: 'var(--border-color, #2D2D2D) var(--bg-secondary, #0D0D0D)'
-                                }}>
-                                  {[...endpointsWithKeys]
-                                    .sort((a, b) => (b.request_count || 0) - (a.request_count || 0))
-                                    .slice(0, 5)
-                                    .map((ep, idx) => {
-                                      const isSelected = selectedEndpointsRequests.includes(ep.key);
-                                      const isFaded = selectedEndpointsRequests.length > 0 && !isSelected;
-                                      return (
-                                        <div
-                                          key={idx}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleEndpointToggleRequests(ep.key);
-                                          }}
-                                          style={{
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center',
-                                            padding: '6px 8px',
-                                            background: isSelected ? 'rgba(94, 96, 206, 0.2)' : 'var(--bg-secondary, #0D0D0D)',
-                                            borderRadius: 4,
-                                            fontSize: 11,
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s',
-                                            opacity: isFaded ? 0.3 : 1,
-                                            border: isSelected ? '1px solid #5E60CE' : '1px solid transparent',
-                                          }}
-                                          onMouseEnter={(e) => {
-                                            if (!isFaded) {
-                                              e.currentTarget.style.background = isSelected ? 'rgba(94, 96, 206, 0.3)' : 'var(--bg-tertiary, #1A1A1A)';
-                                            }
-                                          }}
-                                          onMouseLeave={(e) => {
-                                            e.currentTarget.style.background = isSelected ? 'rgba(94, 96, 206, 0.2)' : 'var(--bg-secondary, #0D0D0D)';
-                                          }}
-                                        >
-                                          <span style={{ fontFamily: 'monospace', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                                            {ep.http_method} {ep.operation_name}
-                                          </span>
-                                          <span style={{ color: '#1890ff', marginLeft: 8, fontWeight: 600 }}>
-                                            {formatNumber(ep.request_count || 0)}
-                                          </span>
-                                        </div>
-                                      );
-                                    })}
-                                </div>
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <Empty description="No data" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-                        )}
-                      </Card>
-                    </Col>
-                    <Col xs={24} lg={8}>
-                      <Card title="Error Rate" className="chart-card" size="small" styles={{ body: { padding: '8px' } }}>
-                        {errorTimeSeries.length > 0 ? (
-                          <>
-                            <ErrorRateChart
-                              data={errorTimeSeries}
-                              endpoints={endpointsWithKeys}
-                              selectedEndpoints={selectedEndpointsErrorRate}
-                            />
-                            {endpoints.length > 0 && (
-                              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border-color, #2D2D2D)' }}>
-                                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase' }}>
-                                  Top by Error Rate
-                                </div>
-                                <div style={{
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  gap: 6,
-                                  maxHeight: '150px',
-                                  overflowY: 'auto',
-                                  paddingRight: 4,
-                                  scrollbarWidth: 'thin',
-                                  scrollbarColor: 'var(--border-color, #2D2D2D) var(--bg-secondary, #0D0D0D)'
-                                }}>
-                                  {[...endpointsWithKeys]
-                                    .map(ep => {
-                                      const errorRate = ep.request_count > 0 ? (ep.error_count / ep.request_count) * 100 : 0;
-                                      return { ...ep, errorRate };
-                                    })
-                                    .filter(ep => ep.errorRate > 0)
-                                    .sort((a, b) => b.errorRate - a.errorRate)
-                                    .slice(0, 5)
-                                    .map((ep, idx) => {
-                                      const isSelected = selectedEndpointsErrorRate.includes(ep.key);
-                                      const isFaded = selectedEndpointsErrorRate.length > 0 && !isSelected;
-                                      return (
-                                        <div
-                                          key={idx}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleEndpointToggleErrorRate(ep.key);
-                                          }}
-                                          style={{
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center',
-                                            padding: '6px 8px',
-                                            background: isSelected ? 'rgba(240, 68, 56, 0.2)' : 'var(--bg-secondary, #0D0D0D)',
-                                            borderRadius: 4,
-                                            fontSize: 11,
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s',
-                                            opacity: isFaded ? 0.3 : 1,
-                                            border: isSelected ? '1px solid #F04438' : '1px solid transparent',
-                                          }}
-                                          onMouseEnter={(e) => {
-                                            if (!isFaded) {
-                                              e.currentTarget.style.background = isSelected ? 'rgba(240, 68, 56, 0.3)' : 'var(--bg-tertiary, #1A1A1A)';
-                                            }
-                                          }}
-                                          onMouseLeave={(e) => {
-                                            e.currentTarget.style.background = isSelected ? 'rgba(240, 68, 56, 0.2)' : 'var(--bg-secondary, #0D0D0D)';
-                                          }}
-                                        >
-                                          <span style={{ fontFamily: 'monospace', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                                            {ep.http_method} {ep.operation_name}
-                                          </span>
-                                          <span style={{ color: ep.errorRate > 5 ? '#F04438' : '#F79009', marginLeft: 8, fontWeight: 600 }}>
-                                            {Number(ep.errorRate).toFixed(2)}%
-                                          </span>
-                                        </div>
-                                      );
-                                    })}
-                                </div>
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <Empty description="No data" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-                        )}
-                      </Card>
-                    </Col>
-                    <Col xs={24} lg={8}>
-                      <Card title="Latency" className="chart-card" size="small" styles={{ body: { padding: '8px' } }}>
-                        {timeSeries.length > 0 ? (
-                          <>
-                            <LatencyChart
-                              data={timeSeries}
-                              endpoints={endpointsWithKeys}
-                              selectedEndpoints={selectedEndpointsLatency}
-                            />
-                            {endpoints.length > 0 && (
-                              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border-color, #2D2D2D)' }}>
-                                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase' }}>
-                                  Top by Latency
-                                </div>
-                                <div style={{
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  gap: 6,
-                                  maxHeight: '150px',
-                                  overflowY: 'auto',
-                                  paddingRight: 4,
-                                  scrollbarWidth: 'thin',
-                                  scrollbarColor: 'var(--border-color, #2D2D2D) var(--bg-secondary, #0D0D0D)'
-                                }}>
-                                  {[...endpointsWithKeys]
-                                    .sort((a, b) => (b.avg_latency || 0) - (a.avg_latency || 0))
-                                    .slice(0, 5)
-                                    .map((ep, idx) => {
-                                      const isSelected = selectedEndpointsLatency.includes(ep.key);
-                                      const isFaded = selectedEndpointsLatency.length > 0 && !isSelected;
-                                      return (
-                                        <div
-                                          key={idx}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleEndpointToggleLatency(ep.key);
-                                          }}
-                                          style={{
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center',
-                                            padding: '6px 8px',
-                                            background: isSelected ? 'rgba(247, 144, 9, 0.2)' : 'var(--bg-secondary, #0D0D0D)',
-                                            borderRadius: 4,
-                                            fontSize: 11,
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s',
-                                            opacity: isFaded ? 0.3 : 1,
-                                            border: isSelected ? '1px solid #F79009' : '1px solid transparent',
-                                          }}
-                                          onMouseEnter={(e) => {
-                                            if (!isFaded) {
-                                              e.currentTarget.style.background = isSelected ? 'rgba(247, 144, 9, 0.3)' : 'var(--bg-tertiary, #1A1A1A)';
-                                            }
-                                          }}
-                                          onMouseLeave={(e) => {
-                                            e.currentTarget.style.background = isSelected ? 'rgba(247, 144, 9, 0.2)' : 'var(--bg-secondary, #0D0D0D)';
-                                          }}
-                                        >
-                                          <span style={{ fontFamily: 'monospace', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                                            {ep.http_method} {ep.operation_name}
-                                          </span>
-                                          <span style={{ color: ep.avg_latency > 500 ? '#F04438' : ep.avg_latency > 200 ? '#F79009' : '#73C991', marginLeft: 8, fontWeight: 600 }}>
-                                            {formatDuration(ep.avg_latency || 0)}
-                                          </span>
-                                        </div>
-                                      );
-                                    })}
-                                </div>
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <Empty description="No data" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-                        )}
-                      </Card>
+                  {/* Configurable Charts */}
+                  <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                    <Col xs={24}>
+                      <ConfigurableDashboard
+                        config={config}
+                        dataSources={{
+                          'metrics-timeseries': timeSeries,
+                          'endpoint-breakdown': endpoints,
+                        }}
+                        isLoading={timeSeriesLoading}
+                      />
                     </Col>
                   </Row>
 

@@ -4,10 +4,11 @@ import {
   Gauge, Database, Radio, Cpu, GitPullRequest,
 } from 'lucide-react';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
+import { useDashboardConfig } from '@hooks/useDashboardConfig';
 import { v1Service } from '@services/v1Service';
 import PageHeader from '@components/common/PageHeader';
 import StatCard from '@components/common/StatCard';
-import RequestChart from '@components/charts/RequestChart';
+import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
 import { formatNumber, formatDuration } from '@utils/formatters';
 import './SaturationPage.css';
 
@@ -40,6 +41,7 @@ function SatGauge({ label, value, max, color }) {
 
 export default function SaturationPage() {
   const [selectedService, setSelectedService] = useState(null);
+  const { config } = useDashboardConfig('saturation');
 
   const { data: metricsRaw, isLoading: metricsLoading } = useTimeRangeQuery(
     'saturation-metrics',
@@ -75,25 +77,6 @@ export default function SaturationPage() {
     return { maxDbPool, maxLag, maxThread, maxQueue };
   }, [metrics]);
 
-  const serviceTimeseriesMap = useMemo(() => {
-    const raw = Array.isArray(timeseriesRaw) ? timeseriesRaw : [];
-    const filtered = selectedService ? raw.filter((r) => r.service_name === selectedService) : raw;
-    const map = {};
-    for (const row of filtered) {
-      const svc = row.service_name || '';
-      if (!map[svc]) map[svc] = [];
-      map[svc].push(row);
-    }
-    return map;
-  }, [timeseriesRaw, selectedService]);
-
-  const hasMetricData = (key) => {
-    const raw = Array.isArray(timeseriesRaw) ? timeseriesRaw : [];
-    return raw.some(r => r[key] != null && r[key] !== '');
-  };
-  const hasLag = hasMetricData('avg_consumer_lag');
-  const hasThread = hasMetricData('avg_thread_active');
-  const hasQueue = hasMetricData('avg_queue_depth');
   const tableColumns = [
     {
       title: 'Service',
@@ -202,18 +185,6 @@ export default function SaturationPage() {
     },
   ];
 
-  function NoData({ icon, attr }) {
-    return (
-      <div className="sat-no-data">
-        {icon}
-        <div>No data available</div>
-        <div className="sat-no-data-hint">
-          Instrument spans with <code>{attr}</code> attribute
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="saturation-page">
       <PageHeader
@@ -272,58 +243,32 @@ export default function SaturationPage() {
         </Col>
       </Row>
 
-      {/* Timeseries charts */}
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24} lg={12}>
-          <Card title="Consumer Lag (avg, per service)" className="sat-chart-card">
-            {tsLoading ? (
-              <Skeleton active paragraph={{ rows: 4 }} />
-            ) : !hasLag ? (
-              <NoData icon={<Radio size={32} style={{ color: 'var(--text-muted)' }} />} attr="messaging.kafka.consumer.lag" />
-            ) : (
-              <div style={{ height: 220 }}>
-                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_consumer_lag" datasetLabel="Lag" />
-              </div>
-            )}
-          </Card>
-        </Col>
+      {/* Configurable timeseries charts */}
+      <ConfigurableDashboard
+        config={config}
+        dataSources={{
+          'saturation-timeseries': Array.isArray(timeseriesRaw) ? timeseriesRaw : [],
+          'saturation-metrics': Array.isArray(metricsRaw) ? metricsRaw : [],
+          'services-metrics': Array.isArray(serviceMetricsRaw) ? serviceMetricsRaw : [],
+        }}
+        isLoading={tsLoading}
+      />
 
-        <Col xs={24} lg={12}>
-          <Card title="Thread Pool Active (avg, per service)" className="sat-chart-card">
-            {tsLoading ? (
-              <Skeleton active paragraph={{ rows: 4 }} />
-            ) : !hasThread ? (
-              <NoData icon={<Cpu size={32} style={{ color: 'var(--text-muted)' }} />} attr="thread.pool.active" />
-            ) : (
-              <div style={{ height: 220 }}>
-                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_thread_active" datasetLabel="Active Threads" />
-              </div>
-            )}
-          </Card>
-        </Col>
-
-        <Col xs={24} lg={12}>
-          <Card title="Queue Depth (avg, per service)" className="sat-chart-card">
-            {tsLoading ? (
-              <Skeleton active paragraph={{ rows: 4 }} />
-            ) : !hasQueue ? (
-              <NoData icon={<GitPullRequest size={32} style={{ color: 'var(--text-muted)' }} />} attr="queue.depth" />
-            ) : (
-              <div style={{ height: 220 }}>
-                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_queue_depth" datasetLabel="Queue Depth" />
-              </div>
-            )}
-          </Card>
-        </Col>
-
-        {/* DB pool utilization gauges */}
-        {metrics.length > 0 && (
+      {/* DB pool utilization gauges */}
+      {metrics.length > 0 && (
+        <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
           <Col xs={24} lg={12}>
             <Card title="Per-Service DB Pool Utilization" className="sat-chart-card">
               {metricsLoading ? (
                 <Skeleton active paragraph={{ rows: 4 }} />
               ) : metrics.every((m) => pct(m.avg_db_pool_util) == null) ? (
-                <NoData icon={<Database size={32} style={{ color: 'var(--text-muted)' }} />} attr="db.connection_pool.utilization" />
+                <div className="sat-no-data">
+                  <Database size={32} style={{ color: 'var(--text-muted)' }} />
+                  <div>No data available</div>
+                  <div className="sat-no-data-hint">
+                    Instrument spans with <code>db.connection_pool.utilization</code> attribute
+                  </div>
+                </div>
               ) : (
                 <div className="sat-gauges-row">
                   {metrics.slice(0, 8).map((m, i) => {
@@ -340,8 +285,8 @@ export default function SaturationPage() {
               )}
             </Card>
           </Col>
-        )}
-      </Row>
+        </Row>
+      )}
 
       {/* Per-service saturation table */}
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>

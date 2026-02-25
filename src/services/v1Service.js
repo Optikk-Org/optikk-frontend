@@ -41,7 +41,7 @@ export const v1Service = {
   },
 
   async getLogHistogram(teamId, startTime, endTime, interval = '1m') {
-    return api.get(`${BASE}/logs/histogram`, { params: { startTime, endTime, interval } });
+    return api.get(`${BASE}/logs/histogram`, { params: { startTime, endTime, step: interval } });
   },
 
   async getLogDetail(teamId, traceId, spanId, timestamp, contextWindow = 30) {
@@ -246,5 +246,19 @@ export const v1Service = {
     return api.get(`${BASE}/health-checks/${checkId}/trend`, {
       params: { startTime, endTime, interval },
     });
+  },
+
+  // ==================== DASHBOARD CONFIG ====================
+
+  async getDashboardConfig(teamId, pageId) {
+    return api.get(`${BASE}/dashboard-config/${pageId}`);
+  },
+
+  async saveDashboardConfig(teamId, pageId, configYaml) {
+    return api.put(`${BASE}/dashboard-config/${pageId}`, { configYaml });
+  },
+
+  async listDashboardPages(teamId) {
+    return api.get(`${BASE}/dashboard-config/pages`);
   },
 };

@@ -410,7 +410,35 @@
   top: 0;
   background: var(--bg-primary, #0A0A0A);
   z-index: 2;
+  user-select: none;
 }
+
+.logs-raw__th {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-color, #2D2D2D);
+  padding-right: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logs-raw__table-resizer {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+}
+
+.logs-raw__table-resizer:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 
 .logs-raw__load-more {
   padding: 16px;
@@ -724,4 +752,64 @@
 .logs-raw__table::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb, #2D2D2D);
   border-radius: 3px;
+}
+
+/* ── Grafana-style Log Histogram Panel ─────────────────────────────────────── */
+
+.lh-panel {
+  background: var(--bg-secondary, #0D0D0D);
+  border-bottom: 1px solid var(--border-color, #2D2D2D);
+  user-select: none;
+}
+
+.lh-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px;
+  cursor: pointer;
+  min-height: 22px;
+}
+
+.lh-panel__chevron {
+  font-size: 11px;
+  color: var(--text-muted, #666);
+  width: 10px;
+}
+
+.lh-panel__title {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted, #666);
+}
+
+.lh-panel__body {
+  padding: 0 0 2px 0;
+}
+
+.lh-chart-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.lh-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 3px 12px 4px;
+}
+
+.lh-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted, #666);
+}
+
+.lh-legend__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }

@@ -3,14 +3,15 @@ import { Card, Row, Col, Tabs, Tag } from 'antd';
 import { useQuery } from '@tanstack/react-query';
 import { Timer } from 'lucide-react';
 import { useTimeRange } from '@hooks/useTimeRangeQuery';
+import { useDashboardConfig } from '@hooks/useDashboardConfig';
 import { v1Service } from '@services/v1Service';
 import { formatNumber } from '@utils/formatters';
 import PageHeader from '@components/common/PageHeader';
 import FilterBar from '@components/common/FilterBar';
 import StatCard from '@components/common/StatCard';
 import DataTable from '@components/common/DataTable';
-import LatencyHistogramChart from '@components/charts/LatencyHistogram';
-import LatencyHeatmapChart from '@components/charts/LatencyHeatmapChart';
+import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
+
 
 const HISTOGRAM_BUCKETS = [
   { label: '0-10ms', key: '0_10ms' },
@@ -37,7 +38,9 @@ export default function LatencyAnalysisPage({ embedded = false }) {
   const { selectedTeamId, startTime, endTime, refreshKey } = useTimeRange();
   const [serviceName, setServiceName] = useState(null);
   const [operationName, setOperationName] = useState(null);
-  const [activeTab, setActiveTab] = useState('histogram');
+  const [activeTab, setActiveTab] = useState('charts');
+
+  const { config } = useDashboardConfig('latency-analysis');
 
   const { data: histogramData, isLoading: histLoading } = useQuery({
     queryKey: ['latency-histogram', selectedTeamId, startTime, endTime, serviceName, operationName, refreshKey],
@@ -56,11 +59,17 @@ export default function LatencyAnalysisPage({ embedded = false }) {
         serviceName: serviceName || undefined,
         interval: '5m',
       }),
-    enabled: !!selectedTeamId && activeTab === 'heatmap',
+    enabled: !!selectedTeamId && activeTab === 'charts',
   });
 
   const histogram = histogramData || [];
   const heatmap = heatmapData || [];
+
+  // Build dataSources map for ConfigurableDashboard
+  const dataSources = useMemo(() => ({
+    'latency-histogram': histogram,
+    'latency-heatmap': heatmap,
+  }), [histogram, heatmap]);
 
   // Derive summary stats from histogram
   const stats = useMemo(() => {
@@ -80,25 +89,6 @@ export default function LatencyAnalysisPage({ embedded = false }) {
     return { p50, p95, p99, avg };
   }, [histogram]);
 
-  // Build Chart.js-compatible histogram traces for LatencyHistogramChart (which expects trace array)
-  // We convert backend bucket data into fake "trace" objects for the existing LatencyHistogram
-  const histogramTraces = useMemo(() => {
-    return histogram.flatMap((bucket) => {
-      const count = Number(bucket.span_count) || 0;
-      const midpointMs = bucketMidpoint(bucket.bucket);
-      return Array(count).fill({ duration_ms: midpointMs });
-    });
-  }, [histogram]);
-
-  function bucketMidpoint(bucketKey) {
-    const map = {
-      '0_10ms': 5, '10_25ms': 17, '25_50ms': 37, '50_100ms': 75,
-      '100_250ms': 175, '250_500ms': 375, '500ms_1s': 750,
-      '1s_2500ms': 1750, '2500ms_5s': 3750, 'gt_5s': 7000,
-    };
-    return map[bucketKey] ?? 0;
-  }
-
   // Percentile table columns
   const percentileColumns = [
     {
@@ -109,49 +99,24 @@ export default function LatencyAnalysisPage({ embedded = false }) {
         return <Tag color={bucketColor(label)}>{label}</Tag>;
       }
     },
-    {
-      title: 'Span Count', dataIndex: 'span_count', key: 'span_count',
-      render: (v) => formatNumber(Number(v) || 0)
-    },
-    {
-      title: 'P50', dataIndex: 'p50_ms', key: 'p50_ms',
-      render: (v) => v != null ? `${Number(v).toFixed(1)}ms` : '-'
-    },
-    {
-      title: 'P95', dataIndex: 'p95_ms', key: 'p95_ms',
-      render: (v) => v != null ? `${Number(v).toFixed(1)}ms` : '-'
-    },
-    {
-      title: 'P99', dataIndex: 'p99_ms', key: 'p99_ms',
-      render: (v) => v != null ? `${Number(v).toFixed(1)}ms` : '-'
-    },
-    {
-      title: 'Max', dataIndex: 'max_ms', key: 'max_ms',
-      render: (v) => v != null ? `${Number(v).toFixed(1)}ms` : '-'
-    },
-    {
-      title: 'Avg', dataIndex: 'avg_ms', key: 'avg_ms',
-      render: (v) => v != null ? `${Number(v).toFixed(1)}ms` : '-'
-    },
+    { title: 'Span Count', dataIndex: 'span_count', key: 'span_count', render: (v) => formatNumber(Number(v) || 0) },
+    { title: 'P50', dataIndex: 'p50_ms', key: 'p50_ms', render: (v) => v != null ? `${Number(v).toFixed(1)}ms` : '-' },
+    { title: 'P95', dataIndex: 'p95_ms', key: 'p95_ms', render: (v) => v != null ? `${Number(v).toFixed(1)}ms` : '-' },
+    { title: 'P99', dataIndex: 'p99_ms', key: 'p99_ms', render: (v) => v != null ? `${Number(v).toFixed(1)}ms` : '-' },
+    { title: 'Max', dataIndex: 'max_ms', key: 'max_ms', render: (v) => v != null ? `${Number(v).toFixed(1)}ms` : '-' },
+    { title: 'Avg', dataIndex: 'avg_ms', key: 'avg_ms', render: (v) => v != null ? `${Number(v).toFixed(1)}ms` : '-' },
   ];
 
   const tabItems = [
     {
-      key: 'histogram',
-      label: 'Histogram',
+      key: 'charts',
+      label: 'Histogram & Heatmap',
       children: (
-        <Card className="chart-card" styles={{ body: { padding: '8px' } }}>
-          <LatencyHistogramChart traces={histogramTraces} height={280} />
-        </Card>
-      ),
-    },
-    {
-      key: 'heatmap',
-      label: 'Heatmap',
-      children: (
-        <Card loading={heatLoading} className="chart-card" styles={{ body: { padding: '8px' } }}>
-          <LatencyHeatmapChart data={heatmap} />
-        </Card>
+        <ConfigurableDashboard
+          config={config}
+          dataSources={dataSources}
+          isLoading={histLoading || heatLoading}
+        />
       ),
     },
     {

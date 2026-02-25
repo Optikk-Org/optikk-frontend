@@ -1,16 +1,14 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Row, Col, Card, Spin, Empty, Switch, Tag, Tabs, Progress } from 'antd';
+import { Row, Col, Card, Switch, Tabs, Progress } from 'antd';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { BarChart3, Activity, AlertCircle, Clock, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
+import { BarChart3, Activity, AlertCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useAppStore } from '@store/appStore';
 import { v1Service } from '@services/v1Service';
 import { dashboardService } from '@services/dashboardService';
-import { PageHeader, FilterBar, StatCard, StatCardsGrid, TopEndpointsList } from '@components/common';
-import RequestChart from '@components/charts/RequestChart';
-import LatencyChart from '@components/charts/LatencyChart';
-import ErrorRateChart from '@components/charts/ErrorRateChart';
-import SparklineChart from '@components/charts/SparklineChart';
+import { PageHeader, FilterBar, StatCardsGrid } from '@components/common';
+import { useDashboardConfig } from '@hooks/useDashboardConfig';
+import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
 import { formatNumber, formatDuration } from '@utils/formatters';
 import LatencyAnalysisPage from './LatencyAnalysisPage';
 
@@ -21,9 +19,8 @@ export default function MetricsPage() {
   const [selectedService, setSelectedService] = useState(null);
   const [showErrorsOnly, setShowErrorsOnly] = useState(false);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') === 'latency' ? 'latency' : 'overview');
-  const [selectedEndpointsRequests, setSelectedEndpointsRequests] = useState([]);
-  const [selectedEndpointsErrorRate, setSelectedEndpointsErrorRate] = useState([]);
-  const [selectedEndpointsLatency, setSelectedEndpointsLatency] = useState([]);
+
+  const { config } = useDashboardConfig('metrics');
 
   useEffect(() => {
     const queryTab = searchParams.get('tab') === 'latency' ? 'latency' : 'overview';
@@ -98,128 +95,6 @@ export default function MetricsPage() {
   const summary = summaryData || {};
   const serviceMetrics = serviceMetricsData || [];
   const endpointMetrics = Array.isArray(endpointMetricsData) ? endpointMetricsData : [];
-
-  const endpointTimeseriesMap = useMemo(() => {
-    if (!endpointTimeSeriesData) return {};
-    const map = {};
-    for (const d of endpointTimeSeriesData) {
-      const method = (d.http_method || '').toUpperCase();
-      const op = d.operation_name || d.endpoint_name || 'Unknown';
-      const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
-
-      // Explicitly match the key format generated for `ep.key`
-      const key = `${method} ${cleanOp}_${d.service_name || ''}`;
-
-      if (!map[key]) map[key] = [];
-      map[key].push(d);
-    }
-    return map;
-  }, [endpointTimeSeriesData]);
-
-  // Top endpoints sorted by request count
-  const topEndpointsByRequests = useMemo(() => {
-    return [...endpointMetrics]
-      .sort((a, b) => (b.request_count || 0) - (a.request_count || 0))
-      .slice(0, 10)
-      .map(ep => ({
-        ...ep,
-        endpoint: (() => {
-          const method = (ep.http_method || '').toUpperCase();
-          const op = ep.operation_name || ep.endpoint_name || 'Unknown';
-          const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
-          return `${method} ${cleanOp}`;
-        })(),
-        service: ep.service_name,
-        key: (() => {
-          const method = (ep.http_method || '').toUpperCase();
-          const op = ep.operation_name || ep.endpoint_name || 'Unknown';
-          const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
-          return `${method} ${cleanOp}_${ep.service_name || ''}`;
-        })(),
-      }));
-  }, [endpointMetrics]);
-
-  const handleEndpointToggleRequests = (endpointKey) => {
-    setSelectedEndpointsRequests(prev => {
-      if (prev.includes(endpointKey)) {
-        return prev.filter(key => key !== endpointKey);
-      } else {
-        return [...prev, endpointKey];
-      }
-    });
-  };
-
-  // Top endpoints sorted by error rate
-  const topEndpointsByErrorRate = useMemo(() => {
-    return [...endpointMetrics]
-      .map(ep => {
-        const errorRate = ep.request_count > 0 ? (ep.error_count / ep.request_count) * 100 : 0;
-        return { ...ep, errorRate };
-      })
-      .filter(ep => ep.errorRate > 0)
-      .sort((a, b) => b.errorRate - a.errorRate)
-      .slice(0, 10)
-      .map(ep => ({
-        ...ep,
-        endpoint: (() => {
-          const method = (ep.http_method || '').toUpperCase();
-          const op = ep.operation_name || ep.endpoint_name || 'Unknown';
-          const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
-          return `${method} ${cleanOp}`;
-        })(),
-        service: ep.service_name,
-        key: (() => {
-          const method = (ep.http_method || '').toUpperCase();
-          const op = ep.operation_name || ep.endpoint_name || 'Unknown';
-          const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
-          return `${method} ${cleanOp}_${ep.service_name || ''}`;
-        })(),
-      }));
-  }, [endpointMetrics]);
-
-  const handleEndpointToggleErrorRate = (endpointKey) => {
-    setSelectedEndpointsErrorRate(prev => {
-      if (prev.includes(endpointKey)) {
-        return prev.filter(key => key !== endpointKey);
-      } else {
-        return [...prev, endpointKey];
-      }
-    });
-  };
-
-  // Top endpoints sorted by latency
-  const topEndpointsByLatency = useMemo(() => {
-    return [...endpointMetrics]
-      .sort((a, b) => (b.avg_latency || b.p95_latency || 0) - (a.avg_latency || a.p95_latency || 0))
-      .slice(0, 10)
-      .map(ep => ({
-        ...ep,
-        endpoint: (() => {
-          const method = (ep.http_method || '').toUpperCase();
-          const op = ep.operation_name || ep.endpoint_name || 'Unknown';
-          const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
-          return `${method} ${cleanOp}`;
-        })(),
-        service: ep.service_name,
-        latency: ep.avg_latency || ep.p95_latency || 0,
-        key: (() => {
-          const method = (ep.http_method || '').toUpperCase();
-          const op = ep.operation_name || ep.endpoint_name || 'Unknown';
-          const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
-          return `${method} ${cleanOp}_${ep.service_name || ''}`;
-        })(),
-      }));
-  }, [endpointMetrics]);
-
-  const handleEndpointToggleLatency = (endpointKey) => {
-    setSelectedEndpointsLatency(prev => {
-      if (prev.includes(endpointKey)) {
-        return prev.filter(key => key !== endpointKey);
-      } else {
-        return [...prev, endpointKey];
-      }
-    });
-  };
 
   // Calculate trends
   const trends = useMemo(() => {
@@ -367,72 +242,16 @@ export default function MetricsPage() {
               key: 'overview',
               label: 'Overview',
               children: (
-                <>
-                  {isLoading ? (
-                    <div style={{ textAlign: 'center', padding: 100 }}>
-                      <Spin size="large" />
-                    </div>
-                  ) : metrics.length === 0 ? (
-                    <Empty description="No metrics data available for the selected time range" />
-                  ) : (
-                    <Row gutter={[16, 16]}>
-                      <Col xs={24} lg={12}>
-                        <Card title="Request Rate" className="chart-card" styles={{ body: { padding: '8px' } }}>
-                          <RequestChart
-                            data={metrics}
-                            endpoints={topEndpointsByRequests}
-                            selectedEndpoints={selectedEndpointsRequests}
-                            serviceTimeseriesMap={endpointTimeseriesMap}
-                          />
-                          <TopEndpointsList
-                            title="Requests"
-                            type="requests"
-                            endpoints={topEndpointsByRequests}
-                            selectedEndpoints={selectedEndpointsRequests}
-                            onToggle={handleEndpointToggleRequests}
-                          />
-                        </Card>
-                      </Col>
-                      <Col xs={24} lg={12}>
-                        <Card title="Error Rate" className="chart-card" styles={{ body: { padding: '8px' } }}>
-                          <ErrorRateChart
-                            data={metrics.map(m => ({
-                              ...m,
-                              value: m.error_rate || (m.request_count > 0 ? (m.error_count / m.request_count) * 100 : 0),
-                            }))}
-                            endpoints={topEndpointsByErrorRate}
-                            selectedEndpoints={selectedEndpointsErrorRate}
-                            serviceTimeseriesMap={endpointTimeseriesMap}
-                          />
-                          <TopEndpointsList
-                            title="Error Rate"
-                            type="errorRate"
-                            endpoints={topEndpointsByErrorRate}
-                            selectedEndpoints={selectedEndpointsErrorRate}
-                            onToggle={handleEndpointToggleErrorRate}
-                          />
-                        </Card>
-                      </Col>
-                      <Col xs={24}>
-                        <Card title="Latency Distribution" className="chart-card" styles={{ body: { padding: '8px' } }}>
-                          <LatencyChart
-                            data={metrics}
-                            endpoints={topEndpointsByLatency}
-                            selectedEndpoints={selectedEndpointsLatency}
-                            serviceTimeseriesMap={endpointTimeseriesMap}
-                          />
-                          <TopEndpointsList
-                            title="Latency"
-                            type="latency"
-                            endpoints={topEndpointsByLatency}
-                            selectedEndpoints={selectedEndpointsLatency}
-                            onToggle={handleEndpointToggleLatency}
-                          />
-                        </Card>
-                      </Col>
-                    </Row>
-                  )}
-                </>
+                <ConfigurableDashboard
+                  config={config}
+                  dataSources={{
+                    'metrics-summary': summaryData,
+                    'metrics-timeseries': metrics,
+                    'endpoints-timeseries': endpointTimeSeriesData || [],
+                    'endpoints-metrics': endpointMetrics,
+                  }}
+                  isLoading={isLoading}
+                />
               ),
             },
             {

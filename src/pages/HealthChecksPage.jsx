@@ -57,7 +57,7 @@ function CreateCheckModal({ open, onCancel, onSubmit, loading }) {
           <Input placeholder="https://api.example.com/health" />
         </Form.Item>
 
-        <Row gutter={16}>
+        <Row gutter={[16, 16]}>
           <Col span={12}>
             <Form.Item name="intervalSeconds" label="Interval (seconds)" rules={[{ required: true }]}>
               <InputNumber style={{ width: '100%' }} min={10} />

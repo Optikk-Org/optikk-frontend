@@ -3,17 +3,18 @@ import { Row, Col, Card, Select, Tag, Table, Skeleton, Empty, Tooltip } from 'an
 import { AlertCircle, ExternalLink, Clock, Server } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
+import { useDashboardConfig } from '@hooks/useDashboardConfig';
 import { v1Service } from '@services/v1Service';
 import PageHeader from '@components/common/PageHeader';
 import StatCard from '@components/common/StatCard';
-import TopEndpointsList from '@components/common/TopEndpointsList';
-import ErrorRateChart from '@components/charts/ErrorRateChart';
+import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
 import { formatNumber, formatRelativeTime } from '@utils/formatters';
 import './ErrorDashboardPage.css';
 
 export default function ErrorDashboardPage() {
   const navigate = useNavigate();
   const [selectedService, setSelectedService] = useState(null);
+  const { config } = useDashboardConfig('error-dashboard');
 
   // Cross-service error groups
   const { data: errorGroupsRaw, isLoading: groupsLoading } = useTimeRangeQuery(
@@ -58,51 +59,6 @@ export default function ErrorDashboardPage() {
     }
     return { totalErrors: 0, uniqueServices: 0, uniqueOperations: 0, topErrorCount: 0 };
   }, [errorGroups]);
-
-  // Build generic serviceTimeseriesMap for the common ErrorRateChart
-  const serviceTimeseriesMap = useMemo(() => {
-    const raw = Array.isArray(serviceTimeseriesRaw) ? serviceTimeseriesRaw : [];
-    const map = {};
-    for (const row of raw) {
-      const svc = row.service_name || '';
-      if (!map[svc]) map[svc] = [];
-      map[svc].push(row);
-    }
-    return map;
-  }, [serviceTimeseriesRaw]);
-
-  const hasChartData = Object.keys(serviceTimeseriesMap).length > 0;
-
-  const [selectedServicesErrorRate, setSelectedServicesErrorRate] = useState([]);
-
-  // Break down services by error rate for the list below the chart
-  const topServicesByErrorRate = useMemo(() => {
-    const raw = Array.isArray(serviceMetricsRaw) ? serviceMetricsRaw : [];
-    return [...raw]
-      .map(svc => {
-        const errorRate = svc.request_count > 0 ? (svc.error_count / svc.request_count) * 100 : 0;
-        return { ...svc, errorRate };
-      })
-      .filter(svc => svc.errorRate > 0)
-      .sort((a, b) => b.errorRate - a.errorRate)
-      .slice(0, 10)
-      .map(svc => ({
-        ...svc,
-        endpoint: svc.service_name,
-        service: svc.service_name,
-        key: svc.service_name,
-      }));
-  }, [serviceMetricsRaw]);
-
-  const handleServiceToggleErrorRate = (serviceKey) => {
-    setSelectedServicesErrorRate(prev => {
-      if (prev.includes(serviceKey)) {
-        return prev.filter(key => key !== serviceKey);
-      } else {
-        return [...prev, serviceKey];
-      }
-    });
-  };
 
   const statusColor = (code) => {
     const n = Number(code);
@@ -259,34 +215,15 @@ export default function ErrorDashboardPage() {
         </Col>
       </Row>
 
-      {/* Error Rate Trend Chart */}
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24}>
-          <Card title="Error Rate Trend by Service (%)" className="err-chart-card">
-            {tsLoading ? (
-              <Skeleton active paragraph={{ rows: 5 }} />
-            ) : !hasChartData ? (
-              <Empty description="No error data in selected time range" />
-            ) : (
-              <>
-                <ErrorRateChart
-                  data={[]}
-                  endpoints={topServicesByErrorRate}
-                  selectedEndpoints={selectedServicesErrorRate}
-                  serviceTimeseriesMap={serviceTimeseriesMap}
-                />
-                <TopEndpointsList
-                  title="Error Rate"
-                  type="errorRate"
-                  endpoints={topServicesByErrorRate}
-                  selectedEndpoints={selectedServicesErrorRate}
-                  onToggle={handleServiceToggleErrorRate}
-                />
-              </>
-            )}
-          </Card>
-        </Col>
-      </Row>
+      {/* Configurable Dashboard Charts */}
+      <ConfigurableDashboard
+        config={config}
+        dataSources={{
+          'service-timeseries': Array.isArray(serviceTimeseriesRaw) ? serviceTimeseriesRaw : [],
+          'services-metrics': Array.isArray(serviceMetricsRaw) ? serviceMetricsRaw : [],
+        }}
+        isLoading={tsLoading}
+      />
 
       {/* Error Groups Table */}
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>

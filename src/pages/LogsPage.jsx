@@ -3,6 +3,10 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { v1Service } from '@services/v1Service';
 import { useAppStore } from '@store/appStore';
+import { useDashboardConfig } from '@hooks/useDashboardConfig';
+import { useTimeRangeQuery, useTimeRange } from '@hooks/useTimeRangeQuery';
+import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
+
 
 import LogsTopNav from '@components/logs/LogsTopNav';
 import LogsQueryBar from '@components/logs/LogsQueryBar';
@@ -12,9 +16,12 @@ import LogRow, { LogDetailPanel } from '@components/logs/LogRow';
 
 import './LogsPage.css';
 
+
 export default function LogsPage() {
   const { selectedTeamId, timeRange, refreshKey } = useAppStore();
   const navigate = useNavigate();
+
+  const { config: dashboardConfig } = useDashboardConfig('logs');
 
   // ── filter state — structured filters from the query bar
   const [filters, setFilters] = useState([]);
@@ -87,26 +94,37 @@ export default function LogsPage() {
     refetchInterval: liveTail ? 3000 : false,
   });
 
-  // ── data fetch: histogram (shown above raw logs)
-  const getInterval = (minutes) => {
-    if (minutes <= 30) return '1m';
-    if (minutes <= 180) return '5m';
-    if (minutes <= 1440) return '15m';
-    return '1h';
-  };
+  // ── data fetch: histogram — uses same time range as all other charts
+  const { selectedTeamId: histTeamId, refreshKey: histRefresh, timeRange: histTimeRange, getTimeRange } = useTimeRange();
+
+  const { histStart, histEnd } = useMemo(() => {
+    const { startTime, endTime } = getTimeRange();
+    return { histStart: startTime, histEnd: endTime };
+  }, [histTimeRange, histRefresh, getTimeRange]);
+
+  const histInterval = (() => {
+    const mins = (histEnd - histStart) / 60000;
+    // Target ~50 bars; pick the finest interval that achieves this
+    if (mins <= 60) return '1m';   // up to 60 bars for 1h window
+    if (mins <= 360) return '5m';   // up to 72 bars for 6h window
+    if (mins <= 1440) return '15m';  // up to 96 bars for 24h window
+    if (mins <= 10080) return '1h';  // up to 168 bars for 7d window
+    return '6h';
+  })();
 
   const { data: histData } = useQuery({
-    queryKey: ['log-histogram', selectedTeamId, timeRange.value, refreshKey],
-    queryFn: () => {
-      const endTime = Date.now();
-      const startTime = endTime - timeRange.minutes * 60 * 1000;
-      const interval = getInterval(timeRange.minutes);
-      return v1Service.getLogHistogram(selectedTeamId, startTime, endTime, interval);
-    },
-    enabled: !!selectedTeamId,
+    queryKey: ['log-histogram', histTeamId, histTimeRange.value, histRefresh, histInterval],
+    queryFn: () => v1Service.getLogHistogram(histTeamId, histStart, histEnd, histInterval),
+    enabled: !!histTeamId,
   });
 
   const histogramData = histData?.histogram || histData?.buckets || histData || [];
+
+  const chartDataSources = useMemo(() => ({
+    'log-histogram': Array.isArray(histogramData) ? histogramData : [],
+    _meta: { startTime: histStart, endTime: histEnd, interval: histInterval },
+  }), [histogramData, histStart, histEnd, histInterval]);
+
 
   // ── derived data
   const allLogs = data?.pages ? data.pages.flatMap((page) => page.logs || []) : [];
@@ -167,23 +185,13 @@ export default function LogsPage() {
           onClearAll={handleClearAll}
         />
 
-        {/* Log Volume Histogram — inline above raw logs */}
-        {Array.isArray(histogramData) && histogramData.length > 0 && (
-          <div className="logs-histogram">
-            <div className="logs-histogram__header">
-              <span className="logs-histogram__title">Log Volume</span>
-              <button
-                className="logs-histogram__toggle"
-                onClick={() => setChartCollapsed(!chartCollapsed)}
-              >
-                {chartCollapsed ? '▸ Show' : '▾ Hide'}
-              </button>
-            </div>
-            {!chartCollapsed && (
-              <div className="logs-histogram__chart">
-                <LogHistogram data={histogramData} height={160} />
-              </div>
-            )}
+        {/* Configurable Charts — powered by backend YAML config */}
+        {dashboardConfig && (
+          <div style={{ marginBottom: 16 }}>
+            <ConfigurableDashboard
+              config={dashboardConfig}
+              dataSources={chartDataSources}
+            />
           </div>
         )}
 
