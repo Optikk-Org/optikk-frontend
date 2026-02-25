@@ -7,6 +7,38 @@ import { v1Service } from '@services/v1Service';
 import RequestChart from '@components/charts/RequestChart';
 
 const n = (v) => (v == null || Number.isNaN(Number(v)) ? 0 : Number(v));
+const queueSeriesKey = (row) => `${row?.queue_name || 'unknown'}::${row?.service_name || 'unknown'}`;
+const scopeQueues = (scope, queues) =>
+  queues.map((q) => ({ ...q, seriesKey: q.key, key: `${scope}::${q.key}` }));
+
+function QueueChartCard({ title, valueKey, listType, listTitle, queues, serviceTimeseriesMap }) {
+  const [selectedQueues, setSelectedQueues] = useState([]);
+  const toggleQueue = (qKey) => {
+    setSelectedQueues((prev) =>
+      prev.includes(qKey) ? prev.filter((k) => k !== qKey) : [...prev, qKey]
+    );
+  };
+
+  return (
+    <Card title={title} className="chart-card" styles={{ body: { padding: '8px' } }}>
+      <div style={{ height: 280 }}>
+        <RequestChart
+          serviceTimeseriesMap={serviceTimeseriesMap}
+          valueKey={valueKey}
+          selectedEndpoints={selectedQueues}
+          endpoints={queues}
+        />
+      </div>
+      <QueueMetricsList
+        type={listType}
+        title={listTitle}
+        queues={queues}
+        selectedQueues={selectedQueues}
+        onToggle={toggleQueue}
+      />
+    </Card>
+  );
+}
 
 export default function MessagingQueueMonitoringPage() {
   const { data, isLoading } = useTimeRangeQuery(
@@ -14,50 +46,42 @@ export default function MessagingQueueMonitoringPage() {
     (teamId, start, end) => v1Service.getMessagingQueueInsights(teamId, start, end, '5m')
   );
 
-  const [selectedQueues, setSelectedQueues] = useState([]);
-
   const summary = data?.summary || {};
   const ts = Array.isArray(data?.timeseries) ? data.timeseries : [];
 
   const serviceTimeseriesMap = useMemo(() => {
     const map = {};
     for (const row of ts) {
-      const q = row.queue_name || 'unknown';
-      if (!map[q]) map[q] = [];
-      map[q].push(row);
+      const key = queueSeriesKey(row);
+      if (!map[key]) map[key] = [];
+      map[key].push(row);
     }
     return map;
   }, [ts]);
 
   const uniqueQueues = Object.keys(serviceTimeseriesMap);
 
-  const topQueues = useMemo(() => {
+  const topQueuesBase = useMemo(() => {
     return Array.isArray(data?.topQueues)
-      ? data.topQueues.map(q => ({ ...q, key: q.queue_name }))
+      ? data.topQueues.map(q => ({ ...q, key: queueSeriesKey(q) }))
       : [];
   }, [data?.topQueues]);
 
   const topQueuesSortedByDepth = useMemo(() => {
-    return [...topQueues].sort((a, b) => b.avg_queue_depth - a.avg_queue_depth);
-  }, [topQueues]);
+    return scopeQueues('depth', [...topQueuesBase].sort((a, b) => b.avg_queue_depth - a.avg_queue_depth));
+  }, [topQueuesBase]);
 
   const topQueuesSortedByLag = useMemo(() => {
-    return [...topQueues].sort((a, b) => b.max_consumer_lag - a.max_consumer_lag);
-  }, [topQueues]);
+    return scopeQueues('lag', [...topQueuesBase].sort((a, b) => b.max_consumer_lag - a.max_consumer_lag));
+  }, [topQueuesBase]);
 
   const topQueuesSortedByPublish = useMemo(() => {
-    return [...topQueues].sort((a, b) => b.avg_publish_rate - a.avg_publish_rate);
-  }, [topQueues]);
+    return scopeQueues('publish', [...topQueuesBase].sort((a, b) => b.avg_publish_rate - a.avg_publish_rate));
+  }, [topQueuesBase]);
 
   const topQueuesSortedByReceive = useMemo(() => {
-    return [...topQueues].sort((a, b) => b.avg_receive_rate - a.avg_receive_rate);
-  }, [topQueues]);
-
-  const handleToggleQueue = (qKey) => {
-    setSelectedQueues(prev =>
-      prev.includes(qKey) ? prev.filter(k => k !== qKey) : [...prev, qKey]
-    );
-  };
+    return scopeQueues('receive', [...topQueuesBase].sort((a, b) => b.avg_receive_rate - a.avg_receive_rate));
+  }, [topQueuesBase]);
 
   return (
     <div>
@@ -85,36 +109,44 @@ export default function MessagingQueueMonitoringPage() {
       <Spin spinning={isLoading}>
         <Row gutter={[16, 16]}>
           <Col xs={24} lg={12}>
-            <Card title={<span><ArrowUpRight size={16} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Production Rate (msg/s)</span>} className="chart-card" styles={{ body: { padding: '8px' } }}>
-              <div style={{ height: 280 }}>
-                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_publish_rate" selectedEndpoints={selectedQueues} endpoints={topQueues} />
-              </div>
-              <QueueMetricsList type="productionRate" title="Production Rate" queues={topQueuesSortedByPublish} selectedQueues={selectedQueues} onToggle={handleToggleQueue} />
-            </Card>
+            <QueueChartCard
+              title={<span><ArrowUpRight size={16} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Production Rate (msg/s)</span>}
+              valueKey="avg_publish_rate"
+              listType="productionRate"
+              listTitle="Production Rate"
+              queues={topQueuesSortedByPublish}
+              serviceTimeseriesMap={serviceTimeseriesMap}
+            />
           </Col>
           <Col xs={24} lg={12}>
-            <Card title={<span><ArrowDownRight size={16} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Consumption Rate (msg/s)</span>} className="chart-card" styles={{ body: { padding: '8px' } }}>
-              <div style={{ height: 280 }}>
-                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_receive_rate" selectedEndpoints={selectedQueues} endpoints={topQueues} />
-              </div>
-              <QueueMetricsList type="consumptionRate" title="Consumption Rate" queues={topQueuesSortedByReceive} selectedQueues={selectedQueues} onToggle={handleToggleQueue} />
-            </Card>
+            <QueueChartCard
+              title={<span><ArrowDownRight size={16} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Consumption Rate (msg/s)</span>}
+              valueKey="avg_receive_rate"
+              listType="consumptionRate"
+              listTitle="Consumption Rate"
+              queues={topQueuesSortedByReceive}
+              serviceTimeseriesMap={serviceTimeseriesMap}
+            />
           </Col>
           <Col xs={24} lg={12}>
-            <Card title={<span><Clock size={16} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Consumer Group Lag</span>} className="chart-card" styles={{ body: { padding: '8px' } }}>
-              <div style={{ height: 280 }}>
-                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_consumer_lag" selectedEndpoints={selectedQueues} endpoints={topQueues} />
-              </div>
-              <QueueMetricsList type="consumerLag" title="Max Lag" queues={topQueuesSortedByLag} selectedQueues={selectedQueues} onToggle={handleToggleQueue} />
-            </Card>
+            <QueueChartCard
+              title={<span><Clock size={16} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Consumer Group Lag</span>}
+              valueKey="avg_consumer_lag"
+              listType="consumerLag"
+              listTitle="Max Lag"
+              queues={topQueuesSortedByLag}
+              serviceTimeseriesMap={serviceTimeseriesMap}
+            />
           </Col>
           <Col xs={24} lg={12}>
-            <Card title={<span><Layers size={16} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Topic Lag (Queue Depth)</span>} className="chart-card" styles={{ body: { padding: '8px' } }}>
-              <div style={{ height: 280 }}>
-                <RequestChart serviceTimeseriesMap={serviceTimeseriesMap} valueKey="avg_queue_depth" selectedEndpoints={selectedQueues} endpoints={topQueues} />
-              </div>
-              <QueueMetricsList type="depth" title="Avg Depth" queues={topQueuesSortedByDepth} selectedQueues={selectedQueues} onToggle={handleToggleQueue} />
-            </Card>
+            <QueueChartCard
+              title={<span><Layers size={16} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Topic Lag (Queue Depth)</span>}
+              valueKey="avg_queue_depth"
+              listType="depth"
+              listTitle="Avg Depth"
+              queues={topQueuesSortedByDepth}
+              serviceTimeseriesMap={serviceTimeseriesMap}
+            />
           </Col>
         </Row>
       </Spin>

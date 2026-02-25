@@ -22,6 +22,18 @@ function tsMs(ts) {
   return Number.isNaN(ms) ? NaN : ms;
 }
 
+function formatAxisValue(value) {
+  const n = Number(value) || 0;
+  const abs = Math.abs(n);
+  if (abs >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+  if (abs >= 1000) return `${(n / 1000).toFixed(1)}K`;
+  if (abs >= 10) return n.toFixed(0);
+  if (abs >= 1) return n.toFixed(1);
+  if (abs >= 0.1) return n.toFixed(2);
+  if (abs > 0) return n.toFixed(3);
+  return '0';
+}
+
 export default function RequestChart({
   data = [],
   endpoints = [],
@@ -38,9 +50,10 @@ export default function RequestChart({
   const buildServiceDatasets = (endpointList) => {
     const targetMap = {};
     for (const ep of endpointList) {
-      const key = ep.key || ep.service_name || ep.service || '';
-      const label = ep.endpoint || ep.service_name || ep.service || key;
-      if (!targetMap[key]) targetMap[key] = { label };
+      const selectionKey = ep.key || ep.service_name || ep.service || '';
+      const seriesKey = ep.seriesKey || ep.series_key || selectionKey;
+      const label = ep.endpoint || ep.service_name || ep.service || seriesKey;
+      if (!targetMap[selectionKey]) targetMap[selectionKey] = { label, seriesKey };
     }
 
     // Determine stepMs from the generated buckets to floor backend timestamps
@@ -48,8 +61,8 @@ export default function RequestChart({
       ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime()
       : 60000;
 
-    return Object.entries(targetMap).map(([key, info], idx) => {
-      const tsData = serviceTimeseriesMap[key] || [];
+    return Object.entries(targetMap).map(([, info], idx) => {
+      const tsData = serviceTimeseriesMap[info.seriesKey] || [];
       const tsMap = {};
 
       for (const row of tsData) {
@@ -130,6 +143,13 @@ export default function RequestChart({
       const dsMax = Math.max(...ds.data.map(v => Number(v) || 0), 0);
       if (dsMax > maxVal) maxVal = dsMax;
     });
+    if (maxVal <= 0) return 1;
+    if (maxVal < 1) {
+      return Math.max(Number((maxVal * 1.4).toFixed(3)), 0.05);
+    }
+    if (maxVal < 10) {
+      return Math.max(Number((maxVal * 1.25).toFixed(2)), 1);
+    }
     return Math.max(Math.ceil(maxVal * 1.5), 1);
   }, [chartData]);
 
@@ -141,7 +161,7 @@ export default function RequestChart({
           label: (ctx) => {
             const v = ctx.parsed.y;
             if (v == null) return null;
-            return `${ctx.dataset.label}: ${v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v.toFixed(0)}`;
+            return `${ctx.dataset.label}: ${formatAxisValue(v)}`;
           },
         },
       },
@@ -151,11 +171,7 @@ export default function RequestChart({
         ticks: {
           color: '#666',
           font: { size: 11 },
-          callback: (value) => {
-            if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-            if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
-            return value.toFixed(0);
-          },
+          callback: (value) => formatAxisValue(value),
         },
         grid: { color: '#2D2D2D' },
         beginAtZero: true,

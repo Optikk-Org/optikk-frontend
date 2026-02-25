@@ -1,5 +1,19 @@
 import { formatNumber } from '@utils/formatters';
 
+function formatRate(value) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '0';
+    if (Math.abs(num) >= 1000) return formatNumber(num);
+    return num.toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
+function formatDepth(value) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '0';
+    if (Math.abs(num) >= 1000) return formatNumber(num);
+    return num.toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
 export default function QueueMetricsList({
     title,
     queues = [],
@@ -35,7 +49,7 @@ export default function QueueMetricsList({
                                 selectedBg = 'rgba(94, 96, 206, 0.2)';
                                 hoverBg = 'rgba(255, 255, 255, 0.05)';
                                 valueColor = '#e0e0e0';
-                                displayValue = formatNumber(q.avg_queue_depth || 0);
+                                displayValue = formatDepth(q.avg_queue_depth || 0);
                             } else if (type === 'consumerLag') {
                                 selectedBg = 'rgba(240, 68, 56, 0.2)';
                                 hoverBg = 'rgba(255, 255, 255, 0.05)';
@@ -45,12 +59,12 @@ export default function QueueMetricsList({
                                 selectedBg = 'rgba(247, 144, 9, 0.2)';
                                 hoverBg = 'rgba(255, 255, 255, 0.05)';
                                 valueColor = '#e0e0e0';
-                                displayValue = `${formatNumber(q.avg_publish_rate || 0)}/s`;
+                                displayValue = `${formatRate(q.avg_publish_rate || 0)}/s`;
                             } else if (type === 'consumptionRate') {
                                 selectedBg = 'rgba(6, 214, 160, 0.2)';
                                 hoverBg = 'rgba(255, 255, 255, 0.05)';
                                 valueColor = '#e0e0e0';
-                                displayValue = `${formatNumber(q.avg_receive_rate || 0)}/s`;
+                                displayValue = `${formatRate(q.avg_receive_rate || 0)}/s`;
                             }
 
                             const CHART_COLORS = ['#5E60CE', '#48CAE4', '#06D6A0', '#FFD166', '#EF476F', '#118AB2', '#073B4C', '#F78C6B', '#83D483', '#5E35B1'];
@@ -58,7 +72,7 @@ export default function QueueMetricsList({
 
                             return (
                                 <tr
-                                    key={idx}
+                                    key={q.key || `${q.queue_name || 'unknown'}::${q.service_name || 'unknown'}::${idx}`}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         if (onToggle) onToggle(q.key);
