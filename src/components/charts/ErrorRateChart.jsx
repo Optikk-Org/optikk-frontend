@@ -10,6 +10,17 @@ function tsKey(ts) {
   return String(ts).replace('T', ' ').replace('Z', '').substring(0, 16);
 }
 
+// Parse timestamp values robustly across API formats.
+// If timezone is missing (e.g. "2026-02-24 10:25:00"), treat as UTC.
+function tsMs(ts) {
+  if (!ts) return NaN;
+  const raw = String(ts).trim();
+  const normalized = raw.includes('T') ? raw : raw.replace(' ', 'T');
+  const hasTimezone = /([zZ]|[+-]\d{2}:\d{2})$/.test(normalized);
+  const ms = new Date(hasTimezone ? normalized : `${normalized}Z`).getTime();
+  return Number.isNaN(ms) ? NaN : ms;
+}
+
 export default function ErrorRateChart({
   data = [],
   endpoints = [],
@@ -36,7 +47,8 @@ export default function ErrorRateChart({
       const tsMap = {};
       for (const row of tsData) {
         if (!row.timestamp) continue;
-        const rowTime = new Date(row.timestamp).getTime();
+        const rowTime = tsMs(row.timestamp);
+        if (Number.isNaN(rowTime)) continue;
         const alignedTimeMs = Math.floor(rowTime / stepMs) * stepMs;
         const bucketKey = tsKey(new Date(alignedTimeMs).toISOString());
 
@@ -93,7 +105,8 @@ export default function ErrorRateChart({
         const tsMap = {};
         for (const row of rows) {
           if (!row.timestamp) continue;
-          const rowTime = new Date(row.timestamp).getTime();
+          const rowTime = tsMs(row.timestamp);
+          if (Number.isNaN(rowTime)) continue;
           const alignedTimeMs = Math.floor(rowTime / stepMs) * stepMs;
           const bucketKey = tsKey(new Date(alignedTimeMs).toISOString());
 

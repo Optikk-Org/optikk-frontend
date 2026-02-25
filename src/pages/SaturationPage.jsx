@@ -204,7 +204,7 @@ export default function SaturationPage() {
       />
 
       {/* Summary stat cards */}
-      <Row gutter={[16, 16]}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             title="Max DB Pool Util"
@@ -244,15 +244,17 @@ export default function SaturationPage() {
       </Row>
 
       {/* Configurable timeseries charts */}
-      <ConfigurableDashboard
-        config={config}
-        dataSources={{
-          'saturation-timeseries': Array.isArray(timeseriesRaw) ? timeseriesRaw : [],
-          'saturation-metrics': Array.isArray(metricsRaw) ? metricsRaw : [],
-          'services-metrics': Array.isArray(serviceMetricsRaw) ? serviceMetricsRaw : [],
-        }}
-        isLoading={tsLoading}
-      />
+      <div style={{ marginBottom: 24 }}>
+        <ConfigurableDashboard
+          config={config}
+          dataSources={{
+            'saturation-timeseries': Array.isArray(timeseriesRaw) ? timeseriesRaw : [],
+            'saturation-metrics': Array.isArray(metricsRaw) ? metricsRaw : [],
+            'services-metrics': Array.isArray(serviceMetricsRaw) ? serviceMetricsRaw : [],
+          }}
+          isLoading={tsLoading}
+        />
+      </div>
 
       {/* DB pool utilization gauges */}
       {metrics.length > 0 && (

@@ -282,6 +282,7 @@ function groupTimeseries(rows, groupByKey) {
     } else {
       key = row.service_name || row.queue_name || '';
     }
+    if (!key) continue;
     if (!map[key]) map[key] = [];
     map[key].push(row);
   }
@@ -330,6 +331,110 @@ function buildEndpointList(endpointMetrics, listType) {
   }
   // requests
   return mapped.sort((a, b) => (b.request_count || 0) - (a.request_count || 0)).slice(0, 10);
+}
+
+function buildServiceListFromMetrics(serviceMetrics, listType) {
+  if (!Array.isArray(serviceMetrics) || serviceMetrics.length === 0) return [];
+
+  const mapped = serviceMetrics
+    .map((svc) => {
+      const name = svc.service_name || svc.service || '';
+      if (!name) return null;
+      const requestCount = Number(svc.request_count || 0);
+      const errorCount = Number(svc.error_count || 0);
+      const avgLatency = Number(svc.avg_latency || 0);
+      const errorRate = requestCount > 0 ? (errorCount * 100.0) / requestCount : 0;
+      return {
+        ...svc,
+        endpoint: name,
+        service: name,
+        key: name,
+        request_count: requestCount,
+        error_count: errorCount,
+        errorRate,
+        latency: avgLatency,
+      };
+    })
+    .filter(Boolean);
+
+  if (listType === 'errorRate') {
+    return mapped.filter((svc) => svc.errorRate > 0).sort((a, b) => b.errorRate - a.errorRate).slice(0, 10);
+  }
+  if (listType === 'latency') {
+    return mapped.sort((a, b) => (b.latency || 0) - (a.latency || 0)).slice(0, 10);
+  }
+  return mapped.sort((a, b) => (b.request_count || 0) - (a.request_count || 0)).slice(0, 10);
+}
+
+function defaultListTypeForChart(chartConfig) {
+  if (chartConfig.endpointListType) return chartConfig.endpointListType;
+  if (chartConfig.type === 'error-rate') return 'errorRate';
+  if (chartConfig.type === 'latency') return 'latency';
+  return 'requests';
+}
+
+function defaultListTitleForChart(chartConfig) {
+  if (chartConfig.listTitle) return chartConfig.listTitle;
+  const listType = defaultListTypeForChart(chartConfig);
+  if (listType === 'errorRate') return 'Average Error Rate';
+  if (listType === 'latency') return 'Average Latency';
+  if (listType === 'requests') return 'Requests';
+  return listType;
+}
+
+function buildGroupedListFromTimeseries(serviceTimeseriesMap, chartConfig) {
+  const listType = defaultListTypeForChart(chartConfig);
+  const valueKey = chartConfig.valueKey || 'request_count';
+
+  const rows = Object.entries(serviceTimeseriesMap || {})
+    .map(([groupName, groupRows]) => {
+      if (!groupName || !Array.isArray(groupRows) || groupRows.length === 0) return null;
+
+      let requestCount = 0;
+      let errorCount = 0;
+      let latencySum = 0;
+      let latencyCount = 0;
+      let valueTotal = 0;
+
+      for (const row of groupRows) {
+        const req = Number(row.request_count || 0);
+        const err = Number(row.error_count || 0);
+        if (!Number.isNaN(req)) requestCount += req;
+        if (!Number.isNaN(err)) errorCount += err;
+
+        const latencyVal = Number(row.avg_latency ?? row.avg_duration_ms ?? row[valueKey]);
+        if (!Number.isNaN(latencyVal) && latencyVal > 0) {
+          latencySum += latencyVal;
+          latencyCount += 1;
+        }
+
+        const value = Number(row[valueKey] ?? 0);
+        if (!Number.isNaN(value)) valueTotal += value;
+      }
+
+      const errorRate = requestCount > 0 ? (errorCount * 100.0) / requestCount : 0;
+      const latency = latencyCount > 0 ? latencySum / latencyCount : 0;
+
+      return {
+        endpoint: groupName,
+        service: groupName,
+        key: groupName,
+        request_count: valueTotal > 0 ? valueTotal : requestCount,
+        error_count: errorCount,
+        errorRate,
+        latency,
+        value: valueTotal,
+      };
+    })
+    .filter(Boolean);
+
+  if (listType === 'errorRate') {
+    return rows.filter((r) => r.errorRate > 0).sort((a, b) => b.errorRate - a.errorRate).slice(0, 10);
+  }
+  if (listType === 'latency') {
+    return rows.sort((a, b) => (b.latency || 0) - (a.latency || 0)).slice(0, 10);
+  }
+  return rows.sort((a, b) => (b.request_count || 0) - (a.request_count || 0)).slice(0, 10);
 }
 
 /**
@@ -413,29 +518,20 @@ function ConfigurableChartCard({ chartConfig, dataSources, extraContext }) {
     const metricsSrcId = chartConfig.endpointMetricsSource;
     if (metricsSrcId && dataSources?.[metricsSrcId]) {
       const metricsData = Array.isArray(dataSources[metricsSrcId]) ? dataSources[metricsSrcId] : [];
-      return buildEndpointList(metricsData, chartConfig.endpointListType || 'requests');
-    }
-    // Service-level grouping — build endpoint-like objects from service keys
-    if (chartConfig.groupByKey === 'service') {
-      const metricsSrcId2 = chartConfig.endpointMetricsSource;
-      if (metricsSrcId2 && dataSources?.[metricsSrcId2]) {
-        const svcData = Array.isArray(dataSources[metricsSrcId2]) ? dataSources[metricsSrcId2] : [];
-        return svcData.map((svc) => ({
-          ...svc,
-          endpoint: svc.service_name,
-          service: svc.service_name,
-          key: svc.service_name,
-          errorRate: svc.request_count > 0 ? (svc.error_count / svc.request_count) * 100 : 0,
-        }))
-          .filter((svc) => chartConfig.endpointListType === 'errorRate' ? svc.errorRate > 0 : true)
-          .sort((a, b) => chartConfig.endpointListType === 'errorRate'
-            ? b.errorRate - a.errorRate
-            : (b.request_count || 0) - (a.request_count || 0))
-          .slice(0, 10);
+      const listType = defaultListTypeForChart(chartConfig);
+      const metricEndpoints = chartConfig.groupByKey === 'service'
+        ? buildServiceListFromMetrics(metricsData, listType)
+        : buildEndpointList(metricsData, listType);
+      if (metricEndpoints.length > 0) {
+        return metricEndpoints;
       }
     }
+    // Grouped timeseries fallback (service/pod/etc.) when explicit metrics source isn't configured.
+    if (chartConfig.groupByKey) {
+      return buildGroupedListFromTimeseries(serviceTimeseriesMap, chartConfig);
+    }
     return [];
-  }, [rawData, dataSources, chartConfig]);
+  }, [rawData, dataSources, serviceTimeseriesMap, chartConfig]);
 
   // Build chart-specific props
   const chartProps = {
@@ -466,7 +562,8 @@ function ConfigurableChartCard({ chartConfig, dataSources, extraContext }) {
 
   // Determine which list component to use
   const isQueueChart = chartConfig.groupByKey === 'queue';
-  const showEndpointList = !isQueueChart && endpoints.length > 0 && chartConfig.endpointListType;
+  const endpointListType = !isQueueChart ? defaultListTypeForChart(chartConfig) : null;
+  const showEndpointList = !isQueueChart && endpoints.length > 0 && !!endpointListType;
   const showQueueList = isQueueChart && endpoints.length > 0;
 
   return (
@@ -476,8 +573,8 @@ function ConfigurableChartCard({ chartConfig, dataSources, extraContext }) {
       </div>
       {showEndpointList && (
         <TopEndpointsList
-          title={chartConfig.listTitle || chartConfig.endpointListType}
-          type={chartConfig.endpointListType}
+          title={defaultListTitleForChart(chartConfig)}
+          type={endpointListType}
           endpoints={endpoints}
           selectedEndpoints={selectedEndpoints}
           onToggle={toggleEndpoint}
