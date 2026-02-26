@@ -1,19 +1,23 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Tag, Button, Card, Row, Col, Tooltip, Switch } from 'antd';
+import { Tag, Button, Card, Tooltip, Switch } from 'antd';
 import { useQuery } from '@tanstack/react-query';
 import { GitBranch, Download, AlertCircle, Clock, Activity } from 'lucide-react';
 import { useAppStore } from '@store/appStore';
 import { v1Service } from '@services/v1Service';
-import { PageHeader, FilterBar, DataTable, StatusBadge, StatCard, StatCardsGrid } from '@components/common';
+import { PageHeader, FilterBar, DataTable, StatusBadge, StatCardsGrid } from '@components/common';
 import { TRACE_STATUSES } from '@config/constants';
 import { formatTimestamp, formatDuration, formatNumber } from '@utils/formatters';
 import LatencyHistogram from '@components/charts/LatencyHistogram';
-import { useDashboardConfig } from '@hooks/useDashboardConfig';
+import { usePagination, useFilters } from '@hooks';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
+import { useDashboardConfig } from '@hooks/useDashboardConfig';
 import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
 
-
+/**
+ * TracesPage - Refactored to use custom hooks (DRY principle)
+ * Uses usePagination and useFilters for state management
+ */
 export default function TracesPage() {
   const navigate = useNavigate();
   const { selectedTeamId, timeRange, refreshKey } = useAppStore();
@@ -40,25 +44,26 @@ export default function TracesPage() {
     'endpoints-metrics': Array.isArray(endpointMetricsRaw) ? endpointMetricsRaw : [],
   }), [metricsTimeseriesRaw, endpointTimeseriesRaw, endpointMetricsRaw]);
 
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [selectedStatus, setSelectedStatus] = useState(null);
-  const [selectedService, setSelectedService] = useState(null);
-  const [minDuration, setMinDuration] = useState(null);
-  const [errorsOnly, setErrorsOnly] = useState(false);
-  const offset = (page - 1) * pageSize;
+  // Use custom hooks for pagination and filters (DRY principle)
+  const { page, pageSize, offset, handlePageChange } = usePagination();
+  const { filters, setFilter } = useFilters({
+    status: null,
+    service: null,
+    minDuration: null,
+    errorsOnly: false,
+  });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['traces-v2', selectedTeamId, timeRange.value, page, pageSize, selectedStatus, selectedService, minDuration, errorsOnly, refreshKey],
+    queryKey: ['traces-v2', selectedTeamId, timeRange.value, page, pageSize, filters.status, filters.service, filters.minDuration, filters.errorsOnly, refreshKey],
     queryFn: () => {
       const endTime = Date.now();
       const startTime = endTime - timeRange.minutes * 60 * 1000;
-      const statusFilter = errorsOnly ? 'ERROR' : selectedStatus;
+      const statusFilter = filters.errorsOnly ? 'ERROR' : filters.status;
 
       return v1Service.getTraces(selectedTeamId, startTime, endTime, {
         status: statusFilter || undefined,
-        services: selectedService ? [selectedService] : undefined,
-        minDuration: minDuration || undefined,
+        services: filters.service ? [filters.service] : undefined,
+        minDuration: filters.minDuration || undefined,
         limit: pageSize,
         offset,
       });
@@ -218,8 +223,8 @@ export default function TracesPage() {
         <div style={{ marginBottom: 12, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <Tag
             style={{ cursor: 'pointer' }}
-            color={!selectedService ? 'blue' : 'default'}
-            onClick={() => setSelectedService(null)}
+            color={!filters.service ? 'blue' : 'default'}
+            onClick={() => setFilter('service', null)}
           >
             All ({total || traces.length})
           </Tag>
@@ -227,8 +232,8 @@ export default function TracesPage() {
             <Tag
               key={service}
               style={{ cursor: 'pointer' }}
-              color={selectedService === service ? 'blue' : 'default'}
-              onClick={() => setSelectedService(selectedService === service ? null : service)}
+              color={filters.service === service ? 'blue' : 'default'}
+              onClick={() => setFilter('service', filters.service === service ? null : service)}
             >
               {service} ({count})
             </Tag>
@@ -243,33 +248,33 @@ export default function TracesPage() {
             key: 'status',
             placeholder: 'Filter by status',
             options: statusOptions,
-            value: selectedStatus,
-            onChange: setSelectedStatus,
+            value: filters.status,
+            onChange: (value) => setFilter('status', value),
           },
           {
             type: 'select',
             key: 'service',
             placeholder: 'Filter by service',
             options: serviceOptions,
-            value: selectedService,
-            onChange: setSelectedService,
+            value: filters.service,
+            onChange: (value) => setFilter('service', value),
           },
           {
             type: 'select',
             key: 'minDuration',
             placeholder: 'Min duration',
             options: durationOptions,
-            value: minDuration,
-            onChange: setMinDuration,
+            value: filters.minDuration,
+            onChange: (value) => setFilter('minDuration', value),
           },
         ]}
         actions={
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Tooltip title="Show only traces with errors">
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <AlertCircle size={14} style={{ color: errorsOnly ? '#F04438' : 'var(--text-muted)' }} />
-                <span style={{ fontSize: 12, color: errorsOnly ? '#F04438' : 'var(--text-muted)' }}>Errors only</span>
-                <Switch size="small" checked={errorsOnly} onChange={setErrorsOnly} />
+                <AlertCircle size={14} style={{ color: filters.errorsOnly ? '#F04438' : 'var(--text-muted)' }} />
+                <span style={{ fontSize: 12, color: filters.errorsOnly ? '#F04438' : 'var(--text-muted)' }}>Errors only</span>
+                <Switch size="small" checked={filters.errorsOnly} onChange={(value) => setFilter('errorsOnly', value)} />
               </div>
             </Tooltip>
             <Button icon={<Download size={16} />}>Export</Button>
@@ -285,10 +290,7 @@ export default function TracesPage() {
         page={page}
         pageSize={pageSize}
         total={total}
-        onPageChange={(newPage, newPageSize) => {
-          setPage(newPage);
-          setPageSize(newPageSize);
-        }}
+        onPageChange={handlePageChange}
       />
     </div>
   );

@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Row, Col, Card, Progress, Segmented, Tag, Input, Tabs, Empty, Skeleton } from 'antd';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Row, Col, Card, Progress, Segmented, Tag, Tabs, Empty, Skeleton } from 'antd';
 import {
   Layers,
   Activity,
   AlertCircle,
   LayoutGrid,
   List,
-  Search,
   Network,
   ArrowRight,
   ShieldAlert,
@@ -15,7 +14,8 @@ import {
 } from 'lucide-react';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
 import { useDashboardConfig } from '@hooks/useDashboardConfig';
-import { PageHeader, DataTable, StatCard, HealthIndicator, StatCardsGrid, FilterBar } from '@components/common';
+import { useTabSync, useTableSort } from '@hooks';
+import { PageHeader, DataTable, HealthIndicator, StatCardsGrid, FilterBar } from '@components/common';
 import SparklineChart from '@components/charts/SparklineChart';
 import ServiceGraph from '@components/charts/ServiceGraph';
 import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
@@ -38,16 +38,18 @@ function calcRiskScore({ errorRate, avgLatency, dependencyCount }) {
   return Number((errFactor * 0.5 + latencyFactor * 0.3 + dependencyFactor * 0.2).toFixed(1));
 }
 
+/**
+ * ServicesPage - Refactored to use custom hooks (DRY principle)
+ * Uses useTabSync and useTableSort for state management
+ */
 export default function ServicesPage() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') === 'topology' ? 'topology' : 'overview');
+  // Use custom hooks (DRY principle)
+  const { activeTab, onTabChange } = useTabSync('overview');
   const [viewMode, setViewMode] = useState('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [healthFilter, setHealthFilter] = useState('all');
-  const [sortField, setSortField] = useState(null);
-  const [sortOrder, setSortOrder] = useState(null);
 
   const { config: dashboardConfig } = useDashboardConfig('services');
 
@@ -75,24 +77,6 @@ export default function ServicesPage() {
     'service-topology',
     (teamId, startTime, endTime) => serviceMapService.getTopology(teamId, startTime, endTime)
   );
-
-  useEffect(() => {
-    const queryTab = searchParams.get('tab') === 'topology' ? 'topology' : 'overview';
-    if (queryTab !== activeTab) {
-      setActiveTab(queryTab);
-    }
-  }, [searchParams, activeTab]);
-
-  const onTabChange = (key) => {
-    setActiveTab(key);
-    const next = new URLSearchParams(searchParams);
-    if (key === 'topology') {
-      next.set('tab', 'topology');
-    } else {
-      next.delete('tab');
-    }
-    setSearchParams(next, { replace: true });
-  };
 
   const services = Array.isArray(data) ? data : [];
   const allTopologyNodes = Array.isArray(topologyData?.nodes) ? topologyData.nodes : [];
@@ -181,6 +165,16 @@ export default function ServicesPage() {
     return Array.from(nodeMap.values());
   }, [allTopologyNodes, servicesByName, serviceRows, adjacency]);
 
+  // Filter by search query
+  const filteredServiceRows = useMemo(() => {
+    return searchQuery
+      ? serviceRows.filter((s) => s.serviceName.toLowerCase().includes(searchQuery.toLowerCase()))
+      : serviceRows;
+  }, [serviceRows, searchQuery]);
+
+  // Use custom sort hook (DRY principle)
+  const { sortedData: tableData, sortField, sortOrder, toggleSort } = useTableSort(filteredServiceRows);
+
   const {
     totalServices,
     healthyServices,
@@ -188,7 +182,6 @@ export default function ServicesPage() {
     unhealthyServices,
     avgErrorRate,
     avgLatency,
-    tableData,
   } = useMemo(() => {
     const total = serviceRows.length;
     const healthy = serviceRows.filter((s) => s.status === 'healthy').length;
@@ -198,19 +191,6 @@ export default function ServicesPage() {
     const errSum = serviceRows.reduce((acc, row) => acc + row.errorRate, 0);
     const latSum = serviceRows.reduce((acc, row) => acc + row.avgLatency, 0);
 
-    const filteredBySearch = searchQuery
-      ? serviceRows.filter((s) => s.serviceName.toLowerCase().includes(searchQuery.toLowerCase()))
-      : serviceRows;
-
-    const sorted = sortField && sortOrder
-      ? [...filteredBySearch].sort((a, b) => {
-        const aVal = a[sortField];
-        const bVal = b[sortField];
-        const comparison = aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
-        return sortOrder === 'ascend' ? comparison : -comparison;
-      })
-      : filteredBySearch;
-
     return {
       totalServices: total,
       healthyServices: healthy,
@@ -218,9 +198,8 @@ export default function ServicesPage() {
       unhealthyServices: unhealthy,
       avgErrorRate: total > 0 ? errSum / total : 0,
       avgLatency: total > 0 ? latSum / total : 0,
-      tableData: sorted,
     };
-  }, [serviceRows, searchQuery, sortField, sortOrder]);
+  }, [serviceRows]);
 
   const topologyNodes = useMemo(() => {
     let rows = normalizedTopologyNodes;
@@ -300,14 +279,7 @@ export default function ServicesPage() {
       ),
       sorter: true,
       onHeaderCell: () => ({
-        onClick: () => {
-          if (sortField === 'serviceName') {
-            setSortOrder(sortOrder === 'ascend' ? 'descend' : 'ascend');
-          } else {
-            setSortField('serviceName');
-            setSortOrder('ascend');
-          }
-        },
+        onClick: () => toggleSort('serviceName'),
       }),
     },
     {
@@ -337,14 +309,7 @@ export default function ServicesPage() {
       ),
       sorter: true,
       onHeaderCell: () => ({
-        onClick: () => {
-          if (sortField === 'requestCount') {
-            setSortOrder(sortOrder === 'ascend' ? 'descend' : 'ascend');
-          } else {
-            setSortField('requestCount');
-            setSortOrder('ascend');
-          }
-        },
+        onClick: () => toggleSort('requestCount'),
       }),
     },
     {
@@ -375,14 +340,7 @@ export default function ServicesPage() {
       ),
       sorter: true,
       onHeaderCell: () => ({
-        onClick: () => {
-          if (sortField === 'errorRate') {
-            setSortOrder(sortOrder === 'ascend' ? 'descend' : 'ascend');
-          } else {
-            setSortField('errorRate');
-            setSortOrder('ascend');
-          }
-        },
+        onClick: () => toggleSort('errorRate'),
       }),
     },
     {
@@ -397,14 +355,7 @@ export default function ServicesPage() {
       ),
       sorter: true,
       onHeaderCell: () => ({
-        onClick: () => {
-          if (sortField === 'avgLatency') {
-            setSortOrder(sortOrder === 'ascend' ? 'descend' : 'ascend');
-          } else {
-            setSortField('avgLatency');
-            setSortOrder('ascend');
-          }
-        },
+        onClick: () => toggleSort('avgLatency'),
       }),
     },
     {
@@ -419,14 +370,7 @@ export default function ServicesPage() {
       ),
       sorter: true,
       onHeaderCell: () => ({
-        onClick: () => {
-          if (sortField === 'p95Latency') {
-            setSortOrder(sortOrder === 'ascend' ? 'descend' : 'ascend');
-          } else {
-            setSortField('p95Latency');
-            setSortOrder('ascend');
-          }
-        },
+        onClick: () => toggleSort('p95Latency'),
       }),
     },
     {
@@ -441,14 +385,7 @@ export default function ServicesPage() {
       ),
       sorter: true,
       onHeaderCell: () => ({
-        onClick: () => {
-          if (sortField === 'p99Latency') {
-            setSortOrder(sortOrder === 'ascend' ? 'descend' : 'ascend');
-          } else {
-            setSortField('p99Latency');
-            setSortOrder('ascend');
-          }
-        },
+        onClick: () => toggleSort('p99Latency'),
       }),
     },
   ];
