@@ -24,7 +24,7 @@ import LatencyHistogram from '@components/charts/distributions/LatencyHistogram'
 import { useDashboardConfig } from '@hooks/useDashboardConfig';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
 import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
-import { tsLabel, relativeTime } from '@features/logs/components/logs/LogRow';
+import { tsLabel, relativeTime } from '@features/log/components/log/LogRow';
 import './TracesPage.css';
 
 /* ─── Filter fields for the shared ObservabilityQueryBar ─────────────────── */

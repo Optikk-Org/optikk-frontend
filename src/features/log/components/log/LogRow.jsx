@@ -88,7 +88,15 @@ export default function LogRow({ log, colWidths, visibleCols, columns, onOpenDet
           </span>
         );
       case 'host':
-        return <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{log.host || log.pod || '—'}</span>;
+        return <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{log.host || log.pod || '—'}</span>;
+      case 'logger':
+        return <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{log.logger || '—'}</span>;
+      case 'trace_id':
+        return <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{log.traceId || log.trace_id || '—'}</span>;
+      case 'thread':
+        return <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{log.thread || '—'}</span>;
+      case 'container':
+        return <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{log.container || '—'}</span>;
       case 'message':
         return (
           <span

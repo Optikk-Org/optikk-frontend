@@ -16,7 +16,7 @@ import SettingsPage from '@features/settings/pages/SettingsPage';
 import ErrorDashboardPage from '@features/errors/pages/ErrorDashboardPage';
 import AiObservabilityPage from '@features/ai/pages/AiObservabilityPage';
 import OverviewHubPage from '@features/overview/pages/OverviewHubPage';
-import LogsHubPage from '@features/logs/pages/LogsHubPage';
+import LogsHubPage from '@features/log/pages/LogsHubPage';
 import InfrastructureHubPage from '@features/infrastructure/pages/InfrastructureHubPage';
 import SaturationHubPage from '@features/metrics/pages/SaturationHubPage';
 import ExplorePage from '@features/overview/pages/ExplorePage';

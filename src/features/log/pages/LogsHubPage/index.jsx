@@ -6,7 +6,6 @@ import {
   AlertCircle,
   Info,
   Bug,
-  Activity,
   TrendingDown,
   TrendingUp,
   BarChart3,
@@ -15,10 +14,10 @@ import {
 import { useAppStore } from '@store/appStore';
 import { v1Service } from '@services/v1Service';
 import { PageHeader, ObservabilityQueryBar, ObservabilityDataBoard, ObservabilityDetailPanel } from '@components/common';
-import { formatNumber, formatTimestamp } from '@utils/formatters';
+import { formatNumber } from '@utils/formatters';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
-import { LevelBadge, tsLabel, relativeTime } from '@features/logs/components/logs/LogRow';
-import LogRow from '@features/logs/components/logs/LogRow';
+import { LevelBadge, tsLabel, relativeTime } from '@features/log/components/log/LogRow';
+import LogRow from '@features/log/components/log/LogRow';
 import './LogsHubPage.css';
 
 /* ─── Filter fields ───────────────────────────────────────────────────────── */
@@ -42,44 +41,141 @@ const LOG_COLUMNS = [
   { key: 'level', label: 'Level', defaultWidth: 80, defaultVisible: true },
   { key: 'service_name', label: 'Service', defaultWidth: 160, defaultVisible: true },
   { key: 'host', label: 'Host/Pod', defaultWidth: 140, defaultVisible: false },
+  { key: 'logger', label: 'Logger', defaultWidth: 160, defaultVisible: false },
+  { key: 'trace_id', label: 'Trace ID', defaultWidth: 220, defaultVisible: false },
+  { key: 'thread', label: 'Thread', defaultWidth: 120, defaultVisible: false },
+  { key: 'container', label: 'Container', defaultWidth: 140, defaultVisible: false },
   { key: 'message', label: 'Message', defaultVisible: true, flex: true },
 ];
 
-/* ─── Volume bar chart ────────────────────────────────────────────────────── */
+/* ─── Level colours ───────────────────────────────────────────────────────── */
 const LEVEL_COLORS = {
   errors: '#F04438',
   warnings: '#F79009',
   infos: '#06AED5',
   debugs: '#5E60CE',
   fatals: '#D92D20',
+  traces: '#98A2B3',
 };
 
+/* ─── Volume bar chart ────────────────────────────────────────────────────── */
+// Backend returns camelCase: timeBucket, total, errors, warnings, infos, debugs, fatals
 function VolumeBar({ bucket, maxTotal }) {
   if (!bucket || !maxTotal) return null;
-  const pct = (v) => `${Math.min((v / maxTotal) * 100, 100).toFixed(1)}%`;
+  const totalCount = bucket.total || 0;
+  // Zero-count bars render as a thin baseline; non-zero bars scale up to 100%
+  const heightPct = totalCount > 0 ? Math.max((totalCount / maxTotal) * 100, 4) : 0;
+  const label = (bucket.timeBucket || bucket.time_bucket || '').replace(/:00$/, ''); // strip trailing :00 seconds
+
+  const hasLevels = bucket.fatals > 0 || bucket.errors > 0 || bucket.warnings > 0 || bucket.infos > 0 || bucket.debugs > 0;
+
   return (
-    <div className="logs-volume-bar-wrapper" title={`${bucket.time_bucket}: ${bucket.total} logs`}>
-      <div className="logs-volume-bar-stack">
-        {bucket.fatals > 0 && <div style={{ width: pct(bucket.fatals), background: LEVEL_COLORS.fatals }} />}
-        {bucket.errors > 0 && <div style={{ width: pct(bucket.errors), background: LEVEL_COLORS.errors }} />}
-        {bucket.warnings > 0 && <div style={{ width: pct(bucket.warnings), background: LEVEL_COLORS.warnings }} />}
-        {bucket.infos > 0 && <div style={{ width: pct(bucket.infos), background: LEVEL_COLORS.infos }} />}
-        {bucket.debugs > 0 && <div style={{ width: pct(bucket.debugs), background: LEVEL_COLORS.debugs }} />}
+    <div
+      className={`logs-volume-bar-wrapper${totalCount === 0 ? ' logs-volume-bar-wrapper--empty' : ''}`}
+      title={totalCount > 0 ? `${label}  •  ${totalCount.toLocaleString()} logs` : label}
+    >
+      {totalCount > 0 && (
+        <div className="logs-volume-bar-stack" style={{ height: `${heightPct}%` }}>
+          {bucket.fatals > 0 && <div style={{ flex: bucket.fatals, background: LEVEL_COLORS.fatals }} />}
+          {bucket.errors > 0 && <div style={{ flex: bucket.errors, background: LEVEL_COLORS.errors }} />}
+          {bucket.warnings > 0 && <div style={{ flex: bucket.warnings, background: LEVEL_COLORS.warnings }} />}
+          {bucket.infos > 0 && <div style={{ flex: bucket.infos, background: LEVEL_COLORS.infos }} />}
+          {bucket.debugs > 0 && <div style={{ flex: bucket.debugs, background: LEVEL_COLORS.debugs }} />}
+          {!hasLevels && <div style={{ flex: 1, background: '#98A2B3' }} />}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Pick ~5 evenly spaced tick indices from the buckets array
+function pickTickIndices(count, desired = 5) {
+  if (count <= desired) return Array.from({ length: count }, (_, i) => i);
+  const indices = [];
+  for (let i = 0; i < desired; i++) {
+    indices.push(Math.round((i / (desired - 1)) * (count - 1)));
+  }
+  return [...new Set(indices)];
+}
+
+// Format bucket label into a short time string for the axis
+function shortTimeLabel(raw) {
+  if (!raw) return '';
+  // raw: "2024-01-15 14:35:00"
+  const parts = raw.split(' ');
+  if (parts.length < 2) return raw;
+  // Show "HH:MM" or "MM-DD HH:MM" if first/last
+  return parts[1].slice(0, 5); // "HH:MM"
+}
+
+function LogVolumeChart({ buckets, isLoading }) {
+  const maxTotal = useMemo(
+    () => Math.max(...(buckets || []).map((b) => b.total || 0), 1),
+    [buckets]
+  );
+
+  if (isLoading) return <div className="logs-chart-empty"><Spin size="small" /></div>;
+  if (!buckets || buckets.length === 0) return <div className="logs-chart-empty">No volume data</div>;
+
+  const tickIndices = new Set(pickTickIndices(buckets.length, 6));
+
+  return (
+    <div className="logs-volume-chart-wrap">
+      <div className="logs-volume-chart">
+        {buckets.map((b, i) => (
+          <VolumeBar key={b.timeBucket || b.time_bucket || i} bucket={b} maxTotal={maxTotal} />
+        ))}
+      </div>
+      <div className="logs-volume-axis">
+        {buckets.map((b, i) => {
+          const label = b.timeBucket || b.time_bucket || '';
+          return (
+            <div
+              key={i}
+              className="logs-volume-axis-tick"
+              style={{ visibility: tickIndices.has(i) ? 'visible' : 'hidden' }}
+            >
+              {shortTimeLabel(label)}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function LogVolumeChart({ buckets, isLoading }) {
-  const maxTotal = useMemo(() => Math.max(...(buckets || []).map((b) => b.total || 0), 1), [buckets]);
+/* ─── Volume chart legend ─────────────────────────────────────────────────── */
+function VolumeLegend({ buckets }) {
+  if (!buckets || !buckets.length) return null;
+  const totals = buckets.reduce(
+    (acc, b) => ({
+      fatals: acc.fatals + (b.fatals || 0),
+      errors: acc.errors + (b.errors || 0),
+      warnings: acc.warnings + (b.warnings || 0),
+      infos: acc.infos + (b.infos || 0),
+      debugs: acc.debugs + (b.debugs || 0),
+    }),
+    { fatals: 0, errors: 0, warnings: 0, infos: 0, debugs: 0 }
+  );
 
-  if (isLoading) return <div className="logs-chart-empty"><Spin size="small" /></div>;
-  if (!buckets || buckets.length === 0) return <div className="logs-chart-empty">No volume data</div>;
+  const items = [
+    { key: 'fatals', label: 'Fatal', color: LEVEL_COLORS.fatals },
+    { key: 'errors', label: 'Error', color: LEVEL_COLORS.errors },
+    { key: 'warnings', label: 'Warn', color: LEVEL_COLORS.warnings },
+    { key: 'infos', label: 'Info', color: LEVEL_COLORS.infos },
+    { key: 'debugs', label: 'Debug', color: LEVEL_COLORS.debugs },
+  ].filter((item) => totals[item.key] > 0);
+
+  if (!items.length) return null;
 
   return (
-    <div className="logs-volume-chart">
-      {buckets.map((b, i) => (
-        <VolumeBar key={b.time_bucket || i} bucket={b} maxTotal={maxTotal} />
+    <div className="logs-volume-legend">
+      {items.map(({ key, label, color }) => (
+        <div key={key} className="logs-volume-legend-item">
+          <span className="logs-volume-legend-dot" style={{ background: color }} />
+          <span>{label}</span>
+          <span className="logs-volume-legend-count">{formatNumber(totals[key])}</span>
+        </div>
       ))}
     </div>
   );
@@ -132,7 +228,7 @@ function ServicePills({ facets, selectedService, onSelect }) {
 }
 
 /* ─── KPI card ────────────────────────────────────────────────────────────── */
-function KpiCard({ title, value, icon: Icon, accentColor, accentBg, trend }) {
+function KpiCard({ title, value, icon: Icon, accentColor, accentBg, trend, subtitle }) {
   return (
     <div className="logs-kpi-card" style={{ '--kpi-accent': accentColor, '--kpi-accent-bg': accentBg }}>
       <div className="logs-kpi-card-header">
@@ -142,6 +238,7 @@ function KpiCard({ title, value, icon: Icon, accentColor, accentBg, trend }) {
         </span>
       </div>
       <div className="logs-kpi-value">{value}</div>
+      {subtitle && <div className="logs-kpi-subtitle">{subtitle}</div>}
       {trend != null && trend !== 0 && (
         <div className={`logs-kpi-pill ${trend > 0 ? 'up' : 'down'}`}>
           {trend > 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
@@ -216,17 +313,60 @@ export default function LogsHubPage() {
   const total = logsData?.total || 0;
   const levelFacets = useMemo(() => statsData?.fields?.level || [], [statsData]);
   const serviceFacets = useMemo(() => statsData?.fields?.service_name || [], [statsData]);
-  const volumeBuckets = useMemo(() => Array.isArray(volumeData?.buckets) ? volumeData.buckets : [], [volumeData]);
+
+  // Client-side gap fill: ensure ~30 evenly spaced bars even if backend has sparse data
+  const volumeBuckets = useMemo(() => {
+    const raw = Array.isArray(volumeData?.buckets) ? volumeData.buckets : [];
+    const step = volumeData?.step || '';
+    if (!raw.length || !step) return raw;
+
+    const stepMs = {
+      '1m': 60_000, '2m': 120_000, '5m': 300_000, '10m': 600_000,
+      '15m': 900_000, '30m': 1_800_000, '1h': 3_600_000,
+      '2h': 7_200_000, '6h': 21_600_000, '12h': 43_200_000,
+    }[step] || 60_000;
+
+    const endMs = Date.now();
+    const startMs = endMs - timeRange.minutes * 60 * 1000;
+
+    // Build lookup by timeBucket label
+    const byKey = {};
+    for (const b of raw) {
+      const k = b.timeBucket || b.time_bucket || '';
+      if (k) byKey[k] = b;
+    }
+
+    // Format a Date into the same label format the backend uses
+    const fmtKey = (d) => {
+      const pad = (n) => String(n).padStart(2, '0');
+      const date = `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+      const time = `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:00`;
+      return `${date} ${time}`;
+    };
+
+    const result = [];
+    const slotStart = Math.floor(startMs / stepMs) * stepMs;
+    for (let t = slotStart; t <= endMs; t += stepMs) {
+      const key = fmtKey(new Date(t));
+      result.push(byKey[key] || { timeBucket: key, total: 0, errors: 0, warnings: 0, infos: 0, debugs: 0, fatals: 0 });
+    }
+    return result;
+  }, [volumeData, timeRange.minutes]);
+
+  // Sum all ERROR + FATAL facets (not just first match)
+  const errorCount = useMemo(() => {
+    return levelFacets
+      .filter((f) => ['ERROR', 'FATAL'].includes((f.value || '').toUpperCase()))
+      .reduce((sum, f) => sum + (f.count || 0), 0);
+  }, [levelFacets]);
+
+  const warnCount = useMemo(() => {
+    return levelFacets
+      .filter((f) => ['WARN', 'WARNING'].includes((f.value || '').toUpperCase()))
+      .reduce((sum, f) => sum + (f.count || 0), 0);
+  }, [levelFacets]);
 
   const totalCount = statsData?.total || total || logs.length;
-  const errorCount = useMemo(() => {
-    const ef = levelFacets.find((f) => ['ERROR', 'FATAL'].includes((f.value || '').toUpperCase()));
-    return ef?.count || 0;
-  }, [levelFacets]);
-  const warnCount = useMemo(() => {
-    const wf = levelFacets.find((f) => (f.value || '').toUpperCase() === 'WARN' || (f.value || '').toUpperCase() === 'WARNING');
-    return wf?.count || 0;
-  }, [levelFacets]);
 
   const clearAll = useCallback(() => {
     setFilters([]);
@@ -259,6 +399,7 @@ export default function LogsHubPage() {
     { key: 'pod', label: 'Pod', value: selectedLog.pod },
     { key: 'container', label: 'Container', value: selectedLog.container },
     { key: 'logger', label: 'Logger', value: selectedLog.logger },
+    { key: 'thread', label: 'Thread', value: selectedLog.thread },
     { key: 'trace_id', label: 'Trace ID', value: selectedLog.traceId || selectedLog.trace_id, filterable: true },
     { key: 'span_id', label: 'Span ID', value: selectedLog.spanId || selectedLog.span_id },
   ].filter((f) => f.value) : [];
@@ -269,12 +410,31 @@ export default function LogsHubPage() {
     <div className="logs-page">
       <PageHeader title="Logs" icon={<FileText size={24} />} />
 
-      {/* ── KPI Row ── */}
+      {/* ── KPI Row (3 cards — no Total Logs) ── */}
       <div className="logs-kpi-row">
-        <KpiCard title="Total Logs" value={formatNumber(totalCount)} icon={Activity} accentColor="#5E60CE" accentBg="rgba(94,96,206,0.12)" />
-        <KpiCard title="Errors & Fatals" value={formatNumber(errorCount)} icon={AlertCircle} accentColor={errorCount > 0 ? '#F04438' : '#73C991'} accentBg={errorCount > 0 ? 'rgba(240,68,56,0.12)' : 'rgba(115,201,145,0.12)'} />
-        <KpiCard title="Warnings" value={formatNumber(warnCount)} icon={Info} accentColor="#F79009" accentBg="rgba(247,144,9,0.12)" />
-        <KpiCard title="Services" value={formatNumber(serviceFacets.length)} icon={Server} accentColor="#06AED5" accentBg="rgba(6,174,213,0.12)" />
+        <KpiCard
+          title="Errors & Fatals"
+          value={formatNumber(errorCount)}
+          icon={AlertCircle}
+          accentColor={errorCount > 0 ? '#F04438' : '#73C991'}
+          accentBg={errorCount > 0 ? 'rgba(240,68,56,0.12)' : 'rgba(115,201,145,0.12)'}
+          subtitle={errorCount > 0 ? 'Needs attention' : 'All clear'}
+        />
+        <KpiCard
+          title="Warnings"
+          value={formatNumber(warnCount)}
+          icon={Info}
+          accentColor={warnCount > 0 ? '#F79009' : '#73C991'}
+          accentBg={warnCount > 0 ? 'rgba(247,144,9,0.12)' : 'rgba(115,201,145,0.12)'}
+        />
+        <KpiCard
+          title="Services"
+          value={formatNumber(serviceFacets.length)}
+          icon={Server}
+          accentColor="#06AED5"
+          accentBg="rgba(6,174,213,0.12)"
+          subtitle={totalCount > 0 ? `${formatNumber(totalCount)} total logs` : undefined}
+        />
       </div>
 
       {/* ── Charts row ── */}
@@ -282,6 +442,7 @@ export default function LogsHubPage() {
         <div className="logs-chart-card logs-chart-card--wide">
           <div className="logs-chart-card-header">
             <span className="logs-chart-card-title"><BarChart3 size={15} />Log Volume</span>
+            <VolumeLegend buckets={volumeBuckets} />
           </div>
           <div className="logs-chart-card-body">
             <LogVolumeChart buckets={volumeBuckets} isLoading={volumeLoading} />
@@ -314,7 +475,7 @@ export default function LogsHubPage() {
 
         {/* Service pills */}
         {serviceFacets.length > 0 && (
-          <div style={{ padding: '10px 18px', borderBottom: '1px solid var(--border-color)' }}>
+          <div className="logs-service-pills-row">
             <ServicePills
               facets={serviceFacets}
               selectedService={selectedService}
@@ -324,7 +485,7 @@ export default function LogsHubPage() {
         )}
 
         {/* Query bar */}
-        <div style={{ padding: '10px 18px', borderBottom: '1px solid var(--border-color)' }}>
+        <div className="logs-querybar-row">
           <ObservabilityQueryBar
             fields={LOG_FILTER_FIELDS}
             filters={filters}
@@ -361,7 +522,7 @@ export default function LogsHubPage() {
             rowKey={(log, i) => log.id ? `log-${log.id}` : `log-${i}-${log.timestamp}`}
             renderRow={renderRow}
             entityName="log"
-            storageKey="logs_visible_cols_v1"
+            storageKey="logs_visible_cols_v2"
             isLoading={logsLoading}
             serverTotal={total || logs.length}
             emptyTips={[
@@ -374,11 +535,11 @@ export default function LogsHubPage() {
 
         {/* Pagination */}
         {!logsLoading && (total > 0 || logs.length > 0) && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 18px', borderTop: '1px solid var(--border-color)' }}>
-            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+          <div className="logs-pagination">
+            <span className="logs-pagination-info">
               Showing {offset + 1}–{Math.min(offset + pageSize, total || logs.length)} of {formatNumber(total || logs.length)}
             </span>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <div className="logs-pagination-controls">
               <Select
                 size="small"
                 value={pageSize}
@@ -386,17 +547,16 @@ export default function LogsHubPage() {
                 options={[20, 50, 100, 200].map((n) => ({ label: `${n} / page`, value: n }))}
                 style={{ width: 110 }}
               />
-              <button className="logs-nav-btn" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} style={{ opacity: page <= 1 ? 0.4 : 1 }}>
+              <button className="logs-nav-btn" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
                 ← Prev
               </button>
-              <span style={{ fontSize: 12, color: 'var(--text-secondary)', padding: '0 4px' }}>
+              <span className="logs-pagination-pages">
                 Page {page} of {Math.max(1, Math.ceil((total || logs.length) / pageSize))}
               </span>
               <button
                 className="logs-nav-btn"
                 disabled={page >= Math.ceil((total || logs.length) / pageSize)}
                 onClick={() => setPage((p) => p + 1)}
-                style={{ opacity: page >= Math.ceil((total || logs.length) / pageSize) ? 0.4 : 1 }}
               >
                 Next →
               </button>

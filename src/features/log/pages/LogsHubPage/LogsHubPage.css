@@ -14,17 +14,17 @@
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── KPI row ── */
+/* ── KPI row (3 cards) ── */
 .logs-kpi-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 900px) {
     .logs-kpi-row { grid-template-columns: repeat(2, 1fr); }
 }
-@media (max-width: 600px) {
+@media (max-width: 560px) {
     .logs-kpi-row { grid-template-columns: 1fr; }
 }
 
@@ -76,14 +76,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .logs-kpi-value {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 700;
     color: var(--text-primary);
     line-height: 1.2;
     letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.logs-kpi-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
 }
 
 .logs-kpi-pill {
@@ -120,11 +127,13 @@
 }
 
 .logs-chart-card-header {
-    padding: 14px 18px;
+    padding: 12px 18px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .logs-chart-card-title {
@@ -134,13 +143,15 @@
     font-size: 13px;
     font-weight: 600;
     color: var(--text-primary);
+    flex-shrink: 0;
 }
 
 .logs-chart-card-body {
     padding: 14px 18px;
     flex: 1;
+    min-height: 100px;
     display: flex;
-    align-items: flex-end;
+    align-items: stretch;
 }
 
 .logs-chart-empty {
@@ -153,7 +164,14 @@
     padding: 20px 0;
 }
 
-/* ── Volume chart ── */
+/* ── Volume chart — vertical bars + time axis ── */
+.logs-volume-chart-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
 .logs-volume-chart {
     width: 100%;
     height: 80px;
@@ -162,14 +180,53 @@
     gap: 2px;
 }
 
+.logs-volume-axis {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    gap: 2px;
+    padding-top: 4px;
+    border-top: 1px solid var(--border-color, rgba(255,255,255,0.06));
+    margin-top: 3px;
+}
+
+.logs-volume-axis-tick {
+    flex: 1;
+    font-size: 10px;
+    color: var(--text-muted);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    font-variant-numeric: tabular-nums;
+    user-select: none;
+}
+
 .logs-volume-bar-wrapper {
     flex: 1;
     height: 100%;
     display: flex;
     align-items: flex-end;
-    cursor: pointer;
+    cursor: default;
+    position: relative;
 }
 
+/* Zero-count bars: show a subtle baseline tick */
+.logs-volume-bar-wrapper--empty::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--border-color, rgba(255,255,255,0.08));
+    border-radius: 1px;
+}
+
+.logs-volume-bar-wrapper:not(.logs-volume-bar-wrapper--empty):hover .logs-volume-bar-stack {
+    opacity: 0.75;
+}
+
+/* Stacked vertical bar: each child has flex proportional to its count */
 .logs-volume-bar-stack {
     width: 100%;
     display: flex;
@@ -177,16 +234,41 @@
     border-radius: 3px 3px 0 0;
     overflow: hidden;
     min-height: 2px;
-}
-
-.logs-volume-bar-stack > div {
-    height: 8px;
-    min-height: 2px;
     transition: opacity 0.15s ease;
 }
 
-.logs-volume-bar-wrapper:hover .logs-volume-bar-stack > div {
-    opacity: 0.8;
+.logs-volume-bar-stack > div {
+    min-height: 2px;
+}
+
+/* ── Volume legend ── */
+.logs-volume-legend {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.logs-volume-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.logs-volume-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.logs-volume-legend-count {
+    font-variant-numeric: tabular-nums;
+    color: var(--text-secondary);
+    font-weight: 500;
 }
 
 /* ── Level distribution ── */
@@ -194,7 +276,7 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 9px;
 }
 
 .logs-level-dist-row {
@@ -226,6 +308,11 @@
 }
 
 /* ── Service pills ── */
+.logs-service-pills-row {
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border-color);
+}
+
 .logs-service-pills {
     display: flex;
     flex-wrap: wrap;
@@ -266,6 +353,12 @@
     border-radius: 10px;
     background: rgba(255,255,255,0.08);
     font-variant-numeric: tabular-nums;
+}
+
+/* ── Query bar row ── */
+.logs-querybar-row {
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border-color);
 }
 
 /* ── Explorer card ── */
@@ -335,6 +428,37 @@
     font-weight: 600;
 }
 
+/* ── Pagination ── */
+.logs-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 18px;
+    border-top: 1px solid var(--border-color);
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.logs-pagination-info {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.logs-pagination-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.logs-pagination-pages {
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 0 4px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
 /* ── Nav buttons ── */
 .logs-nav-btn {
     padding: 4px 12px;
@@ -344,7 +468,8 @@
     color: var(--text-secondary);
     font-size: 12px;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    white-space: nowrap;
 }
 
 .logs-nav-btn:hover:not(:disabled) {
@@ -355,4 +480,5 @@
 
 .logs-nav-btn:disabled {
     cursor: not-allowed;
+    opacity: 0.4;
 }
