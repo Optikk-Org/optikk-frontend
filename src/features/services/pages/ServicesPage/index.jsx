@@ -36,8 +36,6 @@ export default function ServicesPage() {
     healthyServices,
     degradedServices,
     unhealthyServices,
-    avgErrorRate,
-    avgLatency,
     tableData,
     topologyNodes,
     topologyEdges,
@@ -308,8 +306,6 @@ export default function ServicesPage() {
                 healthyServices={healthyServices}
                 degradedServices={degradedServices}
                 unhealthyServices={unhealthyServices}
-                avgErrorRate={avgErrorRate}
-                avgLatency={avgLatency}
                 isLoading={isLoading}
                 dashboardConfig={dashboardConfig}
                 chartDataSources={chartDataSources}

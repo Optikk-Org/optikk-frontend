@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@store/appStore';
 import { v1Service } from '@services/v1Service';
-import { dashboardService } from '@services/dashboardService';
+import { overviewService } from '@services/overviewService';
 
 export function useMetricsQueries({ selectedService, showErrorsOnly, activeTab }) {
     const { selectedTeamId, timeRange, refreshKey } = useAppStore();
@@ -16,7 +16,7 @@ export function useMetricsQueries({ selectedService, showErrorsOnly, activeTab }
         queryKey: ['services', selectedTeamId, timeRange.value, refreshKey],
         queryFn: () => {
             const { startTime, endTime } = getTimeRange();
-            return dashboardService.getServices(selectedTeamId, startTime, endTime);
+            return overviewService.getServices(selectedTeamId, startTime, endTime);
         },
         enabled: !!selectedTeamId,
     });

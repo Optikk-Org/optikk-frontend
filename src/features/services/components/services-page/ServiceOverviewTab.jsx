@@ -21,8 +21,6 @@ export function ServiceOverviewTab({
     healthyServices,
     degradedServices,
     unhealthyServices,
-    avgErrorRate,
-    avgLatency,
     isLoading,
     dashboardConfig,
     chartDataSources,
@@ -37,14 +35,12 @@ export function ServiceOverviewTab({
         <>
             <StatCardsGrid
                 style={{ marginBottom: 24 }}
-                defaultColProps={{ xs: 24, sm: 12, lg: 4 }}
+                defaultColProps={{ xs: 24, sm: 12, lg: 6 }}
                 stats={[
                     { title: "Total Services", value: totalServices, icon: <Layers size={20} />, iconColor: "#6366F1", loading: isLoading },
                     { title: "Healthy", value: healthyServices, icon: <Activity size={20} />, iconColor: "#73C991", loading: isLoading, description: `${totalServices > 0 ? Number(((healthyServices / totalServices) * 100)).toFixed(2) : 0}% of total` },
                     { title: "Degraded", value: degradedServices, icon: <AlertCircle size={20} />, iconColor: "#F79009", loading: isLoading, description: `${totalServices > 0 ? Number(((degradedServices / totalServices) * 100)).toFixed(2) : 0}% of total` },
                     { title: "Unhealthy", value: unhealthyServices, icon: <ShieldAlert size={20} />, iconColor: "#F04438", loading: isLoading, description: `${totalServices > 0 ? Number(((unhealthyServices / totalServices) * 100)).toFixed(2) : 0}% of total` },
-                    { title: "Avg Error Rate", value: `${avgErrorRate.toFixed(2)}%`, icon: <AlertCircle size={20} />, iconColor: avgErrorRate > 5 ? '#F04438' : avgErrorRate > 1 ? '#F79009' : '#73C991', loading: isLoading },
-                    { title: "Avg Latency", value: formatDuration(avgLatency), icon: <Activity size={20} />, iconColor: avgLatency > 1000 ? '#F79009' : '#06AED5', loading: isLoading }
                 ]}
             />
 

@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Row, Col, Card, Skeleton, Empty, Progress, Tag } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { Activity, AlertCircle, Clock, Zap, Bell } from 'lucide-react';
-import { v1Service } from '@services/v1Service';
+import { overviewService } from '@services/overviewService';
 import { alertService } from '@services/alertService';
 import { formatNumber, formatDuration, formatRelativeTime } from '@utils/formatters';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
@@ -67,31 +67,31 @@ export default function OverviewPage() {
   // Metrics summary (primary source — spans table via v1 API)
   const { data: summaryRaw, isLoading: summaryLoading, error: summaryError } = useTimeRangeQuery(
     'metrics-summary',
-    (teamId, start, end) => v1Service.getMetricsSummary(teamId, start, end)
+    (teamId, start, end) => overviewService.getSummary(teamId, start, end)
   );
 
   // Metrics timeseries for charts
   const { data: timeseriesRaw } = useTimeRangeQuery(
     'metrics-timeseries',
-    (teamId, start, end) => v1Service.getMetricsTimeSeries(teamId, start, end, null, '5m')
+    (teamId, start, end) => overviewService.getTimeSeries(teamId, start, end, null, '5m')
   );
 
   // Per-endpoint timeseries from backend
   const { data: endpointTimeseriesRaw } = useTimeRangeQuery(
     'endpoints-timeseries',
-    (teamId, start, end) => v1Service.getEndpointTimeSeries(teamId, start, end)
+    (teamId, start, end) => overviewService.getEndpointTimeSeries(teamId, start, end)
   );
 
   // Service metrics for health grid
   const { data: servicesRaw } = useTimeRangeQuery(
     'services-metrics',
-    (teamId, startTime, endTime) => v1Service.getServiceMetrics(teamId, startTime, endTime)
+    (teamId, startTime, endTime) => overviewService.getServices(teamId, startTime, endTime)
   );
 
   // Endpoint metrics for breakdown lists below charts
   const { data: endpointMetricsRaw } = useTimeRangeQuery(
     'endpoints-metrics',
-    (teamId, startTime, endTime) => v1Service.getEndpointMetrics(teamId, startTime, endTime)
+    (teamId, startTime, endTime) => overviewService.getEndpointMetrics(teamId, startTime, endTime)
   );
 
   // Recent alerts (time-range aware)

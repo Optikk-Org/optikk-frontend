@@ -16,9 +16,9 @@ export const useAppStore = create((set) => ({
   sidebarCollapsed: savedCollapsed === 'true',
   refreshKey: 0,
   autoRefreshInterval: savedAutoRefresh !== null ? Number(savedAutoRefresh) : 10_000,
-  theme: localStorage.getItem('observex_theme') || 'dark',
-  notificationsEnabled: localStorage.getItem('observex_notifications') !== 'false',
-  viewPreferences: JSON.parse(localStorage.getItem('observex_view_prefs') || '{}'),
+  theme: localStorage.getItem('optikk_theme') || 'dark',
+  notificationsEnabled: localStorage.getItem('optikk_notifications') !== 'false',
+  viewPreferences: JSON.parse(localStorage.getItem('optikk_view_prefs') || '{}'),
 
   setSelectedTeamId: (teamId) => {
     localStorage.setItem(STORAGE_KEYS.TEAM_ID, teamId);
@@ -59,19 +59,19 @@ export const useAppStore = create((set) => ({
   },
 
   setTheme: (theme) => {
-    localStorage.setItem('observex_theme', theme);
+    localStorage.setItem('optikk_theme', theme);
     set({ theme });
   },
 
   setNotificationsEnabled: (enabled) => {
-    localStorage.setItem('observex_notifications', String(enabled));
+    localStorage.setItem('optikk_notifications', String(enabled));
     set({ notificationsEnabled: enabled });
   },
 
   setViewPreference: (key, value) => {
     set((state) => {
       const updated = { ...state.viewPreferences, [key]: value };
-      localStorage.setItem('observex_view_prefs', JSON.stringify(updated));
+      localStorage.setItem('optikk_view_prefs', JSON.stringify(updated));
       return { viewPreferences: updated };
     });
   },

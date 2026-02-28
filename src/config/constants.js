@@ -200,12 +200,12 @@ export const HEALTH_CHECK_STATUSES = [
 ];
 
 export const STORAGE_KEYS = {
-  AUTH_TOKEN: 'observex_auth_token',
-  USER_DATA: 'observex_user_data',
-  TEAM_ID: 'observex_team_id',
-  TIME_RANGE: 'observex_time_range',
-  SIDEBAR_COLLAPSED: 'observex_sidebar_collapsed',
-  AUTO_REFRESH: 'observex_auto_refresh',
+  AUTH_TOKEN: 'optikk_auth_token',
+  USER_DATA: 'optikk_user_data',
+  TEAM_ID: 'optikk_team_id',
+  TIME_RANGE: 'optikk_time_range',
+  SIDEBAR_COLLAPSED: 'optikk_sidebar_collapsed',
+  AUTO_REFRESH: 'optikk_auto_refresh',
 };
 
 // Auto-refresh interval options (value = milliseconds, 0 = off)

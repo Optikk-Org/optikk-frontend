@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Row, Col, Card, Select, Tag, Table, Skeleton, Empty, Tooltip } from 'antd';
-import { AlertCircle, ExternalLink, Clock, Server } from 'lucide-react';
+import { AlertCircle, ExternalLink, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
 import { useDashboardConfig } from '@hooks/useDashboardConfig';
-import { v1Service } from '@services/v1Service';
+import { overviewService } from '@services/overviewService';
 import PageHeader from '@components/common/layout/PageHeader';
-import StatCard from '@components/common/cards/StatCard';
 import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
 import { formatNumber, formatRelativeTime } from '@utils/formatters';
 import './ErrorDashboardPage.css';
@@ -48,26 +47,52 @@ export default function ErrorDashboardPage() {
   const [selectedService, setSelectedService] = useState(null);
   const { config } = useDashboardConfig('error-dashboard');
 
-  // Cross-service error groups
-  const { data: errorGroupsRaw, isLoading: groupsLoading } = useTimeRangeQuery(
-    'error-groups-global',
+  const resolvedConfig = useMemo(() => {
+    if (!config) return config;
+
+    return {
+      ...config,
+      charts: Array.isArray(config.charts) ? config.charts.map((chart) => {
+        if (chart.id === 'service-error-rate') return { ...chart, dataSource: 'service-error-rate' };
+        if (chart.id === 'service-error-volume') return { ...chart, dataSource: 'error-volume' };
+        if (chart.id === 'service-latency-under-errors') return { ...chart, dataSource: 'latency-during-error-windows' };
+        return chart;
+      }) : [],
+    };
+  }, [config]);
+
+  const { data: serviceErrorRateRaw, isLoading: errorRateLoading } = useTimeRangeQuery(
+    'overview-service-error-rate',
     (teamId, start, end) =>
-      v1Service.getGlobalErrorGroups(teamId, start, end, { serviceName: selectedService, limit: 100 }),
+      overviewService.getServiceErrorRate(teamId, start, end, selectedService, '5m'),
     { extraKeys: [selectedService] }
   );
 
-  // Service timeseries for chart
-  const { data: serviceTimeseriesRaw, isLoading: tsLoading } = useTimeRangeQuery(
-    'service-timeseries-charts',
+  const { data: errorVolumeRaw, isLoading: errorVolumeLoading } = useTimeRangeQuery(
+    'overview-error-volume',
     (teamId, start, end) =>
-      v1Service.getServiceTimeSeries(teamId, start, end, '5m'),
+      overviewService.getErrorVolume(teamId, start, end, selectedService, '5m'),
+    { extraKeys: [selectedService] }
+  );
+
+  const { data: latencyWindowsRaw, isLoading: latencyLoading } = useTimeRangeQuery(
+    'overview-error-latency-windows',
+    (teamId, start, end) =>
+      overviewService.getLatencyDuringErrorWindows(teamId, start, end, selectedService, '5m'),
+    { extraKeys: [selectedService] }
+  );
+
+  const { data: errorGroupsRaw, isLoading: groupsLoading } = useTimeRangeQuery(
+    'error-groups-global',
+    (teamId, start, end) =>
+      overviewService.getErrorGroups(teamId, start, end, { serviceName: selectedService, limit: 100 }),
     { extraKeys: [selectedService] }
   );
 
   // Service metrics for the filter dropdown and breakdown list
   const { data: serviceMetricsRaw } = useTimeRangeQuery(
-    'services-metrics-err',
-    (teamId, start, end) => v1Service.getServiceMetrics(teamId, start, end)
+    'overview-services-errors',
+    (teamId, start, end) => overviewService.getServices(teamId, start, end)
   );
 
   const errorGroups = useMemo(() => {
@@ -79,26 +104,22 @@ export default function ErrorDashboardPage() {
     () => (Array.isArray(serviceMetricsRaw) ? serviceMetricsRaw.map(normalizeServiceMetric) : []),
     [serviceMetricsRaw]
   );
-  const normalizedServiceTimeseries = useMemo(
-    () => (Array.isArray(serviceTimeseriesRaw) ? serviceTimeseriesRaw.map(normalizeTimeSeriesPoint) : []),
-    [serviceTimeseriesRaw]
+  const normalizedServiceErrorRate = useMemo(
+    () => (Array.isArray(serviceErrorRateRaw) ? serviceErrorRateRaw.map(normalizeTimeSeriesPoint) : []),
+    [serviceErrorRateRaw]
+  );
+  const normalizedErrorVolume = useMemo(
+    () => (Array.isArray(errorVolumeRaw) ? errorVolumeRaw.map(normalizeTimeSeriesPoint) : []),
+    [errorVolumeRaw]
+  );
+  const normalizedLatencyWindows = useMemo(
+    () => (Array.isArray(latencyWindowsRaw) ? latencyWindowsRaw.map(normalizeTimeSeriesPoint) : []),
+    [latencyWindowsRaw]
   );
 
   const services = useMemo(() => {
     return normalizedServiceMetrics.map((s) => s.service_name).filter(Boolean);
   }, [normalizedServiceMetrics]);
-
-  // Derive stats from error groups
-  const stats = useMemo(() => {
-    if (errorGroups.length > 0) {
-      const totalErrors = errorGroups.reduce((sum, g) => sum + Number(g.error_count || 0), 0);
-      const uniqueServices = new Set(errorGroups.map((g) => g.service_name)).size;
-      const uniqueOperations = new Set(errorGroups.map((g) => g.operation_name)).size;
-      const topErrorCount = errorGroups[0]?.error_count || 0;
-      return { totalErrors, uniqueServices, uniqueOperations, topErrorCount };
-    }
-    return { totalErrors: 0, uniqueServices: 0, uniqueOperations: 0, topErrorCount: 0 };
-  }, [errorGroups]);
 
   const statusColor = (code) => {
     const n = Number(code);
@@ -213,56 +234,16 @@ export default function ErrorDashboardPage() {
         }
       />
 
-      {/* Summary Stats */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            title="Total Errors"
-            value={stats.totalErrors}
-            formatter={formatNumber}
-            icon={<AlertCircle size={20} />}
-            iconColor="#F04438"
-            loading={groupsLoading}
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            title="Affected Services"
-            value={stats.uniqueServices}
-            icon={<Server size={20} />}
-            iconColor="#F79009"
-            loading={groupsLoading}
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            title="Affected Endpoints"
-            value={stats.uniqueOperations}
-            icon={<AlertCircle size={20} />}
-            iconColor="#5E60CE"
-            loading={groupsLoading}
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            title="Top Error Group"
-            value={stats.topErrorCount}
-            formatter={formatNumber}
-            icon={<AlertCircle size={20} />}
-            iconColor="#E478FA"
-            loading={groupsLoading}
-          />
-        </Col>
-      </Row>
-
       {/* Configurable Dashboard Charts */}
       <ConfigurableDashboard
-        config={config}
+        config={resolvedConfig}
         dataSources={{
-          'service-timeseries': normalizedServiceTimeseries,
-          'services-metrics': normalizedServiceMetrics,
+          'service-error-rate': normalizedServiceErrorRate,
+          'error-volume': normalizedErrorVolume,
+          'latency-during-error-windows': normalizedLatencyWindows,
+          'error-groups': errorGroups,
         }}
-        isLoading={tsLoading}
+        isLoading={errorRateLoading || errorVolumeLoading || latencyLoading}
       />
 
       {/* Error Groups Table */}

@@ -1,7 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
-import { v1Service } from '@services/v1Service';
-import { serviceMapService } from '@services/serviceMapService';
+import { servicesPageService } from '@services/servicesPageService';
 import {
     normalizeServiceMetric,
     normalizeTimeSeriesPoint,
@@ -12,20 +11,35 @@ import {
 } from '../utils/servicesUtils';
 
 export function useServicesData({ searchQuery, sortField, sortOrder, healthFilter }) {
-    const { data, isLoading } = useTimeRangeQuery(
+    const { data: totalServicesRaw, isLoading: totalLoading } = useTimeRangeQuery(
+        'services-summary-total',
+        (teamId, startTime, endTime) => servicesPageService.getTotalServices(teamId, startTime, endTime)
+    );
+
+    const { data: healthyServicesRaw, isLoading: healthyLoading } = useTimeRangeQuery(
+        'services-summary-healthy',
+        (teamId, startTime, endTime) => servicesPageService.getHealthyServices(teamId, startTime, endTime)
+    );
+
+    const { data: degradedServicesRaw, isLoading: degradedLoading } = useTimeRangeQuery(
+        'services-summary-degraded',
+        (teamId, startTime, endTime) => servicesPageService.getDegradedServices(teamId, startTime, endTime)
+    );
+
+    const { data: unhealthyServicesRaw, isLoading: unhealthyLoading } = useTimeRangeQuery(
+        'services-summary-unhealthy',
+        (teamId, startTime, endTime) => servicesPageService.getUnhealthyServices(teamId, startTime, endTime)
+    );
+
+    const { data: metricsRaw, isLoading: metricsLoading } = useTimeRangeQuery(
         'services-metrics',
-        (teamId, startTime, endTime) => v1Service.getServiceMetrics(teamId, startTime, endTime)
+        (teamId, startTime, endTime) => servicesPageService.getServiceMetrics(teamId, startTime, endTime)
     );
 
-    const { data: serviceTimeseriesRaw } = useTimeRangeQuery(
+    const { data: serviceTimeseriesRaw, isLoading: timeseriesLoading } = useTimeRangeQuery(
         'service-timeseries-svc',
-        (teamId, start, end) => v1Service.getServiceTimeSeries(teamId, start, end, '5m')
+        (teamId, start, end) => servicesPageService.getServiceTimeSeries(teamId, start, end, '5m')
     );
-
-    const chartDataSources = useMemo(() => ({
-        'service-timeseries': (Array.isArray(serviceTimeseriesRaw) ? serviceTimeseriesRaw : []).map(normalizeTimeSeriesPoint),
-        'services-metrics': (Array.isArray(data) ? data : []).map(normalizeServiceMetric),
-    }), [serviceTimeseriesRaw, data]);
 
     const {
         data: topologyDataRaw,
@@ -33,46 +47,86 @@ export function useServicesData({ searchQuery, sortField, sortOrder, healthFilte
         error: topologyError,
     } = useTimeRangeQuery(
         'service-topology',
-        (teamId, startTime, endTime) => serviceMapService.getTopology(teamId, startTime, endTime)
+        (teamId, startTime, endTime) => servicesPageService.getTopology(teamId, startTime, endTime)
     );
 
     const services = useMemo(
-        () => (Array.isArray(data) ? data : []).map(normalizeServiceMetric),
-        [data]
+        () => (Array.isArray(metricsRaw) ? metricsRaw : []).map(normalizeServiceMetric),
+        [metricsRaw]
     );
-    const allTopologyNodes = useMemo(
-        () => (Array.isArray(topologyDataRaw?.nodes) ? topologyDataRaw.nodes : []).map(normalizeTopologyNode),
-        [topologyDataRaw?.nodes]
+
+    const normalizedServiceTimeseries = useMemo(
+        () => (Array.isArray(serviceTimeseriesRaw) ? serviceTimeseriesRaw : []).map(normalizeTimeSeriesPoint),
+        [serviceTimeseriesRaw]
     );
-    const allTopologyEdges = useMemo(
-        () => (Array.isArray(topologyDataRaw?.edges) ? topologyDataRaw.edges : []).map(normalizeTopologyEdge),
-        [topologyDataRaw?.edges]
-    );
+
+    const chartDataSources = useMemo(() => ({
+        'service-timeseries': normalizedServiceTimeseries,
+        'services-metrics': services,
+    }), [normalizedServiceTimeseries, services]);
+
+    const requestTrendsByService = useMemo(() => {
+        const trends = new Map();
+
+        normalizedServiceTimeseries.forEach((point) => {
+            const serviceName = point.service_name;
+            if (!serviceName) return;
+
+            if (!trends.has(serviceName)) trends.set(serviceName, []);
+            trends.get(serviceName).push(point);
+        });
+
+        for (const [serviceName, points] of trends.entries()) {
+            points.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            trends.set(serviceName, points.map((point) => Number(point.request_count || 0)));
+        }
+
+        return trends;
+    }, [normalizedServiceTimeseries]);
 
     const serviceRows = useMemo(() => {
         return services.map((service) => {
             const requestCount = Number(service.request_count) || 0;
             const errorCount = Number(service.error_count) || 0;
             const errorRate = requestCount > 0 ? (errorCount / requestCount) * 100 : 0;
-            const avgLatency = Number(service.avg_latency) || 0;
 
             return {
                 serviceName: service.service_name,
                 errorRate,
                 requestCount,
                 errorCount,
-                avgLatency,
+                avgLatency: Number(service.avg_latency) || 0,
                 p95Latency: Number(service.p95_latency) || 0,
                 p99Latency: Number(service.p99_latency) || 0,
                 status: getServiceStatus(errorRate),
-                requestTrend: Array.from({ length: 20 }, () => Math.random() * requestCount * 0.2 + requestCount * 0.8),
+                requestTrend: requestTrendsByService.get(service.service_name) || null,
             };
         });
-    }, [services]);
+    }, [services, requestTrendsByService]);
 
-    const servicesByName = useMemo(
-        () => new Map(serviceRows.map((row) => [row.serviceName, row])),
-        [serviceRows]
+    const tableData = useMemo(() => {
+        const filteredBySearch = searchQuery
+            ? serviceRows.filter((s) => s.serviceName.toLowerCase().includes(searchQuery.toLowerCase()))
+            : serviceRows;
+
+        return sortField && sortOrder
+            ? [...filteredBySearch].sort((a, b) => {
+                const aVal = a[sortField];
+                const bVal = b[sortField];
+                const comparison = aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+                return sortOrder === 'ascend' ? comparison : -comparison;
+            })
+            : filteredBySearch;
+    }, [serviceRows, searchQuery, sortField, sortOrder]);
+
+    const allTopologyNodes = useMemo(
+        () => (Array.isArray(topologyDataRaw?.nodes) ? topologyDataRaw.nodes : []).map(normalizeTopologyNode),
+        [topologyDataRaw?.nodes]
+    );
+
+    const allTopologyEdges = useMemo(
+        () => (Array.isArray(topologyDataRaw?.edges) ? topologyDataRaw.edges : []).map(normalizeTopologyEdge),
+        [topologyDataRaw?.edges]
     );
 
     const adjacency = useMemo(() => {
@@ -88,90 +142,23 @@ export function useServicesData({ searchQuery, sortField, sortOrder, healthFilte
     }, [allTopologyEdges]);
 
     const normalizedTopologyNodes = useMemo(() => {
-        const nodeMap = new Map();
-
-        allTopologyNodes.forEach((node) => {
-            const serviceMetrics = servicesByName.get(node.name);
-            const errorRate = Number(node.errorRate ?? serviceMetrics?.errorRate ?? 0);
-            const avgLatency = Number(node.avgLatency ?? serviceMetrics?.avgLatency ?? 0);
-            const requestCount = Number(node.requestCount ?? serviceMetrics?.requestCount ?? 0);
-            const status = node.status || serviceMetrics?.status || getServiceStatus(errorRate);
+        return allTopologyNodes.map((node) => {
+            const errorRate = Number(node.errorRate ?? 0);
+            const avgLatency = Number(node.avgLatency ?? 0);
             const dependencyCount = (adjacency.out.get(node.name) || 0) + (adjacency.inbound.get(node.name) || 0);
 
-            nodeMap.set(node.name, {
+            return {
                 ...node,
                 name: node.name,
-                requestCount,
+                requestCount: Number(node.requestCount ?? 0),
                 errorRate,
                 avgLatency,
-                status,
+                status: node.status || getServiceStatus(errorRate),
                 dependencyCount,
                 riskScore: calcRiskScore({ errorRate, avgLatency, dependencyCount }),
-            });
+            };
         });
-
-        serviceRows.forEach((row) => {
-            if (nodeMap.has(row.serviceName)) return;
-            const dependencyCount = (adjacency.out.get(row.serviceName) || 0) + (adjacency.inbound.get(row.serviceName) || 0);
-
-            nodeMap.set(row.serviceName, {
-                name: row.serviceName,
-                requestCount: row.requestCount,
-                errorRate: row.errorRate,
-                avgLatency: row.avgLatency,
-                status: row.status,
-                dependencyCount,
-                riskScore: calcRiskScore({
-                    errorRate: row.errorRate,
-                    avgLatency: row.avgLatency,
-                    dependencyCount,
-                }),
-            });
-        });
-
-        return Array.from(nodeMap.values());
-    }, [allTopologyNodes, servicesByName, serviceRows, adjacency]);
-
-    const {
-        totalServices,
-        healthyServices,
-        degradedServices,
-        unhealthyServices,
-        avgErrorRate,
-        avgLatency,
-        tableData,
-    } = useMemo(() => {
-        const total = serviceRows.length;
-        const healthy = serviceRows.filter((s) => s.status === 'healthy').length;
-        const degraded = serviceRows.filter((s) => s.status === 'degraded').length;
-        const unhealthy = serviceRows.filter((s) => s.status === 'unhealthy').length;
-
-        const errSum = serviceRows.reduce((acc, row) => acc + row.errorRate, 0);
-        const latSum = serviceRows.reduce((acc, row) => acc + row.avgLatency, 0);
-
-        const filteredBySearch = searchQuery
-            ? serviceRows.filter((s) => s.serviceName.toLowerCase().includes(searchQuery.toLowerCase()))
-            : serviceRows;
-
-        const sorted = sortField && sortOrder
-            ? [...filteredBySearch].sort((a, b) => {
-                const aVal = a[sortField];
-                const bVal = b[sortField];
-                const comparison = aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
-                return sortOrder === 'ascend' ? comparison : -comparison;
-            })
-            : filteredBySearch;
-
-        return {
-            totalServices: total,
-            healthyServices: healthy,
-            degradedServices: degraded,
-            unhealthyServices: unhealthy,
-            avgErrorRate: total > 0 ? errSum / total : 0,
-            avgLatency: total > 0 ? latSum / total : 0,
-            tableData: sorted,
-        };
-    }, [serviceRows, searchQuery, sortField, sortOrder]);
+    }, [allTopologyNodes, adjacency]);
 
     const topologyNodes = useMemo(() => {
         let rows = normalizedTopologyNodes;
@@ -187,7 +174,7 @@ export function useServicesData({ searchQuery, sortField, sortOrder, healthFilte
         return rows;
     }, [normalizedTopologyNodes, searchQuery, healthFilter]);
 
-    const topologyNodeNames = useMemo(() => new Set(topologyNodes.map((n) => n.name)), [topologyNodes]);
+    const topologyNodeNames = useMemo(() => new Set(topologyNodes.map((node) => node.name)), [topologyNodes]);
 
     const topologyEdges = useMemo(
         () => allTopologyEdges.filter((edge) => topologyNodeNames.has(edge.source) && topologyNodeNames.has(edge.target)),
@@ -195,9 +182,10 @@ export function useServicesData({ searchQuery, sortField, sortOrder, healthFilte
     );
 
     const topologyStats = useMemo(() => {
-        const unhealthy = topologyNodes.filter((n) => n.status === 'unhealthy').length;
-        const degraded = topologyNodes.filter((n) => n.status === 'degraded').length;
-        const highRiskEdges = topologyEdges.filter((e) => Number(e.errorRate) > 5).length;
+        const unhealthy = topologyNodes.filter((node) => node.status === 'unhealthy').length;
+        const degraded = topologyNodes.filter((node) => node.status === 'degraded').length;
+        const highRiskEdges = topologyEdges.filter((edge) => Number(edge.errorRate) > 5).length;
+
         return {
             graphServices: topologyNodes.length,
             dependencies: topologyEdges.length,
@@ -212,10 +200,15 @@ export function useServicesData({ searchQuery, sortField, sortOrder, healthFilte
             .slice(0, 8);
     }, [topologyNodes]);
 
+    const topologyNodesByName = useMemo(
+        () => new Map(normalizedTopologyNodes.map((node) => [node.name, node])),
+        [normalizedTopologyNodes]
+    );
+
     const dependencyRows = useMemo(() => {
         return topologyEdges.map((edge, index) => {
-            const source = normalizedTopologyNodes.find((n) => n.name === edge.source);
-            const target = normalizedTopologyNodes.find((n) => n.name === edge.target);
+            const source = topologyNodesByName.get(edge.source);
+            const target = topologyNodesByName.get(edge.target);
             const errorRate = Number(edge.errorRate) || 0;
             const avgLatency = Number(edge.avgLatency) || 0;
             const callCount = Number(edge.callCount) || 0;
@@ -236,41 +229,39 @@ export function useServicesData({ searchQuery, sortField, sortOrder, healthFilte
                 }),
             };
         }).sort((a, b) => b.risk - a.risk);
-    }, [topologyEdges, normalizedTopologyNodes]);
+    }, [topologyEdges, topologyNodesByName]);
 
     const healthOptions = [
         { key: 'all', label: 'All', count: normalizedTopologyNodes.length },
         {
             key: 'healthy',
             label: 'Healthy',
-            count: normalizedTopologyNodes.filter((n) => n.status === 'healthy').length,
+            count: normalizedTopologyNodes.filter((node) => node.status === 'healthy').length,
             color: '#73C991',
         },
         {
             key: 'degraded',
             label: 'Degraded',
-            count: normalizedTopologyNodes.filter((n) => n.status === 'degraded').length,
+            count: normalizedTopologyNodes.filter((node) => node.status === 'degraded').length,
             color: '#F79009',
         },
         {
             key: 'unhealthy',
             label: 'Unhealthy',
-            count: normalizedTopologyNodes.filter((n) => n.status === 'unhealthy').length,
+            count: normalizedTopologyNodes.filter((node) => node.status === 'unhealthy').length,
             color: '#F04438',
         },
     ];
 
     return {
-        isLoading,
+        isLoading: metricsLoading || timeseriesLoading || totalLoading || healthyLoading || degradedLoading || unhealthyLoading,
         chartDataSources,
         topologyLoading,
         topologyError,
-        totalServices,
-        healthyServices,
-        degradedServices,
-        unhealthyServices,
-        avgErrorRate,
-        avgLatency,
+        totalServices: Number(totalServicesRaw?.count ?? 0),
+        healthyServices: Number(healthyServicesRaw?.count ?? 0),
+        degradedServices: Number(degradedServicesRaw?.count ?? 0),
+        unhealthyServices: Number(unhealthyServicesRaw?.count ?? 0),
         tableData,
         topologyNodes,
         topologyEdges,

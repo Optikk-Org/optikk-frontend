@@ -43,7 +43,7 @@ export default function LoginPage() {
               <Layers size={24} />
             </div>
             <Title level={2} style={{ margin: 0, color: '#fff' }}>
-              ObserveX
+              Optikk
             </Title>
           </div>
 

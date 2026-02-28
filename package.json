@@ -2,7 +2,7 @@
   "name": "observability-frontend-react",
   "version": "1.0.0",
   "type": "module",
-  "description": "ObserveX Observability Platform - React Frontend",
+  "description": "Optikk Observability Platform - React Frontend",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",

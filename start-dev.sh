@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ObserveX React Frontend - Development Server Startup Script
+# Optikk React Frontend - Development Server Startup Script
 # Connects to local backend on localhost:8080
 
 set -e
@@ -24,7 +24,7 @@ clear
 
 print_header "╔════════════════════════════════════════════════════════════╗"
 print_header "║                                                            ║"
-print_header "║        ObserveX React Frontend - Development Mode         ║"
+print_header "║         Optikk React Frontend - Development Mode          ║"
 print_header "║                                                            ║"
 print_header "╚════════════════════════════════════════════════════════════╝"
 echo ""

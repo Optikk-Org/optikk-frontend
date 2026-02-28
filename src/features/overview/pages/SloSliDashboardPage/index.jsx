@@ -4,11 +4,8 @@ import { Target, ShieldCheck, Gauge, AlertTriangle, CheckCircle, TrendingDown } 
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
 import { useDashboardConfig } from '@hooks/useDashboardConfig';
 import { PageHeader, StatCard, FilterBar } from '@components/common';
-import { v1Service } from '@services/v1Service';
+import { overviewService } from '@services/overviewService';
 import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
-import { useAppStore } from '@store/appStore';
-import { dashboardService } from '@services/dashboardService';
-import { useQuery } from '@tanstack/react-query';
 
 const n = (v) => (v == null || Number.isNaN(Number(v)) ? 0 : Number(v));
 
@@ -74,33 +71,26 @@ function SloGauge({ title, value, target, unit = '%', description }) {
 
 export default function SloSliDashboardPage() {
   const [selectedService, setSelectedService] = useState(null);
-  const { selectedTeamId, timeRange, refreshKey } = useAppStore();
   const { config } = useDashboardConfig('slo-sli');
 
-  const getTimeRange = () => {
-    const endTime = Date.now();
-    const startTime = endTime - timeRange.minutes * 60 * 1000;
-    return { startTime, endTime };
-  };
-
-  const { data: servicesData } = useQuery({
-    queryKey: ['services', selectedTeamId, timeRange.value, refreshKey],
-    queryFn: () => {
-      const { startTime, endTime } = getTimeRange();
-      return dashboardService.getServices(selectedTeamId, startTime, endTime);
-    },
-    enabled: !!selectedTeamId,
-  });
+  const { data: servicesData } = useTimeRangeQuery(
+    'overview-services-slo',
+    (teamId, start, end) => overviewService.getServices(teamId, start, end)
+  );
 
   const services = servicesData || [];
   const serviceOptions = [
     { label: 'All Services', value: null },
-    ...services.map((s) => ({ label: s.name || s.service_name || s.serviceName, value: s.name || s.service_name || s.serviceName })),
+    ...services.map((s) => ({
+      label: s.service_name || s.serviceName || s.name,
+      value: s.service_name || s.serviceName || s.name,
+    })),
   ];
 
   const { data, isLoading } = useTimeRangeQuery(
-    `slo-sli-insights-${selectedService || 'all'}`,
-    (teamId, start, end) => v1Service.getSloSli(teamId, start, end, selectedService, '5m')
+    'overview-slo-sli',
+    (teamId, start, end) => overviewService.getSloSli(teamId, start, end, selectedService, '5m'),
+    { extraKeys: [selectedService] }
   );
 
   const status = data?.status || {};

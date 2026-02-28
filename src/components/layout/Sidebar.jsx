@@ -156,7 +156,7 @@ export default function Sidebar() {
         <div className="logo-icon">
           <Layers size={20} />
         </div>
-        {!sidebarCollapsed && <span className="logo-text">ObserveX</span>}
+        {!sidebarCollapsed && <span className="logo-text">Optikk</span>}
       </div>
 
       {!sidebarCollapsed && (

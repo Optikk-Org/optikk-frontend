@@ -134,7 +134,7 @@ export const v1Service = {
     return api.get(`${BASE}/incidents`, { params: { startTime, endTime, ...params } });
   },
 
-  // ==================== OPERATIONAL INSIGHTS ====================
+  // ==================== INFRASTRUCTURE / SATURATION ====================
 
   async getAvgCPU(teamId, startTime, endTime) {
     return api.get(`${BASE}/infrastructure/resource-utilisation/avg-cpu`, { params: { startTime, endTime } });
@@ -166,14 +166,6 @@ export const v1Service = {
 
   async getResourceUsageByInstance(teamId, startTime, endTime) {
     return api.get(`${BASE}/infrastructure/resource-utilisation/by-instance`, { params: { startTime, endTime } });
-  },
-
-  async getSloSli(teamId, startTime, endTime, serviceName, interval = '5m') {
-    return api.get(`${BASE}/insights/slo-sli`, { params: { startTime, endTime, serviceName, interval } });
-  },
-
-  async getLogsStreamInsights(teamId, startTime, endTime, interval = '1m', limit = 200) {
-    return api.get(`${BASE}/insights/logs-stream`, { params: { startTime, endTime, interval, limit } });
   },
 
   async getDatabaseCacheSummary(teamId, startTime, endTime) {
