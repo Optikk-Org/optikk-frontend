@@ -88,6 +88,7 @@ export default function CommandPalette({ open, onClose }) {
         <div className="command-palette-input-wrapper">
           <Search size={16} className="command-palette-search-icon" />
           <Input
+            data-testid="command-palette-input"
             ref={inputRef}
             placeholder="Type a command or search..."
             value={search}

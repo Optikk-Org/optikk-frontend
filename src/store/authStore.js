@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { authService } from '@services/authService';
-import { STORAGE_KEYS } from '@config/constants';
+import { useAppStore } from '@store/appStore';
 
 export const useAuthStore = create((set) => ({
   user: authService.getCurrentUser(),
@@ -17,6 +17,15 @@ export const useAuthStore = create((set) => ({
           ...payload.user,
           teams: payload.teams || payload.user?.teams || [],
         };
+        const teamId = payload.currentTeam?.id
+          ?? payload.teams?.[0]?.id
+          ?? payload.user?.teams?.[0]?.id
+          ?? null;
+
+        if (teamId != null) {
+          useAppStore.getState().setSelectedTeamId(teamId);
+        }
+
         set({
           user: userData,
           isAuthenticated: true,
@@ -38,6 +47,7 @@ export const useAuthStore = create((set) => ({
 
   logout: async () => {
     await authService.logout();
+    useAppStore.setState({ selectedTeamId: null });
     set({
       user: null,
       isAuthenticated: false,

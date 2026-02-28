@@ -181,6 +181,7 @@ export default function Sidebar() {
         <div className="sidebar-bottom-menu">
           <div className="sidebar-quick-actions">
             <Button
+              data-testid="sidebar-settings"
               type="text"
               className="sidebar-settings-btn"
               icon={<Settings size={14} />}
@@ -191,6 +192,7 @@ export default function Sidebar() {
 
             <Tooltip title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`} placement="right">
               <Button
+                data-testid="sidebar-theme-toggle"
                 type="text"
                 className="sidebar-theme-btn"
                 icon={theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
@@ -201,6 +203,7 @@ export default function Sidebar() {
             </Tooltip>
 
             <Button
+              data-testid="sidebar-logout"
               type="text"
               className="sidebar-logout-btn"
               icon={<LogOut size={14} />}

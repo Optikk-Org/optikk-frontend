@@ -144,6 +144,7 @@ const SettingsPage = () => {
 
           <Form.Item>
             <Button
+              data-testid="settings-save-profile"
               type="primary"
               htmlType="submit"
               loading={updateProfileMutation.isPending}
@@ -169,6 +170,7 @@ const SettingsPage = () => {
             </div>
           </div>
           <Switch
+            data-testid="settings-theme-switch"
             checked={theme === 'dark'}
             onChange={handleThemeChange}
             checkedChildren="Dark"
@@ -187,6 +189,7 @@ const SettingsPage = () => {
             </div>
           </div>
           <Switch
+            data-testid="settings-notifications-switch"
             checked={notificationsEnabled}
             onChange={handleNotificationsChange}
           />

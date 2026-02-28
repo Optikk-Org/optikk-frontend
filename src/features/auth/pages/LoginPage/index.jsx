@@ -107,6 +107,7 @@ export default function LoginPage() {
                 ]}
               >
                 <Input
+                  data-testid="login-email"
                   prefix={<Mail size={16} style={{ color: '#666' }} />}
                   placeholder="frontend.demo@observability.local"
                   size="large"
@@ -119,6 +120,7 @@ export default function LoginPage() {
                 rules={[{ required: true, message: 'Please enter your password' }]}
               >
                 <Input.Password
+                  data-testid="login-password"
                   prefix={<Lock size={16} style={{ color: '#666' }} />}
                   placeholder="Enter your password"
                   size="large"
@@ -127,6 +129,7 @@ export default function LoginPage() {
 
               <Form.Item style={{ marginBottom: 0 }}>
                 <Button
+                  data-testid="login-submit"
                   type="primary"
                   htmlType="submit"
                   size="large"
@@ -149,4 +152,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

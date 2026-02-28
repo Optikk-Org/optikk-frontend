@@ -84,6 +84,7 @@ export default function Header() {
           <div className="header-team-wrap">
             <span className="header-team-label">Workspace</span>
             <Select
+              data-testid="workspace-select"
               value={selectedTeamId}
               onChange={setSelectedTeamId}
               options={teamOptions}
@@ -97,6 +98,7 @@ export default function Header() {
         <div className="header-refresh-wrap" ref={pickerRef}>
           <Tooltip title="Refresh now">
             <Button
+              data-testid="header-refresh"
               icon={<RefreshCw size={16} />}
               onClick={handleRefresh}
               type="text"
@@ -109,6 +111,7 @@ export default function Header() {
 
           <Tooltip title="Auto-refresh interval">
             <button
+              data-testid="header-autorefresh-toggle"
               className={`header-autorefresh-pill ${autoRefreshInterval ? 'header-autorefresh-pill--active' : ''}`}
               onClick={() => setIntervalPickerOpen((v) => !v)}
             >
