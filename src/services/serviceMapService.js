@@ -4,7 +4,7 @@
 import api from './api';
 import { API_CONFIG } from '@config/constants';
 
-const BASE = API_CONFIG.ENDPOINTS.V1.TOPOLOGY;
+const BASE = API_CONFIG.ENDPOINTS.V1_BASE;
 
 export const serviceMapService = {
   async getTopology(teamId, startTime, endTime) {

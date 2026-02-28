@@ -3,6 +3,7 @@
  */
 import api from './api';
 import { API_CONFIG, STORAGE_KEYS } from '@config/constants';
+import { safeGet, safeSet, safeRemove, safeGetJSON } from '@utils/storage';
 
 export const authService = {
   /**
@@ -27,16 +28,16 @@ export const authService = {
     const payload = this.normalizeAuthPayload(response);
     if (payload?.token) {
       // Store auth data
-      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, payload.token);
-      localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(payload.user));
+      safeSet(STORAGE_KEYS.AUTH_TOKEN, payload.token);
+      safeSet(STORAGE_KEYS.USER_DATA, JSON.stringify(payload.user));
 
       // Store team ID if available - check both possible locations
       const teamId = payload.currentTeam?.id ||
-                     payload.teams?.[0]?.id ||
-                     payload.user?.teams?.[0]?.id;
+        payload.teams?.[0]?.id ||
+        payload.user?.teams?.[0]?.id;
 
       if (teamId) {
-        localStorage.setItem(STORAGE_KEYS.TEAM_ID, teamId);
+        safeSet(STORAGE_KEYS.TEAM_ID, teamId);
       }
     }
 
@@ -53,9 +54,9 @@ export const authService = {
       console.error('Logout error:', error);
     } finally {
       // Clear local storage
-      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-      localStorage.removeItem(STORAGE_KEYS.USER_DATA);
-      localStorage.removeItem(STORAGE_KEYS.TEAM_ID);
+      safeRemove(STORAGE_KEYS.AUTH_TOKEN);
+      safeRemove(STORAGE_KEYS.USER_DATA);
+      safeRemove(STORAGE_KEYS.TEAM_ID);
     }
   },
 
@@ -76,14 +77,14 @@ export const authService = {
    * Get current user from storage
    */
   getCurrentUser() {
-    const userData = localStorage.getItem(STORAGE_KEYS.USER_DATA);
-    return userData ? JSON.parse(userData) : null;
+    return safeGetJSON(STORAGE_KEYS.USER_DATA, null);
   },
 
   /**
    * Check if user is authenticated
    */
   isAuthenticated() {
-    return !!localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    return !!safeGet(STORAGE_KEYS.AUTH_TOKEN);
   },
 };
+

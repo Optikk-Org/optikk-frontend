@@ -4,7 +4,7 @@
 import api from './api';
 import { API_CONFIG } from '@config/constants';
 
-const BASE = API_CONFIG.ENDPOINTS.V1.INFRASTRUCTURE;
+const BASE = API_CONFIG.ENDPOINTS.V1_BASE;
 
 export const infrastructureService = {
   async getMetrics(teamId, startTime, endTime) {

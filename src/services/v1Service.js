@@ -1,294 +1,55 @@
 /**
- * V1 Service - API calls for ClickHouse-backed observability endpoints
+ * V1 Service — Backward-compatible barrel that re-exports from domain services.
+ *
+ * NEW CODE should import from the domain service directly:
+ *   import { logsService } from '@services/logsService';
+ *   import { tracesService } from '@services/tracesService';
+ *
+ * This barrel exists solely so existing call-sites (`v1Service.getXxx(…)`)
+ * continue to work without a mass rename.
  */
-import api from './api';
-import { API_CONFIG } from '@config/constants';
-
-// Base path for all v1 ClickHouse-backed endpoints
-const BASE = API_CONFIG.ENDPOINTS.V1.SERVICES_METRICS;
+import { logsService } from './logsService';
+import { tracesService } from './tracesService';
+import { metricsService } from './metricsService';
+import { aiService } from './aiService';
+import { deploymentsService } from './deploymentsService';
+import { latencyService } from './latencyService';
+import { saturationService } from './saturationService';
 
 export const v1Service = {
-  // ==================== METRICS ====================
-
-  async getServiceMetrics(teamId, startTime, endTime) {
-    return api.get(`${BASE}/services/metrics`, { params: { startTime, endTime } });
-  },
-
-  async getEndpointMetrics(teamId, startTime, endTime, serviceName) {
-    return api.get(`${BASE}/endpoints/metrics`, { params: { startTime, endTime, serviceName } });
-  },
-
-  async getEndpointTimeSeries(teamId, startTime, endTime, serviceName) {
-    return api.get(`${BASE}/endpoints/timeseries`, { params: { startTime, endTime, serviceName } });
-  },
-
-  async getMetricsTimeSeries(teamId, startTime, endTime, serviceName, interval) {
-    return api.get(`${BASE}/metrics/timeseries`, { params: { startTime, endTime, serviceName, interval } });
-  },
-
-  async getMetricsSummary(teamId, startTime, endTime) {
-    return api.get(`${BASE}/metrics/summary`, { params: { startTime, endTime } });
-  },
-
-  async getServiceTimeSeries(teamId, startTime, endTime, interval = '5m') {
-    return api.get(`${BASE}/services/timeseries`, { params: { startTime, endTime, interval } });
-  },
-
-  // ==================== LOGS ====================
-
-  async getLogs(teamId, startTime, endTime, params = {}) {
-    return api.get(`${BASE}/logs`, { params: { startTime, endTime, ...params } });
-  },
-
-  async getLogHistogram(teamId, startTime, endTime, interval = '1m') {
-    return api.get(`${BASE}/logs/histogram`, { params: { startTime, endTime, step: interval } });
-  },
-
-  async getLogDetail(teamId, traceId, spanId, timestamp, contextWindow = 30) {
-    return api.get(`${BASE}/logs/detail`, { params: { traceId, spanId, timestamp, contextWindow } });
-  },
-
-  async getLogStats(teamId, startTime, endTime, params = {}) {
-    return api.get(`${BASE}/logs/stats`, { params: { startTime, endTime, ...params } });
-  },
-
-  async getLogVolume(teamId, startTime, endTime, step, params = {}) {
-    return api.get(`${BASE}/logs/volume`, { params: { startTime, endTime, step, ...params } });
-  },
-
-  async getLogFields(teamId, startTime, endTime, field, params = {}) {
-    return api.get(`${BASE}/logs/fields`, { params: { startTime, endTime, field, ...params } });
-  },
-
-  async getLogSurrounding(teamId, logId, before = 10, after = 10) {
-    return api.get(`${BASE}/logs/surrounding`, { params: { id: logId, before, after } });
-  },
-
-  // ==================== TRACES ====================
-
-  async getTraces(teamId, startTime, endTime, params = {}) {
-    return api.get(`${BASE}/traces`, { params: { startTime, endTime, ...params } });
-  },
-
-  async getTraceSpans(teamId, traceId) {
-    return api.get(`${BASE}/traces/${traceId}/spans`);
-  },
-
-  async getSpanTree(teamId, spanId) {
-    return api.get(`${BASE}/spans/${spanId}/tree`);
-  },
-
-  async getTraceLogs(teamId, traceId) {
-    return api.get(`${BASE}/traces/${traceId}/logs`);
-  },
-
-  // ==================== SERVICES ====================
-
-  async getServiceDependencies(teamId, startTime, endTime) {
-    return api.get(`${BASE}/services/dependencies`, { params: { startTime, endTime } });
-  },
-
-  async getEndpointBreakdown(teamId, startTime, endTime, serviceName) {
-    return api.get(`${BASE}/services/${serviceName}/endpoints`, { params: { startTime, endTime } });
-  },
-
-  async getErrorGroups(teamId, startTime, endTime, serviceName) {
-    return api.get(`${BASE}/services/${serviceName}/errors`, { params: { startTime, endTime } });
-  },
-
-  // ==================== ERROR DASHBOARD ====================
-
-  async getGlobalErrorGroups(teamId, startTime, endTime, params = {}) {
-    return api.get(`${BASE}/errors/groups`, { params: { startTime, endTime, ...params } });
-  },
-
-  async getErrorTimeSeries(teamId, startTime, endTime, interval = '5m', serviceName) {
-    return api.get(`${BASE}/errors/timeseries`, { params: { startTime, endTime, interval, serviceName } });
-  },
-
-  // ==================== SATURATION ====================
-
-  async getKafkaQueueLag(teamId, startTime, endTime) {
-    return api.get(`${BASE}/saturation/kafka/queue-lag`, { params: { startTime, endTime } });
-  },
-
-  async getKafkaProductionRate(teamId, startTime, endTime) {
-    return api.get(`${BASE}/saturation/kafka/production-rate`, { params: { startTime, endTime } });
-  },
-
-  async getKafkaConsumptionRate(teamId, startTime, endTime) {
-    return api.get(`${BASE}/saturation/kafka/consumption-rate`, { params: { startTime, endTime } });
-  },
-
-  async getDatabaseQueryByTable(teamId, startTime, endTime) {
-    return api.get(`${BASE}/saturation/database/query-by-table`, { params: { startTime, endTime } });
-  },
-
-  async getDatabaseAvgLatency(teamId, startTime, endTime) {
-    return api.get(`${BASE}/saturation/database/avg-latency`, { params: { startTime, endTime } });
-  },
-
-  // ==================== INCIDENTS ====================
-
-  async getIncidents(teamId, startTime, endTime, params = {}) {
-    return api.get(`${BASE}/incidents`, { params: { startTime, endTime, ...params } });
-  },
-
-  // ==================== INFRASTRUCTURE / SATURATION ====================
-
-  async getAvgCPU(teamId, startTime, endTime) {
-    return api.get(`${BASE}/infrastructure/resource-utilisation/avg-cpu`, { params: { startTime, endTime } });
-  },
-
-  async getAvgMemory(teamId, startTime, endTime) {
-    return api.get(`${BASE}/infrastructure/resource-utilisation/avg-memory`, { params: { startTime, endTime } });
-  },
-
-  async getAvgNetwork(teamId, startTime, endTime) {
-    return api.get(`${BASE}/infrastructure/resource-utilisation/avg-network`, { params: { startTime, endTime } });
-  },
-
-  async getAvgConnPool(teamId, startTime, endTime) {
-    return api.get(`${BASE}/infrastructure/resource-utilisation/avg-conn-pool`, { params: { startTime, endTime } });
-  },
-
-  async getCPUUsagePercentage(teamId, startTime, endTime) {
-    return api.get(`${BASE}/infrastructure/resource-utilisation/cpu-usage-percentage`, { params: { startTime, endTime } });
-  },
-
-  async getMemoryUsagePercentage(teamId, startTime, endTime) {
-    return api.get(`${BASE}/infrastructure/resource-utilisation/memory-usage-percentage`, { params: { startTime, endTime } });
-  },
-
-  async getResourceUsageByService(teamId, startTime, endTime) {
-    return api.get(`${BASE}/infrastructure/resource-utilisation/by-service`, { params: { startTime, endTime } });
-  },
-
-  async getResourceUsageByInstance(teamId, startTime, endTime) {
-    return api.get(`${BASE}/infrastructure/resource-utilisation/by-instance`, { params: { startTime, endTime } });
-  },
-
-  async getDatabaseCacheSummary(teamId, startTime, endTime) {
-    return api.get(`${BASE}/saturation/database/latency-summary`, { params: { startTime, endTime } });
-  },
-
-  async getDatabaseSystemsBreakdown(teamId, startTime, endTime) {
-    return api.get(`${BASE}/saturation/database/systems`, { params: { startTime, endTime } });
-  },
-
-  async getDatabaseTopTablesMetrics(teamId, startTime, endTime) {
-    return api.get(`${BASE}/saturation/database/top-tables`, { params: { startTime, endTime } });
-  },
-
-  async getQueueConsumerLag(teamId, startTime, endTime) {
-    return api.get(`${BASE}/saturation/queue/consumer-lag`, { params: { startTime, endTime } });
-  },
-
-  async getQueueTopicLag(teamId, startTime, endTime) {
-    return api.get(`${BASE}/saturation/queue/topic-lag`, { params: { startTime, endTime } });
-  },
-
-  async getQueueTopQueuesStats(teamId, startTime, endTime) {
-    return api.get(`${BASE}/saturation/queue/top-queues`, { params: { startTime, endTime } });
-  },
-
-  // ==================== AI OBSERVABILITY ====================
-
-  async getAiSummary(teamId, startTime, endTime) {
-    return api.get(`${BASE}/ai/summary`, { params: { startTime, endTime } });
-  },
-
-  async getAiActiveModels(teamId, startTime, endTime) {
-    return api.get(`${BASE}/ai/models`, { params: { startTime, endTime } });
-  },
-
-  async getAiPerformanceMetrics(teamId, startTime, endTime) {
-    return api.get(`${BASE}/ai/performance/metrics`, { params: { startTime, endTime } });
-  },
-
-  async getAiPerformanceTimeSeries(teamId, startTime, endTime, interval = '5m') {
-    return api.get(`${BASE}/ai/performance/timeseries`, { params: { startTime, endTime, interval } });
-  },
-
-  async getAiLatencyHistogram(teamId, startTime, endTime, modelName) {
-    return api.get(`${BASE}/ai/performance/latency-histogram`, { params: { startTime, endTime, modelName } });
-  },
-
-  async getAiCostMetrics(teamId, startTime, endTime) {
-    return api.get(`${BASE}/ai/cost/metrics`, { params: { startTime, endTime } });
-  },
-
-  async getAiCostTimeSeries(teamId, startTime, endTime, interval = '5m') {
-    return api.get(`${BASE}/ai/cost/timeseries`, { params: { startTime, endTime, interval } });
-  },
-
-  async getAiTokenBreakdown(teamId, startTime, endTime) {
-    return api.get(`${BASE}/ai/cost/token-breakdown`, { params: { startTime, endTime } });
-  },
-
-  async getAiSecurityMetrics(teamId, startTime, endTime) {
-    return api.get(`${BASE}/ai/security/metrics`, { params: { startTime, endTime } });
-  },
-
-  async getAiSecurityTimeSeries(teamId, startTime, endTime, interval = '5m') {
-    return api.get(`${BASE}/ai/security/timeseries`, { params: { startTime, endTime, interval } });
-  },
-
-  async getAiPiiCategories(teamId, startTime, endTime) {
-    return api.get(`${BASE}/ai/security/pii-categories`, { params: { startTime, endTime } });
-  },
-
-  // ==================== DEPLOYMENTS ====================
-
-  async getDeployments(teamId, startTime, endTime, params = {}) {
-    return api.get(`${BASE}/deployments`, { params: { startTime, endTime, ...params } });
-  },
-
-  async getDeployEvents(teamId, startTime, endTime, serviceName) {
-    return api.get(`${BASE}/deployments/events`, { params: { startTime, endTime, serviceName } });
-  },
-
-  async getDeployDiff(teamId, deployId, windowMinutes = 30) {
-    return api.get(`${BASE}/deployments/${deployId}/diff`, { params: { windowMinutes } });
-  },
-
-  async createDeployment(teamId, data) {
-    return api.post(`${BASE}/deployments`, data);
-  },
-
-  // ==================== LATENCY ANALYSIS ====================
-
-  async getLatencyHistogram(teamId, startTime, endTime, params = {}) {
-    return api.get(`${BASE}/latency/histogram`, { params: { startTime, endTime, ...params } });
-  },
-
-  async getLatencyHeatmap(teamId, startTime, endTime, serviceName, interval = '5m') {
-    return api.get(`${BASE}/latency/heatmap`, { params: { startTime, endTime, serviceName, interval } });
-  },
-
-  // ==================== INFRASTRUCTURE NODES ====================
-
-  async getNodeHealth(teamId, startTime, endTime) {
-    return api.get(`${BASE}/infrastructure/nodes`, { params: { startTime, endTime } });
-  },
-
-  async getNodeServices(teamId, host, startTime, endTime) {
-    return api.get(`${BASE}/infrastructure/nodes/${encodeURIComponent(host)}/services`, {
-      params: { startTime, endTime },
-    });
-  },
-
-  // ==================== DASHBOARD CONFIG ====================
-
-  async getDashboardConfig(teamId, pageId) {
-    return api.get(`${BASE}/dashboard-config/${pageId}`);
-  },
-
-  async saveDashboardConfig(teamId, pageId, configYaml) {
-    return api.put(`${BASE}/dashboard-config/${pageId}`, { configYaml });
-  },
-
-  async listDashboardPages(teamId) {
-    return api.get(`${BASE}/dashboard-config/pages`);
-  },
+  // ── Metrics / Services / Errors / Incidents / Infrastructure ──────────
+  ...metricsService,
+
+  // ── Logs ──────────────────────────────────────────────────────────────
+  ...logsService,
+
+  // ── Traces ────────────────────────────────────────────────────────────
+  ...tracesService,
+
+  // ── AI Observability ──────────────────────────────────────────────────
+  // Prefixed aliases so existing call-sites (v1Service.getAiXxx) keep working
+  getAiSummary: aiService.getSummary,
+  getAiActiveModels: aiService.getActiveModels,
+  getAiPerformanceMetrics: aiService.getPerformanceMetrics,
+  getAiPerformanceTimeSeries: aiService.getPerformanceTimeSeries,
+  getAiLatencyHistogram: aiService.getLatencyHistogram,
+  getAiCostMetrics: aiService.getCostMetrics,
+  getAiCostTimeSeries: aiService.getCostTimeSeries,
+  getAiTokenBreakdown: aiService.getTokenBreakdown,
+  getAiSecurityMetrics: aiService.getSecurityMetrics,
+  getAiSecurityTimeSeries: aiService.getSecurityTimeSeries,
+  getAiPiiCategories: aiService.getPiiCategories,
+
+  // ── Saturation ────────────────────────────────────────────────────────
+  ...saturationService,
+
+  // ── Deployments ───────────────────────────────────────────────────────
+  ...deploymentsService,
+
+  // ── Latency ───────────────────────────────────────────────────────────
+  getLatencyHistogram: latencyService.getHistogram,
+  getLatencyHeatmap: latencyService.getHeatmap,
+
+  // ── Dashboard Config (from metricsService) ────────────────────────────
+  // Already spread via metricsService above
 };

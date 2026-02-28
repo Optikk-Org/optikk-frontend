@@ -1,7 +1,7 @@
 import api from './api';
 import { API_CONFIG } from '@config/constants';
 
-const BASE = `${API_CONFIG.ENDPOINTS.V1.SERVICES_METRICS}/overview`;
+const BASE = `${API_CONFIG.ENDPOINTS.V1_BASE}/overview`;
 
 export const overviewService = {
   async getSummary(teamId, startTime, endTime) {

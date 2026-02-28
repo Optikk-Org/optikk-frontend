@@ -33,23 +33,7 @@ export const API_CONFIG = {
       MUTE: '/alerts',        // + /{id}/mute
       ACTIVE_COUNT: '/alerts/count/active',
     },
-    V1: {
-      SERVICES_METRICS: '/v1',
-      ENDPOINTS_METRICS: '/v1',
-      METRICS_TIMESERIES: '/v1',
-      METRICS_SUMMARY: '/v1',
-      INCIDENTS: '/v1',
-      LOGS: '/v1',
-      LOGS_HISTOGRAM: '/v1',
-      LOGS_DETAIL: '/v1',
-      TRACES: '/v1',
-      TRACE_SPANS: '/v1',
-      TOPOLOGY: '/v1',
-      SERVICE_ENDPOINTS: '/v1',
-      SERVICE_ERRORS: '/v1',
-      DEPENDENCIES: '/v1',
-      INFRASTRUCTURE: '/v1',
-    },
+    V1_BASE: '/v1',
     SETTINGS: {
       PROFILE: '/settings/profile',
       PREFERENCES: '/settings/preferences',
@@ -206,14 +190,17 @@ export const STORAGE_KEYS = {
   TIME_RANGE: 'optikk_time_range',
   SIDEBAR_COLLAPSED: 'optikk_sidebar_collapsed',
   AUTO_REFRESH: 'optikk_auto_refresh',
+  THEME: 'optikk_theme',
+  NOTIFICATIONS: 'optikk_notifications',
+  VIEW_PREFS: 'optikk_view_prefs',
 };
 
 // Auto-refresh interval options (value = milliseconds, 0 = off)
 export const AUTO_REFRESH_INTERVALS = [
-  { label: 'Off',   value: 0 },
-  { label: '10s',   value: 10_000 },
-  { label: '30s',   value: 30_000 },
-  { label: '1m',    value: 60_000 },
-  { label: '5m',    value: 300_000 },
-  { label: '10m',   value: 600_000 },
+  { label: 'Off', value: 0 },
+  { label: '10s', value: 10_000 },
+  { label: '30s', value: 30_000 },
+  { label: '1m', value: 60_000 },
+  { label: '5m', value: 300_000 },
+  { label: '10m', value: 600_000 },
 ];
