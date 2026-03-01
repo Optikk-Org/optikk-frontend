@@ -1,6 +1,6 @@
 import { Layout, Space, Select, Button, Tooltip } from 'antd';
 import { RefreshCw, ChevronDown } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuthStore } from '@store/authStore';
 import { useAppStore } from '@store/appStore';
 import TimeRangePicker from '@components/common/forms/TimeRangePicker';
@@ -30,15 +30,20 @@ export default function Header() {
     return () => clearInterval(id);
   }, []);
 
+  // Stable callback ref to avoid resetting the interval when triggerRefresh
+  // changes identity (it's a new function on every render from Zustand).
+  const triggerRefreshRef = useRef(triggerRefresh);
+  triggerRefreshRef.current = triggerRefresh;
+
   // Auto-refresh timer — fires triggerRefresh on the configured interval
   useEffect(() => {
     if (!autoRefreshInterval) return;
     const id = setInterval(() => {
-      triggerRefresh();
+      triggerRefreshRef.current();
       setLastRefreshAt(Date.now());
     }, autoRefreshInterval);
     return () => clearInterval(id);
-  }, [autoRefreshInterval, triggerRefresh]);
+  }, [autoRefreshInterval]);
 
   // Close interval picker on outside click
   useEffect(() => {

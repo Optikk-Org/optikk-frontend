@@ -13,15 +13,19 @@ import './index.css';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: true,
+      refetchOnWindowFocus: false,   // Fix #24/#30: Disable to prevent refetch storms on alt-tab
       refetchOnMount: 'always',
       refetchOnReconnect: true,
-      retry: 0,
-      staleTime: 0,
+      retry: 2,                      // Fix #6: Retry transient failures with backoff
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10_000),
+      staleTime: 5_000,             // Fix #24: 5s default stale time; telemetry hooks override to 0
       gcTime: 30_000,
     },
   },
 });
+
+// Export queryClient for use in store actions (team switch cache invalidation).
+export { queryClient };
 
 function AppProviders() {
   const appTheme = useAppStore((state) => state.theme);

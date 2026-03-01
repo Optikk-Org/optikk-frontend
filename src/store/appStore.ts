@@ -55,6 +55,13 @@ export const useAppStore = create<AppState>((set) => ({
       safeSet(STORAGE_KEYS.TEAM_ID, '');
     }
     set({ selectedTeamId: teamId });
+    // Invalidate all React Query caches when switching teams to prevent
+    // stale data from the previous team being shown briefly.
+    import('../main').then((m) => {
+      if ('queryClient' in m) {
+        (m as any).queryClient.invalidateQueries();
+      }
+    }).catch(() => {});
   },
 
   setTimeRange: (valueOrRange) => {

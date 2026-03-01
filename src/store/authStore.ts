@@ -59,6 +59,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     await authService.logout();
     useAppStore.setState({ selectedTeamId: null });
+    // Clear all React Query caches to prevent old user data from leaking.
+    import('../main').then((m) => {
+      if ('queryClient' in m) {
+        (m as any).queryClient.clear();
+      }
+    }).catch(() => {});
     set({
       user: null,
       isAuthenticated: false,

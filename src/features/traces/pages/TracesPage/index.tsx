@@ -23,6 +23,7 @@ import { formatTimestamp, formatDuration, formatNumber } from '@utils/formatters
 import LatencyHistogram from '@components/charts/distributions/LatencyHistogram';
 import { useDashboardConfig } from '@hooks/useDashboardConfig';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
+import { useURLFilters } from '@hooks/useURLFilters';
 import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
 import { tsLabel, relativeTime } from '@features/log/components/log/LogRow';
 import './TracesPage.css';
@@ -265,6 +266,16 @@ function TraceRow({ trace, colWidths, visibleCols, maxDuration, onRowClick, onOp
   );
 }
 
+/* ─── URL filter config ────────────────────────────────────────────────── */
+const TRACES_URL_FILTER_CONFIG = {
+  params: [
+    { key: 'search', type: 'string' as const, defaultValue: '' },
+    { key: 'service', type: 'string' as const, defaultValue: '' },
+    { key: 'errorsOnly', type: 'boolean' as const, defaultValue: false },
+  ],
+  syncStructuredFilters: true,
+};
+
 /* ─── Main Page ───────────────────────────────────────────────────────────── */
 export default function TracesPage() {
   const navigate = useNavigate();
@@ -282,11 +293,23 @@ export default function TracesPage() {
     'endpoints-metrics': (Array.isArray(endpointMetricsRaw) ? endpointMetricsRaw : []).map(normalizeEndpointMetric),
   }), [metricsTimeseriesRaw, endpointTimeseriesRaw, endpointMetricsRaw]);
 
-  /* ── Filter state ── */
-  const [filters, setFilters] = useState([]);
-  const [searchText, setSearchText] = useState('');
-  const [selectedService, setSelectedService] = useState(null);
-  const [errorsOnly, setErrorsOnly] = useState(false);
+  /* ── URL-synced filter state ── */
+  const {
+    values: urlValues,
+    setters: urlSetters,
+    structuredFilters: filters,
+    setStructuredFilters: setFilters,
+    clearAll: clearURLFilters,
+  } = useURLFilters(TRACES_URL_FILTER_CONFIG);
+
+  const searchText = urlValues.search;
+  const setSearchText = urlSetters.search;
+  const selectedService = urlValues.service || null;
+  const setSelectedService = (v: string | null) => urlSetters.service(v || '');
+  const errorsOnly = urlValues.errorsOnly;
+  const setErrorsOnly = urlSetters.errorsOnly;
+
+  /* ── Local-only state ── */
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [selectedTrace, setSelectedTrace] = useState(null);
@@ -395,12 +418,9 @@ export default function TracesPage() {
   }, [rawTraces]);
 
   const clearAll = useCallback(() => {
-    setFilters([]);
-    setSearchText('');
-    setSelectedService(null);
-    setErrorsOnly(false);
+    clearURLFilters();
     setPage(1);
-  }, []);
+  }, [clearURLFilters]);
 
   /* ── Board row renderer ── */
   const renderRow = useCallback(

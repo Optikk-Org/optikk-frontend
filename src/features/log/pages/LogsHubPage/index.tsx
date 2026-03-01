@@ -15,6 +15,7 @@ import { v1Service } from '@services/v1Service';
 import { PageHeader, ObservabilityQueryBar, ObservabilityDataBoard, ObservabilityDetailPanel, boardHeight } from '@components/common';
 import { formatNumber } from '@utils/formatters';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
+import { useURLFilters } from '@hooks/useURLFilters';
 import { LevelBadge, tsLabel, relativeTime } from '@features/log/components/log/LogRow';
 import LogRow from '@features/log/components/log/LogRow';
 import LogVolumeChart, { VolumeLegend } from '@features/log/components/log/LogVolumeChart';
@@ -72,16 +73,38 @@ const LOG_COLUMNS = [
   { key: 'message', label: 'Message', defaultVisible: true, flex: true },
 ];
 
+/* ─── URL filter config ────────────────────────────────────────────────── */
+const LOGS_URL_FILTER_CONFIG = {
+  params: [
+    { key: 'search', type: 'string' as const, defaultValue: '' },
+    { key: 'service', type: 'string' as const, defaultValue: '' },
+    { key: 'errorsOnly', type: 'boolean' as const, defaultValue: false },
+  ],
+  syncStructuredFilters: true,
+};
+
 /* ─── Main page ───────────────────────────────────────────────────────────── */
 export default function LogsHubPage() {
   const { selectedTeamId, timeRange, refreshKey } = useAppStore();
   const navigate = useNavigate();
 
-  /* ── State ── */
-  const [filters, setFilters] = useState([]);
-  const [searchText, setSearchText] = useState('');
-  const [selectedService, setSelectedService] = useState(null);
-  const [errorsOnly, setErrorsOnly] = useState(false);
+  /* ── URL-synced filter state ── */
+  const {
+    values: urlValues,
+    setters: urlSetters,
+    structuredFilters: filters,
+    setStructuredFilters: setFilters,
+    clearAll: clearURLFilters,
+  } = useURLFilters(LOGS_URL_FILTER_CONFIG);
+
+  const searchText = urlValues.search;
+  const setSearchText = urlSetters.search;
+  const selectedService = urlValues.service || null;
+  const setSelectedService = (v: string | null) => urlSetters.service(v || '');
+  const errorsOnly = urlValues.errorsOnly;
+  const setErrorsOnly = urlSetters.errorsOnly;
+
+  /* ── Local-only state (not worth putting in URL) ── */
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [selectedLog, setSelectedLog] = useState(null);
@@ -191,12 +214,9 @@ export default function LogsHubPage() {
   const totalCount = (statsData as any)?.total || total || logs.length;
 
   const clearAll = useCallback(() => {
-    setFilters([]);
-    setSearchText('');
-    setSelectedService(null);
-    setErrorsOnly(false);
+    clearURLFilters();
     setPage(1);
-  }, []);
+  }, [clearURLFilters]);
 
   /* ── Board row renderer ── */
   const renderRow = useCallback(

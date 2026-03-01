@@ -14,7 +14,7 @@ const api = axios.create({
   },
 });
 
-// Request interceptor - Add auth token
+// Request interceptor - Add auth token and check expiry
 api.interceptors.request.use(
   (config) => {
     // Disable browser/proxy response caching for telemetry queries.
@@ -24,6 +24,23 @@ api.interceptors.request.use(
 
     const token = safeGet(STORAGE_KEYS.AUTH_TOKEN);
     if (token) {
+      // Check if token is expired before sending the request.
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp && Date.now() >= payload.exp * 1000) {
+          // Token is expired — fire auth:expired and reject.
+          safeRemove(STORAGE_KEYS.AUTH_TOKEN);
+          safeRemove(STORAGE_KEYS.USER_DATA);
+          window.dispatchEvent(new CustomEvent('auth:expired'));
+          return Promise.reject({ status: 401, message: 'Token expired' });
+        }
+      } catch {
+        // Malformed token — clear and reject.
+        safeRemove(STORAGE_KEYS.AUTH_TOKEN);
+        window.dispatchEvent(new CustomEvent('auth:expired'));
+        return Promise.reject({ status: 401, message: 'Invalid token' });
+      }
+
       config.headers.Authorization = `Bearer ${token}`;
     }
 

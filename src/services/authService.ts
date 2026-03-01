@@ -81,10 +81,62 @@ export const authService = {
   },
 
   /**
-   * Check if user is authenticated
+   * Check if user is authenticated (token exists and is not expired).
    */
   isAuthenticated() {
-    return !!safeGet(STORAGE_KEYS.AUTH_TOKEN);
+    const token = safeGet(STORAGE_KEYS.AUTH_TOKEN);
+    if (!token) return false;
+    return !this.isTokenExpired(token);
+  },
+
+  /**
+   * Decode JWT payload without verification and check the exp claim.
+   * Returns true if the token is expired or malformed.
+   */
+  isTokenExpired(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (!payload.exp) return false;
+      // Consider expired 60 seconds early to avoid edge cases.
+      return Date.now() >= (payload.exp * 1000) - 60_000;
+    } catch {
+      return true;
+    }
+  },
+
+  /**
+   * Returns seconds until the token expires, or 0 if expired/invalid.
+   */
+  tokenExpiresIn(token: string): number {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (!payload.exp) return Infinity;
+      return Math.max(0, Math.floor((payload.exp * 1000 - Date.now()) / 1000));
+    } catch {
+      return 0;
+    }
+  },
+
+  /**
+   * Refresh the current session by calling /api/auth/me and updating stored
+   * user data. Returns true if the session is still valid.
+   */
+  async refreshSession(): Promise<boolean> {
+    try {
+      const response = await api.get(API_CONFIG.ENDPOINTS.AUTH.ME);
+      const payload = this.normalizeAuthPayload(response);
+      if (payload?.user) {
+        safeSet(STORAGE_KEYS.USER_DATA, JSON.stringify(payload.user));
+        // If the server returns a new token, store it.
+        if (payload.token) {
+          safeSet(STORAGE_KEYS.AUTH_TOKEN, payload.token);
+        }
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
   },
 };
 
