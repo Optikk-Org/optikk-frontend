@@ -14,13 +14,6 @@ export const API_CONFIG = {
       VALIDATE: '/auth/validate',
       ME: '/auth/me',
     },
-    DASHBOARD: {
-      OVERVIEW: '/dashboard/overview',
-      METRICS: '/dashboard/metrics',
-      LOGS: '/dashboard/logs',
-      TRACES: '/dashboard/traces',
-      SERVICES: '/dashboard/services',
-    },
     TEAMS: {
       LIST: '/teams',
       SWITCH: '/teams/switch',
@@ -39,7 +32,6 @@ export const API_CONFIG = {
       PROFILE: '/settings/profile',
       PREFERENCES: '/settings/preferences',
     },
-    SERVICE_DETAIL: '/dashboard/services', // + /{serviceName}
   },
 };
 

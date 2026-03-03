@@ -15,6 +15,7 @@ import { aiService } from './aiService';
 import { deploymentsService } from './deploymentsService';
 import { latencyService } from './latencyService';
 import { saturationService } from './saturationService';
+import { dashboardConfigService } from './dashboardConfigService';
 
 export const v1Service = {
   // ── Metrics / Services / Errors / Incidents / Infrastructure ──────────
@@ -50,6 +51,6 @@ export const v1Service = {
   getLatencyHistogram: latencyService.getHistogram,
   getLatencyHeatmap: latencyService.getHeatmap,
 
-  // ── Dashboard Config (from metricsService) ────────────────────────────
-  // Already spread via metricsService above
+  // ── Dashboard Config ──────────────────────────────────────────────────
+  ...dashboardConfigService,
 };

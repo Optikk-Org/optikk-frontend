@@ -195,16 +195,4 @@ export const metricsService = {
         });
     },
 
-    // ── Dashboard Config ────────────────────────────────────────────────────
-    async getDashboardConfig(teamId: number | null, pageId: string): Promise<any> {
-        return api.get(`${BASE}/dashboard-config/${pageId}`);
-    },
-
-    async saveDashboardConfig(teamId: number | null, pageId: string, configYaml: string): Promise<any> {
-        return api.put(`${BASE}/dashboard-config/${pageId}`, { configYaml });
-    },
-
-    async listDashboardPages(teamId: number | null): Promise<any> {
-        return api.get(`${BASE}/dashboard-config/pages`);
-    },
 };

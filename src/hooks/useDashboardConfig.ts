@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import yaml from 'js-yaml';
-import { v1Service } from '@services/v1Service';
+import { dashboardConfigService } from '@services/dashboardConfigService';
 import { useAppStore } from '@store/appStore';
 
 /**
@@ -12,7 +12,7 @@ export function useDashboardConfig(pageId) {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['dashboard-config', selectedTeamId, pageId],
-    queryFn: () => v1Service.getDashboardConfig(selectedTeamId, pageId),
+    queryFn: () => dashboardConfigService.getDashboardConfig(selectedTeamId, pageId),
     enabled: !!selectedTeamId && !!pageId,
     staleTime: 5 * 60 * 1000, // cache for 5 minutes
   });

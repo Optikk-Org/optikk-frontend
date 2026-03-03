@@ -80,7 +80,7 @@ function SystemBreakdownCard({ system }: { system: any }) {
           </div>
         </div>
         <div>
-          <div style={{ color: '#8e8e8e', fontSize: '11px', marginBottom: '2px' }}>Avg Latency</div>
+          <div style={{ color: '#8e8e8e', fontSize: '11px', marginBottom: '2px' }}>Avg Query / Pool Latency</div>
           <div style={{
             color: avgLatency > 100 ? '#F04438' : avgLatency > 50 ? '#F79009' : '#12B76A',
             fontWeight: 600, fontSize: '16px', fontFamily: 'monospace',
@@ -176,15 +176,15 @@ export default function DatabaseCachePerformancePage() {
 
   return (
     <div>
-      <PageHeader title="Database & Cache Performance" icon={<Database size={24} />} subtitle="Query latency, cache hit ratio, database system breakdown, and per-table metrics" />
+      <PageHeader title="Database & Cache Performance" icon={<Database size={24} />} subtitle="Mongo query latency, SQL pool latency, cache hit ratio, database system breakdown, and collection or pool metrics" />
 
       {/* Stat cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>
-          <StatCard title="Avg Query Latency" value={`${n(summary.avg_query_latency_ms).toFixed(1)} ms`} icon={<Timer size={18} />} loading={isLoading} description="Across all database systems" />
+          <StatCard title="Avg DB / Pool Latency" value={`${n(summary.avg_query_latency_ms).toFixed(1)} ms`} icon={<Timer size={18} />} loading={isLoading} description="Mongo query latency plus SQL pool usage latency" />
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <StatCard title="P95 Query Latency" value={`${n(summary.p95_query_latency_ms).toFixed(1)} ms`} icon={<Zap size={18} />} loading={isLoading} description="95th percentile response" />
+          <StatCard title="P95 DB / Pool Latency" value={`${n(summary.p95_query_latency_ms).toFixed(1)} ms`} icon={<Zap size={18} />} loading={isLoading} description="95th percentile Mongo query or SQL pool usage latency" />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard title="Cache Hit Ratio" value={formatPercentage(cache.cacheHitRatio, 1)} icon={<Layers3 size={18} />} loading={isLoading} description={`${formatNumber(cache.cacheHits || 0)} hits / ${formatNumber((cache.cacheHits || 0) + (cache.cacheMisses || 0))} total`} />
@@ -232,7 +232,7 @@ export default function DatabaseCachePerformancePage() {
             title={
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Database size={16} />
-                Query Performance by Table
+                Collection / Pool Performance
               </span>
             }
             style={{ height: '100%' }}
