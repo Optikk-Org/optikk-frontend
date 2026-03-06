@@ -71,6 +71,12 @@ export function createChartOptions(overrides: any = {}) {
  * @param fill - Whether to fill under the line
  */
 export function createLineDataset(label: string, data: any[], color: string, fill: boolean = false) {
+  const visiblePointCount = data.reduce((count, value) => {
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) && numericValue !== 0 ? count + 1 : count;
+  }, 0);
+  const isSparseSeries = visiblePointCount <= 1;
+
   return {
     label,
     data,
@@ -78,8 +84,10 @@ export function createLineDataset(label: string, data: any[], color: string, fil
     backgroundColor: fill ? `${color}1A` : 'transparent',
     fill,
     tension: 0.1,
-    pointRadius: 0,
-    pointHoverRadius: 0,
+    pointRadius: isSparseSeries ? 3 : 0,
+    pointHoverRadius: isSparseSeries ? 4 : 0,
+    pointBackgroundColor: color,
+    pointBorderColor: color,
     borderWidth: 1.5,
   };
 }

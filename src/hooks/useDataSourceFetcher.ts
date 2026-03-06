@@ -1,7 +1,8 @@
 import { useQueries } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
-import { api } from '@services/api/client';
 import type { DataSourceSpec } from '@/types/dashboardConfig';
+import { api } from '@services/api/client';
 import { useAppStore } from '@store/appStore';
 
 interface UseDataSourceFetcherResult {
@@ -19,12 +20,25 @@ export function useDataSourceFetcher(
 ): UseDataSourceFetcherResult {
   const { selectedTeamId, timeRange, refreshKey } = useAppStore();
 
-  const endMs = timeRange.value === 'custom' && timeRange.endTime != null
-    ? Number(timeRange.endTime)
-    : Date.now();
-  const startMs = timeRange.value === 'custom' && timeRange.startTime != null
-    ? Number(timeRange.startTime)
-    : endMs - (timeRange.minutes || 60) * 60 * 1000;
+  const { startMs, endMs } = useMemo(() => {
+    // refreshKey forces a fresh "now" anchor for relative ranges on manual refresh.
+    void refreshKey;
+
+    const resolvedEndMs = timeRange.value === 'custom' && timeRange.endTime != null
+      ? Number(timeRange.endTime)
+      : Date.now();
+    const resolvedStartMs = timeRange.value === 'custom' && timeRange.startTime != null
+      ? Number(timeRange.startTime)
+      : resolvedEndMs - (timeRange.minutes || 60) * 60 * 1000;
+
+    return { startMs: resolvedStartMs, endMs: resolvedEndMs };
+  }, [
+    timeRange.value,
+    timeRange.startTime,
+    timeRange.endTime,
+    timeRange.minutes,
+    refreshKey,
+  ]);
 
   const results = useQueries({
     queries: dataSources.map((spec) => {
