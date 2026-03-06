@@ -4,14 +4,14 @@
 
 - Domain-internal migration completed for:
   - `traces`
-  - `logs`
+  - `log` (logs domain; folder renamed from `src/domains/logs` to `src/domains/log` to avoid `.gitignore` `logs` pattern)
   - `services`
   - `metrics`
   - `overview`
   - `infrastructure`
   - `ai`
   - `settings`
-- Feature folders for migrated domains are now bridge-only (`src/features/*/index.ts` re-exporting from `src/domains/*`).
+- Legacy `src/features/` bridge layer removed (no remaining `@features/*` imports).
 - Auth page migration completed:
   - `src/app/auth/pages/LoginPage/*` is now source of truth
   - `src/features/auth/index.ts` is bridge-only
@@ -37,6 +37,9 @@
   - `src/config/apiConfig.ts` now owns API route constants and API client base config (`API_CONFIG`)
   - Vite dev server/proxy now reads frontend/backend defaults from shared config constants (`DEV_FRONTEND_PORT`, `DEV_BACKEND_URL`, `API_PROXY_BASE`)
   - Service layer API_CONFIG imports switched to `@config/apiConfig`
+- Alias cleanup completed:
+  - Removed `@features/*` path alias from `tsconfig.json`
+  - Removed `@features` alias from `vite.config.ts`
 - Current verification status:
   - `npm run type-check`: passing
   - `npm run build`: passing

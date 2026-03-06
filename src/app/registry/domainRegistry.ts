@@ -3,7 +3,7 @@ import type { LucideIcon } from 'lucide-react';
 
 import { aiConfig } from '@/domains/ai';
 import { infrastructureConfig } from '@/domains/infrastructure';
-import { logsConfig } from '@/domains/logs';
+import { logsConfig } from '@/domains/log';
 import { metricsConfig } from '@/domains/metrics';
 import { overviewConfig } from '@/domains/overview';
 import { servicesConfig } from '@/domains/services';
