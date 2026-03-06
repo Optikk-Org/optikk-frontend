@@ -5,6 +5,10 @@ import SparklineChart from '@components/charts/micro/SparklineChart';
 import { FilterBar, HealthIndicator, StatCardsGrid } from '@components/common';
 import ObservabilityDataBoard, { boardHeight } from '@components/common/data-display/ObservabilityDataBoard';
 import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
+import type {
+  DashboardDataSources,
+  DashboardRenderConfig,
+} from '@/types/dashboardConfig';
 
 import { formatNumber, formatDuration } from '@utils/formatters';
 
@@ -26,8 +30,8 @@ interface ServiceOverviewTabProps {
   degradedServices: number;
   unhealthyServices: number;
   isLoading: boolean;
-  dashboardConfig: unknown;
-  chartDataSources: Record<string, unknown[]>;
+  dashboardConfig: DashboardRenderConfig | null;
+  chartDataSources: DashboardDataSources;
   searchQuery: string;
   setSearchQuery: (value: string) => void;
   viewMode: ServiceViewMode;

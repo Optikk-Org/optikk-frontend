@@ -4,24 +4,28 @@ export const API_RETRY_ATTEMPTS = 3;
 
 export const DEV_FRONTEND_PORT = 3000;
 export const DEV_BACKEND_HOST = 'localhost';
-export const DEV_BACKEND_PORT = 8080;
+export const DEV_BACKEND_PORT = 9090;
 export const DEV_BACKEND_URL = `http://${DEV_BACKEND_HOST}:${DEV_BACKEND_PORT}`;
+export const API_V1_BASE = '/v1';
 
 export const API_ENDPOINTS = {
+  V1_BASE: API_V1_BASE,
   AUTH: {
-    LOGIN: '/auth/login',
-    LOGOUT: '/auth/logout',
-    VALIDATE: '/auth/validate',
-    ME: '/auth/me',
+    LOGIN: `${API_V1_BASE}/auth/login`,
+    LOGOUT: `${API_V1_BASE}/auth/logout`,
+    VALIDATE: `${API_V1_BASE}/auth/validate`,
+    ME: `${API_V1_BASE}/auth/me`,
   },
   TEAMS: {
-    LIST: '/teams',
-    SWITCH: '/teams/switch',
+    LIST: `${API_V1_BASE}/teams`,
+    SWITCH: `${API_V1_BASE}/teams/switch`,
   },
-  V1_BASE: '/v1',
   SETTINGS: {
-    PROFILE: '/settings/profile',
-    PREFERENCES: '/settings/preferences',
+    PROFILE: `${API_V1_BASE}/settings/profile`,
+    PREFERENCES: `${API_V1_BASE}/settings/preferences`,
+  },
+  EVENTS: {
+    STREAM: `${API_V1_BASE}/events/stream`,
   },
 } as const;
 

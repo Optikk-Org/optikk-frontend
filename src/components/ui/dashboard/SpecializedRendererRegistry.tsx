@@ -21,6 +21,7 @@ import {
   TrendingDown,
   Zap,
 } from 'lucide-react';
+import type { ComponentType } from 'react';
 import { useMemo } from 'react';
 import { Bar, Line } from 'react-chartjs-2';
 
@@ -34,6 +35,11 @@ import {
   createLineDataset,
   getChartColor,
 } from '@utils/chartHelpers';
+import type {
+  DashboardComponentSpec,
+  DashboardDataSources,
+  DashboardExtraContext,
+} from '@/types/dashboardConfig';
 
 const ICONS: Record<string, any> = {
   Activity, AlertCircle, Clock, Zap, Network, Layers,
@@ -90,7 +96,15 @@ function buildAiTimeseries(rows: any[], metricKey: string, groupKey: string = 'm
  * @param root0.dataSources
  * @param root0.extraContext
  */
-function LogHistogramRenderer({ chartConfig, dataSources, extraContext }: { chartConfig: any; dataSources: any; extraContext?: any }) {
+export function LogHistogramRenderer({
+  chartConfig,
+  dataSources,
+  extraContext,
+}: {
+  chartConfig: DashboardComponentSpec;
+  dataSources: DashboardDataSources;
+  extraContext?: DashboardExtraContext;
+}) {
   const rawData = dataSources?.[chartConfig.dataSource];
   const { startTime, endTime } = extraContext || {};
   const data = useMemo(() => {
@@ -111,7 +125,13 @@ function LogHistogramRenderer({ chartConfig, dataSources, extraContext }: { char
  * @param root0.chartConfig
  * @param root0.dataSources
  */
-function LatencyHistogramRenderer({ chartConfig, dataSources }: { chartConfig: any; dataSources: any }) {
+export function LatencyHistogramRenderer({
+  chartConfig,
+  dataSources,
+}: {
+  chartConfig: DashboardComponentSpec;
+  dataSources: DashboardDataSources;
+}) {
   const rawData = dataSources?.[chartConfig.dataSource];
   const traces = useMemo(() => {
     const arr = Array.isArray(rawData) ? rawData : [];
@@ -137,7 +157,13 @@ function LatencyHistogramRenderer({ chartConfig, dataSources }: { chartConfig: a
  * @param root0.chartConfig
  * @param root0.dataSources
  */
-function LatencyHeatmapRenderer({ chartConfig, dataSources }: { chartConfig: any; dataSources: any }) {
+export function LatencyHeatmapRenderer({
+  chartConfig,
+  dataSources,
+}: {
+  chartConfig: DashboardComponentSpec;
+  dataSources: DashboardDataSources;
+}) {
   const rawData = dataSources?.[chartConfig.dataSource];
   const data = useMemo(() => {
     const key = chartConfig.dataKey;
@@ -155,7 +181,15 @@ function LatencyHeatmapRenderer({ chartConfig, dataSources }: { chartConfig: any
  * @param root0.dataSources
  * @param root0.extraContext
  */
-function AiLineRenderer({ chartConfig, dataSources, extraContext }: { chartConfig: any; dataSources: any; extraContext: any }) {
+export function AiLineRenderer({
+  chartConfig,
+  dataSources,
+  extraContext,
+}: {
+  chartConfig: DashboardComponentSpec;
+  dataSources: DashboardDataSources;
+  extraContext: DashboardExtraContext;
+}) {
   const rawData = dataSources?.[chartConfig.dataSource];
   const rows = useMemo(() => {
     const key = chartConfig.dataKey;
@@ -202,7 +236,15 @@ function AiLineRenderer({ chartConfig, dataSources, extraContext }: { chartConfi
  * @param root0.dataSources
  * @param root0.extraContext
  */
-function AiBarRenderer({ chartConfig, dataSources, extraContext }: { chartConfig: any; dataSources: any; extraContext: any }) {
+export function AiBarRenderer({
+  chartConfig,
+  dataSources,
+  extraContext,
+}: {
+  chartConfig: DashboardComponentSpec;
+  dataSources: DashboardDataSources;
+  extraContext: DashboardExtraContext;
+}) {
   const rawData = dataSources?.[chartConfig.dataSource];
   const rows = useMemo(() => {
     const key = chartConfig.dataKey;
@@ -282,10 +324,8 @@ function AiBarRenderer({ chartConfig, dataSources, extraContext }: { chartConfig
   return <div style={{ height }}><Bar data={{ labels: chartData.labels, datasets: chartData.datasets }} options={options} /></div>;
 }
 
-export const SPECIALIZED_RENDERERS: Record<string, any> = {
-  'log-histogram': LogHistogramRenderer,
-  'latency-histogram': LatencyHistogramRenderer,
-  'latency-heatmap': LatencyHeatmapRenderer,
-  'ai-line': AiLineRenderer,
-  'ai-bar': AiBarRenderer,
-};
+export type SpecializedDashboardRenderer = ComponentType<{
+  chartConfig: DashboardComponentSpec;
+  dataSources: DashboardDataSources;
+  extraContext?: DashboardExtraContext;
+}>;

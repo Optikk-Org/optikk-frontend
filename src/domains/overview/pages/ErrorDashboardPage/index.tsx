@@ -54,20 +54,6 @@ export default function ErrorDashboardPage() {
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const { config } = useDashboardConfig('error-dashboard');
 
-  const resolvedConfig = useMemo(() => {
-    if (!config) return config;
-
-    return {
-      ...config,
-      charts: Array.isArray(config.charts) ? config.charts.map((chart: any) => {
-        if (chart.id === 'service-error-rate') return { ...chart, dataSource: 'service-error-rate' };
-        if (chart.id === 'service-error-volume') return { ...chart, dataSource: 'error-volume' };
-        if (chart.id === 'service-latency-under-errors') return { ...chart, dataSource: 'latency-during-error-windows' };
-        return chart;
-      }) : [],
-    };
-  }, [config]);
-
   const { data: serviceErrorRateRaw, isLoading: errorRateLoading } = useTimeRangeQuery(
     'overview-service-error-rate',
     (teamId, start, end) =>
@@ -243,7 +229,7 @@ export default function ErrorDashboardPage() {
 
       {/* Configurable Dashboard Charts */}
       <ConfigurableDashboard
-        config={resolvedConfig}
+        config={config}
         dataSources={{
           'service-error-rate': normalizedServiceErrorRate,
           'error-volume': normalizedErrorVolume,

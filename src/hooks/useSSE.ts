@@ -4,6 +4,7 @@ import { useAppStore } from '@store/appStore';
 
 import { safeGet } from '@utils/storage';
 
+import { API_CONFIG } from '@config/apiConfig';
 import { STORAGE_KEYS } from '@config/constants';
 
 /**
@@ -38,6 +39,21 @@ function parseSSEData(raw: string): unknown {
   } catch (_error: unknown) {
     return raw;
   }
+}
+
+export function buildSSEStreamUrl(
+  baseApiUrl: string,
+  token: string,
+  teamId: number,
+): string {
+  const normalizedBaseApiUrl = baseApiUrl.endsWith('/')
+    ? baseApiUrl.slice(0, -1)
+    : baseApiUrl;
+  const params = new URLSearchParams({
+    token,
+    teamId: String(teamId),
+  });
+  return `${normalizedBaseApiUrl}${API_CONFIG.ENDPOINTS.EVENTS.STREAM}?${params.toString()}`;
 }
 
 /**
@@ -102,8 +118,8 @@ export function useSSE(options: UseSSEOptions = {}): {
         return;
       }
 
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-      const streamUrl = `${baseUrl}/api/events/stream?token=${encodeURIComponent(token)}&teamId=${selectedTeamId}`;
+      const baseApiUrl = import.meta.env.VITE_API_BASE_URL || API_CONFIG.BASE_URL;
+      const streamUrl = buildSSEStreamUrl(baseApiUrl, token, selectedTeamId);
       setStatus('connecting');
 
       const eventSource = new EventSource(streamUrl);

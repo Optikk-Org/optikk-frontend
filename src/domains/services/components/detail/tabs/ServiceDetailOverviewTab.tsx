@@ -2,11 +2,12 @@ import { Card, Col, Row } from 'antd';
 
 import DataTable from '@components/common/data-display/DataTable';
 import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
+import type { DashboardRenderConfig } from '@/types/dashboardConfig';
 
 import { formatDuration } from '@utils/formatters';
 
 interface ServiceDetailOverviewTabProps {
-  config: unknown;
+  config: DashboardRenderConfig | null;
   timeSeries: any[];
   endpoints: any[];
   timeSeriesLoading: boolean;
@@ -90,4 +91,3 @@ export default function ServiceDetailOverviewTab({
     </>
   );
 }
-

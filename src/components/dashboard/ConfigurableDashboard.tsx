@@ -1,12 +1,17 @@
 import { Col, Row, Spin } from 'antd';
 
 import { ConfigurableChartCard } from '@components/ui/dashboard';
+import type {
+  DashboardDataSources,
+  DashboardExtraContext,
+  DashboardRenderConfig,
+} from '@/types/dashboardConfig';
 
 interface ConfigurableDashboardProps {
-  config: any;
-  dataSources?: any;
+  config: DashboardRenderConfig | null;
+  dataSources?: DashboardDataSources;
   isLoading?: boolean;
-  extraContext?: any;
+  extraContext?: DashboardExtraContext;
 }
 
 /**
@@ -23,17 +28,17 @@ export default function ConfigurableDashboard({
   isLoading = false,
   extraContext = {},
 }: ConfigurableDashboardProps) {
-  if (!config || !config.charts) return null;
+  if (!config || config.components.length === 0) return null;
 
   return (
     <Spin spinning={isLoading}>
       <Row gutter={[16, 16]}>
-        {(config.charts as any[]).map((chartConfig: any) => {
-          const colSpan = chartConfig.layout?.col || 12;
+        {config.components.map((componentConfig) => {
+          const colSpan = componentConfig.layout?.col || 12;
           return (
-            <Col key={chartConfig.id} xs={24} lg={colSpan}>
+            <Col key={componentConfig.id} xs={24} lg={colSpan}>
               <ConfigurableChartCard
-                chartConfig={chartConfig}
+                componentConfig={componentConfig}
                 dataSources={dataSources}
                 extraContext={extraContext}
               />
