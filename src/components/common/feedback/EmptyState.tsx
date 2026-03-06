@@ -1,4 +1,12 @@
 import { Empty } from 'antd';
+import type { ReactNode } from 'react';
+
+interface EmptyStateProps {
+  icon?: ReactNode;
+  title?: ReactNode;
+  description?: string;
+  action?: ReactNode;
+}
 
 /**
  * Consistent empty data placeholder used across all pages and DataTable.
@@ -13,7 +21,7 @@ export default function EmptyState({
   title,
   description = 'No data found',
   action,
-}) {
+}: EmptyStateProps): JSX.Element {
   return (
     <div style={{ padding: '40px 0', textAlign: 'center' }}>
       {icon || <Empty description={false} />}

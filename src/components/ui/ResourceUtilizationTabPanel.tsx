@@ -1,4 +1,4 @@
-import { ResourceUtilizationPage } from '@features/metrics';
+import { ResourceUtilizationPageView as ResourceUtilizationPage } from '@/domains/metrics';
 
 /**
  * Shared wrapper used by hub pages to embed resource utilization tab content.
@@ -6,4 +6,3 @@ import { ResourceUtilizationPage } from '@features/metrics';
 export default function ResourceUtilizationTabPanel(): JSX.Element {
   return <ResourceUtilizationPage />;
 }
-

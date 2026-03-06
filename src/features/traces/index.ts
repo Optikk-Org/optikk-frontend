@@ -1,4 +1,6 @@
-export { default as TracesPage } from './pages/TracesPage';
-export { default as TraceDetailPage } from './pages/TraceDetailPage';
-export * from './components';
-export { default } from './pages/TracesPage';
+export {
+  TracesPageView as TracesPage,
+  TraceDetailPageView as TraceDetailPage,
+} from '@/domains/traces';
+export * from '@/domains/traces';
+export { TracesPageView as default } from '@/domains/traces';

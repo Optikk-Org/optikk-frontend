@@ -17,6 +17,14 @@ const sparklineOptions = {
   },
 };
 
+interface SparklineChartProps {
+  data?: number[];
+  color?: string;
+  fill?: boolean;
+  width?: number;
+  height?: number;
+}
+
 /**
  *
  * @param root0
@@ -32,7 +40,7 @@ export default function SparklineChart({
   fill = true,
   width = 60,
   height = 24,
-}) {
+}: SparklineChartProps) {
   if (!data || data.length < 2) return null;
 
   const chartData = {

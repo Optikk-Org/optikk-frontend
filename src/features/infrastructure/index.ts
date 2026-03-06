@@ -1,4 +1,4 @@
-export { default as InfrastructureHubPage } from './pages/InfrastructureHubPage';
-export { default as NodesPage } from './pages/NodesPage';
-export { default } from './pages/InfrastructureHubPage';
-export * from './components';
+export { InfrastructureHubPageView as InfrastructureHubPage } from '@/domains/infrastructure';
+export { NodesPageView as NodesPage } from '@/domains/infrastructure';
+export * from '@/domains/infrastructure';
+export { InfrastructureHubPageView as default } from '@/domains/infrastructure';

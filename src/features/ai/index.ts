@@ -1,3 +1,3 @@
-export { default as AiObservabilityPage } from './pages/AiObservabilityPage';
-export { default } from './pages/AiObservabilityPage';
-export * from './components';
+export { AiObservabilityPageView as AiObservabilityPage } from '@/domains/ai';
+export * from '@/domains/ai';
+export { AiObservabilityPageView as default } from '@/domains/ai';

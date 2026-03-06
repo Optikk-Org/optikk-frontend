@@ -1,5 +1,11 @@
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
+interface TrendIndicatorProps {
+  value?: number | null;
+  inverted?: boolean;
+  showValue?: boolean;
+}
+
 /**
  * Displays a trend arrow with percentage value.
  * Green = positive trend, Red = negative trend.
@@ -9,7 +15,11 @@ import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
  * @param root0.inverted
  * @param root0.showValue
  */
-export default function TrendIndicator({ value, inverted = false, showValue = true }) {
+export default function TrendIndicator({
+  value,
+  inverted = false,
+  showValue = true,
+}: TrendIndicatorProps): JSX.Element {
   if (value == null || value === 0) {
     return (
       <span className="trend-indicator" style={{ color: '#98A2B3' }}>

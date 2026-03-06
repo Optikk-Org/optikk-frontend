@@ -6,8 +6,8 @@ import { useState, useEffect } from 'react';
  * @param value
  * @param delay
  */
-export function useDebouncedValue(value, delay = 300) {
-  const [debounced, setDebounced] = useState(value);
+export function useDebouncedValue<T>(value: T, delay = 300): T {
+  const [debounced, setDebounced] = useState<T>(value);
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(value), delay);
     return () => clearTimeout(timer);

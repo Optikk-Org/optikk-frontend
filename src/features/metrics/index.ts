@@ -1,9 +1,9 @@
-export { default as MetricsPage } from './pages/MetricsPage';
-export { default as SaturationHubPage } from './pages/SaturationHubPage';
-export { default as SaturationPage } from './pages/SaturationPage';
-export { default as LatencyAnalysisPage } from './pages/LatencyAnalysisPage';
-export { default as ResourceUtilizationPage } from './pages/ResourceUtilizationPage';
-export { default as DatabaseCachePerformancePage } from './pages/DatabaseCachePerformancePage';
-export { default as MessagingQueueMonitoringPage } from './pages/MessagingQueueMonitoringPage';
-export { default } from './pages/MetricsPage';
-export * from './components';
+export { MetricsPageView as MetricsPage } from '@/domains/metrics';
+export { SaturationHubPageView as SaturationHubPage } from '@/domains/metrics';
+export { SaturationPageView as SaturationPage } from '@/domains/metrics';
+export { LatencyAnalysisPageView as LatencyAnalysisPage } from '@/domains/metrics';
+export { ResourceUtilizationPageView as ResourceUtilizationPage } from '@/domains/metrics';
+export { DatabaseCachePerformancePageView as DatabaseCachePerformancePage } from '@/domains/metrics';
+export { MessagingQueueMonitoringPageView as MessagingQueueMonitoringPage } from '@/domains/metrics';
+export * from '@/domains/metrics';
+export { MetricsPageView as default } from '@/domains/metrics';

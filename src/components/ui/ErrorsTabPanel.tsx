@@ -1,4 +1,4 @@
-import { ErrorDashboardPage } from '@features/errors';
+import { ErrorDashboardPageView as ErrorDashboardPage } from '@/domains/overview';
 
 /**
  * Shared wrapper used by hub pages to embed the Errors dashboard tab content.
@@ -6,4 +6,3 @@ import { ErrorDashboardPage } from '@features/errors';
 export default function ErrorsTabPanel(): JSX.Element {
   return <ErrorDashboardPage />;
 }
-

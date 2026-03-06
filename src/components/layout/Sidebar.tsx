@@ -1,23 +1,17 @@
-import { useQuery } from '@tanstack/react-query';
-import { Layout, Menu, Badge, Button, Tooltip } from 'antd';
+import { Button, Layout, Menu, Tooltip } from 'antd';
 import {
-  LayoutDashboard,
-  FileText,
-  GitBranch,
-  Server,
-  Bell,
-  BarChart3,
   Layers,
-  HardDrive,
-  Settings,
-  Gauge,
-  Brain,
-  Sun,
-  Moon,
   LogOut,
+  Moon,
+  Settings,
+  Sun,
 } from 'lucide-react';
+import { useMemo } from 'react';
 import toast from 'react-hot-toast';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+
+import { domainRegistry } from '@/app/registry/domainRegistry';
+import { ROUTES } from '@/shared/constants/routes';
 
 import { useAppStore } from '@store/appStore';
 import { useAuthStore } from '@store/authStore';
@@ -26,80 +20,90 @@ import './Sidebar.css';
 
 const { Sider } = Layout;
 
+function getRoutePrefix(path: string): string {
+  return path.split('/:')[0] || path;
+}
+
 /**
  *
  */
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { sidebarCollapsed, toggleSidebar, theme, setTheme, selectedTeamId } = useAppStore();
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { sidebarCollapsed, toggleSidebar, theme, setTheme, selectedTeamId } =
+    useAppStore();
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
-  const currentTeam = (user?.teams || []).find((t) => t.id === selectedTeamId);
+  const currentTeam = (user?.teams || []).find((team) => team.id === selectedTeamId);
 
-  const observeItems = [
-    {
-      key: '/overview',
-      icon: <LayoutDashboard size={18} />,
-      label: 'Overview',
-    },
-    {
-      key: '/metrics',
-      icon: <BarChart3 size={18} />,
-      label: 'Metrics',
-    },
-    {
-      key: '/logs',
-      icon: <FileText size={18} />,
-      label: 'Logs',
-    },
-    {
-      key: '/traces',
-      icon: <GitBranch size={18} />,
-      label: 'Traces',
-    },
-    {
-      key: '/services',
-      icon: <Server size={18} />,
-      label: 'Services',
-    },
-  ];
+  const navEntries = useMemo(
+    () =>
+      domainRegistry.flatMap((domain) =>
+        domain.navigation.map((item) => ({
+          ...item,
+          routePrefixes: domain.routes.map((route) => getRoutePrefix(route.path)),
+        })),
+      ),
+    [],
+  );
 
-  const operateItems = [
-    {
-      key: '/infrastructure',
-      icon: <HardDrive size={18} />,
-      label: 'Infrastructure',
-    },
-    {
-      key: '/saturation',
-      icon: <Gauge size={18} />,
-      label: 'Saturation',
-    },
-    {
-      key: '/ai-observability',
-      icon: <Brain size={18} />,
-      label: 'AI Observability',
-    },
-  ];
+  const observeItems = useMemo(
+    () =>
+      navEntries
+        .filter((entry) => entry.group === 'observe')
+        .map((entry) => {
+          const Icon = entry.icon;
+          return {
+            key: entry.path,
+            icon: <Icon size={18} />,
+            label: entry.label,
+          };
+        }),
+    [navEntries],
+  );
 
-  const mainMenuItems = [
-    {
-      key: 'observe-group',
-      type: 'group' as const,
-      label: !sidebarCollapsed ? <span className="sidebar-group-title">Observe</span> : '',
-      children: observeItems,
-    },
-    {
-      key: 'operate-group',
-      type: 'group' as const,
-      label: !sidebarCollapsed ? <span className="sidebar-group-title">Operate</span> : '',
-      children: operateItems,
-    },
-  ];
+  const operateItems = useMemo(
+    () =>
+      navEntries
+        .filter((entry) => entry.group === 'operate')
+        .map((entry) => {
+          const Icon = entry.icon;
+          return {
+            key: entry.path,
+            icon: <Icon size={18} />,
+            label: entry.label,
+          };
+        }),
+    [navEntries],
+  );
 
-  const handleMenuClick = ({ key }) => {
+  const mainMenuItems = useMemo(
+    () => [
+      {
+        key: 'observe-group',
+        type: 'group' as const,
+        label: !sidebarCollapsed ? (
+          <span className="sidebar-group-title">Observe</span>
+        ) : (
+          ''
+        ),
+        children: observeItems,
+      },
+      {
+        key: 'operate-group',
+        type: 'group' as const,
+        label: !sidebarCollapsed ? (
+          <span className="sidebar-group-title">Operate</span>
+        ) : (
+          ''
+        ),
+        children: operateItems,
+      },
+    ],
+    [observeItems, operateItems, sidebarCollapsed],
+  );
+
+  const handleMenuClick = ({ key }: { key: string }) => {
     navigate(key);
   };
 
@@ -110,18 +114,23 @@ export default function Sidebar() {
   const handleLogout = async () => {
     await logout();
     toast.success('Logged out successfully');
-    navigate('/login');
+    navigate(ROUTES.login);
   };
 
-  // Match nested routes to their parent for selected key
   const getSelectedKey = () => {
-    const path = location.pathname;
-    if (path.startsWith('/services/')) return '/services';
-    if (path.startsWith('/traces/')) return '/traces';
-    if (path.startsWith('/errors')) return '/overview';
-    if (path.startsWith('/deployments')) return '/infrastructure';
-    if (path.startsWith('/latency')) return '/metrics';
-    return path;
+    const pathname = location.pathname;
+
+    if (pathname.startsWith(ROUTES.latencyAlias)) {
+      return ROUTES.metrics;
+    }
+
+    const matchedEntry = navEntries.find((entry) =>
+      entry.routePrefixes.some((prefix) =>
+        pathname === prefix || pathname.startsWith(`${prefix}/`),
+      ),
+    );
+
+    return matchedEntry?.path || pathname;
   };
 
   return (
@@ -144,7 +153,9 @@ export default function Sidebar() {
       {!sidebarCollapsed && (
         <div className="sidebar-context-strip">
           <div className="sidebar-context-badge">Enterprise</div>
-          <div className="sidebar-context-team">{currentTeam?.name || `Workspace #${selectedTeamId}`}</div>
+          <div className="sidebar-context-team">
+            {currentTeam?.name || `Workspace #${selectedTeamId}`}
+          </div>
         </div>
       )}
 
@@ -167,12 +178,15 @@ export default function Sidebar() {
               type="text"
               className="sidebar-settings-btn"
               icon={<Settings size={14} />}
-              onClick={() => navigate('/settings')}
+              onClick={() => navigate(ROUTES.settings)}
             >
               {!sidebarCollapsed && 'Settings'}
             </Button>
 
-            <Tooltip title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`} placement="right">
+            <Tooltip
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              placement="right"
+            >
               <Button
                 data-testid="sidebar-theme-toggle"
                 type="text"

@@ -1,6 +1,14 @@
 import { Input } from 'antd';
 import { Search } from 'lucide-react';
 import { useState, useCallback, useRef } from 'react';
+import type { CSSProperties, ChangeEvent } from 'react';
+
+interface SearchInputProps {
+  placeholder?: string;
+  onSearch?: (value: string) => void;
+  debounceMs?: number;
+  style?: CSSProperties;
+}
 
 /**
  * Debounced search input. Triggers onSearch after the user stops typing.
@@ -15,12 +23,12 @@ export default function SearchInput({
   onSearch,
   debounceMs = 300,
   style,
-}) {
+}: SearchInputProps): JSX.Element {
   const [value, setValue] = useState('');
-  const timerRef = useRef(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleChange = useCallback(
-    (e) => {
+    (e: ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
       setValue(newValue);
 

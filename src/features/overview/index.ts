@@ -1,5 +1,5 @@
-export { default as OverviewHubPage } from './pages/OverviewHubPage';
-export { default as OverviewPage } from './pages/OverviewPage';
-export { default as SloSliDashboardPage } from './pages/SloSliDashboardPage';
-export { default } from './pages/OverviewHubPage';
-export * from './components';
+export { OverviewHubPageView as OverviewHubPage } from '@/domains/overview';
+export { OverviewPageView as OverviewPage } from '@/domains/overview';
+export { SloSliDashboardPageView as SloSliDashboardPage } from '@/domains/overview';
+export * from '@/domains/overview';
+export { OverviewHubPageView as default } from '@/domains/overview';

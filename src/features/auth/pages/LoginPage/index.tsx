@@ -1,6 +1,6 @@
 import { Form, Input, Button, Card, Typography, Space } from 'antd';
 import { Mail, Lock, Layers } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,6 +10,11 @@ import { useAuthStore } from '@store/authStore';
 import './LoginPage.css';
 
 const { Title, Text } = Typography;
+
+interface LoginFormValues {
+  email: string;
+  password: string;
+}
 
 /**
  *
@@ -33,7 +38,7 @@ export default function LoginPage() {
     }
   }, [error, clearError]);
 
-  const handleSubmit = async (values) => {
+  const handleSubmit = async (values: LoginFormValues): Promise<void> => {
     const result = await login(values.email, values.password);
     if (result.success) {
       // Normalize post-login view window for load-test verification.

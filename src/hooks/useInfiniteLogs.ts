@@ -14,8 +14,20 @@ import {
   extractServerTotal,
 } from '@utils/logUtils';
 
+interface LogRow extends Record<string, unknown> {
+  id?: string | number;
+  timestamp?: string | number | Date;
+  traceId?: string;
+  trace_id?: string;
+  spanId?: string;
+  span_id?: string;
+  serviceName?: string;
+  service_name?: string;
+  message?: string;
+}
+
 interface UseInfiniteLogsOptions {
-  backendParams: any;
+  backendParams: Record<string, unknown>;
   liveTail?: boolean;
   pageSize?: number;
 }
@@ -47,20 +59,34 @@ export function useInfiniteLogs({ backendParams, liveTail = false, pageSize = 10
     refreshKey,
   ]);
 
-  const query = useInfiniteQuery<any, Error, InfiniteData<any>, any[], any>({
+  const query = useInfiniteQuery<
+    unknown,
+    Error,
+    InfiniteData<unknown>,
+    unknown[],
+    string | number | bigint | null
+  >({
     queryKey: [
       'logs-v2-infinite',
       selectedTeamId, timeRange.value,
       pageSize, backendParams,
       refreshKey,
     ],
-    queryFn: ({ pageParam }) =>
-      v1Service.getLogs(selectedTeamId, stableStart, stableEnd, {
+    queryFn: ({ pageParam }) => {
+      const cursor =
+        typeof pageParam === 'bigint'
+          ? String(pageParam)
+          : typeof pageParam === 'string' || typeof pageParam === 'number'
+            ? pageParam
+            : undefined;
+
+      return v1Service.getLogs(selectedTeamId, stableStart, stableEnd, {
         ...backendParams,
         limit: pageSize,
         direction: 'desc',
-        ...(pageParam != null ? { cursor: pageParam } : {}),
-      }),
+        ...(cursor !== undefined ? { cursor } : {}),
+      });
+    },
     getNextPageParam: (lastPage, allPages) => {
       if (!getHasMoreFromPage(lastPage, allPages, pageSize)) return undefined;
       return getNextCursorFromPage(lastPage);
@@ -76,8 +102,11 @@ export function useInfiniteLogs({ backendParams, liveTail = false, pageSize = 10
     if (!query.data?.pages) return [];
     const raw = query.data.pages.flatMap((page) => getLogsFromPage(page));
     const seen = new Set();
-    const unique = [];
-    for (const log of raw) {
+    const unique: LogRow[] = [];
+
+    for (const rawLog of raw) {
+      const log: LogRow =
+        typeof rawLog === 'object' && rawLog !== null ? (rawLog as LogRow) : {};
       const id = String(log?.id ?? '').trim();
       const traceId = log?.traceId || log?.trace_id || '';
       const spanId = log?.spanId || log?.span_id || '';
@@ -90,7 +119,8 @@ export function useInfiniteLogs({ backendParams, liveTail = false, pageSize = 10
         unique.push(log);
       }
     }
-    unique.sort((a, b) => {
+
+    unique.sort((a: LogRow, b: LogRow) => {
       const tsDiff = getTimestampMs(b) - getTimestampMs(a);
       if (tsDiff !== 0) return tsDiff;
       return compareIdsDesc(a.id, b.id);

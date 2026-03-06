@@ -1,5 +1,5 @@
-export { default as ServicesPage } from './pages/ServicesPage';
-export { default as ServiceDetailPage } from './pages/ServiceDetailPage';
-export { default as ServiceMapPage } from './pages/ServiceMapPage';
-export * from './components/detail';
-export { default } from './pages/ServicesPage';
+export { ServicesPageView as ServicesPage } from '@/domains/services';
+export { ServiceDetailPageView as ServiceDetailPage } from '@/domains/services';
+export { ServiceMapPageView as ServiceMapPage } from '@/domains/services';
+export * from '@/domains/services';
+export { ServicesPageView as default } from '@/domains/services';

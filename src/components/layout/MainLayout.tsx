@@ -19,7 +19,7 @@ export default function MainLayout() {
   const sidebarCollapsed = useAppStore((state) => state.sidebarCollapsed);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
-  const handleKeyDown = useCallback((e) => {
+  const handleKeyDown = useCallback((e: KeyboardEvent): void => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
       e.preventDefault();
       setCommandPaletteOpen((prev) => !prev);

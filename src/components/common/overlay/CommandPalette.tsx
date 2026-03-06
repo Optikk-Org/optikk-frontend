@@ -1,15 +1,34 @@
 import { Modal, Input } from 'antd';
+import type { InputRef } from 'antd';
 import {
   BarChart3, FileText, GitBranch, Layers, Network,
   Server, Settings, Activity, RefreshCw, Sun, Search,
 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import type { KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useAppStore } from '@store/appStore';
 import './CommandPalette.css';
 
-const COMMANDS = [
+type CommandAction = 'refresh' | 'toggleTheme';
+
+interface Command {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  group: 'Navigate' | 'Actions';
+  path?: string;
+  action?: CommandAction;
+}
+
+interface CommandPaletteProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+const COMMANDS: Command[] = [
   { id: 'overview', label: 'Go to Overview', icon: Activity, path: '/overview', group: 'Navigate' },
   { id: 'metrics', label: 'Go to Metrics', icon: BarChart3, path: '/metrics', group: 'Navigate' },
   { id: 'logs', label: 'Go to Logs', icon: FileText, path: '/logs', group: 'Navigate' },
@@ -30,18 +49,18 @@ const COMMANDS = [
  * @param root0.open
  * @param root0.onClose
  */
-export default function CommandPalette({ open, onClose }) {
+export default function CommandPalette({ open, onClose }: CommandPaletteProps): JSX.Element {
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
-  const inputRef = useRef(null);
+  const inputRef = useRef<InputRef | null>(null);
   const { triggerRefresh, theme, setTheme } = useAppStore();
 
   const filtered = COMMANDS.filter((cmd) =>
     cmd.label.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const executeCommand = useCallback((cmd) => {
+  const executeCommand = useCallback((cmd: Command): void => {
     if (cmd.path) {
       navigate(cmd.path);
     } else if (cmd.action === 'refresh') {
@@ -64,7 +83,7 @@ export default function CommandPalette({ open, onClose }) {
     setSelectedIndex(0);
   }, [search]);
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setSelectedIndex((prev) => Math.min(prev + 1, filtered.length - 1));

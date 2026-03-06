@@ -1,3 +1,2 @@
-export { default as ErrorDashboardPage } from './pages/ErrorDashboardPage';
-export { default } from './pages/ErrorDashboardPage';
-
+export { ErrorDashboardPageView as ErrorDashboardPage } from '@/domains/overview';
+export { ErrorDashboardPageView as default } from '@/domains/overview';
