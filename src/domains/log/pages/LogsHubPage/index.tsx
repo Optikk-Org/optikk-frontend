@@ -7,6 +7,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { PageHeader, ObservabilityDetailPanel } from '@components/common';
+import ConfiguredTabPanel from '@components/dashboard/ConfiguredTabPanel';
 
 import LogRow, { LevelBadge } from '../../components/log/LogRow';
 import LogsLevelDistributionCard from '../../components/charts/LogsLevelDistributionCard';
@@ -499,6 +500,10 @@ export default function LogsHubPage() {
       <div className="logs-charts-row">
         <LogsVolumeSection volumeBuckets={volumeBuckets} isLoading={volumeLoading} />
         <LogsLevelDistributionCard isLoading={statsLoading} levelFacets={levelFacets} />
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <ConfiguredTabPanel pageId="logs" tabId="default" />
       </div>
 
       <LogsTableSection

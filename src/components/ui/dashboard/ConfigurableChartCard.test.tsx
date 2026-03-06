@@ -16,6 +16,8 @@ describe('ConfigurableChartCard', () => {
       id: 'unknown-key-card',
       componentKey: 'does-not-exist',
       title: 'Unknown',
+      order: 10,
+      query: { method: 'GET', endpoint: '/v1/unknown' },
     };
 
     render(

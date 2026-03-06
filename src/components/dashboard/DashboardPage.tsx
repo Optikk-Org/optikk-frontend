@@ -2,7 +2,8 @@ import { Skeleton, Tabs } from 'antd';
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { useDashboardConfig } from '@hooks/useDashboardConfig';
+import { usePageTabs } from '@hooks/usePageTabs';
+import { useTabComponents } from '@hooks/useTabComponents';
 import { useUrlSyncedTab } from '@hooks/useUrlSyncedTab';
 
 import DashboardTabContent from './DashboardTabContent';
@@ -15,15 +16,14 @@ interface DashboardPageProps {
 
 /**
  * A fully backend-driven page component.
- * Reads tabs, dataSources, statCards, and charts from the backend YAML config
- * and renders them without any hardcoded structure.
+ * Reads tabs and components from the backend JSON config hierarchy.
  */
 export default function DashboardPage({ pageId, pathParams }: DashboardPageProps) {
-  const { config, isLoading } = useDashboardConfig(pageId);
+  const { tabs, isLoading: tabsLoading } = usePageTabs(pageId);
 
   const tabIds = useMemo(
-    () => config?.tabs?.map((t) => t.id) ?? [],
-    [config?.tabs],
+    () => tabs.map((tab) => tab.id),
+    [tabs],
   );
 
   const defaultTabId = tabIds[0] ?? '';
@@ -33,7 +33,10 @@ export default function DashboardPage({ pageId, pathParams }: DashboardPageProps
     defaultTab: defaultTabId,
   });
 
-  if (isLoading && !config) {
+  const selectedTabId = activeTab || defaultTabId;
+  const { components, isLoading: componentsLoading } = useTabComponents(pageId, selectedTabId);
+
+  if ((tabsLoading || componentsLoading) && tabs.length === 0) {
     return (
       <div style={{ padding: 24 }}>
         <Skeleton active paragraph={{ rows: 6 }} />
@@ -41,41 +44,28 @@ export default function DashboardPage({ pageId, pathParams }: DashboardPageProps
     );
   }
 
-  if (!config) return null;
-
-  const hasTabs = config.tabs && config.tabs.length > 0;
-
-  if (hasTabs) {
-    const tabItems = config.tabs!.map((tab) => ({
+  if (tabs.length > 1) {
+    const tabItems = tabs.map((tab) => ({
       key: tab.id,
       label: tab.label,
-      children: (
-        <DashboardTabContent
-          tab={tab}
-          pathParams={pathParams}
-        />
-      ),
+      children: null,
     }));
 
     return (
-      <Tabs
-        activeKey={activeTab || defaultTabId}
-        onChange={onTabChange}
-        items={tabItems}
-        size="large"
-        tabBarStyle={{ marginBottom: 16 }}
-      />
+      <>
+        <Tabs
+          activeKey={selectedTabId}
+          onChange={onTabChange}
+          items={tabItems}
+          size="large"
+          tabBarStyle={{ marginBottom: 16 }}
+        />
+        <DashboardTabContent components={components} pathParams={pathParams} />
+      </>
     );
   }
 
-  // Flat page (no tabs) — treat the top-level config as a single tab-like object
-  const flatTab = {
-    dataSources: config.dataSources ?? [],
-    statCards: config.statCards,
-    charts: config.components,
-  };
-
-  return <DashboardTabContent tab={flatTab} pathParams={pathParams} />;
+  return <DashboardTabContent components={components} pathParams={pathParams} />;
 }
 
 /**

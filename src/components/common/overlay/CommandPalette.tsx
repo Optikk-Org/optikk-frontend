@@ -34,7 +34,7 @@ const COMMANDS: Command[] = [
   { id: 'logs', label: 'Go to Logs', icon: FileText, path: '/logs', group: 'Navigate' },
   { id: 'traces', label: 'Go to Traces', icon: GitBranch, path: '/traces', group: 'Navigate' },
   { id: 'services', label: 'Go to Services', icon: Layers, path: '/services', group: 'Navigate' },
-  { id: 'service-map', label: 'Go to Service Map', icon: Network, path: '/service-map', group: 'Navigate' },
+  { id: 'service-map', label: 'Go to Service Map', icon: Network, path: '/services?tab=service-map', group: 'Navigate' },
   { id: 'errors', label: 'Go to Errors', icon: Activity, path: '/overview?tab=errors', group: 'Navigate' },
   { id: 'infrastructure', label: 'Go to Infrastructure', icon: Server, path: '/infrastructure', group: 'Navigate' },
   { id: 'latency', label: 'Go to Latency', icon: BarChart3, path: '/metrics?tab=latency', group: 'Navigate' },

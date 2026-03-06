@@ -22,8 +22,8 @@ describe('ConfigurableDashboard', () => {
   it('renders only components returned by backend config', () => {
     const config: DashboardRenderConfig = {
       components: [
-        { id: 'requests', componentKey: 'request', title: 'Requests' },
-        { id: 'latency', componentKey: 'latency', title: 'Latency' },
+        { id: 'requests', componentKey: 'request', title: 'Requests', order: 10, query: { method: 'GET', endpoint: '/v1/requests' } },
+        { id: 'latency', componentKey: 'latency', title: 'Latency', order: 20, query: { method: 'GET', endpoint: '/v1/latency' } },
       ],
     };
 

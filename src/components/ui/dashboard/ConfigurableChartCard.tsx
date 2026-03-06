@@ -1,10 +1,11 @@
-import { Card } from 'antd';
+import { Card, Col, Empty, Row } from 'antd';
 import type { ComponentType } from 'react';
 import { useMemo, useState } from 'react';
 
 import ErrorRateChart from '@components/charts/time-series/ErrorRateChart';
 import LatencyChart from '@components/charts/time-series/LatencyChart';
 import RequestChart from '@components/charts/time-series/RequestChart';
+import StatCard from '@components/common/cards/StatCard';
 import QueueMetricsList from '@components/common/data-display/QueueMetricsList';
 import TopEndpointsList from '@components/common/data-display/TopEndpointsList';
 import type {
@@ -12,6 +13,11 @@ import type {
   DashboardDataSources,
   DashboardExtraContext,
 } from '@/types/dashboardConfig';
+import {
+  formatBytes,
+  formatDuration,
+  formatNumber,
+} from '@utils/formatters';
 
 import {
   AiBarRenderer,
@@ -23,6 +29,7 @@ import {
   LatencyHeatmapRenderer,
   LatencyHistogramRenderer,
   LogHistogramRenderer,
+  PieRenderer,
   ScorecardRenderer,
   ServiceMapRenderer,
   TableRenderer,
@@ -56,6 +63,7 @@ const DASHBOARD_COMPONENT_MAP: Record<string, ComponentType<any>> = {
   gauge: GaugeRenderer,
   scorecard: ScorecardRenderer,
   heatmap: HeatmapRenderer,
+  pie: PieRenderer,
   'service-map': ServiceMapRenderer,
   'trace-waterfall': TraceWaterfallRenderer,
 };
@@ -69,12 +77,86 @@ const SPECIALIZED_COMPONENT_KEYS = new Set([
   'table',
   'bar',
   'area',
+  'pie',
   'gauge',
   'scorecard',
   'heatmap',
   'service-map',
   'trace-waterfall',
 ]);
+
+function formatStatValue(formatter: string | undefined, value: any): string | number {
+  switch (formatter) {
+    case 'ms':
+      return formatDuration(value);
+    case 'bytes':
+      return formatBytes(Number(value) || 0);
+    case 'percent1':
+      return `${Number(value || 0).toFixed(1)}%`;
+    case 'percent2':
+      return `${Number(value || 0).toFixed(2)}%`;
+    case 'number':
+      return formatNumber(Number(value) || 0);
+    default:
+      return typeof value === 'number' ? value : String(value ?? '0');
+  }
+}
+
+function resolveComponentData(
+  chartConfig: DashboardComponentSpec,
+  dataSources: DashboardDataSources,
+) {
+  const dataSourceId = (chartConfig.dataSource as string | undefined) || chartConfig.id;
+  return dataSourceId ? dataSources?.[dataSourceId] : undefined;
+}
+
+function resolveFieldValue(raw: any, field: string | undefined) {
+  if (!field) return 0;
+  if (field === '_count') {
+    return Array.isArray(raw) ? raw.length : 0;
+  }
+  if (Array.isArray(raw)) {
+    const first = raw[0];
+    return first && typeof first === 'object' ? (first as Record<string, unknown>)[field] ?? 0 : 0;
+  }
+  if (raw && typeof raw === 'object') {
+    return (raw as Record<string, unknown>)[field] ?? 0;
+  }
+  return 0;
+}
+
+function renderStatSummary(rawData: any) {
+  const summary = Array.isArray(rawData) ? rawData[0] : rawData;
+  if (!summary || typeof summary !== 'object') {
+    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No data" />;
+  }
+
+  const cells = [
+    { label: 'P50', value: firstValue(summary, ['p50', 'p50_ms', 'p50Latency', 'p50_latency'], null) },
+    { label: 'P95', value: firstValue(summary, ['p95', 'p95_ms', 'p95Latency', 'p95_latency'], null) },
+    { label: 'P99', value: firstValue(summary, ['p99', 'p99_ms', 'p99Latency', 'p99_latency'], null) },
+    { label: 'Avg', value: firstValue(summary, ['avg', 'avg_ms', 'avgLatency', 'avg_latency'], null) },
+  ].filter((cell) => cell.value !== null && cell.value !== undefined);
+
+  if (cells.length === 0) {
+    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No summary data" />;
+  }
+
+  return (
+    <Row gutter={[12, 12]}>
+      {cells.map((cell) => (
+        <Col span={Math.max(6, Math.floor(24 / cells.length))} key={cell.label}>
+          <div style={{ padding: '8px 0' }}>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{cell.label}</div>
+            <div style={{ fontSize: 20, fontWeight: 700 }}>
+              {formatDuration(Number(cell.value) || 0)}
+            </div>
+          </div>
+        </Col>
+      ))}
+    </Row>
+  );
+}
 
 function firstValue(row: any, keys: string[], fallback: any = '') {
   if (!row || typeof row !== 'object') return fallback;
@@ -337,6 +419,31 @@ export default function ConfigurableChartCard({
   ) : chartConfig.title;
 
   const componentRenderer = componentKey ? DASHBOARD_COMPONENT_MAP[componentKey] : undefined;
+  const rawData = resolveComponentData(chartConfig, dataSources);
+
+  if (componentKey === 'stat-card') {
+    const value = resolveFieldValue(rawData, chartConfig.valueField as string | undefined);
+    const icon = chartConfig.titleIcon
+      ? getDashboardIcon(String(chartConfig.titleIcon), 20)
+      : undefined;
+    return (
+      <StatCard
+        title={String(chartConfig.title || '')}
+        value={value}
+        formatter={(val) => formatStatValue(chartConfig.formatter as string | undefined, val)}
+        icon={icon ?? undefined}
+      />
+    );
+  }
+
+  if (componentKey === 'stat') {
+    return (
+      <Card title={titleContent} className="chart-card" styles={{ body: { padding: '12px 16px' } }}>
+        {renderStatSummary(rawData)}
+      </Card>
+    );
+  }
+
   if (!componentRenderer) {
     console.warn(`Unknown dashboard component key received from backend: ${componentKey || '<empty>'}`);
     return (
@@ -362,8 +469,6 @@ export default function ConfigurableChartCard({
   }
 
   const ChartComponent = componentRenderer as ComponentType<BaseChartComponentProps>;
-  const dataSourceId = chartConfig.dataSource as string | undefined;
-  const rawData = dataSourceId ? dataSources?.[dataSourceId] : undefined;
   const timeseriesData = (chartConfig.dataKey
     ? (Array.isArray((rawData as any)?.[chartConfig.dataKey as string])
       ? (rawData as any)[chartConfig.dataKey as string]

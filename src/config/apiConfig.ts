@@ -28,6 +28,8 @@ export const API_ENDPOINTS = {
   },
 } as const;
 
+export const API_V1_BASE = API_ENDPOINTS.V1_BASE;
+
 export const API_CONFIG = {
   BASE_URL: API_PROXY_BASE,
   TIMEOUT: API_TIMEOUT_MS,

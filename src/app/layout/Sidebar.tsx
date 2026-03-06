@@ -10,8 +10,9 @@ import { useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { domainRegistry } from '@/app/registry/domainRegistry';
+import { getDashboardIcon } from '@/components/ui/dashboard/SpecializedRendererRegistry';
 import { ROUTES } from '@/shared/constants/routes';
+import { usePagesConfig } from '@/hooks/usePagesConfig';
 
 import { useAppStore } from '@store/appStore';
 import { useAuthStore } from '@store/authStore';
@@ -19,10 +20,6 @@ import { useAuthStore } from '@store/authStore';
 import './Sidebar.css';
 
 const { Sider } = Layout;
-
-function getRoutePrefix(path: string): string {
-  return path.split('/:')[0] || path;
-}
 
 /**
  *
@@ -34,17 +31,19 @@ export default function Sidebar() {
     useAppStore();
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
+  const { pages } = usePagesConfig();
   const currentTeam = (user?.teams || []).find((team) => team.id === selectedTeamId);
 
   const navEntries = useMemo(
-    () =>
-      domainRegistry.flatMap((domain) =>
-        domain.navigation.map((item) => ({
-          ...item,
-          routePrefixes: domain.routes.map((route) => getRoutePrefix(route.path)),
-        })),
-      ),
-    [],
+    () => pages
+      .filter((page) => page.navigable)
+      .map((page) => ({
+        path: page.path,
+        label: page.label,
+        group: page.group,
+        iconNode: getDashboardIcon(page.icon, 18),
+      })),
+    [pages],
   );
 
   const observeItems = useMemo(
@@ -52,10 +51,9 @@ export default function Sidebar() {
       navEntries
         .filter((entry) => entry.group === 'observe')
         .map((entry) => {
-          const Icon = entry.icon;
           return {
             key: entry.path,
-            icon: <Icon size={18} />,
+            icon: entry.iconNode,
             label: entry.label,
           };
         }),
@@ -67,10 +65,9 @@ export default function Sidebar() {
       navEntries
         .filter((entry) => entry.group === 'operate')
         .map((entry) => {
-          const Icon = entry.icon;
           return {
             key: entry.path,
-            icon: <Icon size={18} />,
+            icon: entry.iconNode,
             label: entry.label,
           };
         }),
@@ -123,11 +120,15 @@ export default function Sidebar() {
     if (pathname.startsWith(ROUTES.latencyAlias)) {
       return ROUTES.metrics;
     }
+    if (pathname.startsWith('/errors')) {
+      return ROUTES.overview;
+    }
+    if (pathname.startsWith('/service-map')) {
+      return ROUTES.services;
+    }
 
     const matchedEntry = navEntries.find((entry) =>
-      entry.routePrefixes.some((prefix) =>
-        pathname === prefix || pathname.startsWith(`${prefix}/`),
-      ),
+      pathname === entry.path || pathname.startsWith(`${entry.path}/`),
     );
 
     return matchedEntry?.path || pathname;

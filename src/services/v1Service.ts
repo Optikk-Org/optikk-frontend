@@ -9,7 +9,7 @@
  * continue to work without a mass rename.
  */
 import { aiService } from './aiService';
-import { dashboardConfigService } from './dashboardConfigService';
+import { defaultConfigService } from './defaultConfigService';
 import { deploymentsService } from './deploymentsService';
 import { latencyService } from './latencyService';
 import { logsService } from './logsService';
@@ -54,6 +54,6 @@ const v1Service = {
   getLatencyHistogram: latencyService.getHistogram,
   getLatencyHeatmap: latencyService.getHeatmap,
 
-  // ── Dashboard Config ──────────────────────────────────────────────────
-  ...dashboardConfigService,
+  // ── Default Config ────────────────────────────────────────────────────
+  ...defaultConfigService,
 };

@@ -3,9 +3,12 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { ROUTES } from '@/shared/constants/routes';
 import { ErrorBoundary } from '@/shared/components/feedback';
+import { ServiceDetailPageView } from '@/domains/services';
+import { SettingsPageView } from '@/domains/settings';
+import { TraceDetailPageView } from '@/domains/traces';
 
 import MainLayout from '../layout/MainLayout';
-import { domainRegistry } from '../registry/domainRegistry';
+import BackendDrivenPage from './BackendDrivenPage';
 import ProtectedRoute from './ProtectedRoute';
 
 const LoginPage = lazy(() => import('@/app/auth'));
@@ -31,25 +34,49 @@ export default function AppRoutes(): JSX.Element {
         }
       >
         <Route index element={<Navigate to={ROUTES.overview} replace />} />
-        {domainRegistry.flatMap((domain) =>
-          domain.routes.map((route) => {
-            const Page = route.page;
-            return (
-              <Route
-                key={`${domain.key}:${route.path}`}
-                path={toNestedRoutePath(route.path)}
-                element={
-                  <ErrorBoundary>
-                    <Page />
-                  </ErrorBoundary>
-                }
-              />
-            );
-          }),
-        )}
+        <Route
+          path={toNestedRoutePath(ROUTES.settings)}
+          element={(
+            <ErrorBoundary>
+              <SettingsPageView />
+            </ErrorBoundary>
+          )}
+        />
+        <Route
+          path={toNestedRoutePath(ROUTES.traceDetail)}
+          element={(
+            <ErrorBoundary>
+              <TraceDetailPageView />
+            </ErrorBoundary>
+          )}
+        />
+        <Route
+          path={toNestedRoutePath(ROUTES.serviceDetail)}
+          element={(
+            <ErrorBoundary>
+              <ServiceDetailPageView />
+            </ErrorBoundary>
+          )}
+        />
+        <Route
+          path="errors"
+          element={<Navigate to={`${ROUTES.overview}?tab=errors`} replace />}
+        />
         <Route
           path={toNestedRoutePath(ROUTES.latencyAlias)}
-          element={<Navigate to={`${ROUTES.metrics}?tab=latency`} replace />}
+          element={<Navigate to={`${ROUTES.metrics}?tab=latency-analysis`} replace />}
+        />
+        <Route
+          path="service-map"
+          element={<Navigate to={`${ROUTES.services}?tab=service-map`} replace />}
+        />
+        <Route
+          path="*"
+          element={(
+            <ErrorBoundary>
+              <BackendDrivenPage />
+            </ErrorBoundary>
+          )}
         />
       </Route>
 

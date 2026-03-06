@@ -1,39 +1,27 @@
 import { Spin } from 'antd';
 
 import ConfigurableDashboard from './ConfigurableDashboard';
-import DashboardStatCards from './DashboardStatCards';
-import type { DataSourceSpec, DashboardComponentSpec, StatCardSpec } from '@/types/dashboardConfig';
-import { useDataSourceFetcher } from '@hooks/useDataSourceFetcher';
-
-interface TabLike {
-  dataSources: DataSourceSpec[];
-  statCards?: StatCardSpec[];
-  charts: DashboardComponentSpec[];
-}
+import type { DashboardComponentSpec } from '@/types/dashboardConfig';
+import { useComponentDataFetcher } from '@hooks/useComponentDataFetcher';
 
 interface DashboardTabContentProps {
-  tab: TabLike;
+  components: DashboardComponentSpec[];
   pathParams?: Record<string, string>;
 }
 
 /**
- * Renders a single tab's content: fetches its declared dataSources,
- * then renders statCards + charts driven entirely from config.
+ * Renders a single tab's content by fetching each component's query contract.
  */
-export default function DashboardTabContent({ tab, pathParams }: DashboardTabContentProps) {
-  const { data, isLoading } = useDataSourceFetcher(tab.dataSources, pathParams);
+export default function DashboardTabContent({
+  components,
+  pathParams,
+}: DashboardTabContentProps) {
+  const { data, isLoading } = useComponentDataFetcher(components, pathParams);
 
   return (
     <Spin spinning={isLoading}>
-      {tab.statCards && tab.statCards.length > 0 && (
-        <DashboardStatCards
-          statCards={tab.statCards}
-          dataSources={data}
-          isLoading={isLoading}
-        />
-      )}
       <ConfigurableDashboard
-        config={{ components: tab.charts }}
+        config={{ components }}
         dataSources={data}
         isLoading={isLoading}
       />

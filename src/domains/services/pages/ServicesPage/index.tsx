@@ -1,11 +1,12 @@
 import { Tabs } from 'antd';
-import { Layers, Network } from 'lucide-react';
-import { useState } from 'react';
+import { Layers, Network, Share2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { PageHeader } from '@components/common';
+import ConfiguredTabPanel from '@components/dashboard/ConfiguredTabPanel';
 
-import { useDashboardConfig } from '@hooks/useDashboardConfig';
+import { usePageTabs } from '@hooks/usePageTabs';
 import { useUrlSyncedTab } from '@hooks/useUrlSyncedTab';
 
 import { ServiceOverviewTab } from '../../components/services-page/ServiceOverviewTab';
@@ -21,9 +22,14 @@ import './ServicesPage.css';
  */
 export default function ServicesPage() {
   const navigate = useNavigate();
+  const { tabs } = usePageTabs('services');
+  const allowedTabs = useMemo(
+    () => (tabs.length > 0 ? tabs.map((tab) => tab.id) : ['overview']),
+    [tabs],
+  );
 
   const { activeTab, onTabChange } = useUrlSyncedTab({
-    allowedTabs: ['overview', 'topology'] as const,
+    allowedTabs: allowedTabs as readonly string[],
     defaultTab: 'overview',
   });
 
@@ -33,11 +39,8 @@ export default function ServicesPage() {
   const sortField: ServiceSortField | null = null;
   const sortOrder: ServiceSortOrder | null = null;
 
-  const { config: dashboardConfig } = useDashboardConfig('services');
-
   const {
     isLoading,
-    chartDataSources,
     topologyLoading,
     topologyError,
     totalServices,
@@ -80,8 +83,6 @@ export default function ServicesPage() {
                 degradedServices={degradedServices}
                 unhealthyServices={unhealthyServices}
                 isLoading={isLoading}
-                dashboardConfig={dashboardConfig}
-                chartDataSources={chartDataSources}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 viewMode={viewMode}
@@ -111,6 +112,11 @@ export default function ServicesPage() {
                 onNodeClick={onNodeClick}
               />
             ),
+          },
+          {
+            key: 'service-map',
+            label: <span><Share2 size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Service Map</span>,
+            children: <ConfiguredTabPanel pageId="services" tabId="service-map" />,
           },
         ]}
       />

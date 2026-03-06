@@ -23,13 +23,11 @@ import {
   ObservabilityDetailPanel,
   boardHeight,
 } from '@components/common';
-import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
+import ConfiguredTabPanel from '@components/dashboard/ConfiguredTabPanel';
 
 import { v1Service } from '@services/v1Service';
 import type { QueryParams } from '@services/service-types';
 
-import { useDashboardConfig } from '@hooks/useDashboardConfig';
-import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
 import { useURLFilters, type StructuredFilter } from '@hooks/useURLFilters';
 
 import { useAppStore } from '@store/appStore';
@@ -60,24 +58,6 @@ interface TraceFilterField {
   icon: string;
   group: string;
   operators: TraceFilterOperator[];
-}
-
-interface TraceTimeSeriesPoint extends Record<string, unknown> {
-  timestamp: string;
-  request_count: number;
-  error_count: number;
-  avg_latency: number;
-  p50: number;
-  p95: number;
-  p99: number;
-}
-
-interface TraceEndpointMetric extends Record<string, unknown> {
-  service_name: string;
-  operation_name: string;
-  request_count: number;
-  error_count: number;
-  avg_latency: number;
 }
 
 interface TracesSummary extends Record<string, unknown> {
@@ -139,32 +119,6 @@ function normalizeTrace(input: unknown): TraceRecord {
     status: toStringValue(row.status) || 'UNSET',
     http_method: toStringValue(row.http_method ?? row.httpMethod),
     http_status_code: toNumber(row.http_status_code ?? row.httpStatusCode),
-  };
-}
-
-function normalizeTimeSeriesPoint(input: unknown): TraceTimeSeriesPoint {
-  const row = asRecord(input);
-  return {
-    ...row,
-    timestamp: toStringValue(row.timestamp ?? row.time_bucket ?? row.timeBucket),
-    request_count: toNumber(row.request_count ?? row.requestCount),
-    error_count: toNumber(row.error_count ?? row.errorCount),
-    avg_latency: toNumber(row.avg_latency ?? row.avgLatency),
-    p50: toNumber(row.p50 ?? row.p50_latency),
-    p95: toNumber(row.p95 ?? row.p95_latency),
-    p99: toNumber(row.p99 ?? row.p99_latency),
-  };
-}
-
-function normalizeEndpointMetric(input: unknown): TraceEndpointMetric {
-  const row = asRecord(input);
-  return {
-    ...row,
-    service_name: toStringValue(row.service_name ?? row.serviceName),
-    operation_name: toStringValue(row.operation_name ?? row.operationName),
-    request_count: toNumber(row.request_count ?? row.requestCount),
-    error_count: toNumber(row.error_count ?? row.errorCount),
-    avg_latency: toNumber(row.avg_latency ?? row.avgLatency),
   };
 }
 
@@ -265,40 +219,6 @@ const TRACES_URL_FILTER_CONFIG = {
 export default function TracesPage(): JSX.Element {
   const navigate = useNavigate();
   const { selectedTeamId, timeRange, refreshKey } = useAppStore();
-  const { config: dashboardConfig } = useDashboardConfig('traces');
-
-  const { data: metricsTimeseriesRaw } = useTimeRangeQuery(
-    'metrics-timeseries-traces',
-    (teamId, startTime, endTime) =>
-      v1Service.getMetricsTimeSeries(teamId, startTime, endTime, undefined, '5m'),
-  );
-  const { data: endpointTimeseriesRaw } = useTimeRangeQuery(
-    'endpoints-timeseries-traces',
-    (teamId, startTime, endTime) =>
-      v1Service.getEndpointTimeSeries(teamId, startTime, endTime, ''),
-    { extraKeys: [] },
-  );
-  const { data: endpointMetricsRaw } = useTimeRangeQuery(
-    'endpoints-metrics-traces',
-    (teamId, startTime, endTime) =>
-      v1Service.getEndpointMetrics(teamId, startTime, endTime, ''),
-    { extraKeys: [] },
-  );
-
-  const chartDataSources = useMemo(
-    () => ({
-      'metrics-timeseries': (Array.isArray(metricsTimeseriesRaw) ? metricsTimeseriesRaw : []).map(
-        normalizeTimeSeriesPoint,
-      ),
-      'endpoints-timeseries': (
-        Array.isArray(endpointTimeseriesRaw) ? endpointTimeseriesRaw : []
-      ).map(normalizeTimeSeriesPoint),
-      'endpoints-metrics': (Array.isArray(endpointMetricsRaw) ? endpointMetricsRaw : []).map(
-        normalizeEndpointMetric,
-      ),
-    }),
-    [metricsTimeseriesRaw, endpointTimeseriesRaw, endpointMetricsRaw],
-  );
 
   const {
     values: urlValues,
@@ -539,8 +459,6 @@ export default function TracesPage(): JSX.Element {
     : [];
 
   const offset = (page - 1) * pageSize;
-  const hasDashboardConfig = Boolean(dashboardConfig && typeof dashboardConfig === 'object');
-
   return (
     <div className="traces-page">
       <PageHeader title="Traces" icon={<GitBranch size={24} />} />
@@ -580,9 +498,7 @@ export default function TracesPage(): JSX.Element {
         />
       </div>
 
-      {hasDashboardConfig ? (
-        <ConfigurableDashboard config={dashboardConfig} dataSources={chartDataSources} />
-      ) : null}
+      <ConfiguredTabPanel pageId="traces" tabId="default" />
 
       <div className="traces-charts-row">
         <div className="traces-chart-card">

@@ -7,24 +7,30 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   BarChart3,
+  Box,
+  CheckCircle2,
+  Circle,
   Clock,
   Cpu,
   Database,
+  FolderOpen,
   Gauge,
   GitPullRequest,
   HardDrive,
   Layers,
   Network,
   Radio,
+  RefreshCw,
   Server,
   ShieldCheck,
   Target,
   TrendingDown,
+  XCircle,
   Zap,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 import { useMemo } from 'react';
-import { Bar, Line } from 'react-chartjs-2';
+import { Bar, Doughnut, Line } from 'react-chartjs-2';
 
 import LatencyHistogram from '@components/charts/distributions/LatencyHistogram';
 import LogHistogram from '@components/charts/distributions/LogHistogram';
@@ -49,7 +55,8 @@ const ICONS: Record<string, any> = {
   Activity, AlertCircle, Clock, Zap, Network, Layers,
   ArrowUpRight, ArrowDownRight, AlertTriangle, Database,
   HardDrive, Cpu, Radio, Gauge, GitPullRequest, Target,
-  BarChart3, Server, ShieldCheck, TrendingDown,
+  BarChart3, Server, ShieldCheck, TrendingDown, Box,
+  CheckCircle2, Circle, FolderOpen, RefreshCw, XCircle,
 };
 
 /**
@@ -61,6 +68,10 @@ export function getDashboardIcon(name: string, size: number = 16) {
   const IconComponent = ICONS[name];
   if (!IconComponent) return null;
   return <IconComponent size={size} />;
+}
+
+function resolveDataSourceId(chartConfig: DashboardComponentSpec): string {
+  return String(chartConfig.dataSource || chartConfig.id);
 }
 
 function buildAiTimeseries(rows: any[], metricKey: string, groupKey: string = 'model_name', filterValue: string | null = null) {
@@ -109,7 +120,7 @@ export function LogHistogramRenderer({
   dataSources: DashboardDataSources;
   extraContext?: DashboardExtraContext;
 }) {
-  const rawData = dataSources?.[chartConfig.dataSource];
+  const rawData = dataSources?.[resolveDataSourceId(chartConfig)];
   const { startTime, endTime } = extraContext || {};
   const data = useMemo(() => {
     const key = chartConfig.dataKey;
@@ -136,7 +147,7 @@ export function LatencyHistogramRenderer({
   chartConfig: DashboardComponentSpec;
   dataSources: DashboardDataSources;
 }) {
-  const rawData = dataSources?.[chartConfig.dataSource];
+  const rawData = dataSources?.[resolveDataSourceId(chartConfig)];
   const traces = useMemo(() => {
     const arr = Array.isArray(rawData) ? rawData : [];
     if (arr.length > 0 && (arr[0].duration_ms != null || arr[0].durationMs != null)) return arr;
@@ -168,7 +179,7 @@ export function LatencyHeatmapRenderer({
   chartConfig: DashboardComponentSpec;
   dataSources: DashboardDataSources;
 }) {
-  const rawData = dataSources?.[chartConfig.dataSource];
+  const rawData = dataSources?.[resolveDataSourceId(chartConfig)];
   const data = useMemo(() => {
     const key = chartConfig.dataKey;
     const arr = key ? rawData?.[key] : rawData;
@@ -194,7 +205,7 @@ export function AiLineRenderer({
   dataSources: DashboardDataSources;
   extraContext: DashboardExtraContext;
 }) {
-  const rawData = dataSources?.[chartConfig.dataSource];
+  const rawData = dataSources?.[resolveDataSourceId(chartConfig)];
   const rows = useMemo(() => {
     const key = chartConfig.dataKey;
     const arr = key ? rawData?.[key] : rawData;
@@ -249,7 +260,7 @@ export function AiBarRenderer({
   dataSources: DashboardDataSources;
   extraContext: DashboardExtraContext;
 }) {
-  const rawData = dataSources?.[chartConfig.dataSource];
+  const rawData = dataSources?.[resolveDataSourceId(chartConfig)];
   const rows = useMemo(() => {
     const key = chartConfig.dataKey;
     const arr = key ? rawData?.[key] : rawData;
@@ -338,7 +349,7 @@ export function TableRenderer({
   chartConfig: DashboardComponentSpec;
   dataSources: DashboardDataSources;
 }) {
-  const rawData = dataSources?.[chartConfig.dataSource];
+  const rawData = dataSources?.[resolveDataSourceId(chartConfig)];
   const rows = useMemo(() => {
     const key = chartConfig.dataKey;
     const arr = key ? rawData?.[key] : rawData;
@@ -393,6 +404,73 @@ export function BarRenderer({
 }
 
 /**
+ * Pie/doughnut renderer for categorical distributions.
+ */
+export function PieRenderer({
+  chartConfig,
+  dataSources,
+}: {
+  chartConfig: DashboardComponentSpec;
+  dataSources: DashboardDataSources;
+}) {
+  const rawData = dataSources?.[resolveDataSourceId(chartConfig)];
+  const rows = useMemo(() => {
+    const key = chartConfig.dataKey;
+    const arr = key ? rawData?.[key] : rawData;
+    return Array.isArray(arr) ? arr : [];
+  }, [rawData, chartConfig.dataKey]);
+
+  const labelKey = chartConfig.labelKey || chartConfig.groupByKey || 'label';
+  const valueKey = chartConfig.valueKey || 'value';
+
+  const chartData = useMemo(() => {
+    const filtered = rows.filter((row) => row != null);
+    if (filtered.length === 0) {
+      return null;
+    }
+
+    const labels = filtered.map((row, index) => String(row[labelKey] ?? `Item ${index + 1}`));
+    const values = filtered.map((row) => {
+      const value = Number(row[valueKey]);
+      return Number.isFinite(value) ? value : 0;
+    });
+
+    if (!values.some((value) => value > 0)) {
+      return null;
+    }
+
+    return {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: labels.map((_, index) => `${getChartColor(index)}CC`),
+        borderColor: labels.map((_, index) => getChartColor(index)),
+        borderWidth: 1,
+      }],
+    };
+  }, [labelKey, rows, valueKey]);
+
+  const height = Number(chartConfig.height || 260);
+  if (!chartData) {
+    return <Empty description="No data" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: 20 }} />;
+  }
+
+  const options = createChartOptions({
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+          color: APP_COLORS.hex_666,
+          font: { size: 11 },
+        },
+      },
+    },
+  });
+
+  return <div style={{ height }}><Doughnut data={chartData} options={options} /></div>;
+}
+
+/**
  * Area/line chart renderer.
  */
 export function AreaRenderer({
@@ -403,7 +481,7 @@ export function AreaRenderer({
   dataSources: DashboardDataSources;
   extraContext?: DashboardExtraContext;
 }) {
-  const rawData = dataSources?.[chartConfig.dataSource];
+  const rawData = dataSources?.[resolveDataSourceId(chartConfig)];
   const rows = useMemo(() => {
     const key = chartConfig.dataKey;
     const arr = key ? rawData?.[key] : rawData;
@@ -467,7 +545,7 @@ export function GaugeRenderer({
   chartConfig: DashboardComponentSpec;
   dataSources: DashboardDataSources;
 }) {
-  const rawData = dataSources?.[chartConfig.dataSource];
+  const rawData = dataSources?.[resolveDataSourceId(chartConfig)];
   const rows = useMemo(() => Array.isArray(rawData) ? rawData : [], [rawData]);
   const valueKey = chartConfig.valueKey || 'value';
   const groupKey = chartConfig.groupByKey;
@@ -507,7 +585,7 @@ export function ScorecardRenderer({
   chartConfig: DashboardComponentSpec;
   dataSources: DashboardDataSources;
 }) {
-  const rawData = dataSources?.[chartConfig.dataSource];
+  const rawData = dataSources?.[resolveDataSourceId(chartConfig)];
   const rows = useMemo(() => Array.isArray(rawData) ? rawData : [], [rawData]);
 
   if (rows.length === 0) {
@@ -552,7 +630,7 @@ export function HeatmapRenderer({
   chartConfig: DashboardComponentSpec;
   dataSources: DashboardDataSources;
 }) {
-  const rawData = dataSources?.[chartConfig.dataSource];
+  const rawData = dataSources?.[resolveDataSourceId(chartConfig)];
   const rows = useMemo(() => Array.isArray(rawData) ? rawData : [], [rawData]);
 
   if (rows.length === 0) {
@@ -618,7 +696,7 @@ export function ServiceMapRenderer({
   chartConfig: DashboardComponentSpec;
   dataSources: DashboardDataSources;
 }) {
-  const rawData = dataSources?.[chartConfig.dataSource];
+  const rawData = dataSources?.[resolveDataSourceId(chartConfig)];
   const nodes = useMemo(() => (rawData as any)?.nodes ?? [], [rawData]);
   const edges = useMemo(() => (rawData as any)?.edges ?? [], [rawData]);
   const height = Number(chartConfig.height || 560);
@@ -643,7 +721,7 @@ export function TraceWaterfallRenderer({
   chartConfig: DashboardComponentSpec;
   dataSources: DashboardDataSources;
 }) {
-  const rawData = dataSources?.[chartConfig.dataSource];
+  const rawData = dataSources?.[resolveDataSourceId(chartConfig)];
   const spans = useMemo(() => Array.isArray(rawData) ? rawData : [], [rawData]);
   const height = Number(chartConfig.height || 600);
 
