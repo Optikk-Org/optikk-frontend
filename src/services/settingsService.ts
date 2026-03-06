@@ -1,7 +1,7 @@
 /**
  * Settings Service - API calls for user profile and preferences
  */
-import { API_CONFIG } from '@config/constants';
+import { API_CONFIG } from '@config/apiConfig';
 
 import api from './api';
 

@@ -1,6 +1,6 @@
 import type { Team, User } from '@/types';
 
-import { API_CONFIG } from '@config/constants';
+import { API_CONFIG } from '@config/apiConfig';
 
 import api from '@services/api/client';
 

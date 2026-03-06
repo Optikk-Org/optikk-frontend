@@ -1,7 +1,7 @@
 /**
  * Service Map Service - API calls for service topology/dependency data
  */
-import { API_CONFIG } from '@config/constants';
+import { API_CONFIG } from '@config/apiConfig';
 
 import api from './api';
 

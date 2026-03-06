@@ -5,7 +5,7 @@
  * defines which charts to render, their layout, data sources, and display options.
  * Teams can override the built-in defaults via saveDashboardConfig().
  */
-import { API_CONFIG } from '@config/constants';
+import { API_CONFIG } from '@config/apiConfig';
 
 import api from './api';
 

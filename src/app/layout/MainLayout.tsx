@@ -6,7 +6,7 @@ import { useAppStore } from '@store/appStore';
 
 import Header from './Header';
 import Sidebar from './Sidebar';
-import CommandPalette from '../common/overlay/CommandPalette';
+import CommandPalette from '@components/common/overlay/CommandPalette';
 
 import './MainLayout.css';
 

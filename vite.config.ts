@@ -2,6 +2,11 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import {
+  API_PROXY_BASE,
+  DEV_BACKEND_URL,
+  DEV_FRONTEND_PORT,
+} from './src/config/apiConfig'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -23,10 +28,10 @@ export default defineConfig({
     }
   },
   server: {
-    port: 3000,
+    port: DEV_FRONTEND_PORT,
     proxy: {
-      '/api': {
-        target: 'http://localhost:8080',
+      [API_PROXY_BASE]: {
+        target: DEV_BACKEND_URL,
         changeOrigin: true,
         secure: false,
       }
@@ -47,4 +52,3 @@ export default defineConfig({
     }
   }
 })
-

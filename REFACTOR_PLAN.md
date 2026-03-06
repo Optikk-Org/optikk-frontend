@@ -12,9 +12,31 @@
   - `ai`
   - `settings`
 - Feature folders for migrated domains are now bridge-only (`src/features/*/index.ts` re-exporting from `src/domains/*`).
+- Auth page migration completed:
+  - `src/app/auth/pages/LoginPage/*` is now source of truth
+  - `src/features/auth/index.ts` is bridge-only
+- Layout migration completed:
+  - `src/app/layout/{MainLayout,Header,Sidebar}.{tsx,css}` is now source of truth
+  - `appRoutes` uses `app/layout/MainLayout`
+- Store migration completed:
+  - `src/app/store/{appStore,authStore}.ts` is now source of truth
+  - `src/store/{appStore,authStore}.ts` are compatibility bridges
+- No remaining `@features/*` imports in application code.
 - Shared wrappers updated to domain-owned imports:
   - `src/components/ui/ErrorsTabPanel.tsx`
   - `src/components/ui/ResourceUtilizationTabPanel.tsx`
+- Shared feedback migration completed:
+  - `src/shared/components/feedback/*` is now source of truth (`ErrorBoundary`, `EmptyState`, `StatusBadge`, `TrendIndicator`, `Loading`, `Skeleton`)
+  - `src/components/common/feedback/*` are compatibility bridges
+  - `main.tsx` and `appRoutes.tsx` now import `ErrorBoundary` from `src/shared/components/feedback`
+- Shared data-board migration completed:
+  - `src/shared/components/data-board/*` is now source of truth (`DataTable`, `ObservabilityDataBoard`, `Timeline`, `DatabaseTopTablesList`, `QueueMetricsList`, `TopEndpointsList`, with CSS)
+  - `src/components/common/data-display/*` are compatibility bridges (TSX re-exports + CSS `@import` shims)
+  - Shared component barrels now export `data-board` from `src/shared/components/index.ts`
+- API configuration extraction completed:
+  - `src/config/apiConfig.ts` now owns API route constants and API client base config (`API_CONFIG`)
+  - Vite dev server/proxy now reads frontend/backend defaults from shared config constants (`DEV_FRONTEND_PORT`, `DEV_BACKEND_URL`, `API_PROXY_BASE`)
+  - Service layer API_CONFIG imports switched to `@config/apiConfig`
 - Current verification status:
   - `npm run type-check`: passing
   - `npm run build`: passing

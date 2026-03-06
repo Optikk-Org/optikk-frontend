@@ -1,7 +1,7 @@
 /**
  * Metrics Service — API calls for core metrics (services, endpoints, timeseries).
  */
-import { API_CONFIG } from '@config/constants';
+import { API_CONFIG } from '@config/apiConfig';
 
 import api from './api';
 

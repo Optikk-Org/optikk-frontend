@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
-import ErrorBoundary from '@components/common/feedback/ErrorBoundary';
+import { ErrorBoundary } from '@/shared/components/feedback';
 
 import App from './App';
 import AppQueryClientProvider, {

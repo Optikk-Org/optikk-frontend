@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { API_CONFIG } from '@config/constants';
+import { API_CONFIG } from '@config/apiConfig';
 
 import { attachAuthInterceptor } from './interceptors/authInterceptor';
 import { attachErrorInterceptor } from './interceptors/errorInterceptor';

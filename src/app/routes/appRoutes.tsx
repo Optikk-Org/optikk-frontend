@@ -1,15 +1,14 @@
 import { lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
-import ErrorBoundary from '@components/common/feedback/ErrorBoundary';
-import MainLayout from '@components/layout/MainLayout';
-
 import { ROUTES } from '@/shared/constants/routes';
+import { ErrorBoundary } from '@/shared/components/feedback';
 
+import MainLayout from '../layout/MainLayout';
 import { domainRegistry } from '../registry/domainRegistry';
 import ProtectedRoute from './ProtectedRoute';
 
-const LoginPage = lazy(() => import('@features/auth'));
+const LoginPage = lazy(() => import('@/app/auth'));
 
 function toNestedRoutePath(path: string): string {
   if (!path || path === ROUTES.home) {

@@ -1,7 +1,7 @@
 /**
  * Saturation Service — API calls for Kafka, database, and queue saturation monitoring.
  */
-import { API_CONFIG } from '@config/constants';
+import { API_CONFIG } from '@config/apiConfig';
 
 import api from './api';
 

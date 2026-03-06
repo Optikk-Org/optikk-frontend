@@ -1,7 +1,7 @@
 /**
  * AI Observability Service — API calls for AI/ML model monitoring.
  */
-import { API_CONFIG } from '@config/constants';
+import { API_CONFIG } from '@config/apiConfig';
 
 import api from './api';
 

@@ -3,31 +3,7 @@
  * Centralized configuration for the entire React application
  */
 
-export /**
-        *
-        */
-const API_CONFIG = {
-  BASE_URL: '/api',
-  TIMEOUT: 30000,
-  RETRY_ATTEMPTS: 3,
-  ENDPOINTS: {
-    AUTH: {
-      LOGIN: '/auth/login',
-      LOGOUT: '/auth/logout',
-      VALIDATE: '/auth/validate',
-      ME: '/auth/me',
-    },
-    TEAMS: {
-      LIST: '/teams',
-      SWITCH: '/teams/switch',
-    },
-    V1_BASE: '/v1',
-    SETTINGS: {
-      PROFILE: '/settings/profile',
-      PREFERENCES: '/settings/preferences',
-    },
-  },
-};
+export { API_CONFIG } from './apiConfig';
 
 export /**
         *
