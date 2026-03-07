@@ -1,26 +1,21 @@
 import {
-  Check,
-  Clock,
-  Copy,
-  Filter,
-  X,
-} from 'lucide-react';
-import {
   useCallback,
   useMemo,
-  useState,
-  type CSSProperties,
   type ReactNode,
 } from 'react';
 
-import { usePersistedColumns } from '@hooks/usePersistedColumns';
-import { useResizableColumns } from '@hooks/useResizableColumns';
 import {
   BoardActionBar,
   BoardEmptyState,
-  BoardLoadMoreFooter,
   BoardSkeleton,
 } from '@components/ui/data-board';
+
+import { usePersistedColumns } from '@hooks/usePersistedColumns';
+import { useResizableColumns } from '@hooks/useResizableColumns';
+
+import { ObservabilityDetailPanel, type DetailPanelField } from './ObservabilityDetailPanel';
+import { BoardClickableCell, type BoardClickableCellProps } from './BoardClickableCell';
+import { BoardTable } from './BoardTable';
 
 import './ObservabilityDataBoard.css';
 
@@ -29,24 +24,20 @@ const BOARD_CHROME_HEIGHT = 72;
 const DEFAULT_COLUMN_WIDTH = 160;
 const MIN_COLUMN_WIDTH = 60;
 const SKELETON_ROW_COUNT = 10;
-const COPY_CONFIRMATION_DURATION_MS = 1500;
-const EMPTY_VALUE_PLACEHOLDER = '—';
 const SKELETON_BASE_WIDTH_PERCENT = 50;
 const SKELETON_WIDTH_RANGE_PERCENT = 40;
 const SKELETON_FLEX_BASE_WIDTH_PERCENT = 55;
 const SKELETON_FLEX_WIDTH_RANGE_PERCENT = 35;
 
-type BoardFilterValue = string | number | boolean;
+export type BoardFilterValue = string | number | boolean;
 
-type BoardFilterOperator = 'equals';
-
-interface BoardFilter {
+export interface BoardFilter {
   field: string;
   value: BoardFilterValue;
-  operator: BoardFilterOperator;
+  operator: 'equals';
 }
 
-interface BoardColumn {
+export interface BoardColumn {
   key: string;
   label: string;
   defaultWidth?: number;
@@ -55,15 +46,14 @@ interface BoardColumn {
 }
 
 type ColumnWidths = Record<string, number>;
-
 type VisibleColumns = Record<string, boolean>;
 
-interface EmptyTip {
+export interface EmptyTip {
   num?: number;
   text: ReactNode;
 }
 
-interface RenderRowContext {
+export interface RenderRowContext {
   colWidths: ColumnWidths;
   visibleCols: VisibleColumns;
   onAddFilter?: (filter: BoardFilter) => void;
@@ -71,8 +61,6 @@ interface RenderRowContext {
 
 /**
  * Calculates board height for a fixed number of data rows.
- * @param pageSize Number of rows shown in one page.
- * @returns Board height in pixels.
  */
 export function boardHeight(pageSize: number): number {
   return pageSize * BOARD_ROW_HEIGHT + BOARD_CHROME_HEIGHT;
@@ -94,10 +82,6 @@ function createDefaultVisibleColumns(columns: BoardColumn[]): VisibleColumns {
   return visibility;
 }
 
-function isFilterValue(value: unknown): value is BoardFilterValue {
-  return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
-}
-
 function randomSkeletonWidth(basePercent: number, rangePercent: number): string {
   return `${basePercent + Math.random() * rangePercent}%`;
 }
@@ -112,245 +96,64 @@ function downloadFile(content: string, filename: string, type: string): void {
   URL.revokeObjectURL(url);
 }
 
-export interface BoardClickableCellProps {
-  field: string;
-  value?: BoardFilterValue | null;
-  onAddFilter?: (filter: BoardFilter) => void;
-  children: ReactNode;
-  style?: CSSProperties;
-}
-
-/**
- * Clickable cell wrapper that emits an equals filter for the wrapped value.
- * @param props Cell props.
- * @returns Filterable or plain cell wrapper.
- */
-export function BoardClickableCell({
-  field,
-  value,
-  onAddFilter,
-  children,
-  style = {},
-}: BoardClickableCellProps): JSX.Element {
-  if (!onAddFilter || !isFilterValue(value) || value === '' || value === '-') {
-    return <span style={style}>{children}</span>;
-  }
-
-  return (
-    <span
-      className="oboard__clickable-cell"
-      style={style}
-      onClick={(event) => {
-        event.stopPropagation();
-        onAddFilter({ field, value, operator: 'equals' });
-      }}
-      title={`Filter: ${field} = "${String(value)}"`}
-    >
-      {children}
-      <Filter size={10} className="oboard__filter-icon" />
-    </span>
-  );
-}
-
-interface CopyableValueProps {
-  value: unknown;
-}
-
-function CopyableValue({ value }: CopyableValueProps): JSX.Element {
-  const [copied, setCopied] = useState(false);
-
-  if (value === null || value === undefined || value === '') {
-    return <span style={{ color: 'var(--text-muted)' }}>{EMPTY_VALUE_PLACEHOLDER}</span>;
-  }
-
-  const handleCopy = (): void => {
-    if (!navigator.clipboard) return;
-
-    // Clipboard copy is intentionally fire-and-forget for responsive UI.
-    void navigator.clipboard
-      .writeText(String(value))
-      .then(() => {
-        setCopied(true);
-        window.setTimeout(() => {
-          setCopied(false);
-        }, COPY_CONFIRMATION_DURATION_MS);
-      })
-      .catch(() => undefined);
-  };
-
-  return (
-    <div className="oboard__detail-field-value" onClick={handleCopy} title="Click to copy">
-      <span>{String(value)}</span>
-      {copied ? (
-        <Check size={10} style={{ marginLeft: 6, color: 'var(--color-success)' }} />
-      ) : (
-        <Copy size={10} style={{ marginLeft: 6, opacity: 0.35 }} />
-      )}
-    </div>
-  );
-}
-
-/**
- * Field metadata shown in the detail panel.
- */
-export interface DetailPanelField {
-  key: string;
-  label: string;
-  value: unknown;
-  filterable?: boolean;
-}
-
-interface ObservabilityDetailPanelProps {
-  title?: string;
-  titleBadge?: ReactNode;
-  metaLine?: string;
-  metaRight?: string;
-  summary?: string;
-  summaryNode?: ReactNode;
-  fields?: DetailPanelField[];
-  actions?: ReactNode;
-  rawData?: unknown;
-  onClose: () => void;
-  onAddFilter?: (filter: BoardFilter) => void;
-}
-
-/**
- * Side detail panel for an observability row.
- * @param props Detail panel props.
- * @returns Detail panel UI.
- */
-export function ObservabilityDetailPanel({
-  title = 'Detail',
-  titleBadge,
-  metaLine,
-  metaRight,
-  summary,
-  summaryNode,
-  fields = [],
-  actions,
-  rawData,
-  onClose,
-  onAddFilter,
-}: ObservabilityDetailPanelProps): JSX.Element {
-  const [tab, setTab] = useState<'fields' | 'json'>('fields');
-
-  return (
-    <div className="oboard__detail-overlay" onClick={(event) => event.stopPropagation()}>
-      <div className="oboard__detail-header">
-        <div className="oboard__detail-title">
-          {title}
-          {titleBadge}
-        </div>
-        <button className="oboard__detail-close" onClick={onClose}>
-          <X size={18} />
-        </button>
-      </div>
-
-      {metaLine && (
-        <div className="oboard__detail-meta">
-          <Clock size={12} />
-          <span>{metaLine}</span>
-          {metaRight && <span className="oboard__detail-meta-right">{metaRight}</span>}
-        </div>
-      )}
-
-      {(summary || summaryNode) && <div className="oboard__detail-summary">{summaryNode || summary}</div>}
-
-      {actions && <div className="oboard__detail-actions">{actions}</div>}
-
-      <div className="oboard__detail-tabs">
-        {(['fields', 'json'] as const).map((tabKey) => (
-          <button
-            key={tabKey}
-            className={`oboard__detail-tab ${tab === tabKey ? 'oboard__detail-tab--active' : ''}`}
-            onClick={() => setTab(tabKey)}
-          >
-            {tabKey === 'fields' ? 'Fields' : 'JSON'}
-          </button>
-        ))}
-      </div>
-
-      <div className="oboard__detail-body">
-        {tab === 'fields' && (
-          <div className="oboard__detail-fields">
-            {fields.map(({ key, label, value, filterable }) => {
-              const canFilter = Boolean(filterable && onAddFilter && isFilterValue(value));
-
-              return (
-                <div key={key} className="oboard__detail-field">
-                  <div className="oboard__detail-field-label">
-                    {label}
-                    {canFilter && (
-                      <button
-                        className="oboard__detail-filter-btn"
-                        onClick={() => {
-                          if (onAddFilter && isFilterValue(value)) {
-                            onAddFilter({ field: key, value, operator: 'equals' });
-                          }
-                        }}
-                        title={`Filter by ${label} = "${String(value)}"`}
-                      >
-                        <Filter size={10} />
-                      </button>
-                    )}
-                  </div>
-                  <CopyableValue value={value} />
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {tab === 'json' && <pre className="oboard__detail-json">{JSON.stringify(rawData, null, 2)}</pre>}
-      </div>
-    </div>
-  );
-}
-
-interface ObservabilityDataBoardProps<
-  RowType extends Record<string, unknown> = Record<string, unknown>,
-> {
-  columns?: BoardColumn[];
+export interface BoardDataState<RowType> {
   rows?: RowType[];
+  isLoading?: boolean;
+  serverTotal?: number;
+}
+
+export interface BoardPaginationState {
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
+  fetchNextPage?: () => void;
+}
+
+export interface BoardConfig<RowType> {
+  columns?: BoardColumn[];
   rowKey?: (row: RowType, index: number) => string | number;
   renderRow: (row: RowType, context: RenderRowContext) => ReactNode;
   entityName?: string;
   storageKey?: string;
-  isLoading?: boolean;
-  serverTotal?: number;
-  hasNextPage?: boolean;
-  isFetchingNextPage?: boolean;
-  fetchNextPage?: () => void;
-  exportRowsAsCSV?: (rows: RowType[]) => void;
   emptyTips?: EmptyTip[];
+}
+
+export interface BoardActions<RowType> {
+  exportRowsAsCSV?: (rows: RowType[]) => void;
   onAddFilter?: (filter: BoardFilter) => void;
   extraActions?: ReactNode;
 }
 
+export interface ObservabilityDataBoardProps<
+  RowType extends Record<string, unknown> = Record<string, unknown>,
+> {
+  data?: BoardDataState<RowType>;
+  pagination?: BoardPaginationState;
+  config: BoardConfig<RowType>;
+  actions?: BoardActions<RowType>;
+}
+
 /**
  * Generic observability data board with column controls, export, and incremental loading.
- * @param props Board props.
- * @returns Enterprise table UI for logs/traces/services/infrastructure pages.
  */
 export default function ObservabilityDataBoard<
   RowType extends Record<string, unknown> = Record<string, unknown>,
 >({
-  columns = [],
-  rows = [],
-  rowKey = (_row: RowType, index: number) => index,
-  renderRow,
-  entityName = 'item',
-  storageKey,
-  isLoading = false,
-  serverTotal,
-  hasNextPage = false,
-  isFetchingNextPage = false,
-  fetchNextPage,
-  exportRowsAsCSV,
-  emptyTips,
-  onAddFilter,
-  extraActions,
+  data = {},
+  pagination = {},
+  config,
+  actions = {},
 }: ObservabilityDataBoardProps<RowType>): JSX.Element {
+  const { rows = [], isLoading = false, serverTotal } = data;
+  const {
+    columns = [],
+    rowKey = (_row: RowType, index: number) => index,
+    renderRow,
+    entityName = 'item',
+    storageKey,
+    emptyTips,
+  } = config;
+  const { exportRowsAsCSV, onAddFilter, extraActions } = actions;
+  
   const defaultWidths = useMemo(() => createDefaultWidths(columns), [columns]);
   const {
     columnWidths: colWidths,
@@ -455,35 +258,23 @@ export default function ObservabilityDataBoard<
         ) : rows.length === 0 ? (
           <BoardEmptyState entityName={entityName} tips={tips} />
         ) : (
-          <div className="oboard__tbody">
-            <div className="oboard__thead">
-              {fixedColumns.map((column) => (
-                <div key={column.key} className="oboard__th" style={{ width: colWidths[column.key] }}>
-                  {column.label}
-                  <div
-                    className="oboard__resizer"
-                    onMouseDown={(event) => handleResizeMouseDown(event, column.key)}
-                  />
-                </div>
-              ))}
-              {flexColumn && <div className="oboard__th oboard__th--flex">{flexColumn.label}</div>}
-            </div>
-
-            {rows.map((row, index) => (
-              <div key={rowKey(row, index)} className="oboard__row">
-                {renderRow(row, { colWidths, visibleCols, onAddFilter })}
-              </div>
-            ))}
-
-            <BoardLoadMoreFooter
-              entityName={entityName}
-              hasNextPage={hasNextPage}
-              isFetchingNextPage={isFetchingNextPage}
-              onFetchNextPage={fetchNextPage}
-            />
-          </div>
+          <BoardTable
+            rows={rows}
+            fixedColumns={fixedColumns}
+            flexColumn={flexColumn}
+            colWidths={colWidths}
+            rowKey={rowKey}
+            renderRow={renderRow}
+            visibleCols={visibleCols}
+            onAddFilter={onAddFilter}
+            handleResizeMouseDown={handleResizeMouseDown}
+            entityName={entityName}
+            pagination={pagination}
+          />
         )}
       </div>
     </div>
   );
 }
+
+export { ObservabilityDetailPanel, type DetailPanelField, BoardClickableCell, type BoardClickableCellProps };

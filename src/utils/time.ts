@@ -41,4 +41,3 @@ export function relativeTime(value: unknown): string {
   const diffDays = Math.floor(diffHours / 24);
   return `${diffDays}d ago`;
 }
-

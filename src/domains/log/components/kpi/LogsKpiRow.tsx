@@ -1,9 +1,10 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { AlertCircle, Server } from 'lucide-react';
 
-import KpiCard from '../log/KpiCard';
-
 import { formatNumber } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
+
+import KpiCard from '../log/KpiCard';
 
 interface LogsKpiRowProps {
   errorCount: number;

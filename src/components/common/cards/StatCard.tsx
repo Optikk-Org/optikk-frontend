@@ -1,61 +1,49 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Card, Skeleton } from 'antd';
 import React from 'react';
-
 import { TrendIndicator } from '@components/common';
-
+import { APP_COLORS } from '@config/colorLiterals';
 import SparklineChart from '../../charts/micro/SparklineChart';
 import './StatCard.css';
 
-/**
- * Reusable metric card for displaying a single statistic with trend.
- * Used in OverviewPage, ServiceDetailPage, InfrastructurePage, etc.
- */
-interface StatCardProps {
+export interface StatCardMetric {
   title: string;
-  value: any;
-  formatter?: (val: any) => string | number;
-  trend?: number | null;
-  trendInverted?: boolean;
-  icon?: React.ReactNode;
-  iconColor?: string;
-  loading?: boolean;
+  value: string | number;
+  formatter?: (val: string | number) => string | number;
   suffix?: string;
   description?: string;
+}
+
+export interface StatCardTrend {
+  value?: number | null;
+  inverted?: boolean;
+}
+
+export interface StatCardVisuals {
+  icon?: React.ReactNode;
+  iconColor?: string;
   sparklineData?: number[];
   sparklineColor?: string;
+  loading?: boolean;
+}
+
+export interface StatCardProps {
+  metric: StatCardMetric;
+  trend?: StatCardTrend;
+  visuals?: StatCardVisuals;
 }
 
 /**
- *
- * @param root0
- * @param root0.title
- * @param root0.value
- * @param root0.formatter
- * @param root0.trend
- * @param root0.trendInverted
- * @param root0.icon
- * @param root0.iconColor
- * @param root0.loading
- * @param root0.suffix
- * @param root0.description
- * @param root0.sparklineData
- * @param root0.sparklineColor
+ * Reusable metric card for displaying a single statistic with trend.
  */
-export default function StatCard({
-  title,
-  value,
-  formatter,
-  trend,
-  trendInverted = false,
-  icon,
-  iconColor,
-  loading = false,
-  suffix,
-  description,
-  sparklineData,
-  sparklineColor,
+const StatCard = React.memo(function StatCard({
+  metric,
+  trend = {},
+  visuals = {},
 }: StatCardProps) {
+  const { title, value, formatter, suffix, description } = metric;
+  const { value: trendValue, inverted: trendInverted = false } = trend;
+  const { icon, iconColor, sparklineData, sparklineColor, loading = false } = visuals;
+
   const displayValue = formatter ? formatter(value) : value;
 
   return (
@@ -91,11 +79,13 @@ export default function StatCard({
               />
             </div>
           )}
-          {trend != null && (
-            <TrendIndicator value={trend} inverted={trendInverted} />
+          {trendValue != null && (
+            <TrendIndicator value={trendValue} inverted={trendInverted} />
           )}
         </>
       )}
     </Card>
   );
-}
+});
+
+export default StatCard;

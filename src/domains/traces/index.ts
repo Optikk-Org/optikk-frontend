@@ -1,5 +1,5 @@
-import { lazy } from 'react';
 import { GitBranch } from 'lucide-react';
+import { lazy } from 'react';
 
 import type { DomainConfig } from '@/app/registry/domainRegistry';
 import { ROUTES } from '@/shared/constants/routes';
@@ -11,7 +11,10 @@ const TraceDetailPage = lazy(() =>
   import('./pages/TraceDetailPage').then((module) => ({ default: module.default })),
 );
 
-export const tracesConfig: DomainConfig = {
+export /**
+ *
+ */
+const tracesConfig: DomainConfig = {
   key: 'traces',
   label: 'Traces',
   permissions: ['traces:read'],

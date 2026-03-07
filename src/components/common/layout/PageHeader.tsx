@@ -1,7 +1,8 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Breadcrumb, Badge } from 'antd';
 import React, { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+import { APP_COLORS } from '@config/colorLiterals';
 import './PageHeader.css';
 
 interface BreadcrumbItem {
@@ -12,7 +13,7 @@ interface BreadcrumbItem {
 interface PageHeaderProps {
   title: ReactNode;
   subtitle?: ReactNode;
-  icon?: any;
+  icon?: ReactNode | React.ElementType;
   actions?: ReactNode;
   badge?: number;
   breadcrumbs?: BreadcrumbItem[];
@@ -45,7 +46,13 @@ export default function PageHeader({
           className="page-header-breadcrumbs"
           items={breadcrumbs.map((crumb) => ({
             title: crumb.path ? (
-              <a onClick={() => navigate(crumb.path || '')}>{crumb.label}</a>
+              <button
+                type="button"
+                className="page-header-breadcrumb-btn"
+                onClick={() => navigate(crumb.path || '')}
+              >
+                {crumb.label}
+              </button>
             ) : (
               crumb.label
             ),
@@ -54,7 +61,13 @@ export default function PageHeader({
       )}
       <div className="page-header-row">
         <div className="page-header-title-group">
-          {icon && <span className="page-header-icon">{React.isValidElement(icon) ? icon : React.createElement(icon, { size: 24 })}</span>}
+          {icon && (
+            <span className="page-header-icon">
+              {React.isValidElement(icon)
+                ? icon
+                : React.createElement(icon as React.ElementType, { size: 24 })}
+            </span>
+          )}
           <h1 className="page-header-title">{title}</h1>
           {badge != null && badge > 0 && (
             <Badge count={badge} style={{ backgroundColor: APP_COLORS.hex_f04438, marginLeft: 12 }} />

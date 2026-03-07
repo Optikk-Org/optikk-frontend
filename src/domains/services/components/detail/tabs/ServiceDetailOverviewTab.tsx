@@ -1,11 +1,13 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Card, Col, Row } from 'antd';
+
+import type { DashboardRenderConfig } from '@/types/dashboardConfig';
 
 import DataTable from '@components/common/data-display/DataTable';
 import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
-import type { DashboardRenderConfig } from '@/types/dashboardConfig';
 
 import { formatDuration } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 interface ServiceDetailOverviewTabProps {
   config: DashboardRenderConfig | null;
@@ -83,10 +85,12 @@ export default function ServiceDetailOverviewTab({
 
       <Card title="Endpoints Breakdown" className="chart-card" size="small">
         <DataTable
-          columns={endpointColumns}
-          data={endpoints}
-          loading={endpointsLoading}
-          rowKey={(record: any) => `${record.operation_name}-${record.http_method}`}
+          data={{
+            columns: endpointColumns,
+            rows: endpoints,
+            loading: endpointsLoading,
+            rowKey: (record: any) => `${record.operation_name}-${record.http_method}`,
+          }}
         />
       </Card>
     </>

@@ -113,10 +113,30 @@ export default function ResourceUtilizationPage() {
       <PageHeader title="Resource Utilization" icon={<Cpu size={24} />} subtitle="CPU, memory, disk, network and connection pool utilization by service/instance" />
 
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} sm={12} lg={6}><StatCard title="Avg CPU" value={`${stats.cpu.toFixed(1)}%`} icon={<Cpu size={18} />} loading={isLoading} /></Col>
-        <Col xs={24} sm={12} lg={6}><StatCard title="Avg Memory" value={`${stats.memory.toFixed(1)}%`} icon={<HardDrive size={18} />} loading={isLoading} /></Col>
-        <Col xs={24} sm={12} lg={6}><StatCard title="Avg Network" value={`${stats.network.toFixed(1)}%`} icon={<Network size={18} />} loading={isLoading} /></Col>
-        <Col xs={24} sm={12} lg={6}><StatCard title="Avg Conn Pool" value={`${stats.connPool.toFixed(1)}%`} icon={<Database size={18} />} loading={isLoading} /></Col>
+        <Col xs={24} sm={12} lg={6}>
+          <StatCard 
+            metric={{ title: 'Avg CPU', value: `${stats.cpu.toFixed(1)}%` }} 
+            visuals={{ icon: <Cpu size={18} />, loading: isLoading }} 
+          />
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <StatCard 
+            metric={{ title: 'Avg Memory', value: `${stats.memory.toFixed(1)}%` }} 
+            visuals={{ icon: <HardDrive size={18} />, loading: isLoading }} 
+          />
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <StatCard 
+            metric={{ title: 'Avg Network', value: `${stats.network.toFixed(1)}%` }} 
+            visuals={{ icon: <Network size={18} />, loading: isLoading }} 
+          />
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <StatCard 
+            metric={{ title: 'Avg Conn Pool', value: `${stats.connPool.toFixed(1)}%` }} 
+            visuals={{ icon: <Database size={18} />, loading: isLoading }} 
+          />
+        </Col>
       </Row>
 
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
@@ -132,11 +152,25 @@ export default function ResourceUtilizationPage() {
       </Row>
 
       <Card title="By Service" style={{ marginBottom: 16 }}>
-        <DataTable columns={serviceCols} data={byService.map((r: any, i: number) => ({ ...r, key: `svc-${i}` }))} loading={isLoading} rowKey="key" />
+        <DataTable 
+          data={{ 
+            columns: serviceCols, 
+            rows: byService.map((r: any, i: number) => ({ ...r, key: `svc-${i}` })), 
+            loading: isLoading, 
+            rowKey: "key" 
+          }} 
+        />
       </Card>
 
       <Card title="By Instance">
-        <DataTable columns={instanceCols} data={byInstance.map((r: any, i: number) => ({ ...r, key: `ins-${i}` }))} loading={isLoading} rowKey="key" />
+        <DataTable 
+          data={{ 
+            columns: instanceCols, 
+            rows: byInstance.map((r: any, i: number) => ({ ...r, key: `ins-${i}` })), 
+            loading: isLoading, 
+            rowKey: "key" 
+          }} 
+        />
       </Card>
     </div>
   );

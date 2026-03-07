@@ -3,6 +3,9 @@ import { Layers, Network, Share2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { HealthSnapshotStrip, ServiceFlyInPanel } from '@/components/ui/calm';
+import { useServiceHealthSummary } from '@/domains/overview/hooks/useServiceHealthSummary';
+
 import { PageHeader } from '@components/common';
 import ConfiguredTabPanel from '@components/dashboard/ConfiguredTabPanel';
 
@@ -36,6 +39,9 @@ export default function ServicesPage() {
   const [viewMode, setViewMode] = useState<ServiceViewMode>('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [healthFilter, setHealthFilter] = useState('all');
+  const [flyInService, setFlyInService] = useState<string | null>(null);
+
+  const { data: healthSummary = [], isLoading: healthLoading } = useServiceHealthSummary();
   const sortField: ServiceSortField | null = null;
   const sortOrder: ServiceSortOrder | null = null;
 
@@ -66,6 +72,12 @@ export default function ServicesPage() {
         title="Services"
         subtitle="Global service health and dependency topology"
         icon={<Layers size={24} />}
+      />
+
+      <HealthSnapshotStrip
+        services={healthSummary}
+        onServiceClick={(name) => setFlyInService(name)}
+        loading={healthLoading}
       />
 
       <Tabs
@@ -119,6 +131,11 @@ export default function ServicesPage() {
             children: <ConfiguredTabPanel pageId="services" tabId="service-map" />,
           },
         ]}
+      />
+      <ServiceFlyInPanel
+        serviceName={flyInService}
+        open={flyInService !== null}
+        onClose={() => setFlyInService(null)}
       />
     </div>
   );

@@ -33,7 +33,10 @@ function str(record: DomainRecord, ...keys: string[]): string {
   return '';
 }
 
-export const normalizeMetricSummary = (summary: unknown = {}): MetricSummary => {
+export /**
+ *
+ */
+const normalizeMetricSummary = (summary: unknown = {}): MetricSummary => {
   const row = asRecord(summary);
   return {
     ...row,
@@ -46,7 +49,10 @@ export const normalizeMetricSummary = (summary: unknown = {}): MetricSummary => 
   };
 };
 
-export const normalizeTimeSeriesPoint = (point: unknown = {}): MetricTimeSeriesPoint => {
+export /**
+ *
+ */
+const normalizeTimeSeriesPoint = (point: unknown = {}): MetricTimeSeriesPoint => {
   const row = asRecord(point);
   return {
     ...row,
@@ -60,7 +66,10 @@ export const normalizeTimeSeriesPoint = (point: unknown = {}): MetricTimeSeriesP
   };
 };
 
-export const normalizeServiceMetric = (metric: unknown = {}): ServiceMetricPoint => {
+export /**
+ *
+ */
+const normalizeServiceMetric = (metric: unknown = {}): ServiceMetricPoint => {
   const row = asRecord(metric);
   return {
     ...row,
@@ -74,7 +83,10 @@ export const normalizeServiceMetric = (metric: unknown = {}): ServiceMetricPoint
   };
 };
 
-export const normalizeEndpointMetric = (metric: unknown = {}): EndpointMetricPoint => {
+export /**
+ *
+ */
+const normalizeEndpointMetric = (metric: unknown = {}): EndpointMetricPoint => {
   const row = asRecord(metric);
   return {
     ...row,

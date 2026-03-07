@@ -1,8 +1,14 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Row, Col, Card, Skeleton, Empty, Progress } from 'antd';
 import { Activity, AlertCircle, Clock, Zap, Server } from 'lucide-react';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+import {
+  normalizeMetricSummary,
+  normalizeTimeSeriesPoint,
+  normalizeServiceMetric,
+  normalizeEndpointMetric,
+} from '@/domains/metrics/utils/metricNormalizers';
 
 import { PageHeader, StatCardsGrid, HealthIndicator } from '@components/common';
 import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
@@ -14,12 +20,7 @@ import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
 
 import { formatNumber, formatDuration } from '@utils/formatters';
 
-import {
-  normalizeMetricSummary,
-  normalizeTimeSeriesPoint,
-  normalizeServiceMetric,
-  normalizeEndpointMetric,
-} from '@/domains/metrics/utils/metricNormalizers';
+import { APP_COLORS } from '@config/colorLiterals';
 import './OverviewPage.css';
 
 /**
@@ -164,50 +165,62 @@ export default function OverviewPage() {
         className="overview-stats-grid"
         stats={[
           {
-            title: 'Total Requests',
-            value: (summary).total_requests || 0,
-            formatter: formatNumber,
-            trend: 0,
-            trendInverted: false,
-            icon: <Activity size={20} />,
-            iconColor: APP_COLORS.hex_5e60ce,
-            loading: summaryLoading,
-            sparklineData: requestsSparkline,
-            sparklineColor: APP_COLORS.hex_5e60ce,
+            metric: {
+              title: 'Total Requests',
+              value: (summary).total_requests || 0,
+              formatter: formatNumber,
+            },
+            trend: { value: 0 },
+            visuals: {
+              icon: <Activity size={20} />,
+              iconColor: APP_COLORS.hex_5e60ce,
+              loading: summaryLoading,
+              sparklineData: requestsSparkline,
+              sparklineColor: APP_COLORS.hex_5e60ce,
+            },
           },
           {
-            title: 'Error Rate',
-            value: Number(Math.max(0, (summary).error_rate || 0).toFixed(2)),
-            trend: 0,
-            trendInverted: true,
-            icon: <AlertCircle size={20} />,
-            iconColor: APP_COLORS.hex_f04438,
-            loading: summaryLoading,
-            suffix: '%',
-            sparklineData: errorsSparkline,
-            sparklineColor: APP_COLORS.hex_f04438,
+            metric: {
+              title: 'Error Rate',
+              value: Number(Math.max(0, (summary).error_rate || 0).toFixed(2)),
+              suffix: '%',
+            },
+            trend: { value: 0, inverted: true },
+            visuals: {
+              icon: <AlertCircle size={20} />,
+              iconColor: APP_COLORS.hex_f04438,
+              loading: summaryLoading,
+              sparklineData: errorsSparkline,
+              sparklineColor: APP_COLORS.hex_f04438,
+            },
           },
           {
-            title: 'Avg Latency',
-            value: (summary).avg_latency || 0,
-            formatter: formatDuration,
-            trend: 0,
-            trendInverted: true,
-            icon: <Clock size={20} />,
-            iconColor: APP_COLORS.hex_f79009,
-            loading: summaryLoading,
-            sparklineData: latencySparkline,
-            sparklineColor: APP_COLORS.hex_f79009,
+            metric: {
+              title: 'Avg Latency',
+              value: (summary).avg_latency || 0,
+              formatter: formatDuration,
+            },
+            trend: { value: 0, inverted: true },
+            visuals: {
+              icon: <Clock size={20} />,
+              iconColor: APP_COLORS.hex_f79009,
+              loading: summaryLoading,
+              sparklineData: latencySparkline,
+              sparklineColor: APP_COLORS.hex_f79009,
+            },
           },
           {
-            title: 'P95 Latency',
-            value: (summary).p95_latency || 0,
-            formatter: formatDuration,
-            trend: 0,
-            trendInverted: true,
-            icon: <Zap size={20} />,
-            iconColor: APP_COLORS.hex_06aed5,
-            loading: summaryLoading,
+            metric: {
+              title: 'P95 Latency',
+              value: (summary).p95_latency || 0,
+              formatter: formatDuration,
+            },
+            trend: { value: 0, inverted: true },
+            visuals: {
+              icon: <Zap size={20} />,
+              iconColor: APP_COLORS.hex_06aed5,
+              loading: summaryLoading,
+            },
           },
         ]}
       />

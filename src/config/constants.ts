@@ -10,15 +10,15 @@ export /**
         */
 const UI_CONFIG = {
   THEME: {
-    PRIMARY_COLOR: '#5E60CE',
-    SUCCESS_COLOR: '#73C991',
-    WARNING_COLOR: '#F79009',
-    ERROR_COLOR: '#F04438',
-    INFO_COLOR: '#06AED5',
+    PRIMARY_COLOR: '#7C7FF2',
+    SUCCESS_COLOR: '#52876B',
+    WARNING_COLOR: '#D97706',
+    ERROR_COLOR: '#DC2626',
+    INFO_COLOR: '#4DA6C8',
   },
-  SIDEBAR_WIDTH: 240,
-  SIDEBAR_COLLAPSED_WIDTH: 64,
-  HEADER_HEIGHT: 64,
+  SIDEBAR_WIDTH: 220,
+  SIDEBAR_COLLAPSED_WIDTH: 56,
+  HEADER_HEIGHT: 56,
   PAGE_SIZES: [10, 20, 50, 100],
   DEFAULT_PAGE_SIZE: 20,
 };
@@ -43,49 +43,49 @@ export /**
         *
         */
 const STATUS_COLORS = {
-  OK: '#73C991',
-  ERROR: '#F04438',
-  WARNING: '#F79009',
-  INFO: '#06AED5',
-  UNKNOWN: '#98A2B3',
+  OK: '#52876B',
+  ERROR: '#DC2626',
+  WARNING: '#D97706',
+  INFO: '#4DA6C8',
+  UNKNOWN: '#6B7280',
 };
 
 export /**
         *
         */
 const LOG_LEVELS = {
-  TRACE: { label: 'Trace', color: '#98A2B3' },
-  DEBUG: { label: 'Debug', color: '#06AED5' },
-  INFO: { label: 'Info', color: '#73C991' },
-  WARN: { label: 'Warn', color: '#F79009' },
-  ERROR: { label: 'Error', color: '#F04438' },
-  FATAL: { label: 'Fatal', color: '#D92D20' },
+  TRACE: { label: 'Trace', color: '#6B7280' },
+  DEBUG: { label: 'Debug', color: '#4DA6C8' },
+  INFO: { label: 'Info', color: '#52876B' },
+  WARN: { label: 'Warn', color: '#D97706' },
+  ERROR: { label: 'Error', color: '#DC2626' },
+  FATAL: { label: 'Fatal', color: '#991B1B' },
 };
 
 export /**
         *
         */
 const CHART_COLORS = [
-  '#5E60CE',
-  '#73C991',
-  '#F79009',
-  '#06AED5',
-  '#9E77ED',
-  '#F04438',
-  '#36BFFA',
-  '#FDB022',
-  '#F670C7',
-  '#16B364',
+  '#648FFF',
+  '#785EF0',
+  '#DC267F',
+  '#FE6100',
+  '#FFB000',
+  '#009E73',
+  '#56B4E9',
+  '#CC79A7',
+  '#7C7FF2',
+  '#52876B',
 ];
 
 export /**
         *
         */
 const SERVICE_HEALTH = {
-  healthy: { label: 'Healthy', color: '#73C991' },
-  degraded: { label: 'Degraded', color: '#F79009' },
-  unhealthy: { label: 'Unhealthy', color: '#F04438' },
-  unknown: { label: 'Unknown', color: '#98A2B3' },
+  healthy: { label: 'Healthy', color: '#52876B' },
+  degraded: { label: 'Degraded', color: '#D97706' },
+  unhealthy: { label: 'Unhealthy', color: '#DC2626' },
+  unknown: { label: 'Unknown', color: '#6B7280' },
 };
 
 export /**
@@ -101,9 +101,9 @@ export /**
         *
         */
 const TRACE_STATUSES = [
-  { label: 'OK', value: 'OK', color: '#73C991' },
-  { label: 'Error', value: 'ERROR', color: '#F04438' },
-  { label: 'Unset', value: 'UNSET', color: '#98A2B3' },
+  { label: 'OK', value: 'OK', color: '#52876B' },
+  { label: 'Error', value: 'ERROR', color: '#DC2626' },
+  { label: 'Unset', value: 'UNSET', color: '#6B7280' },
 ];
 
 export /**

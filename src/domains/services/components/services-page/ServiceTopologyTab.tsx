@@ -1,4 +1,3 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Card, Col, Empty, Row, Skeleton, Tag } from 'antd';
 import { ArrowRight, GitBranch, Network, ShieldAlert } from 'lucide-react';
 
@@ -7,6 +6,8 @@ import { FilterBar, HealthIndicator, StatCardsGrid } from '@components/common';
 import ObservabilityDataBoard, { boardHeight } from '@components/common/data-display/ObservabilityDataBoard';
 
 import { formatNumber, formatDuration } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 import type {
   ServiceDependencyRow,
@@ -78,10 +79,22 @@ export function ServiceTopologyTab({
       <StatCardsGrid
         style={{ marginBottom: 16 }}
         stats={[
-          { title: 'Services in Graph', value: formatNumber(topologyStats.graphServices), icon: <Network size={20} />, iconColor: APP_COLORS.hex_5e60ce, loading: topologyLoading },
-          { title: 'Dependencies', value: formatNumber(topologyStats.dependencies), icon: <GitBranch size={20} />, iconColor: APP_COLORS.hex_06aed5, loading: topologyLoading },
-          { title: 'Critical Services', value: formatNumber(topologyStats.criticalServices), icon: <ShieldAlert size={20} />, iconColor: APP_COLORS.hex_f79009, loading: topologyLoading },
-          { title: 'High-Risk Edges', value: formatNumber(topologyStats.highRiskEdges), icon: <ArrowRight size={20} />, iconColor: APP_COLORS.hex_f04438, loading: topologyLoading },
+          {
+            metric: { title: 'Services in Graph', value: formatNumber(topologyStats.graphServices) },
+            visuals: { icon: <Network size={20} />, iconColor: APP_COLORS.hex_5e60ce, loading: topologyLoading },
+          },
+          {
+            metric: { title: 'Dependencies', value: formatNumber(topologyStats.dependencies) },
+            visuals: { icon: <GitBranch size={20} />, iconColor: APP_COLORS.hex_06aed5, loading: topologyLoading },
+          },
+          {
+            metric: { title: 'Critical Services', value: formatNumber(topologyStats.criticalServices) },
+            visuals: { icon: <ShieldAlert size={20} />, iconColor: APP_COLORS.hex_f79009, loading: topologyLoading },
+          },
+          {
+            metric: { title: 'High-Risk Edges', value: formatNumber(topologyStats.highRiskEdges) },
+            visuals: { icon: <ArrowRight size={20} />, iconColor: APP_COLORS.hex_f04438, loading: topologyLoading },
+          },
         ]}
       />
 
@@ -182,48 +195,49 @@ export function ServiceTopologyTab({
       >
         <div style={{ height: boardHeight(15) }}>
           <ObservabilityDataBoard<ServiceDependencyRow>
-            columns={DEP_COLUMNS}
-            rows={dependencyRows}
-            rowKey={(row) => row.key}
-            entityName="dependency"
-            storageKey="services-deps-board-cols"
-            isLoading={topologyLoading}
-            renderRow={(row, { colWidths, visibleCols }) => (
-              <>
-                {visibleCols.source && (
-                  <div style={{ width: colWidths.source, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <HealthIndicator status={row.sourceStatus} size={7} />
-                    <a onClick={() => onNodeClick(row.source)} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.source}</a>
-                  </div>
-                )}
-                {visibleCols.target && (
-                  <div style={{ width: colWidths.target, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <HealthIndicator status={row.targetStatus} size={7} />
-                    <a onClick={() => onNodeClick(row.target)} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.target}</a>
-                  </div>
-                )}
-                {visibleCols.callCount && (
-                  <div style={{ width: colWidths.callCount, flexShrink: 0 }}>{formatNumber(row.callCount)}</div>
-                )}
-                {visibleCols.avgLatency && (
-                  <div style={{ width: colWidths.avgLatency, flexShrink: 0 }}>{formatDuration(row.avgLatency)}</div>
-                )}
-                {visibleCols.errorRate && (
-                  <div style={{ width: colWidths.errorRate, flexShrink: 0, color: row.errorRate > 5 ? APP_COLORS.hex_f04438 : row.errorRate > 1 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991, fontWeight: 600 }}>
-                    {row.errorRate.toFixed(2)}%
-                  </div>
-                )}
-                {visibleCols.risk && (
-                  <div style={{ flex: 1, color: row.risk > 70 ? APP_COLORS.hex_f04438 : row.risk > 45 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991, fontWeight: 600 }}>
-                    {row.risk}
-                  </div>
-                )}
-              </>
-            )}
-            emptyTips={[
-              { num: 1, text: <>No service dependencies detected yet</> },
-              { num: 2, text: <>Ensure services are making <strong>outbound calls</strong> to each other</> },
-            ]}
+            data={{ rows: dependencyRows, isLoading: topologyLoading }}
+            config={{
+              columns: DEP_COLUMNS,
+              rowKey: (row) => row.key,
+              entityName: 'dependency',
+              storageKey: 'services-deps-board-cols',
+              renderRow: (row, { colWidths, visibleCols }) => (
+                <>
+                  {visibleCols.source && (
+                    <div style={{ width: colWidths.source, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <HealthIndicator status={row.sourceStatus} size={7} />
+                      <a onClick={() => onNodeClick(row.source)} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.source}</a>
+                    </div>
+                  )}
+                  {visibleCols.target && (
+                    <div style={{ width: colWidths.target, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <HealthIndicator status={row.targetStatus} size={7} />
+                      <a onClick={() => onNodeClick(row.target)} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.target}</a>
+                    </div>
+                  )}
+                  {visibleCols.callCount && (
+                    <div style={{ width: colWidths.callCount, flexShrink: 0 }}>{formatNumber(row.callCount)}</div>
+                  )}
+                  {visibleCols.avgLatency && (
+                    <div style={{ width: colWidths.avgLatency, flexShrink: 0 }}>{formatDuration(row.avgLatency)}</div>
+                  )}
+                  {visibleCols.errorRate && (
+                    <div style={{ width: colWidths.errorRate, flexShrink: 0, color: row.errorRate > 5 ? APP_COLORS.hex_f04438 : row.errorRate > 1 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991, fontWeight: 600 }}>
+                      {row.errorRate.toFixed(2)}%
+                    </div>
+                  )}
+                  {visibleCols.risk && (
+                    <div style={{ flex: 1, color: row.risk > 70 ? APP_COLORS.hex_f04438 : row.risk > 45 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991, fontWeight: 600 }}>
+                      {row.risk}
+                    </div>
+                  )}
+                </>
+              ),
+              emptyTips: [
+                { num: 1, text: <>No service dependencies detected yet</> },
+                { num: 2, text: <>Ensure services are making <strong>outbound calls</strong> to each other</> },
+              ]
+            }}
           />
         </div>
       </Card>

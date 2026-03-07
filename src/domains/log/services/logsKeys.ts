@@ -1,4 +1,7 @@
-export const logsKeys = {
+export /**
+ *
+ */
+const logsKeys = {
   all: ['logs'] as const,
   list: (teamId: number | null, range: string, queryHash: string) =>
     ['logs', 'list', teamId, range, queryHash] as const,

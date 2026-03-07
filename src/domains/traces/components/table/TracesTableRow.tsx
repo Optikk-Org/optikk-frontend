@@ -1,12 +1,15 @@
-import { APP_COLORS } from '@config/colorLiterals';
+import React from 'react';
 import { ArrowUpRight } from 'lucide-react';
-import type { ReactNode } from 'react';
 
 import { formatDuration, formatTimestamp } from '@utils/formatters';
 
-import type { TraceColumn, TraceRecord } from '../../types';
+import { APP_COLORS } from '@config/colorLiterals';
+
 import TraceMethodBadge from './TraceMethodBadge';
 import TraceStatusBadge from './TraceStatusBadge';
+
+import type { TraceColumn, TraceRecord } from '../../types';
+import type { ReactNode } from 'react';
 
 interface TracesTableRowProps {
   trace: TraceRecord;
@@ -21,7 +24,7 @@ interface TracesTableRowProps {
 /**
  * Row renderer for traces in ObservabilityDataBoard.
  */
-export default function TracesTableRow({
+export const TracesTableRow = React.memo(function TracesTableRow({
   trace,
   colWidths,
   visibleCols,
@@ -104,14 +107,17 @@ export default function TracesTableRow({
             <span className="traces-operation-name" title={trace.operation_name}>
               {trace.operation_name || '—'}
             </span>
-            {(trace.http_method || trace.http_status_code > 0) && (
+            {(trace.http_method || (trace.http_status_code && trace.http_status_code > 0)) && (
               <div className="traces-http-meta">
-                <TraceMethodBadge method={trace.http_method} />
-                {trace.http_status_code > 0 && (
+                <TraceMethodBadge method={trace.http_method as any} />
+                {trace.http_status_code && trace.http_status_code > 0 && (
                   <span className="traces-http-code">HTTP {trace.http_status_code}</span>
                 )}
               </div>
             )}
+            <span className="trace-row-duration">
+              {formatDuration(trace.duration_ms)}
+            </span>
           </div>
         );
       default:
@@ -138,5 +144,6 @@ export default function TracesTableRow({
       )}
     </>
   );
-}
+});
 
+export default TracesTableRow;

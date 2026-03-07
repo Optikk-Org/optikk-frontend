@@ -1,8 +1,10 @@
-import { APP_COLORS } from '@config/colorLiterals';
-import type { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 
 import { createChartOptions } from '@utils/chartHelpers';
+
+import { APP_COLORS } from '@config/colorLiterals';
+
+import type { TooltipItem } from 'chart.js';
 
 const BUCKETS = [
   { label: '0-50ms', max: 50, color: APP_COLORS.hex_73c991 },

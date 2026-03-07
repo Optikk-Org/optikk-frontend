@@ -5,8 +5,9 @@ import { useMemo, useState } from 'react';
 import PageHeader from '@components/common/layout/PageHeader';
 import ConfiguredTabPanel from '@components/dashboard/ConfiguredTabPanel';
 
-import { AiGuideTab } from '../../components';
 import { usePageTabs } from '@hooks/usePageTabs';
+
+import { AiGuideTab } from '../../components';
 
 import './AiObservabilityPage.css';
 

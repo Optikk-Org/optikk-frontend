@@ -1,8 +1,9 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Card, Empty } from 'antd';
 import { Network } from 'lucide-react';
 
 import { formatNumber } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 interface ServiceDependency {
   source: string;
@@ -66,4 +67,3 @@ export default function ServiceDetailDependenciesTab({
     </Card>
   );
 }
-

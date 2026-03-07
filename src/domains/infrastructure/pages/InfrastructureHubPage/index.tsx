@@ -3,6 +3,7 @@ import { Activity, Cpu, Layers, Network } from 'lucide-react';
 import { useMemo } from 'react';
 
 import ConfiguredTabPanel from '@components/dashboard/ConfiguredTabPanel';
+
 import { usePageTabs } from '@hooks/usePageTabs';
 import { useUrlSyncedTab } from '@hooks/useUrlSyncedTab';
 

@@ -1,9 +1,10 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { getLogValue } from '@utils/logUtils';
 import { tsLabel } from '@utils/time';
-import type { ReactNode } from 'react';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 import type { LogColumn, LogRecord } from '../../types';
+import type { ReactNode } from 'react';
 
 /* ─── Level badge ─────────────────────────────────────────────────────────── */
 

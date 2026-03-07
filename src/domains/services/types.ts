@@ -1,8 +1,23 @@
+/**
+ *
+ */
 export type DomainRecord = Record<string, unknown>;
 
+/**
+ *
+ */
 export type ServiceStatus = 'healthy' | 'degraded' | 'unhealthy' | 'unknown';
+/**
+ *
+ */
 export type ServiceViewMode = 'table' | 'grid';
+/**
+ *
+ */
 export type ServiceSortOrder = 'ascend' | 'descend';
+/**
+ *
+ */
 export type ServiceSortField =
   | 'serviceName'
   | 'requestCount'
@@ -11,6 +26,9 @@ export type ServiceSortField =
   | 'p95Latency'
   | 'p99Latency';
 
+/**
+ *
+ */
 export interface ServiceMetric extends DomainRecord {
   service_name: string;
   request_count: number;
@@ -21,6 +39,9 @@ export interface ServiceMetric extends DomainRecord {
   p99_latency: number;
 }
 
+/**
+ *
+ */
 export interface ServiceTimeSeriesPoint extends DomainRecord {
   timestamp: string;
   service_name: string;
@@ -34,6 +55,9 @@ export interface ServiceTimeSeriesPoint extends DomainRecord {
   p99: number;
 }
 
+/**
+ *
+ */
 export interface ServiceTopologyNode extends DomainRecord {
   name: string;
   requestCount: number;
@@ -44,6 +68,9 @@ export interface ServiceTopologyNode extends DomainRecord {
   riskScore?: number;
 }
 
+/**
+ *
+ */
 export interface ServiceTopologyEdge extends DomainRecord {
   source: string;
   target: string;
@@ -52,6 +79,9 @@ export interface ServiceTopologyEdge extends DomainRecord {
   errorRate: number;
 }
 
+/**
+ *
+ */
 export interface ServiceTableRow extends DomainRecord {
   serviceName: string;
   errorRate: number;
@@ -64,6 +94,9 @@ export interface ServiceTableRow extends DomainRecord {
   requestTrend: number[] | null;
 }
 
+/**
+ *
+ */
 export interface ServiceDependencyRow extends DomainRecord {
   key: string;
   source: string;
@@ -76,6 +109,9 @@ export interface ServiceDependencyRow extends DomainRecord {
   risk: number;
 }
 
+/**
+ *
+ */
 export interface ServiceTopologyStats {
   graphServices: number;
   dependencies: number;
@@ -83,6 +119,9 @@ export interface ServiceTopologyStats {
   highRiskEdges: number;
 }
 
+/**
+ *
+ */
 export interface ServiceHealthOption {
   key: string;
   label: string;
@@ -90,6 +129,9 @@ export interface ServiceHealthOption {
   color?: string;
 }
 
+/**
+ *
+ */
 export interface ServicesDataParams {
   searchQuery: string;
   sortField: ServiceSortField | null;
@@ -97,6 +139,9 @@ export interface ServicesDataParams {
   healthFilter: string;
 }
 
+/**
+ *
+ */
 export interface ServicesDataResult {
   isLoading: boolean;
   chartDataSources: Record<string, unknown[]>;
@@ -115,6 +160,9 @@ export interface ServicesDataResult {
   healthOptions: ServiceHealthOption[];
 }
 
+/**
+ *
+ */
 export interface ServiceEndpointRow extends DomainRecord {
   service_name: string;
   operation_name: string;
@@ -126,6 +174,9 @@ export interface ServiceEndpointRow extends DomainRecord {
   p99_latency: number;
 }
 
+/**
+ *
+ */
 export interface ServiceErrorGroupRow extends DomainRecord {
   service_name: string;
   operation_name: string;
@@ -137,6 +188,9 @@ export interface ServiceErrorGroupRow extends DomainRecord {
   sample_trace_id: string;
 }
 
+/**
+ *
+ */
 export interface ServiceLogRow extends DomainRecord {
   timestamp: string;
   level: string;
@@ -145,6 +199,9 @@ export interface ServiceLogRow extends DomainRecord {
   span_id: string;
 }
 
+/**
+ *
+ */
 export interface ServiceDependency extends DomainRecord {
   source: string;
   target: string;

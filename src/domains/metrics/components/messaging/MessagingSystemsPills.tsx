@@ -1,5 +1,6 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Activity, Radio } from 'lucide-react';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 import { getMqMeta } from './messagingMeta';
 

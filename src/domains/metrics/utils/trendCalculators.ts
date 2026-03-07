@@ -11,7 +11,10 @@ interface TrendPoint {
 const EMPTY_TRENDS: TrendSnapshot = { requestTrend: 0, errorTrend: 0 };
 const WINDOW_SIZE = 10;
 
-export const calculateTrends = (
+export /**
+ *
+ */
+const calculateTrends = (
   metricsPoints: readonly TrendPoint[] = [],
 ): TrendSnapshot => {
   if (metricsPoints.length < 2) {

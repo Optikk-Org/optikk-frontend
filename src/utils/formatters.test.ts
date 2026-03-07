@@ -1,5 +1,6 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 import {
   formatDuration,

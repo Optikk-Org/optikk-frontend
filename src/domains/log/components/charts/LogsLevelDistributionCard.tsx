@@ -1,9 +1,9 @@
 import { Spin } from 'antd';
 import { Bug } from 'lucide-react';
 
-import type { LogFacet } from '../../types';
-
 import LevelDistribution from '../log/LevelDistribution';
+
+import type { LogFacet } from '../../types';
 
 interface LogsLevelDistributionCardProps {
   isLoading: boolean;

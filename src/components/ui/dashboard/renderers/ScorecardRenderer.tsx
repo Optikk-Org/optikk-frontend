@@ -1,0 +1,72 @@
+import { Empty, Table } from 'antd';
+import { useMemo } from 'react';
+import { Bar, Doughnut, Line } from 'react-chartjs-2';
+
+import type {
+  DashboardComponentSpec,
+  DashboardDataSources,
+  DashboardExtraContext,
+} from '@/types/dashboardConfig';
+
+import LatencyHistogram from '@components/charts/distributions/LatencyHistogram';
+import LogHistogram from '@components/charts/distributions/LogHistogram';
+import GaugeChart from '@components/charts/micro/GaugeChart';
+import LatencyHeatmapChart from '@components/charts/specialized/LatencyHeatmapChart';
+import ServiceGraph from '@components/charts/specialized/ServiceGraph';
+import WaterfallChart from '@components/charts/specialized/WaterfallChart';
+
+import {
+  createBarDataset,
+  createChartOptions,
+  createLineDataset,
+  getChartColor,
+} from '@utils/chartHelpers';
+
+import { APP_COLORS } from '@config/colorLiterals';
+
+import { useDashboardData } from '../hooks/useDashboardData';
+import { buildAiTimeseries, resolveDataSourceId } from '../utils/dashboardUtils';
+
+/**
+ *
+ */
+export function ScorecardRenderer({
+  chartConfig,
+  dataSources,
+}: {
+  chartConfig: DashboardComponentSpec;
+  dataSources: DashboardDataSources;
+}) {
+  const { rawData, data: rows } = useDashboardData(chartConfig, dataSources);
+
+  if (rows.length === 0) {
+    return <Empty description="No data" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: 20 }} />;
+  }
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, padding: 8 }}>
+      {rows.map((row: any, i: number) => {
+        const name = row.service_name || row.serviceName || row.service || `Service ${i + 1}`;
+        const rps = Number(row.rps ?? row.requestRate ?? 0).toFixed(1);
+        const errPct = Number(row.error_pct ?? row.errorPct ?? row.error_rate ?? 0).toFixed(1);
+        const p95 = Number(row.p95_ms ?? row.p95 ?? row.p95LatencyMs ?? 0).toFixed(0);
+        return (
+          <div key={name} style={{
+            background: 'var(--glass-bg, rgba(255,255,255,0.05))',
+            border: '1px solid var(--glass-border, #333)',
+            borderRadius: 8,
+            padding: '8px 12px',
+            minWidth: 160,
+          }}>
+            <div style={{ fontWeight: 600, marginBottom: 4, fontSize: 13 }}>{name}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary, #888)' }}>
+              <span style={{ marginRight: 8 }}>{rps} rps</span>
+              <span style={{ marginRight: 8, color: Number(errPct) > 1 ? APP_COLORS.hex_f04438 : undefined }}>{errPct}% err</span>
+              <span>{p95}ms p95</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

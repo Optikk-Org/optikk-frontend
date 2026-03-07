@@ -1,4 +1,3 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Col, Row } from 'antd';
 import {
   Activity,
@@ -12,12 +11,13 @@ import {
   TrendingUp,
   Zap,
 } from 'lucide-react';
-import React from 'react';
 
 import StatCard from '@components/common/cards/StatCard';
 import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
 
 import { formatDuration, formatNumber } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 import { dollar, latColor, n, pct, rateColor } from './tabHelpers';
 
@@ -58,18 +58,22 @@ export default function AiOverviewTab({
           { title: 'P95 Latency', value: formatDuration(n(s.p95_latency_ms) ?? 0), icon: <Clock size={20} />, color: latColor(n(s.p95_latency_ms) ?? 0), desc: '95th percentile latency' },
         ].map((card) => (
           <Col xs={24} sm={12} lg={6} key={card.title}>
-            {React.createElement(StatCard as any, {
-              title: card.title,
-              value: card.value,
-              icon: card.icon,
-              iconColor: card.color,
-              loading: summaryLoading,
-              description: card.desc,
-              formatter: (value: any) => value,
-              trend: 0,
-              sparklineData: [],
-              sparklineColor: card.color,
-            })}
+            <StatCard
+              metric={{
+                title: card.title,
+                value: card.value,
+                description: card.desc,
+                formatter: (value: any) => value,
+              }}
+              visuals={{
+                icon: card.icon,
+                iconColor: card.color,
+                loading: summaryLoading,
+                sparklineData: [],
+                sparklineColor: card.color,
+              }}
+              trend={{ value: 0 }}
+            />
           </Col>
         ))}
       </Row>
@@ -83,18 +87,22 @@ export default function AiOverviewTab({
           { title: 'Cache Hit Rate', value: pct(s.cache_hit_rate), icon: <CheckCircle size={20} />, color: (n(s.cache_hit_rate) ?? 0) > 50 ? APP_COLORS.hex_73c991 : APP_COLORS.hex_f79009, desc: 'Prompt cache utilisation' },
         ].map((card) => (
           <Col xs={24} sm={12} lg={6} key={card.title}>
-            {React.createElement(StatCard as any, {
-              title: card.title,
-              value: card.value,
-              icon: card.icon,
-              iconColor: card.color,
-              loading: summaryLoading,
-              description: card.desc,
-              formatter: (value: any) => value,
-              trend: 0,
-              sparklineData: [],
-              sparklineColor: card.color,
-            })}
+            <StatCard
+              metric={{
+                title: card.title,
+                value: card.value,
+                description: card.desc,
+                formatter: (value: any) => value,
+              }}
+              visuals={{
+                icon: card.icon,
+                iconColor: card.color,
+                loading: summaryLoading,
+                sparklineData: [],
+                sparklineColor: card.color,
+              }}
+              trend={{ value: 0 }}
+            />
           </Col>
         ))}
       </Row>
@@ -108,18 +116,22 @@ export default function AiOverviewTab({
           { title: 'Guardrail Block Rate', value: pct(s.guardrail_block_rate), icon: <ShieldAlert size={20} />, color: rateColor(n(s.guardrail_block_rate) ?? 0), desc: '% requests blocked' },
         ].map((card) => (
           <Col xs={24} sm={12} lg={6} key={card.title}>
-            {React.createElement(StatCard as any, {
-              title: card.title,
-              value: card.value,
-              icon: card.icon,
-              iconColor: card.color,
-              loading: summaryLoading,
-              description: card.desc,
-              formatter: (value: any) => value,
-              trend: 0,
-              sparklineData: [],
-              sparklineColor: card.color,
-            })}
+            <StatCard
+              metric={{
+                title: card.title,
+                value: card.value,
+                description: card.desc,
+                formatter: (value: any) => value,
+              }}
+              visuals={{
+                icon: card.icon,
+                iconColor: card.color,
+                loading: summaryLoading,
+                sparklineData: [],
+                sparklineColor: card.color,
+              }}
+              trend={{ value: 0 }}
+            />
           </Col>
         ))}
       </Row>

@@ -2,11 +2,12 @@ import { Layout } from 'antd';
 import { useState, useEffect, useCallback } from 'react';
 import { Outlet } from 'react-router-dom';
 
+import CommandPalette from '@components/common/overlay/CommandPalette';
+
 import { useAppStore } from '@store/appStore';
 
 import Header from './Header';
 import Sidebar from './Sidebar';
-import CommandPalette from '@components/common/overlay/CommandPalette';
 
 import './MainLayout.css';
 

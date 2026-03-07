@@ -1,5 +1,3 @@
-import type { ComponentType, LazyExoticComponent } from 'react';
-import type { LucideIcon } from 'lucide-react';
 
 import { aiConfig } from '@/domains/ai';
 import { infrastructureConfig } from '@/domains/infrastructure';
@@ -10,10 +8,19 @@ import { servicesConfig } from '@/domains/services';
 import { settingsConfig } from '@/domains/settings';
 import { tracesConfig } from '@/domains/traces';
 
+import type { LucideIcon } from 'lucide-react';
+import type { ComponentType, LazyExoticComponent } from 'react';
+
+/**
+ *
+ */
 export type DomainPage =
   | ComponentType<any>
   | LazyExoticComponent<ComponentType<any>>;
 
+/**
+ *
+ */
 export interface DomainNavigationItem {
   readonly path: string;
   readonly label: string;
@@ -21,11 +28,17 @@ export interface DomainNavigationItem {
   readonly group: string;
 }
 
+/**
+ *
+ */
 export interface DomainRouteConfig {
   readonly path: string;
   readonly page: DomainPage;
 }
 
+/**
+ *
+ */
 export interface DomainConfig {
   readonly key: string;
   readonly label: string;
@@ -34,7 +47,10 @@ export interface DomainConfig {
   readonly routes: readonly DomainRouteConfig[];
 }
 
-export const domainRegistry: readonly DomainConfig[] = [
+export /**
+ *
+ */
+const domainRegistry: readonly DomainConfig[] = [
   overviewConfig,
   metricsConfig,
   logsConfig,

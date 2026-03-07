@@ -1,49 +1,48 @@
 import { Table, type TableProps } from 'antd';
-
-import { UI_CONFIG } from '@config/constants';
 import { EmptyState } from '@/shared/components/feedback';
+import { UI_CONFIG } from '@config/constants';
 
-/**
- * Wrapper around Ant Design Table with consistent pagination, loading, and empty state.
- * Replaces the 5+ Table usages with inconsistent pagination configs.
- */
-interface DataTableProps {
-  columns: NonNullable<TableProps<Record<string, unknown>>['columns']>;
-  data: Record<string, unknown>[];
+export interface DataTableData<RowType = any> {
+  columns: NonNullable<TableProps<RowType>['columns']>;
+  rows: RowType[];
   loading?: boolean;
-  rowKey?: TableProps<Record<string, unknown>>['rowKey'];
+  rowKey?: TableProps<RowType>['rowKey'];
+}
+
+export interface DataTablePagination {
   page?: number;
   pageSize?: number;
   total?: number;
   onPageChange?: (page: number, pageSize?: number) => void;
-  emptyText?: string;
-  scroll?: TableProps<Record<string, unknown>>['scroll'];
-  onRow?: TableProps<Record<string, unknown>>['onRow'];
   showPagination?: boolean;
-  expandable?: TableProps<Record<string, unknown>>['expandable'];
+}
+
+export interface DataTableConfig<RowType = any> {
+  emptyText?: string;
+  scroll?: TableProps<RowType>['scroll'];
+  onRow?: TableProps<RowType>['onRow'];
+  expandable?: TableProps<RowType>['expandable'];
+}
+
+export interface DataTableProps<RowType = any> {
+  data: DataTableData<RowType>;
+  pagination?: DataTablePagination;
+  config?: DataTableConfig<RowType>;
 }
 
 /**
  * Shared table wrapper with consistent pagination and empty states.
- * @param props Component props.
- * @returns Ant Design table with project defaults.
  */
-export default function DataTable({
-  columns,
+export default function DataTable<RowType extends Record<string, any> = any>({
   data,
-  loading = false,
-  rowKey = 'id',
-  page,
-  pageSize,
-  total,
-  onPageChange,
-  emptyText = 'No data found',
-  scroll,
-  onRow,
-  showPagination = true,
-  expandable,
-}: DataTableProps): JSX.Element {
-  const paginationConfig: TableProps<Record<string, unknown>>['pagination'] =
+  pagination = {},
+  config = {},
+}: DataTableProps<RowType>): JSX.Element {
+  const { columns, rows, loading = false, rowKey = 'id' } = data;
+  const { page, pageSize, total, onPageChange, showPagination = true } = pagination;
+  const { emptyText = 'No data found', scroll, onRow, expandable } = config;
+
+  const paginationConfig: TableProps<RowType>['pagination'] =
     showPagination && onPageChange
     ? {
       current: page,
@@ -60,8 +59,8 @@ export default function DataTable({
 
   return (
     <Table
-      columns={columns}
-      dataSource={data}
+      columns={columns as any}
+      dataSource={rows}
       loading={loading}
       rowKey={rowKey}
       pagination={paginationConfig}

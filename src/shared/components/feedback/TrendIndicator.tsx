@@ -1,5 +1,6 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Minus, TrendingDown, TrendingUp } from 'lucide-react';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 import type { TrendIndicatorProps } from './types';
 

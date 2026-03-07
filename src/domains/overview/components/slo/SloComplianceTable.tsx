@@ -1,5 +1,6 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Card, Table, Tag } from 'antd';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 interface SloComplianceTableProps {
   timeseries: any[];

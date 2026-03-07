@@ -63,4 +63,3 @@ export function useAutoRefresh({
 
   return { lastRefreshAt, refreshLabel, triggerRefresh };
 }
-

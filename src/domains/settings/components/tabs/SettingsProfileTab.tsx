@@ -1,5 +1,6 @@
 import { Avatar, Button, Card, Divider, Form, Input, Spin } from 'antd';
 import { Bell, User } from 'lucide-react';
+
 import type { FormInstance } from 'antd/es/form';
 
 interface SettingsProfileTabProps {
@@ -89,4 +90,3 @@ export default function SettingsProfileTab({
     </Card>
   );
 }
-

@@ -1,9 +1,15 @@
-import type { StructuredFilter } from '@hooks/useURLFilters';
-
 import type { QueryParams } from '@services/service-types';
 
+import type { StructuredFilter } from '@hooks/useURLFilters';
+
+/**
+ *
+ */
 export type DomainRecord = Record<string, unknown>;
 
+/**
+ *
+ */
 export interface LogRecord extends DomainRecord {
   id?: string | number | bigint;
   timestamp?: string | number | Date;
@@ -22,11 +28,17 @@ export interface LogRecord extends DomainRecord {
   message?: string;
 }
 
+/**
+ *
+ */
 export interface LogFacet extends DomainRecord {
   value: string;
   count: number;
 }
 
+/**
+ *
+ */
 export interface LogVolumeBucket extends DomainRecord {
   timeBucket?: string;
   time_bucket?: string;
@@ -38,6 +50,9 @@ export interface LogVolumeBucket extends DomainRecord {
   fatals?: number;
 }
 
+/**
+ *
+ */
 export interface LogColumn {
   key: string;
   label: string;
@@ -46,12 +61,18 @@ export interface LogColumn {
   flex?: boolean;
 }
 
+/**
+ *
+ */
 export interface LogFilterOperator {
   key: string;
   label: string;
   symbol: string;
 }
 
+/**
+ *
+ */
 export interface LogFilterField {
   key: string;
   label: string;
@@ -60,13 +81,22 @@ export interface LogFilterField {
   operators: LogFilterOperator[];
 }
 
+/**
+ *
+ */
 export interface LogsBoardRenderContext {
   colWidths: Record<string, number>;
   visibleCols: Record<string, boolean>;
 }
 
+/**
+ *
+ */
 export type LogStructuredFilter = StructuredFilter;
 
+/**
+ *
+ */
 export type LogsBackendParams = QueryParams & {
   limit?: number;
   offset?: number;
@@ -84,11 +114,17 @@ export type LogsBackendParams = QueryParams & {
   spanId?: string;
 };
 
+/**
+ *
+ */
 export interface LogsListResponse {
   logs: LogRecord[];
   total: number;
 }
 
+/**
+ *
+ */
 export interface LogsStatsResponse {
   total: number;
   fields: {
@@ -97,6 +133,9 @@ export interface LogsStatsResponse {
   };
 }
 
+/**
+ *
+ */
 export interface LogsVolumeResponse {
   step: string;
   buckets: LogVolumeBucket[];

@@ -1,6 +1,7 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Card, Col, Progress, Row, Skeleton, Tag } from 'antd';
 import { ShieldCheck } from 'lucide-react';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 interface SloHealthGaugesProps {
   isLoading: boolean;

@@ -1,5 +1,5 @@
-import { lazy } from 'react';
 import { HardDrive } from 'lucide-react';
+import { lazy } from 'react';
 
 import type { DomainConfig } from '@/app/registry/domainRegistry';
 import { ROUTES } from '@/shared/constants/routes';
@@ -8,7 +8,10 @@ const InfrastructurePage = lazy(() =>
   import('./pages/InfrastructureHubPage').then((module) => ({ default: module.default })),
 );
 
-export const infrastructureConfig: DomainConfig = {
+export /**
+ *
+ */
+const infrastructureConfig: DomainConfig = {
   key: 'infrastructure',
   label: 'Infrastructure',
   permissions: ['infrastructure:read'],

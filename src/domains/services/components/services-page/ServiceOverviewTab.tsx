@@ -1,4 +1,3 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Col, Progress, Row, Segmented, Tag } from 'antd';
 import { Activity, AlertCircle, Layers, LayoutGrid, List, ShieldAlert } from 'lucide-react';
 
@@ -8,6 +7,8 @@ import ObservabilityDataBoard, { boardHeight } from '@components/common/data-dis
 import ConfiguredTabPanel from '@components/dashboard/ConfiguredTabPanel';
 
 import { formatNumber, formatDuration } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 import type { ServiceTableRow, ServiceViewMode } from '../../types';
 
@@ -73,10 +74,34 @@ export function ServiceOverviewTab({
         style={{ marginBottom: 24 }}
         defaultColProps={{ xs: 24, sm: 12, lg: 6 }}
         stats={[
-          { title: 'Total Services', value: totalServices, icon: <Layers size={20} />, iconColor: APP_COLORS.hex_6366f1, loading: isLoading },
-          { title: 'Healthy', value: healthyServices, icon: <Activity size={20} />, iconColor: APP_COLORS.hex_73c991, loading: isLoading, description: `${totalServices > 0 ? Number(((healthyServices / totalServices) * 100)).toFixed(2) : 0}% of total` },
-          { title: 'Degraded', value: degradedServices, icon: <AlertCircle size={20} />, iconColor: APP_COLORS.hex_f79009, loading: isLoading, description: `${totalServices > 0 ? Number(((degradedServices / totalServices) * 100)).toFixed(2) : 0}% of total` },
-          { title: 'Unhealthy', value: unhealthyServices, icon: <ShieldAlert size={20} />, iconColor: APP_COLORS.hex_f04438, loading: isLoading, description: `${totalServices > 0 ? Number(((unhealthyServices / totalServices) * 100)).toFixed(2) : 0}% of total` },
+          {
+            metric: { title: 'Total Services', value: totalServices },
+            visuals: { icon: <Layers size={20} />, iconColor: APP_COLORS.hex_6366f1, loading: isLoading }
+          },
+          {
+            metric: {
+              title: 'Healthy',
+              value: healthyServices,
+              description: `${totalServices > 0 ? Number(((healthyServices / totalServices) * 100)).toFixed(2) : 0}% of total`,
+            },
+            visuals: { icon: <Activity size={20} />, iconColor: APP_COLORS.hex_73c991, loading: isLoading },
+          },
+          {
+            metric: {
+              title: 'Degraded',
+              value: degradedServices,
+              description: `${totalServices > 0 ? Number(((degradedServices / totalServices) * 100)).toFixed(2) : 0}% of total`,
+            },
+            visuals: { icon: <AlertCircle size={20} />, iconColor: APP_COLORS.hex_f79009, loading: isLoading },
+          },
+          {
+            metric: {
+              title: 'Unhealthy',
+              value: unhealthyServices,
+              description: `${totalServices > 0 ? Number(((unhealthyServices / totalServices) * 100)).toFixed(2) : 0}% of total`,
+            },
+            visuals: { icon: <ShieldAlert size={20} />, iconColor: APP_COLORS.hex_f04438, loading: isLoading },
+          },
         ]}
       />
 
@@ -116,62 +141,63 @@ export function ServiceOverviewTab({
       {viewMode === 'table' ? (
         <div style={{ height: boardHeight(25) }}>
           <ObservabilityDataBoard<ServiceTableRow>
-            columns={SERVICE_COLUMNS}
-            rows={tableData}
-            rowKey={(row) => row.serviceName}
-            entityName="service"
-            storageKey="services-overview-board-cols"
-            isLoading={isLoading}
-            renderRow={(row, { colWidths, visibleCols }) => (
-              <>
-                {visibleCols.serviceName && (
-                  <div
-                    style={{ width: colWidths.serviceName, flexShrink: 0, fontWeight: 600, cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: `var(--color-primary, ${APP_COLORS.hex_5e60ce})` }}
-                    onClick={() => onNodeClick(row.serviceName)}
-                  >
-                    {row.serviceName}
-                  </div>
-                )}
-                {visibleCols.status && (
-                  <div style={{ width: colWidths.status, flexShrink: 0 }}>
-                    <HealthIndicator status={row.status} showLabel />
-                  </div>
-                )}
-                {visibleCols.requestCount && (
-                  <div style={{ width: colWidths.requestCount, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span>{formatNumber(row.requestCount)}</span>
-                    {row.requestTrend && (
-                      <SparklineChart data={row.requestTrend} color={APP_COLORS.hex_1890ff} width={50} height={18} />
-                    )}
-                  </div>
-                )}
-                {visibleCols.errorRate && (
-                  <div style={{ width: colWidths.errorRate, flexShrink: 0, color: row.errorRate > 5 ? APP_COLORS.hex_f04438 : row.errorRate > 1 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991, fontWeight: 600 }}>
-                    {Number(row.errorRate).toFixed(2)}%
-                  </div>
-                )}
-                {visibleCols.avgLatency && (
-                  <div style={{ width: colWidths.avgLatency, flexShrink: 0, fontFamily: 'monospace', fontSize: 12 }}>
-                    {formatDuration(row.avgLatency)}
-                  </div>
-                )}
-                {visibleCols.p95Latency && (
-                  <div style={{ width: colWidths.p95Latency, flexShrink: 0, fontFamily: 'monospace', fontSize: 12 }}>
-                    {formatDuration(row.p95Latency)}
-                  </div>
-                )}
-                {visibleCols.p99Latency && (
-                  <div style={{ flex: 1, fontFamily: 'monospace', fontSize: 12 }}>
-                    {formatDuration(row.p99Latency)}
-                  </div>
-                )}
-              </>
-            )}
-            emptyTips={[
-              { num: 1, text: <>Clear the <strong>search</strong> filter above</> },
-              { num: 2, text: <>Widen the <strong>time range</strong> in the top bar</> },
-              { num: 3, text: <>Ensure your services are sending <strong>OTLP telemetry</strong></> },
-            ]}
+            data={{ rows: tableData, isLoading }}
+            config={{
+              columns: SERVICE_COLUMNS,
+              rowKey: (row) => row.serviceName,
+              entityName: 'service',
+              storageKey: 'services-overview-board-cols',
+              renderRow: (row, { colWidths, visibleCols }) => (
+                <>
+                  {visibleCols.serviceName && (
+                    <div
+                      style={{ width: colWidths.serviceName, flexShrink: 0, fontWeight: 600, cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: `var(--color-primary, ${APP_COLORS.hex_5e60ce})` }}
+                      onClick={() => onNodeClick(row.serviceName)}
+                    >
+                      {row.serviceName}
+                    </div>
+                  )}
+                  {visibleCols.status && (
+                    <div style={{ width: colWidths.status, flexShrink: 0 }}>
+                      <HealthIndicator status={row.status} showLabel />
+                    </div>
+                  )}
+                  {visibleCols.requestCount && (
+                    <div style={{ width: colWidths.requestCount, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span>{formatNumber(row.requestCount)}</span>
+                      {row.requestTrend && (
+                        <SparklineChart data={row.requestTrend} color={APP_COLORS.hex_1890ff} width={50} height={18} />
+                      )}
+                    </div>
+                  )}
+                  {visibleCols.errorRate && (
+                    <div style={{ width: colWidths.errorRate, flexShrink: 0, color: row.errorRate > 5 ? APP_COLORS.hex_f04438 : row.errorRate > 1 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991, fontWeight: 600 }}>
+                      {Number(row.errorRate).toFixed(2)}%
+                    </div>
+                  )}
+                  {visibleCols.avgLatency && (
+                    <div style={{ width: colWidths.avgLatency, flexShrink: 0, fontFamily: 'monospace', fontSize: 12 }}>
+                      {formatDuration(row.avgLatency)}
+                    </div>
+                  )}
+                  {visibleCols.p95Latency && (
+                    <div style={{ width: colWidths.p95Latency, flexShrink: 0, fontFamily: 'monospace', fontSize: 12 }}>
+                      {formatDuration(row.p95Latency)}
+                    </div>
+                  )}
+                  {visibleCols.p99Latency && (
+                    <div style={{ flex: 1, fontFamily: 'monospace', fontSize: 12 }}>
+                      {formatDuration(row.p99Latency)}
+                    </div>
+                  )}
+                </>
+              ),
+              emptyTips: [
+                { num: 1, text: <>Clear the <strong>search</strong> filter above</> },
+                { num: 2, text: <>Widen the <strong>time range</strong> in the top bar</> },
+                { num: 3, text: <>Ensure your services are sending <strong>OTLP telemetry</strong></> },
+              ]
+            }}
           />
         </div>
       ) : (

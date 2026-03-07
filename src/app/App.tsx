@@ -1,8 +1,9 @@
 import { Skeleton } from 'antd';
 import { Suspense } from 'react';
 
-import { APP_COLORS } from '@config/colorLiterals';
 import { useRealtimeRefresh } from '@hooks/useRealtimeRefresh';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 import AuthExpiryListener from './providers/AuthExpiryListener';
 import AppRoutes from './routes/appRoutes';

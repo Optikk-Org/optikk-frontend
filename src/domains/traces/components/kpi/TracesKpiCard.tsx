@@ -1,4 +1,5 @@
 import { TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react';
+
 import type { CSSProperties, ReactNode } from 'react';
 
 interface KpiCardStyle extends CSSProperties {
@@ -51,4 +52,3 @@ export default function TracesKpiCard({
     </div>
   );
 }
-

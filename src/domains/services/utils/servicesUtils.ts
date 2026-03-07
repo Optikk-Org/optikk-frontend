@@ -7,20 +7,44 @@ import type {
   ServiceTopologyNode,
 } from '../types';
 
-function asRecord(value: unknown): DomainRecord {
+/**
+ *
+ */
+export function asRecord(value: unknown): DomainRecord {
   if (typeof value !== 'object' || value === null) {
     return {};
   }
   return value as DomainRecord;
 }
 
-function toNumber(value: unknown): number {
+/**
+ *
+ */
+export function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+/**
+ *
+ */
+export function toNumber(value: unknown): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function toStringValue(value: unknown): string {
+/**
+ *
+ */
+export function toStringValue(value: unknown): string {
   return typeof value === 'string' ? value : '';
+}
+
+/**
+ *
+ */
+export function countFromSummary(value: unknown): number {
+  const row = asRecord(value);
+  return toNumber(row.count);
 }
 
 export /**

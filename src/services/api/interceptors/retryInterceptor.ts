@@ -14,6 +14,9 @@ function shouldRetryRequest(error: AxiosError): boolean {
   return method === 'GET' || method === 'HEAD';
 }
 
+/**
+ *
+ */
 export function attachRetryInterceptor(instance: AxiosInstance, maxRetries: number): number {
   return instance.interceptors.response.use(undefined, async (error: AxiosError) => {
     const config = error.config as RetryConfig | undefined;

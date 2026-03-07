@@ -315,3 +315,65 @@ export function extractServerTotal(pages: unknown): number {
     ?? 0,
   );
 }
+
+// ── Volume Bucket Gap Filling ──────────────────────────────────────────────
+
+export const STEP_MS_BY_LABEL: Record<string, number> = {
+  '1m': 60_000,
+  '2m': 120_000,
+  '5m': 300_000,
+  '10m': 600_000,
+  '15m': 900_000,
+  '30m': 1_800_000,
+  '1h': 3_600_000,
+  '2h': 7_200_000,
+  '6h': 21_600_000,
+  '12h': 43_200_000,
+};
+
+export function formatUtcBucketKey(date: Date): string {
+  const pad = (value: number): string => String(value).padStart(2, '0');
+  const dateLabel = `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
+  const timeLabel = `${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:00`;
+  return `${dateLabel} ${timeLabel}`;
+}
+
+export function fillVolumeBucketGaps<T extends Record<string, unknown>>(
+  rawBuckets: T[],
+  step: string,
+  timeRangeMinutes: number
+): T[] {
+  if (!rawBuckets.length || !step) return rawBuckets;
+
+  const stepMs = STEP_MS_BY_LABEL[step] || 60_000;
+
+  const endMs = Date.now();
+  const startMs = endMs - timeRangeMinutes * 60 * 1000;
+
+  const byKey: Record<string, T> = {};
+  for (const bucket of rawBuckets) {
+    const key = String(bucket.timeBucket || bucket.time_bucket || '');
+    if (key) {
+      byKey[key] = bucket;
+    }
+  }
+
+  const result: T[] = [];
+  const slotStart = Math.floor(startMs / stepMs) * stepMs;
+  for (let timestamp = slotStart; timestamp <= endMs; timestamp += stepMs) {
+    const key = formatUtcBucketKey(new Date(timestamp));
+    result.push(
+      byKey[key] || {
+        timeBucket: key,
+        total: 0,
+        errors: 0,
+        warnings: 0,
+        infos: 0,
+        debugs: 0,
+        fatals: 0,
+      } as unknown as T,
+    );
+  }
+
+  return result;
+}

@@ -1,8 +1,10 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Spin } from 'antd';
 import { useMemo } from 'react';
 
 import { formatNumber } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
+
 import type { LogVolumeBucket } from '../../types';
 
 /* ─── Level colours ───────────────────────────────────────────────────────── */
@@ -17,13 +19,13 @@ const LEVEL_COLORS: Record<'errors' | 'warnings' | 'infos' | 'debugs' | 'fatals'
 
 export { LEVEL_COLORS };
 
-type VolumeLegendTotals = {
+interface VolumeLegendTotals {
   fatals: number;
   errors: number;
   warnings: number;
   infos: number;
   debugs: number;
-};
+}
 
 type VolumeLevelKey = keyof VolumeLegendTotals;
 
@@ -171,6 +173,9 @@ interface VolumeLegendProps {
   buckets: LogVolumeBucket[];
 }
 
+/**
+ *
+ */
 export function VolumeLegend({ buckets }: VolumeLegendProps) {
   if (!buckets.length) return null;
 

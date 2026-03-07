@@ -1,8 +1,10 @@
 import { Spin } from 'antd';
 
-import ConfigurableDashboard from './ConfigurableDashboard';
 import type { DashboardComponentSpec } from '@/types/dashboardConfig';
+
 import { useComponentDataFetcher } from '@hooks/useComponentDataFetcher';
+
+import ConfigurableDashboard from './ConfigurableDashboard';
 
 interface DashboardTabContentProps {
   components: DashboardComponentSpec[];

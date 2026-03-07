@@ -1,5 +1,5 @@
-import { lazy } from 'react';
 import { Brain } from 'lucide-react';
+import { lazy } from 'react';
 
 import type { DomainConfig } from '@/app/registry/domainRegistry';
 import { ROUTES } from '@/shared/constants/routes';
@@ -8,7 +8,10 @@ const AiPage = lazy(() =>
   import('./pages/AiObservabilityPage').then((module) => ({ default: module.default })),
 );
 
-export const aiConfig: DomainConfig = {
+export /**
+ *
+ */
+const aiConfig: DomainConfig = {
   key: 'ai',
   label: 'AI Observability',
   permissions: ['ai:read'],

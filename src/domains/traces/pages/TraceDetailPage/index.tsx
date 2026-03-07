@@ -1,141 +1,40 @@
-import { useQuery } from '@tanstack/react-query';
 import { Row, Col, Spin, Empty, Tag, Table } from 'antd';
 import { GitBranch, Layers, Clock, AlertCircle, ArrowLeft, FileText, X, ChevronDown, ChevronRight } from 'lucide-react';
-import React, { useMemo, useState, useEffect } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 
-import { APP_COLORS } from '@config/colorLiterals';
 import WaterfallChart from '@components/charts/specialized/WaterfallChart';
-import { ObservabilityDetailPanel } from '@components/common';
+import { ObservabilityDetailPanel } from '@/shared/components/data-board/ObservabilityDetailPanel';
 import StatCard from '@components/common/cards/StatCard';
 import PageHeader from '@components/common/layout/PageHeader';
 
-import { v1Service } from '@services/v1Service';
-
 import { useAppStore } from '@store/appStore';
-
 import { formatDuration, formatTimestamp, formatNumber } from '@utils/formatters';
+import { APP_COLORS } from '@config/colorLiterals';
+
+import { useTraceDetailData } from '../../hooks/useTraceDetailData';
 import './TraceDetailPage.css';
 
-const parseAttributes = (attributes: unknown) => {
-  if (!attributes) return {};
-  if (typeof attributes === 'object') return attributes;
-  if (typeof attributes !== 'string') return {};
-
-  try {
-    const parsed = JSON.parse(attributes);
-    return parsed && typeof parsed === 'object' ? parsed : {};
-  } catch {
-    return { raw: attributes };
-  }
-};
-
-const normalizeSpan = (span: any = {}) => ({
-  ...span,
-  span_id: span.span_id ?? span.spanId ?? '',
-  parent_span_id: span.parent_span_id ?? span.parentSpanId ?? '',
-  trace_id: span.trace_id ?? span.traceId ?? '',
-  operation_name: span.operation_name ?? span.operationName ?? '',
-  service_name: span.service_name ?? span.serviceName ?? '',
-  span_kind: span.span_kind ?? span.spanKind ?? '',
-  start_time: span.start_time ?? span.startTime ?? '',
-  end_time: span.end_time ?? span.endTime ?? '',
-  duration_ms: Number(span.duration_ms ?? span.durationMs ?? 0),
-  status: span.status ?? 'UNSET',
-  status_message: span.status_message ?? span.statusMessage ?? '',
-  http_method: span.http_method ?? span.httpMethod ?? '',
-  http_url: span.http_url ?? span.httpUrl ?? '',
-  http_status_code: Number(span.http_status_code ?? span.httpStatusCode ?? 0),
-  attributes: parseAttributes(span.attributes),
-});
-
-const normalizeTraceLog = (log: any = {}) => ({
-  ...log,
-  timestamp: log.timestamp ?? '',
-  level: log.level ?? 'INFO',
-  service_name: log.service_name ?? log.serviceName ?? '',
-  message: log.message ?? '',
-  trace_id: log.trace_id ?? log.traceId ?? '',
-  span_id: (log).span_id ?? (log).spanId ?? '',
-});
-
 /**
- *
+ * Enterprise trace detail page with waterfall visualization and associated logs.
  */
 export default function TraceDetailPage() {
   const { traceId } = useParams();
   const traceIdParam = traceId ?? '';
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const selectedTeamId = useAppStore((state) => state.selectedTeamId);
-  const [selectedSpanId, setSelectedSpanId] = useState(() => searchParams.get('span') || null);
   const [waterfallCollapsed, setWaterfallCollapsed] = useState(false);
 
-  // Sync span from URL on mount (in case component was already mounted)
-  useEffect(() => {
-    const spanFromUrl = searchParams.get('span');
-    if (spanFromUrl) setSelectedSpanId(spanFromUrl);
-  }, []);
-
-  // Fetch spans by root span_id (the URL parameter is a span_id from the traces list).
-  // Falls back to fetching by trace_id (e.g., when navigating here from a log's traceId).
-  const { data: spansData, isLoading } = useQuery({
-    queryKey: ['span-tree', selectedTeamId, traceIdParam],
-    queryFn: async () => {
-      const bySpan = await v1Service.getSpanTree(selectedTeamId, traceIdParam);
-      if (Array.isArray(bySpan) && bySpan.length > 0) return bySpan;
-      // Fallback: treat the id as a trace_id (e.g. navigated from logs)
-      return v1Service.getTraceSpans(selectedTeamId, traceIdParam);
-    },
-    enabled: !!selectedTeamId && !!traceIdParam,
-  });
-
-  const spans = useMemo(
-    () => (Array.isArray(spansData) ? spansData : []).map(normalizeSpan),
-    [spansData],
-  );
-
-  // Resolve the actual trace_id from loaded spans (URL param may be a root span_id).
-  const resolvedTraceId = spans.length > 0 ? (spans[0].trace_id || traceIdParam) : traceIdParam;
-
-  // Fetch logs associated with this trace, keyed by the resolved trace_id.
-  const { data: logsData, isLoading: logsLoading } = useQuery({
-    queryKey: ['trace-logs', selectedTeamId, resolvedTraceId],
-    queryFn: () => v1Service.getTraceLogs(selectedTeamId, resolvedTraceId),
-    enabled: !!selectedTeamId && !!resolvedTraceId,
-  });
-  const traceLogs = useMemo(
-    () => (Array.isArray(logsData) ? logsData : []).map(normalizeTraceLog),
-    [logsData],
-  );
-  const selectedSpan = spans.find((s) => s.span_id === selectedSpanId);
-
-  // Calculate trace statistics
-  const stats = {
-    totalSpans: spans.length,
-    duration: 0,
-    services: new Set(),
-    errors: 0,
-  };
-
-  if (spans.length > 0) {
-    const startTimes = spans.map((s) => new Date(s.start_time).getTime());
-    const endTimes = spans.map((s) => new Date(s.end_time).getTime());
-    const spanEnvelopeDuration = Math.max(...endTimes) - Math.min(...startTimes);
-    const rootSpan = [...spans]
-      .filter((s) => !s.parent_span_id)
-      .sort((a, b) => Number(b.duration_ms || 0) - Number(a.duration_ms || 0))[0];
-    const rootDuration = Number((rootSpan)?.duration_ms || 0);
-    // Keep detail duration aligned with trace-list duration (root span) when available.
-    stats.duration = rootDuration > 0 ? rootDuration : spanEnvelopeDuration;
-
-    spans.forEach((span) => {
-      stats.services.add(span.service_name);
-      if (span.status === 'ERROR') {
-        stats.errors++;
-      }
-    });
-  }
+  const {
+    spans,
+    traceLogs,
+    stats,
+    selectedSpan,
+    selectedSpanId,
+    setSelectedSpanId,
+    isLoading,
+    logsLoading,
+  } = useTraceDetailData(selectedTeamId, traceIdParam);
 
   const handleSpanClick = (span: { span_id?: string }) => {
     setSelectedSpanId(span.span_id ?? null);
@@ -280,44 +179,56 @@ export default function TraceDetailPage() {
           {/* Statistics Cards */}
           <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
             <Col xs={24} sm={12} lg={6}>
-              {React.createElement(StatCard as any, {
-                title: 'Total Spans',
-                value: stats.totalSpans,
-                formatter: formatNumber,
-                trend: 0,
-                icon: <Layers size={20} />,
-                iconColor: APP_COLORS.hex_5e60ce,
-              })}
+              <StatCard
+                metric={{
+                  title: 'Total Spans',
+                  value: stats.totalSpans,
+                  formatter: formatNumber,
+                }}
+                visuals={{
+                  icon: <Layers size={20} />,
+                  iconColor: APP_COLORS.hex_5e60ce,
+                }}
+              />
             </Col>
             <Col xs={24} sm={12} lg={6}>
-              {React.createElement(StatCard as any, {
-                title: 'Duration',
-                value: (stats as any).duration,
-                formatter: formatDuration,
-                trend: 0,
-                icon: <Clock size={20} />,
-                iconColor: APP_COLORS.hex_73c991,
-              })}
+              <StatCard
+                metric={{
+                  title: 'Duration',
+                  value: stats.duration,
+                  formatter: formatDuration,
+                }}
+                visuals={{
+                  icon: <Clock size={20} />,
+                  iconColor: APP_COLORS.hex_73c991,
+                }}
+              />
             </Col>
             <Col xs={24} sm={12} lg={6}>
-              {React.createElement(StatCard as any, {
-                title: 'Services',
-                value: stats.services.size,
-                formatter: formatNumber,
-                trend: 0,
-                icon: <GitBranch size={20} />,
-                iconColor: APP_COLORS.hex_06aed5,
-              })}
+              <StatCard
+                metric={{
+                  title: 'Services',
+                  value: stats.services.size,
+                  formatter: formatNumber,
+                }}
+                visuals={{
+                  icon: <GitBranch size={20} />,
+                  iconColor: APP_COLORS.hex_06aed5,
+                }}
+              />
             </Col>
             <Col xs={24} sm={12} lg={6}>
-              {React.createElement(StatCard as any, {
-                title: 'Errors',
-                value: stats.errors,
-                formatter: formatNumber,
-                trend: 0,
-                icon: <AlertCircle size={20} />,
-                iconColor: stats.errors > 0 ? APP_COLORS.hex_f04438 : APP_COLORS.hex_73c991,
-              })}
+              <StatCard
+                metric={{
+                  title: 'Errors',
+                  value: stats.errors,
+                  formatter: formatNumber,
+                }}
+                visuals={{
+                  icon: <AlertCircle size={20} />,
+                  iconColor: stats.errors > 0 ? APP_COLORS.hex_f04438 : APP_COLORS.hex_73c991,
+                }}
+              />
             </Col>
           </Row>
 
@@ -412,8 +323,6 @@ export default function TraceDetailPage() {
               />
             )}
           </div>
-
-          {/* Span Detail Panel */}
         </>
       )}
     </div>

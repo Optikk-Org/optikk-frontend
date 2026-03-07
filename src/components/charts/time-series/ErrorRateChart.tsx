@@ -1,4 +1,3 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Empty } from 'antd';
 import { useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
@@ -6,6 +5,8 @@ import { Line } from 'react-chartjs-2';
 import { useChartTimeBuckets } from '@hooks/useChartTimeBuckets';
 
 import { createChartOptions, createLineDataset, getChartColor } from '@utils/chartHelpers';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 // Normalize timestamps to "YYYY-MM-DD HH:mm" for reliable cross-source matching.
 function tsKey(ts: any) {

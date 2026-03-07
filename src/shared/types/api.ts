@@ -1,3 +1,6 @@
+/**
+ *
+ */
 export interface ApiError {
   readonly message: string;
   readonly code?: string;
@@ -5,6 +8,9 @@ export interface ApiError {
   readonly [key: string]: unknown;
 }
 
+/**
+ *
+ */
 export interface ApiResponseEnvelope<TData> {
   readonly success: boolean;
   readonly data: TData;

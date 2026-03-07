@@ -18,6 +18,9 @@ interface UseMetricsStateResult {
   onTabChange: (nextTab: string) => void;
 }
 
+/**
+ *
+ */
 export function useMetricsState(): UseMetricsStateResult {
   const {
     values: urlValues,

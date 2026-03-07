@@ -12,7 +12,7 @@ export { default as CommandPalette } from './overlay/CommandPalette';
 export { default as SearchInput } from './forms/SearchInput';
 export { default as EmptyState } from './feedback/EmptyState';
 export { default as DetailDrawer } from './layout/DetailDrawer';
-export { default as TimeRangePicker } from './forms/TimeRangePicker';
+export { TimeRangePicker } from './TimeSelector';
 export { default as ObservabilityQueryBar } from './forms/ObservabilityQueryBar';
 export { default as HealthIndicator } from './cards/HealthIndicator';
 export { default as DatabaseTopTablesList } from './data-display/DatabaseTopTablesList';

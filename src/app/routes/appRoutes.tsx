@@ -1,15 +1,15 @@
 import { lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
-import { ROUTES } from '@/shared/constants/routes';
-import { ErrorBoundary } from '@/shared/components/feedback';
 import { ServiceDetailPageView } from '@/domains/services';
 import { SettingsPageView } from '@/domains/settings';
 import { TraceDetailPageView } from '@/domains/traces';
+import { ErrorBoundary } from '@/shared/components/feedback';
+import { ROUTES } from '@/shared/constants/routes';
 
-import MainLayout from '../layout/MainLayout';
 import BackendDrivenPage from './BackendDrivenPage';
 import ProtectedRoute from './ProtectedRoute';
+import MainLayout from '../layout/MainLayout';
 
 const LoginPage = lazy(() => import('@/app/auth'));
 

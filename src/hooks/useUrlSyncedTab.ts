@@ -68,4 +68,3 @@ export function useUrlSyncedTab<T extends string>({
 
   return { activeTab, setActiveTab, onTabChange };
 }
-

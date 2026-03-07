@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
 import { Search } from 'lucide-react';
+import { ReactNode } from 'react';
 
 interface EmptyTip {
   num?: number;

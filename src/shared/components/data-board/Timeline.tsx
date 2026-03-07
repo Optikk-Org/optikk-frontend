@@ -1,7 +1,8 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Timeline as AntTimeline } from 'antd';
 
 import { formatRelativeTime } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
 import './Timeline.css';
 
 interface TimelineTag {

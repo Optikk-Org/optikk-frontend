@@ -1,5 +1,4 @@
-import { APP_COLORS } from '@config/colorLiterals';
-import { Row, Col, Card, Select, Tag, Table, Skeleton, Empty } from 'antd';
+import { Row, Col, Card, Select } from 'antd';
 import {
   Gauge, Database, Radio, Cpu, GitPullRequest,
 } from 'lucide-react';
@@ -16,7 +15,11 @@ import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
 
 import { useAppStore } from '@store/appStore';
 
-import { formatNumber, formatDuration } from '@utils/formatters';
+import { formatNumber } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
+import { KafkaSaturationTable } from '../../components/KafkaSaturationTable';
+import { DatabaseSaturationTable } from '../../components/DatabaseSaturationTable';
 import './SaturationPage.css';
 
 function normalizeKafkaMetric(row: any = {}) {
@@ -42,9 +45,6 @@ function normalizeDatabaseMetric(row: any = {}) {
   };
 }
 
-/**
- *
- */
 export default function SaturationPage() {
   const { refreshKey } = useAppStore();
   const [selectedService, setSelectedService] = useState<string | null>(null);
@@ -106,64 +106,6 @@ export default function SaturationPage() {
     };
   }, [kafkaLag, metricsData]);
 
-  const kafkaColumns = [
-    {
-      title: 'Kafka Queue',
-      dataIndex: 'queue',
-      key: 'queue',
-      render: (v: any) => (
-        <Tag style={{ background: APP_COLORS.rgba_247_144_9_0p15, color: APP_COLORS.hex_f79009, border: `1px solid ${APP_COLORS.rgba_247_144_9_0p3_2}` }}>
-          {v || 'unknown'}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Consumer Lag (Avg)',
-      dataIndex: 'avg_consumer_lag',
-      key: 'avg_consumer_lag',
-      render: (v: any) => formatNumber(v),
-      sorter: (a: any, b: any) => Number(a.avg_consumer_lag) - Number(b.avg_consumer_lag),
-      align: 'right' as any,
-    },
-    {
-      title: 'Queue Depth (Avg)',
-      dataIndex: 'avg_queue_depth',
-      key: 'avg_queue_depth',
-      render: (v: any) => formatNumber(v),
-      sorter: (a: any, b: any) => Number(a.avg_queue_depth) - Number(b.avg_queue_depth),
-      align: 'right' as any,
-    },
-  ];
-
-  const dbTableColumns = [
-    {
-      title: 'Table Name',
-      dataIndex: 'table_name',
-      key: 'table_name',
-      render: (v: any) => (
-        <Tag style={{ background: APP_COLORS.rgba_94_96_206_0p15_2, color: APP_COLORS.hex_5e60ce, border: `1px solid ${APP_COLORS.rgba_94_96_206_0p3_2}` }}>
-          {v || 'unknown'}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Query Count',
-      dataIndex: 'query_count',
-      key: 'query_count',
-      render: (v: any) => formatNumber(Number(v)),
-      sorter: (a: any, b: any) => Number(a.query_count) - Number(b.query_count),
-      align: 'right' as any,
-    },
-    {
-      title: 'Avg Latency',
-      dataIndex: 'avg_latency_ms',
-      key: 'avg_latency_ms',
-      render: (v: any) => formatDuration(Number(v)),
-      sorter: (a: any, b: any) => Number(a.avg_latency_ms) - Number(b.avg_latency_ms),
-      align: 'right' as any,
-    },
-  ];
-
   return (
     <div className="saturation-page">
       <PageHeader
@@ -186,38 +128,54 @@ export default function SaturationPage() {
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Max DB Pool Util"
-            value={`${Number(summary.maxDbPool).toFixed(1)}%`}
-            icon={<Database size={20} />}
-            iconColor={summary.maxDbPool > 80 ? APP_COLORS.hex_f04438 : summary.maxDbPool > 60 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991}
-            loading={metricsLoading}
+            metric={{
+              title: 'Max DB Pool Util',
+              value: `${Number(summary.maxDbPool).toFixed(1)}%`,
+            }}
+            visuals={{
+              icon: <Database size={20} />,
+              iconColor: summary.maxDbPool > 80 ? APP_COLORS.hex_f04438 : summary.maxDbPool > 60 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991,
+              loading: metricsLoading,
+            }}
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Max Consumer Lag"
-            value={formatNumber(summary.maxLag)}
-            icon={<Radio size={20} />}
-            iconColor={summary.maxLag > 1000 ? APP_COLORS.hex_f04438 : summary.maxLag > 100 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991}
-            loading={metricsLoading}
+            metric={{
+              title: 'Max Consumer Lag',
+              value: formatNumber(summary.maxLag),
+            }}
+            visuals={{
+              icon: <Radio size={20} />,
+              iconColor: summary.maxLag > 1000 ? APP_COLORS.hex_f04438 : summary.maxLag > 100 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991,
+              loading: metricsLoading,
+            }}
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Max Thread Active"
-            value={formatNumber(summary.maxThread)}
-            icon={<Cpu size={20} />}
-            iconColor={summary.maxThread > 200 ? APP_COLORS.hex_f04438 : summary.maxThread > 100 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991}
-            loading={metricsLoading}
+            metric={{
+              title: 'Max Thread Active',
+              value: formatNumber(summary.maxThread),
+            }}
+            visuals={{
+              icon: <Cpu size={20} />,
+              iconColor: summary.maxThread > 200 ? APP_COLORS.hex_f04438 : summary.maxThread > 100 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991,
+              loading: metricsLoading,
+            }}
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Max Queue Depth"
-            value={formatNumber(summary.maxQueue)}
-            icon={<GitPullRequest size={20} />}
-            iconColor={summary.maxQueue > 1000 ? APP_COLORS.hex_f04438 : summary.maxQueue > 100 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991}
-            loading={metricsLoading}
+            metric={{
+              title: 'Max Queue Depth',
+              value: formatNumber(summary.maxQueue),
+            }}
+            visuals={{
+              icon: <GitPullRequest size={20} />,
+              iconColor: summary.maxQueue > 1000 ? APP_COLORS.hex_f04438 : summary.maxQueue > 100 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991,
+              loading: metricsLoading,
+            }}
           />
         </Col>
       </Row>
@@ -249,19 +207,7 @@ export default function SaturationPage() {
             }
             className="sat-chart-card"
           >
-            {dbQueryLoading ? (
-              <Skeleton active paragraph={{ rows: 8 }} />
-            ) : dbQueries.length === 0 ? (
-              <Empty description="No saturation data in selected time range" />
-            ) : (
-              <Table
-                dataSource={dbQueries.map((m, i) => ({ ...m, key: i }))}
-                columns={dbTableColumns}
-                size="small"
-                pagination={{ pageSize: 20 }}
-                scroll={{ x: 800 }}
-              />
-            )}
+            <DatabaseSaturationTable data={dbQueries} loading={dbQueryLoading} />
           </Card>
         </Col>
       </Row>
@@ -277,19 +223,7 @@ export default function SaturationPage() {
             }
             className="sat-chart-card"
           >
-            {lagLoading ? (
-              <Skeleton active paragraph={{ rows: 8 }} />
-            ) : kafkaLag.length === 0 ? (
-              <Empty description="No messaging data in selected time range" />
-            ) : (
-              <Table
-                dataSource={kafkaLag.map((m, i) => ({ ...m, key: i }))}
-                columns={kafkaColumns}
-                size="small"
-                pagination={{ pageSize: 20 }}
-                scroll={{ x: 800 }}
-              />
-            )}
+            <KafkaSaturationTable data={kafkaLag} loading={lagLoading} />
           </Card>
         </Col>
       </Row>

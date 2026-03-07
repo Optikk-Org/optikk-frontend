@@ -1,15 +1,19 @@
-import { API_CONFIG } from '@config/apiConfig';
 import type {
   DashboardComponentSpec,
   DefaultConfigPage,
   DefaultConfigTab,
 } from '@/types/dashboardConfig';
 
+import { API_CONFIG } from '@config/apiConfig';
+
 import api from './api';
 
 const BASE = API_CONFIG.ENDPOINTS.V1_BASE;
 
-export const defaultConfigService = {
+export /**
+ *
+ */
+const defaultConfigService = {
   async listPages(_teamId: number | null): Promise<DefaultConfigPage[]> {
     const response = await api.get(`${BASE}/default-config/pages`) as { pages?: DefaultConfigPage[] };
     return Array.isArray(response.pages) ? response.pages : [];

@@ -1,6 +1,7 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Tooltip } from 'antd';
 import { useMemo } from 'react';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 import './LatencyHeatmapChart.css';
 

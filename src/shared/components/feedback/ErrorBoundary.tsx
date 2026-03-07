@@ -1,7 +1,8 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Button, Result } from 'antd';
 import { AlertCircle } from 'lucide-react';
 import React from 'react';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 import type { ErrorBoundaryProps, ErrorBoundaryState } from './types';
 

@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 
+import type { DashboardRenderConfig } from '@/types/dashboardConfig';
+
 import { usePageTabs } from './usePageTabs';
 import { useTabComponents } from './useTabComponents';
-import type { DashboardRenderConfig } from '@/types/dashboardConfig';
 
 interface UseDashboardConfigResult {
   config: DashboardRenderConfig | null;
@@ -10,6 +11,9 @@ interface UseDashboardConfigResult {
   error: Error | null;
 }
 
+/**
+ *
+ */
 export function useDashboardConfig(pageId: string): UseDashboardConfigResult {
   const { tabs, isLoading: tabsLoading, error: tabsError } = usePageTabs(pageId);
   const defaultTabId = tabs[0]?.id ?? '';

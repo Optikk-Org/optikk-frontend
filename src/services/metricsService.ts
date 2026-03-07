@@ -9,7 +9,26 @@ import type { QueryParams, RequestTime } from './service-types';
 
 const BASE = API_CONFIG.ENDPOINTS.V1_BASE;
 
-interface MetricRow extends Record<string, unknown> {}
+interface MetricRow extends Record<string, unknown> {
+  service_name?: string;
+  serviceName?: string;
+  operation_name?: string;
+  operationName?: string;
+  request_count?: number;
+  requestCount?: number;
+  error_count?: number;
+  errorCount?: number;
+  error_rate?: number;
+  errorRate?: number;
+  avg_latency?: number;
+  avgLatency?: number;
+  p50_latency?: number;
+  p50Latency?: number;
+  p95_latency?: number;
+  p95Latency?: number;
+  p99_latency?: number;
+  p99Latency?: number;
+}
 
 /**
  * Service metric shape consumed across dashboard pages.

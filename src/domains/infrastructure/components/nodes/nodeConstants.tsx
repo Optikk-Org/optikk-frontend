@@ -1,5 +1,6 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 /**
  *
@@ -12,13 +13,19 @@ export function deriveNodeStatus(errorRate: any): 'healthy' | 'degraded' | 'unhe
   return 'healthy';
 }
 
-export const STATUS_CONFIG: Record<string, { label: string; color: string; icon: JSX.Element }> = {
+export /**
+ *
+ */
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: JSX.Element }> = {
   healthy: { label: 'Healthy', color: APP_COLORS.hex_73c991, icon: <CheckCircle2 size={14} /> },
   degraded: { label: 'Degraded', color: APP_COLORS.hex_f79009, icon: <AlertTriangle size={14} /> },
   unhealthy: { label: 'Unhealthy', color: APP_COLORS.hex_f04438, icon: <XCircle size={14} /> },
 };
 
-export const NODE_COLUMNS = [
+export /**
+ *
+ */
+const NODE_COLUMNS = [
   { key: 'host', label: 'Host', defaultWidth: 200 },
   { key: 'status', label: 'Status', defaultWidth: 110 },
   { key: 'pod_count', label: 'Pods', defaultWidth: 80 },
@@ -31,7 +38,10 @@ export const NODE_COLUMNS = [
   { key: 'last_seen', label: 'Last Seen', defaultWidth: 150, flex: true },
 ];
 
-export const NODE_SERVICE_COLUMNS = [
+export /**
+ *
+ */
+const NODE_SERVICE_COLUMNS = [
   { key: 'service_name', label: 'Service', defaultWidth: 180 },
   { key: 'request_count', label: 'Requests', defaultWidth: 100 },
   { key: 'error_rate', label: 'Error Rate', defaultWidth: 100 },

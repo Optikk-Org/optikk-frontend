@@ -1,8 +1,10 @@
 import { Col, Row } from 'antd';
 
+import type { DashboardDataSources, StatCardSpec } from '@/types/dashboardConfig';
+
 import StatCard from '@components/common/cards/StatCard';
 import { getDashboardIcon } from '@components/ui/dashboard/SpecializedRendererRegistry';
-import type { DashboardDataSources, StatCardSpec } from '@/types/dashboardConfig';
+
 import { formatDuration, formatNumber } from '@utils/formatters';
 
 interface DashboardStatCardsProps {
@@ -59,11 +61,15 @@ export default function DashboardStatCards({
         return (
           <Col key={spec.title} xs={24} sm={12} lg={colSpan}>
             <StatCard
-              title={spec.title}
-              value={value}
-              formatter={formatter}
-              icon={icon ?? undefined}
-              loading={isLoading}
+              metric={{
+                title: spec.title,
+                value: value,
+                formatter: formatter,
+              }}
+              visuals={{
+                icon: icon ?? undefined,
+                loading: isLoading,
+              }}
             />
           </Col>
         );

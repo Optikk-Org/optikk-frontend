@@ -11,7 +11,7 @@ interface UnifiedMetricListColumn<ItemType> {
 interface UnifiedMetricListProps<ItemType> {
   title?: ReactNode;
   items: ItemType[];
-  columns: UnifiedMetricListColumn<ItemType>[];
+  columns: Array<UnifiedMetricListColumn<ItemType>>;
   rowKey: (item: ItemType, index: number) => string;
   emptyDescription?: string;
   className?: string;

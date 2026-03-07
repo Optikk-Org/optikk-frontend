@@ -1,8 +1,8 @@
 import type { Team, User } from '@/types';
 
-import { API_CONFIG } from '@config/apiConfig';
-
 import api from '@services/api/client';
+
+import { API_CONFIG } from '@config/apiConfig';
 
 import {
   clearAuthPresentFlag,
@@ -33,7 +33,10 @@ function asAuthPayload(value: unknown): AuthPayload | null {
   return value as AuthPayload;
 }
 
-export const authService = {
+export /**
+ *
+ */
+const authService = {
   normalizeAuthPayload(response: unknown): AuthPayload | null {
     const payload = asAuthPayload(response);
     if (!payload) {

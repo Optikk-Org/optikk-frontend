@@ -4,4 +4,3 @@ export { default as TracesKpiCard } from './kpi/TracesKpiCard';
 export { default as TraceMethodBadge } from './table/TraceMethodBadge';
 export { default as TraceStatusBadge } from './table/TraceStatusBadge';
 export { default as TracesTableRow } from './table/TracesTableRow';
-

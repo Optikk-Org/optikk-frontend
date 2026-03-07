@@ -4,17 +4,17 @@
 }
 
 .main-content-layout {
-  margin-left: 240px;
+  margin-left: var(--space-sidebar-w, 220px);
   transition: margin-left 0.2s ease;
 }
 
 .main-content-layout.sidebar-collapsed {
-  margin-left: 64px;
+  margin-left: var(--space-sidebar-collapsed, 56px);
 }
 
 .main-content {
   padding: 24px;
-  min-height: calc(100vh - 64px);
+  min-height: calc(100vh - var(--space-header-h, 56px));
   background: var(--bg-primary, var(--literal-hex-0a0a0a-2));
   position: relative;
   z-index: 1;

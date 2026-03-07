@@ -5,13 +5,12 @@ import { useMemo } from 'react';
 import { PageHeader } from '@components/common';
 import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
 
-import { MessagingSystemsPills, TopQueuesTable } from '../../components';
-
 import { v1Service } from '@services/v1Service';
 
 import { useDashboardConfig } from '@hooks/useDashboardConfig';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
 
+import { MessagingSystemsPills, TopQueuesTable } from '../../components';
 
 /**
  *

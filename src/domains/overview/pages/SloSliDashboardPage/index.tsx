@@ -5,12 +5,12 @@ import { useMemo, useState } from 'react';
 import { FilterBar, PageHeader } from '@components/common';
 import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
 
-import { SloComplianceTable, SloHealthGauges } from '../../components';
-
 import { overviewService } from '@services/overviewService';
 
 import { useDashboardConfig } from '@hooks/useDashboardConfig';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
+
+import { SloComplianceTable, SloHealthGauges } from '../../components';
 
 const n = (v: any) => (v == null || Number.isNaN(Number(v)) ? 0 : Number(v));
 

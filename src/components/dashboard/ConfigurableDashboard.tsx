@@ -1,11 +1,12 @@
 import { Col, Row, Spin } from 'antd';
 
-import { ConfigurableChartCard } from '@components/ui/dashboard';
 import type {
   DashboardDataSources,
   DashboardExtraContext,
   DashboardRenderConfig,
 } from '@/types/dashboardConfig';
+
+import { ConfigurableChartCard } from '@components/ui/dashboard';
 
 interface ConfigurableDashboardProps {
   config: DashboardRenderConfig | null;

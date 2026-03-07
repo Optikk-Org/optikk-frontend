@@ -1,4 +1,3 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Row, Col, Card, Select, Tag, Table, Skeleton, Empty, Tooltip } from 'antd';
 import { AlertCircle, ExternalLink, Clock } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -13,6 +12,8 @@ import { useDashboardConfig } from '@hooks/useDashboardConfig';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
 
 import { formatNumber, formatRelativeTime } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
 import './ErrorDashboardPage.css';
 
 const n = (v: any) => (v == null || Number.isNaN(Number(v)) ? 0 : Number(v));

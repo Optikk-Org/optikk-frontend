@@ -1,7 +1,8 @@
 import { Skeleton } from 'antd';
 
-import DashboardTabContent from './DashboardTabContent';
 import { useTabComponents } from '@hooks/useTabComponents';
+
+import DashboardTabContent from './DashboardTabContent';
 
 interface ConfiguredTabPanelProps {
   pageId: string;

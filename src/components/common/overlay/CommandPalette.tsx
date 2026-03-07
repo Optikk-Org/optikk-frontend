@@ -1,15 +1,16 @@
 import { Modal, Input } from 'antd';
-import type { InputRef } from 'antd';
 import {
   BarChart3, FileText, GitBranch, Layers, Network,
   Server, Settings, Activity, RefreshCw, Sun, Search,
 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { LucideIcon } from 'lucide-react';
-import type { KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useAppStore } from '@store/appStore';
+
+import type { InputRef } from 'antd';
+import type { LucideIcon } from 'lucide-react';
+import type { KeyboardEvent } from 'react';
 import './CommandPalette.css';
 
 type CommandAction = 'refresh' | 'toggleTheme';

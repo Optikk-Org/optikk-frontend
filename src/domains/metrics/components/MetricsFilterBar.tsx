@@ -1,8 +1,9 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Switch } from 'antd';
 import { AlertTriangle } from 'lucide-react';
 
 import { FilterBar } from '@components/common';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 import type { MetricsServiceOption } from '../types';
 
@@ -14,6 +15,9 @@ interface MetricsFilterBarProps {
   setShowErrorsOnly: (value: boolean) => void;
 }
 
+/**
+ *
+ */
 export function MetricsFilterBar({
   services,
   selectedService,

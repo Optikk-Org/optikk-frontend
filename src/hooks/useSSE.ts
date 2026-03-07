@@ -41,6 +41,9 @@ function parseSSEData(raw: string): unknown {
   }
 }
 
+/**
+ *
+ */
 export function buildSSEStreamUrl(
   baseApiUrl: string,
   token: string,

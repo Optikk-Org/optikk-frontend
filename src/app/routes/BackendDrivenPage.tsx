@@ -1,14 +1,16 @@
-import { Navigate, useLocation } from 'react-router-dom';
 import { Skeleton } from 'antd';
+import { Navigate, useLocation } from 'react-router-dom';
 
-import DashboardPage from '@components/dashboard/DashboardPage';
-import { usePagesConfig } from '@hooks/usePagesConfig';
-import { ROUTES } from '@/shared/constants/routes';
 import { AiObservabilityPageView } from '@/domains/ai';
 import { InfrastructureHubPageView } from '@/domains/infrastructure';
 import { LogsHubPageView } from '@/domains/log';
 import { ServicesPageView } from '@/domains/services';
 import { TracesPageView } from '@/domains/traces';
+import { ROUTES } from '@/shared/constants/routes';
+
+import DashboardPage from '@components/dashboard/DashboardPage';
+
+import { usePagesConfig } from '@hooks/usePagesConfig';
 
 const CUSTOM_SHELLS = {
   'ai-observability': AiObservabilityPageView,

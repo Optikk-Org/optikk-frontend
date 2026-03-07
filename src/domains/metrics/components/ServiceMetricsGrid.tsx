@@ -1,7 +1,8 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Row, Col, Card, Progress } from 'antd';
 
 import { formatNumber, formatDuration } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 import type { ServiceMetricPoint } from '../types';
 
@@ -10,6 +11,9 @@ interface ServiceMetricsGridProps {
   onServiceSelect: (serviceName: string) => void;
 }
 
+/**
+ *
+ */
 export function ServiceMetricsGrid({ serviceMetrics, onServiceSelect }: ServiceMetricsGridProps) {
   if (serviceMetrics.length === 0) {
     return null;

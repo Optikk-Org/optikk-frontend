@@ -17,4 +17,3 @@ export default function TraceStatusBadge({ status }: TraceStatusBadgeProps): JSX
     </span>
   );
 }
-

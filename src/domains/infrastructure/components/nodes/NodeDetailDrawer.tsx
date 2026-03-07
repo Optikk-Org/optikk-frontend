@@ -1,10 +1,11 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Descriptions, Drawer, Tag } from 'antd';
 
 import { formatNumber, formatTimestamp } from '@utils/formatters';
 
-import NodeServicesTable from './NodeServicesTable';
+import { APP_COLORS } from '@config/colorLiterals';
+
 import { deriveNodeStatus, STATUS_CONFIG } from './nodeConstants';
+import NodeServicesTable from './NodeServicesTable';
 
 interface NodeDetailDrawerProps {
   open: boolean;

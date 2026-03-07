@@ -1,46 +1,80 @@
-import { STORAGE_KEYS } from '@config/constants';
-import { safeGet, safeGetJSON, safeRemove, safeSet } from '@utils/storage';
-
 import type { Team, User } from '@/types';
 
-export const AUTH_PRESENT_KEY = 'optic_auth_present';
+import { safeGet, safeGetJSON, safeRemove, safeSet } from '@utils/storage';
 
+import { STORAGE_KEYS } from '@config/constants';
+
+export /**
+ *
+ */
+const AUTH_PRESENT_KEY = 'optic_auth_present';
+
+/**
+ *
+ */
 export function setAuthPresentFlag(): void {
   safeSet(AUTH_PRESENT_KEY, '1');
 }
 
+/**
+ *
+ */
 export function clearAuthPresentFlag(): void {
   safeRemove(AUTH_PRESENT_KEY);
 }
 
+/**
+ *
+ */
 export function isAuthPresent(): boolean {
   return safeGet(AUTH_PRESENT_KEY) === '1';
 }
 
+/**
+ *
+ */
 export function getStoredToken(): string | null {
   return safeGet(STORAGE_KEYS.AUTH_TOKEN);
 }
 
+/**
+ *
+ */
 export function setStoredToken(token: string): void {
   safeSet(STORAGE_KEYS.AUTH_TOKEN, token);
 }
 
+/**
+ *
+ */
 export function clearStoredToken(): void {
   safeRemove(STORAGE_KEYS.AUTH_TOKEN);
 }
 
+/**
+ *
+ */
 export function getStoredUser(): User | null {
   return safeGetJSON<User>(STORAGE_KEYS.USER_DATA, null);
 }
 
+/**
+ *
+ */
 export function setStoredUser(user: User): void {
   safeSet(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
 }
 
+/**
+ *
+ */
 export function clearStoredUser(): void {
   safeRemove(STORAGE_KEYS.USER_DATA);
 }
 
+/**
+ *
+ */
 export function getStoredTeamId(): number | null {
   const rawValue = safeGet(STORAGE_KEYS.TEAM_ID);
   if (!rawValue) {
@@ -51,10 +85,16 @@ export function getStoredTeamId(): number | null {
   return Number.isFinite(parsedValue) ? parsedValue : null;
 }
 
+/**
+ *
+ */
 export function setStoredTeamId(teamId: number): void {
   safeSet(STORAGE_KEYS.TEAM_ID, String(teamId));
 }
 
+/**
+ *
+ */
 export function resolveTeamId(payload: {
   readonly currentTeam?: Team;
   readonly teams?: Team[];
@@ -68,6 +108,9 @@ export function resolveTeamId(payload: {
   );
 }
 
+/**
+ *
+ */
 export function clearAuthStorage(): void {
   clearAuthPresentFlag();
   clearStoredToken();

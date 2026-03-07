@@ -1,10 +1,10 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Empty } from 'antd';
 import { useMemo, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
 
 import { createChartOptions } from '@utils/chartHelpers';
 
+import { APP_COLORS } from '@config/colorLiterals';
 import { LOG_LEVELS } from '@config/constants';
 
 const LEVEL_ORDER = ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'];

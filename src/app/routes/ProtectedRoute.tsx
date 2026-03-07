@@ -1,10 +1,12 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Skeleton } from 'antd';
-import type { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 
 import { useAppStore } from '@store/appStore';
 import { useAuthStore } from '@store/authStore';
+
+import { APP_COLORS } from '@config/colorLiterals';
+
+import type { ReactNode } from 'react';
 
 interface ProtectedRouteProps {
   readonly children: ReactNode;

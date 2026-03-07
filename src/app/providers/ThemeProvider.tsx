@@ -1,10 +1,12 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { ConfigProvider, theme as antdTheme } from 'antd';
-import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 
 import { useAppStore } from '@store/appStore';
+
+import { APP_COLORS } from '@config/colorLiterals';
+
+import type { ReactNode } from 'react';
 
 interface ThemeProviderProps {
   readonly children: ReactNode;
@@ -23,12 +25,12 @@ export default function ThemeProvider({ children }: ThemeProviderProps): JSX.Ele
         ? antdTheme.defaultAlgorithm
         : antdTheme.darkAlgorithm,
     token: {
-      colorPrimary: APP_COLORS.hex_5e60ce,
-      colorSuccess: APP_COLORS.hex_73c991,
-      colorWarning: APP_COLORS.hex_f79009,
-      colorError: APP_COLORS.hex_f04438,
-      colorInfo: APP_COLORS.hex_06aed5,
-      borderRadius: 6,
+      colorPrimary: APP_COLORS.hex_7c7ff2,
+      colorSuccess: APP_COLORS.hex_52876b,
+      colorWarning: APP_COLORS.hex_d97706,
+      colorError: APP_COLORS.hex_dc2626,
+      colorInfo: APP_COLORS.hex_4da6c8,
+      borderRadius: 8,
       fontFamily:
         "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     },
@@ -59,13 +61,13 @@ export default function ThemeProvider({ children }: ThemeProviderProps): JSX.Ele
           },
           success: {
             iconTheme: {
-              primary: APP_COLORS.hex_73c991,
+              primary: APP_COLORS.hex_52876b,
               secondary: APP_COLORS.hex_fff,
             },
           },
           error: {
             iconTheme: {
-              primary: APP_COLORS.hex_f04438,
+              primary: APP_COLORS.hex_dc2626,
               secondary: APP_COLORS.hex_fff,
             },
           },

@@ -1,14 +1,14 @@
 import { Layout, Space, Select, Button, Tooltip } from 'antd';
-import { RefreshCw, ChevronDown } from 'lucide-react';
+import { RefreshCw, ChevronDown, Moon, Sun } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
-import TimeRangePicker from '@components/common/forms/TimeRangePicker';
+import { TimeRangePicker } from '@components/common/TimeSelector';
+
+import { useAutoRefresh } from '@hooks/useAutoRefresh';
 
 import { useAppStore } from '@store/appStore';
 import { useAuthStore } from '@store/authStore';
-
-import { useAutoRefresh } from '@hooks/useAutoRefresh';
 
 import { AUTO_REFRESH_INTERVALS } from '@config/constants';
 
@@ -21,7 +21,7 @@ const { Header: AntHeader } = Layout;
  */
 export default function Header() {
   const { user } = useAuthStore();
-  const { selectedTeamId, setSelectedTeamId, triggerRefresh, autoRefreshInterval, setAutoRefreshInterval } = useAppStore();
+  const { selectedTeamId, setSelectedTeamId, triggerRefresh, autoRefreshInterval, setAutoRefreshInterval, theme, setTheme } = useAppStore();
   const [intervalPickerOpen, setIntervalPickerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement | null>(null);
   const { refreshLabel, triggerRefresh: triggerHeaderRefresh } = useAutoRefresh({
@@ -32,6 +32,10 @@ export default function Header() {
   const handleRefresh = () => {
     triggerHeaderRefresh();
     toast.success('Data refreshed');
+  };
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   // Close interval picker on outside click
@@ -75,6 +79,17 @@ export default function Header() {
             />
           </div>
         )}
+
+        {/* Theme toggle */}
+        <Tooltip title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+          <Button
+            data-testid="header-theme-toggle"
+            type="text"
+            className="header-theme-btn"
+            icon={theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            onClick={toggleTheme}
+          />
+        </Tooltip>
 
         {/* Refresh button + interval picker */}
         <div className="header-refresh-wrap" ref={pickerRef}>

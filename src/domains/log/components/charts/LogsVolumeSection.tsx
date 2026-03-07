@@ -1,8 +1,8 @@
 import { BarChart3 } from 'lucide-react';
 
-import type { LogVolumeBucket } from '../../types';
-
 import LogVolumeChart, { VolumeLegend } from '../log/LogVolumeChart';
+
+import type { LogVolumeBucket } from '../../types';
 
 interface LogsVolumeSectionProps {
   volumeBuckets: LogVolumeBucket[];

@@ -4,9 +4,10 @@ import { ReactNode } from 'react';
 
 import { ObservabilityDataBoard, ObservabilityQueryBar, boardHeight } from '@components/common';
 
+import { formatNumber } from '@utils/formatters';
+
 import ServicePills from '../log/ServicePills';
 
-import { formatNumber } from '@utils/formatters';
 import type {
   LogColumn,
   LogFacet,
@@ -16,75 +17,81 @@ import type {
   LogStructuredFilter,
 } from '../../types';
 
-interface LogsTableSectionProps {
-  columns: LogColumn[];
-  logs: LogRecord[];
-  total: number;
-  page: number;
-  pageSize: number;
-  logsLoading: boolean;
-  serviceFacets: LogFacet[];
-  selectedService: string | null;
+/**
+ *
+ */
+export interface LogsFiltersState {
   filters: LogStructuredFilter[];
   searchText: string;
+  selectedService: string | null;
   errorsOnly: boolean;
+  setFilters: (filters: LogStructuredFilter[]) => void;
+  setSearchText: (value: string) => void;
+  setSelectedService: (value: string | null) => void;
+  setErrorsOnly: (value: boolean) => void;
+  clearAll: () => void;
+}
+
+/**
+ *
+ */
+export interface LogsPaginationState {
+  page: number;
+  pageSize: number;
+  total: number;
+  setPage: (value: number | ((prev: number) => number)) => void;
+  setPageSize: (value: number) => void;
+}
+
+/**
+ *
+ */
+export interface LogsDataState {
+  logs: LogRecord[];
+  isLoading: boolean;
+  serviceFacets: LogFacet[];
+}
+
+/**
+ *
+ */
+export interface LogsTableConfig {
+  columns: LogColumn[];
   filterFields: LogFilterField[];
-  onSelectService: (value: string | null) => void;
-  onSetFilters: (filters: LogStructuredFilter[]) => void;
-  onSetSearchText: (value: string) => void;
-  onToggleErrorsOnly: (value: boolean) => void;
-  onClearAll: () => void;
-  onSetPage: (value: number | ((prev: number) => number)) => void;
-  onSetPageSize: (value: number) => void;
   renderRow: (row: LogRecord, args: LogsBoardRenderContext) => ReactNode;
 }
 
 /**
  *
- * @param root0
- * @param root0.columns
- * @param root0.logs
- * @param root0.total
- * @param root0.page
- * @param root0.pageSize
- * @param root0.logsLoading
- * @param root0.serviceFacets
- * @param root0.selectedService
- * @param root0.filters
- * @param root0.searchText
- * @param root0.errorsOnly
- * @param root0.filterFields
- * @param root0.onSelectService
- * @param root0.onSetFilters
- * @param root0.onSetSearchText
- * @param root0.onToggleErrorsOnly
- * @param root0.onClearAll
- * @param root0.onSetPage
- * @param root0.onSetPageSize
- * @param root0.renderRow
  */
+export interface LogsTableSectionProps {
+  data: LogsDataState;
+  pagination: LogsPaginationState;
+  filters: LogsFiltersState;
+  config: LogsTableConfig;
+}
+
 export default function LogsTableSection({
-  columns,
-  logs,
-  total,
-  page,
-  pageSize,
-  logsLoading,
-  serviceFacets,
-  selectedService,
+  data,
+  pagination,
   filters,
-  searchText,
-  errorsOnly,
-  filterFields,
-  onSelectService,
-  onSetFilters,
-  onSetSearchText,
-  onToggleErrorsOnly,
-  onClearAll,
-  onSetPage,
-  onSetPageSize,
-  renderRow,
+  config,
 }: LogsTableSectionProps) {
+  const { logs, isLoading, serviceFacets } = data;
+  const { page, pageSize, total, setPage, setPageSize } = pagination;
+  const { 
+    filters: structuredFilters, 
+    searchText, 
+    selectedService, 
+    errorsOnly, 
+    setFilters, 
+    setSearchText, 
+    setSelectedService, 
+    setErrorsOnly, 
+    clearAll, 
+  } = filters;
+  const { columns, filterFields, renderRow } = config;
+
   const resolvedTotal = total || logs.length;
   const offset = (page - 1) * pageSize;
   const pageCount = Math.max(1, Math.ceil(resolvedTotal / pageSize));
@@ -106,7 +113,7 @@ export default function LogsTableSection({
           <ServicePills
             facets={serviceFacets}
             selectedService={selectedService}
-            onSelect={onSelectService}
+            onSelect={setSelectedService}
           />
         </div>
       )}
@@ -114,24 +121,24 @@ export default function LogsTableSection({
       <div className="logs-querybar-row">
         <ObservabilityQueryBar
           fields={filterFields}
-          filters={filters}
-          setFilters={onSetFilters}
+          filters={structuredFilters}
+          setFilters={setFilters}
           searchText={searchText}
-          setSearchText={onSetSearchText}
-          onClearAll={onClearAll}
+          setSearchText={setSearchText}
+          onClearAll={clearAll}
           placeholder="Search log messages, filter by service, level, host…"
           rightSlot={(
             <Tooltip title="Show only error and fatal logs">
               <div
                 className={`logs-errors-toggle ${errorsOnly ? 'active' : ''}`}
-                onClick={() => onToggleErrorsOnly(!errorsOnly)}
+                onClick={() => setErrorsOnly(!errorsOnly)}
               >
                 <AlertCircle size={13} />
                 Errors only
                 <Switch
                   size="small"
                   checked={errorsOnly}
-                  onChange={onToggleErrorsOnly}
+                  onChange={setErrorsOnly}
                   onClick={(_, e) => e.stopPropagation()}
                 />
               </div>
@@ -142,29 +149,29 @@ export default function LogsTableSection({
 
       <div style={{ height: boardHeight(pageSize), display: 'flex', flexDirection: 'column' }}>
         <ObservabilityDataBoard<LogRecord>
-          columns={columns}
-          rows={logs}
-          rowKey={(log, index) => {
-            const id = log.id;
-            if (id !== null && id !== undefined && String(id) !== '') {
-              return `log-${String(id)}`;
-            }
-            return `log-${index}-${String(log.timestamp ?? '')}`;
+          data={{ rows: logs, isLoading, serverTotal: resolvedTotal }}
+          config={{
+            columns,
+            rowKey: (log, index) => {
+              const id = log.id;
+              if (id !== null && id !== undefined && String(id) !== '') {
+                return `log-${String(id)}`;
+              }
+              return `log-${index}-${String(log.timestamp ?? '')}`;
+            },
+            renderRow,
+            entityName: 'log',
+            storageKey: 'logs_visible_cols_v2',
+            emptyTips: [
+              { num: 1, text: <>Widen the <strong>time range</strong> in the top bar</> },
+              { num: 2, text: <>Remove active <strong>filters</strong> or clear the search</> },
+              { num: 3, text: <>Ensure your services emit logs via <strong>OTLP</strong></> },
+            ]
           }}
-          renderRow={renderRow}
-          entityName="log"
-          storageKey="logs_visible_cols_v2"
-          isLoading={logsLoading}
-          serverTotal={resolvedTotal}
-          emptyTips={[
-            { num: 1, text: <>Widen the <strong>time range</strong> in the top bar</> },
-            { num: 2, text: <>Remove active <strong>filters</strong> or clear the search</> },
-            { num: 3, text: <>Ensure your services emit logs via <strong>OTLP</strong></> },
-          ]}
         />
       </div>
 
-      {!logsLoading && (resolvedTotal > 0 || logs.length > 0) && (
+      {!isLoading && (resolvedTotal > 0 || logs.length > 0) && (
         <div className="logs-pagination">
           <span className="logs-pagination-info">
             Showing {offset + 1}–{Math.min(offset + pageSize, resolvedTotal)} of {formatNumber(resolvedTotal)}
@@ -174,13 +181,13 @@ export default function LogsTableSection({
               size="small"
               value={pageSize}
               onChange={(value) => {
-                onSetPageSize(value);
-                onSetPage(1);
+                setPageSize(value);
+                setPage(1);
               }}
               options={[20, 50, 100, 200].map((n) => ({ label: `${n} / page`, value: n }))}
               style={{ width: 110 }}
             />
-            <button className="logs-nav-btn" disabled={page <= 1} onClick={() => onSetPage((p) => Math.max(1, p - 1))}>
+            <button className="logs-nav-btn" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
               ← Prev
             </button>
             <span className="logs-pagination-pages">
@@ -189,7 +196,7 @@ export default function LogsTableSection({
             <button
               className="logs-nav-btn"
               disabled={page >= pageCount}
-              onClick={() => onSetPage((p) => p + 1)}
+              onClick={() => setPage((p) => p + 1)}
             >
               Next →
             </button>

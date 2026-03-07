@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
+/**
+ *
+ */
 export type VisibleColumnsState = Record<string, boolean>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {

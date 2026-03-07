@@ -1,10 +1,11 @@
 import { render, screen } from '@testing-library/react';
-import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { DashboardComponentSpec, DashboardRenderConfig } from '@/types/dashboardConfig';
 
 import ConfigurableDashboard from './ConfigurableDashboard';
+
+import type { ReactNode } from 'react';
 
 vi.mock('antd', () => ({
   Col: ({ children }: { children: ReactNode }) => <div>{children}</div>,

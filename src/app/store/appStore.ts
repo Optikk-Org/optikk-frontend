@@ -6,7 +6,14 @@ import { safeGet, safeGetJSON, safeSet, safeSetJSON } from '@utils/storage';
 
 import { STORAGE_KEYS, TIME_RANGES } from '@config/constants';
 
-type ViewPreferences = Record<string, unknown>;
+interface ViewPreferences {
+  theme?: 'light' | 'dark' | 'system';
+  timezone?: string;
+  refreshInterval?: number;
+  sidebarCollapsed?: boolean;
+  density?: 'compact' | 'comfortable';
+  [key: string]: unknown;
+}
 
 interface QueryClientLike {
   invalidateQueries: () => Promise<void> | void;

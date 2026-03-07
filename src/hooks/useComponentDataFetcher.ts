@@ -2,7 +2,9 @@ import { useQueries } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import type { DashboardComponentSpec } from '@/types/dashboardConfig';
+
 import { api } from '@services/api/client';
+
 import { useAppStore } from '@store/appStore';
 
 interface UseComponentDataFetcherResult {
@@ -25,6 +27,9 @@ function buildRequestKey(
   });
 }
 
+/**
+ *
+ */
 export function useComponentDataFetcher(
   components: DashboardComponentSpec[],
   pathParams?: Record<string, string>,

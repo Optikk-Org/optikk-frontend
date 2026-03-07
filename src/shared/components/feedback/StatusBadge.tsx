@@ -1,7 +1,8 @@
 import { Tag } from 'antd';
 
-import { STATUS_COLORS } from '@config/constants';
 import { getHealthColor } from '@utils/formatters';
+
+import { STATUS_COLORS } from '@config/constants';
 
 import type { StatusBadgeProps } from './types';
 

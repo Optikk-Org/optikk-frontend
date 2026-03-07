@@ -1,7 +1,10 @@
-import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
-
 import { getStoredTeamId, getStoredToken } from '@services/auth/authStorage';
 
+import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+
+/**
+ *
+ */
 export function attachAuthInterceptor(instance: AxiosInstance): number {
   return instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     const headers = config.headers;

@@ -1,18 +1,33 @@
+/**
+ *
+ */
 export type DashboardDataSources = Record<string, any>;
 
+/**
+ *
+ */
 export type DashboardExtraContext = Record<string, any>;
 
+/**
+ *
+ */
 export interface DashboardLayout {
   col?: number;
   [key: string]: any;
 }
 
+/**
+ *
+ */
 export interface DashboardQuerySpec extends Record<string, any> {
   method: string;
   endpoint: string;
   params?: Record<string, string | number | boolean>;
 }
 
+/**
+ *
+ */
 export interface DashboardComponentSpec extends Record<string, any> {
   id: string;
   componentKey: string;
@@ -26,6 +41,9 @@ export interface DashboardComponentSpec extends Record<string, any> {
   key?: string;
 }
 
+/**
+ *
+ */
 export interface DefaultConfigPage {
   id: string;
   path: string;
@@ -39,6 +57,9 @@ export interface DefaultConfigPage {
   subtitle?: string;
 }
 
+/**
+ *
+ */
 export interface DefaultConfigTab {
   id: string;
   pageId: string;
@@ -46,12 +67,18 @@ export interface DefaultConfigTab {
   order: number;
 }
 
+/**
+ *
+ */
 export interface DataSourceSpec {
   id: string;
   endpoint: string;
   params?: Record<string, string | number>;
 }
 
+/**
+ *
+ */
 export interface StatCardSpec {
   title: string;
   dataSource: string;
@@ -60,6 +87,9 @@ export interface StatCardSpec {
   icon?: string;
 }
 
+/**
+ *
+ */
 export interface TabSpec {
   id: string;
   label: string;
@@ -68,6 +98,9 @@ export interface TabSpec {
   charts: DashboardComponentSpec[];
 }
 
+/**
+ *
+ */
 export interface DashboardRenderConfig extends Record<string, any> {
   components: DashboardComponentSpec[];
 }

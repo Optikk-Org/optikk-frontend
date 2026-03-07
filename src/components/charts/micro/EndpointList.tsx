@@ -1,5 +1,6 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { formatNumber, formatDuration } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 const DEFAULT_MAX_HEIGHT = '200px';
 

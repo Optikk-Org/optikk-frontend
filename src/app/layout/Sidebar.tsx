@@ -1,18 +1,16 @@
-import { Button, Layout, Menu, Tooltip } from 'antd';
+import { Button, Layout, Menu } from 'antd';
 import {
   Layers,
   LogOut,
-  Moon,
   Settings,
-  Sun,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { getDashboardIcon } from '@/components/ui/dashboard/SpecializedRendererRegistry';
-import { ROUTES } from '@/shared/constants/routes';
 import { usePagesConfig } from '@/hooks/usePagesConfig';
+import { ROUTES } from '@/shared/constants/routes';
 
 import { useAppStore } from '@store/appStore';
 import { useAuthStore } from '@store/authStore';
@@ -27,13 +25,11 @@ const { Sider } = Layout;
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { sidebarCollapsed, toggleSidebar, theme, setTheme, selectedTeamId } =
+  const { sidebarCollapsed, toggleSidebar, theme, selectedTeamId } =
     useAppStore();
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
   const { pages } = usePagesConfig();
-  const currentTeam = (user?.teams || []).find((team) => team.id === selectedTeamId);
-
   const navEntries = useMemo(
     () => pages
       .filter((page) => page.navigable)
@@ -104,10 +100,6 @@ export default function Sidebar() {
     navigate(key);
   };
 
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
-
   const handleLogout = async () => {
     await logout();
     toast.success('Logged out successfully');
@@ -140,8 +132,8 @@ export default function Sidebar() {
       collapsed={sidebarCollapsed}
       onCollapse={toggleSidebar}
       collapsible
-      width={240}
-      collapsedWidth={64}
+      width={220}
+      collapsedWidth={56}
       theme={theme === 'light' ? 'light' : 'dark'}
     >
       <div className="sidebar-logo">
@@ -150,15 +142,6 @@ export default function Sidebar() {
         </div>
         {!sidebarCollapsed && <span className="logo-text">Optikk</span>}
       </div>
-
-      {!sidebarCollapsed && (
-        <div className="sidebar-context-strip">
-          <div className="sidebar-context-badge">Enterprise</div>
-          <div className="sidebar-context-team">
-            {currentTeam?.name || `Workspace #${selectedTeamId}`}
-          </div>
-        </div>
-      )}
 
       <div className="sidebar-menu-container">
         <div className="sidebar-nav-scroll">
@@ -183,21 +166,6 @@ export default function Sidebar() {
             >
               {!sidebarCollapsed && 'Settings'}
             </Button>
-
-            <Tooltip
-              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-              placement="right"
-            >
-              <Button
-                data-testid="sidebar-theme-toggle"
-                type="text"
-                className="sidebar-theme-btn"
-                icon={theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-                onClick={toggleTheme}
-              >
-                {!sidebarCollapsed && (theme === 'dark' ? 'Light Theme' : 'Dark Theme')}
-              </Button>
-            </Tooltip>
 
             <Button
               data-testid="sidebar-logout"

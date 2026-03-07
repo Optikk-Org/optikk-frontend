@@ -1,8 +1,9 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Col, Row } from 'antd';
 import { Activity, Database } from 'lucide-react';
 
 import { formatDuration, formatNumber, normalizePercentage } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 const DB_SYSTEM_META: Record<string, { label: string; color: string; gradient: string }> = {
   postgresql: { label: 'PostgreSQL', color: APP_COLORS.hex_336791, gradient: `linear-gradient(135deg, ${APP_COLORS.hex_336791} 0%, ${APP_COLORS.hex_5e9ed6} 100%)` },

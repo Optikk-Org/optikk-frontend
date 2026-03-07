@@ -1,5 +1,6 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { formatNumber } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 const CHART_COLORS = [
   APP_COLORS.hex_5e60ce,

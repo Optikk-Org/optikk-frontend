@@ -1,0 +1,7346 @@
+[
+  {
+    "file": "/src/App.tsx",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/app/App.tsx",
+    "loc": 54,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "PageLoader",
+        "loc": 16,
+        "props": 0,
+        "nesting": 1,
+        "hooks": 0
+      },
+      {
+        "name": "App",
+        "loc": 24,
+        "props": 0,
+        "nesting": 1,
+        "hooks": 1
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/app/auth/index.ts",
+    "loc": 3,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/app/auth/pages/LoginPage/index.tsx",
+    "loc": 171,
+    "exportCount": 1,
+    "hasUseEffect": 2,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "LoginPage",
+        "loc": 146,
+        "props": 0,
+        "nesting": 5,
+        "hooks": 5
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "LoginFormValues",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/app/layout/Header.tsx",
+    "loc": 145,
+    "exportCount": 1,
+    "hasUseEffect": 1,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "Header",
+        "loc": 122,
+        "props": 0,
+        "nesting": 7,
+        "hooks": 6
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/app/layout/MainLayout.tsx",
+    "loc": 51,
+    "exportCount": 1,
+    "hasUseEffect": 1,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "MainLayout",
+        "loc": 31,
+        "props": 0,
+        "nesting": 6,
+        "hooks": 4
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/app/layout/Sidebar.tsx",
+    "loc": 185,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "Sidebar",
+        "loc": 159,
+        "props": 0,
+        "nesting": 5,
+        "hooks": 10
+      },
+      {
+        "name": "user",
+        "loc": 0,
+        "props": 0,
+        "nesting": 1,
+        "hooks": 1
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/app/providers/AuthExpiryListener.tsx",
+    "loc": 18,
+    "exportCount": 1,
+    "hasUseEffect": 1,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "AuthExpiryListener",
+        "loc": 13,
+        "props": 0,
+        "nesting": 5,
+        "hooks": 2
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/app/providers/QueryClientProvider.tsx",
+    "loc": 37,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "AppQueryClientProvider",
+        "loc": 8,
+        "props": 1,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "AppQueryClientProviderProps",
+        "fields": 1
+      }
+    ]
+  },
+  {
+    "file": "/src/app/providers/ThemeProvider.tsx",
+    "loc": 79,
+    "exportCount": 1,
+    "hasUseEffect": 1,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ThemeProvider",
+        "loc": 63,
+        "props": 1,
+        "nesting": 3,
+        "hooks": 2
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "ThemeProviderProps",
+        "fields": 1
+      }
+    ]
+  },
+  {
+    "file": "/src/app/registry/domainRegistry.ts",
+    "loc": 63,
+    "exportCount": 5,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "DomainPage",
+        "fields": 0
+      },
+      {
+        "name": "DomainNavigationItem",
+        "fields": 4
+      },
+      {
+        "name": "DomainRouteConfig",
+        "fields": 2
+      },
+      {
+        "name": "DomainConfig",
+        "fields": 5
+      }
+    ]
+  },
+  {
+    "file": "/src/app/registry/permissionRegistry.ts",
+    "loc": 19,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/app/routes/BackendDrivenPage.tsx",
+    "loc": 51,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "CUSTOM_SHELLS",
+        "loc": 6,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "BackendDrivenPage",
+        "loc": 27,
+        "props": 0,
+        "nesting": 3,
+        "hooks": 2
+      },
+      {
+        "name": "Shell",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/app/routes/ProtectedRoute.tsx",
+    "loc": 41,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ProtectedRoute",
+        "loc": 25,
+        "props": 1,
+        "nesting": 3,
+        "hooks": 2
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "ProtectedRouteProps",
+        "fields": 1
+      }
+    ]
+  },
+  {
+    "file": "/src/app/routes/appRoutes.tsx",
+    "loc": 87,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "LoginPage",
+        "loc": 0,
+        "props": 0,
+        "nesting": 1,
+        "hooks": 0
+      },
+      {
+        "name": "AppRoutes",
+        "loc": 63,
+        "props": 0,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/app/store/appStore.ts",
+    "loc": 160,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useAppStore",
+        "loc": 72,
+        "props": 0,
+        "nesting": 5,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "ViewPreferences",
+        "fields": 0
+      },
+      {
+        "name": "QueryClientLike",
+        "fields": 1
+      },
+      {
+        "name": "AppState",
+        "fields": 17
+      }
+    ]
+  },
+  {
+    "file": "/src/app/store/authStore.ts",
+    "loc": 132,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useAuthStore",
+        "loc": 58,
+        "props": 0,
+        "nesting": 8,
+        "hooks": 3
+      },
+      {
+        "name": "userData",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "AuthState",
+        "fields": 7
+      },
+      {
+        "name": "LoginPayload",
+        "fields": 4
+      },
+      {
+        "name": "QueryClientLike",
+        "fields": 1
+      }
+    ]
+  },
+  {
+    "file": "/src/components/charts/distributions/LatencyHistogram.tsx",
+    "loc": 98,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BUCKETS",
+        "loc": 8,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "LatencyHistogram",
+        "loc": 49,
+        "props": 2,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "LatencyHistogramTrace",
+        "fields": 2
+      },
+      {
+        "name": "LatencyHistogramProps",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/components/charts/distributions/LogHistogram.tsx",
+    "loc": 285,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "LEVEL_ORDER",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "LEVEL_COLORS",
+        "loc": 7,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "LEGEND_ORDER",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "INTERVAL_MS",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "LogHistogramPanel",
+        "loc": 30,
+        "props": 3,
+        "nesting": 3,
+        "hooks": 2
+      },
+      {
+        "name": "LogHistogram",
+        "loc": 164,
+        "props": 5,
+        "nesting": 8,
+        "hooks": 1
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/charts/micro/EndpointList.tsx",
+    "loc": 203,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DEFAULT_MAX_HEIGHT",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "EndpointList",
+        "loc": 161,
+        "props": 5,
+        "nesting": 7,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "EndpointListType",
+        "fields": 0
+      },
+      {
+        "name": "EndpointListItem",
+        "fields": 10
+      },
+      {
+        "name": "EndpointListProps",
+        "fields": 5
+      },
+      {
+        "name": "EndpointValue",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/components/charts/micro/GaugeChart.tsx",
+    "loc": 74,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "GaugeChart",
+        "loc": 51,
+        "props": 3,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "GaugeChartProps",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/components/charts/micro/SparklineChart.tsx",
+    "loc": 82,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "SparklineChart",
+        "loc": 32,
+        "props": 6,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "SparklineChartProps",
+        "fields": 6
+      }
+    ]
+  },
+  {
+    "file": "/src/components/charts/specialized/BurnRateChart.tsx",
+    "loc": 109,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BurnRateChart",
+        "loc": 70,
+        "props": 5,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "BurnRatePoint",
+        "fields": 3
+      },
+      {
+        "name": "BurnRateChartProps",
+        "fields": 5
+      }
+    ]
+  },
+  {
+    "file": "/src/components/charts/specialized/GoldenSignalsHeatmap.tsx",
+    "loc": 115,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "GoldenSignalsHeatmap",
+        "loc": 82,
+        "props": 4,
+        "nesting": 5,
+        "hooks": 1
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "HeatCell",
+        "fields": 3
+      },
+      {
+        "name": "GoldenSignalsHeatmapProps",
+        "fields": 4
+      }
+    ]
+  },
+  {
+    "file": "/src/components/charts/specialized/LatencyHeatmapChart.tsx",
+    "loc": 107,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "LATENCY_BUCKETS",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "LatencyHeatmapChart",
+        "loc": 79,
+        "props": 1,
+        "nesting": 5,
+        "hooks": 2
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "LatencyHeatmapDataPoint",
+        "fields": 3
+      },
+      {
+        "name": "LatencyHeatmapChartProps",
+        "fields": 1
+      }
+    ]
+  },
+  {
+    "file": "/src/components/charts/specialized/N1QueryDetector.tsx",
+    "loc": 123,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "N1QueryDetector",
+        "loc": 87,
+        "props": 4,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "N1QueryRow",
+        "fields": 7
+      },
+      {
+        "name": "N1QueryDetectorProps",
+        "fields": 4
+      }
+    ]
+  },
+  {
+    "file": "/src/components/charts/specialized/PodLifecycleGantt.tsx",
+    "loc": 138,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "PHASE_COLORS",
+        "loc": 6,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "ROW_HEIGHT",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "LABEL_WIDTH",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "PodLifecycleGantt",
+        "loc": 97,
+        "props": 4,
+        "nesting": 5,
+        "hooks": 1
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "PodEvent",
+        "fields": 5
+      },
+      {
+        "name": "PodLifecycleGanttProps",
+        "fields": 4
+      }
+    ]
+  },
+  {
+    "file": "/src/components/charts/specialized/ServiceGraph.tsx",
+    "loc": 408,
+    "exportCount": 1,
+    "hasUseEffect": 1,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "NODE_WIDTH",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "NODE_HEIGHT",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "NODE_GAP_Y",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "STAGE_GAP_X",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "PAD_LEFT",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "PAD_RIGHT",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "PAD_TOP",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "PAD_BOTTOM",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "ServiceGraph",
+        "loc": 242,
+        "props": 3,
+        "nesting": 7,
+        "hooks": 15
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/charts/specialized/WaterfallChart.tsx",
+    "loc": 193,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "WaterfallChart",
+        "loc": 175,
+        "props": 3,
+        "nesting": 9,
+        "hooks": 2
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/charts/time-series/ErrorRateChart.tsx",
+    "loc": 252,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ErrorRateChart",
+        "loc": 202,
+        "props": 7,
+        "nesting": 11,
+        "hooks": 3
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/charts/time-series/LatencyChart.tsx",
+    "loc": 261,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "LatencyChart",
+        "loc": 175,
+        "props": 8,
+        "nesting": 10,
+        "hooks": 3
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "EndpointData",
+        "fields": 11
+      },
+      {
+        "name": "LatencyDataPoint",
+        "fields": 18
+      },
+      {
+        "name": "LatencyChartProps",
+        "fields": 8
+      }
+    ]
+  },
+  {
+    "file": "/src/components/charts/time-series/RequestChart.tsx",
+    "loc": 236,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "RequestChart",
+        "loc": 174,
+        "props": 7,
+        "nesting": 10,
+        "hooks": 3
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/common/cards/HealthIndicator.tsx",
+    "loc": 41,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "HealthIndicator",
+        "loc": 26,
+        "props": 3,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "HealthIndicatorProps",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/components/common/cards/StatCard.tsx",
+    "loc": 103,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "StatCard",
+        "loc": 56,
+        "props": 12,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "StatCardProps",
+        "fields": 12
+      }
+    ]
+  },
+  {
+    "file": "/src/components/common/cards/StatCardsGrid.tsx",
+    "loc": 51,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "StatCardsGrid",
+        "loc": 22,
+        "props": 5,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "StatCardsGridProps",
+        "fields": 5
+      }
+    ]
+  },
+  {
+    "file": "/src/components/common/data-display/DataTable.tsx",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/common/data-display/DatabaseTopTablesList.tsx",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/common/data-display/ObservabilityDataBoard.tsx",
+    "loc": 12,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/common/data-display/QueueMetricsList.tsx",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/common/data-display/Timeline.tsx",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/common/data-display/TopEndpointsList.tsx",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/common/feedback/EmptyState.tsx",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/common/feedback/ErrorBoundary.tsx",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/common/feedback/StatusBadge.tsx",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/common/feedback/TrendIndicator.tsx",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/common/forms/FilterBar.tsx",
+    "loc": 82,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "FilterBar",
+        "loc": 41,
+        "props": 2,
+        "nesting": 5,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "FilterSearchConfig",
+        "fields": 7
+      },
+      {
+        "name": "FilterSelectConfig",
+        "fields": 8
+      },
+      {
+        "name": "FilterConfig",
+        "fields": 0
+      },
+      {
+        "name": "FilterBarProps",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/components/common/forms/ObservabilityQueryBar.tsx",
+    "loc": 370,
+    "exportCount": 1,
+    "hasUseEffect": 1,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DEFAULT_OPERATORS",
+        "loc": 6,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "ObservabilityQueryBar",
+        "loc": 292,
+        "props": 9,
+        "nesting": 10,
+        "hooks": 10
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "QueryOperator",
+        "fields": 3
+      },
+      {
+        "name": "QueryField",
+        "fields": 5
+      },
+      {
+        "name": "ActiveFilter",
+        "fields": 7
+      },
+      {
+        "name": "QueryBarSearchValue",
+        "fields": 0
+      },
+      {
+        "name": "SetFiltersFn",
+        "fields": 0
+      },
+      {
+        "name": "SetSearchTextFn",
+        "fields": 0
+      },
+      {
+        "name": "ClearAllFn",
+        "fields": 0
+      },
+      {
+        "name": "ObservabilityQueryBarProps",
+        "fields": 9
+      }
+    ]
+  },
+  {
+    "file": "/src/components/common/forms/SearchInput.tsx",
+    "loc": 56,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "SearchInput",
+        "loc": 33,
+        "props": 4,
+        "nesting": 5,
+        "hooks": 3
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "SearchInputProps",
+        "fields": 4
+      }
+    ]
+  },
+  {
+    "file": "/src/components/common/forms/TimeRangePicker.tsx",
+    "loc": 315,
+    "exportCount": 1,
+    "hasUseEffect": 2,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "RANGE_GROUPS",
+        "loc": 28,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "MONTHS",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "DAYS",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "DISPLAY_MAP",
+        "loc": 5,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "MiniCalendar",
+        "loc": 86,
+        "props": 7,
+        "nesting": 6,
+        "hooks": 0
+      },
+      {
+        "name": "TimeRangePicker",
+        "loc": 152,
+        "props": 0,
+        "nesting": 6,
+        "hooks": 11
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/common/index.ts",
+    "loc": 21,
+    "exportCount": 20,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/common/layout/DetailDrawer.tsx",
+    "loc": 88,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DetailDrawer",
+        "loc": 41,
+        "props": 7,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "DetailDrawerField",
+        "fields": 3
+      },
+      {
+        "name": "DetailDrawerSection",
+        "fields": 2
+      },
+      {
+        "name": "DetailDrawerProps",
+        "fields": 7
+      }
+    ]
+  },
+  {
+    "file": "/src/components/common/layout/PageHeader.tsx",
+    "loc": 70,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "PageHeader",
+        "loc": 37,
+        "props": 6,
+        "nesting": 3,
+        "hooks": 1
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "BreadcrumbItem",
+        "fields": 2
+      },
+      {
+        "name": "PageHeaderProps",
+        "fields": 6
+      }
+    ]
+  },
+  {
+    "file": "/src/components/common/overlay/CommandPalette.tsx",
+    "loc": 164,
+    "exportCount": 1,
+    "hasUseEffect": 2,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "COMMANDS",
+        "loc": 13,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "CommandPalette",
+        "loc": 110,
+        "props": 2,
+        "nesting": 7,
+        "hooks": 8
+      },
+      {
+        "name": "Icon",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "CommandAction",
+        "fields": 0
+      },
+      {
+        "name": "Command",
+        "fields": 6
+      },
+      {
+        "name": "CommandPaletteProps",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/components/dashboard/ConfigurableDashboard.tsx",
+    "loc": 53,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ConfigurableDashboard",
+        "loc": 26,
+        "props": 4,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "ConfigurableDashboardProps",
+        "fields": 4
+      }
+    ]
+  },
+  {
+    "file": "/src/components/dashboard/ConfiguredTabPanel.tsx",
+    "loc": 26,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ConfiguredTabPanel",
+        "loc": 12,
+        "props": 3,
+        "nesting": 3,
+        "hooks": 1
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "ConfiguredTabPanelProps",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/components/dashboard/DashboardPage.tsx",
+    "loc": 90,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DashboardPage",
+        "loc": 48,
+        "props": 2,
+        "nesting": 4,
+        "hooks": 4
+      },
+      {
+        "name": "DashboardPageWithRouteParam",
+        "loc": 14,
+        "props": 2,
+        "nesting": 3,
+        "hooks": 2
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "DashboardPageProps",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/components/dashboard/DashboardStatCards.tsx",
+    "loc": 76,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DashboardStatCards",
+        "loc": 30,
+        "props": 3,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "DashboardStatCardsProps",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/components/dashboard/DashboardTabContent.tsx",
+    "loc": 33,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DashboardTabContent",
+        "loc": 15,
+        "props": 2,
+        "nesting": 1,
+        "hooks": 1
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "DashboardTabContentProps",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/ErrorsTabPanel.tsx",
+    "loc": 9,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ErrorsTabPanel",
+        "loc": 2,
+        "props": 0,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/ResourceUtilizationTabPanel.tsx",
+    "loc": 9,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ResourceUtilizationTabPanel",
+        "loc": 2,
+        "props": 0,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/calm/AiNarrationCard/index.tsx",
+    "loc": 56,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "AiNarrationCard",
+        "loc": 33,
+        "props": 3,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "AnomalyEvent",
+        "fields": 5
+      },
+      {
+        "name": "AiNarrationCardProps",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/calm/AlertGroupCard/index.tsx",
+    "loc": 69,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "SEVERITY_COLOR",
+        "loc": 5,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "AlertGroupCard",
+        "loc": 31,
+        "props": 3,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "Alert",
+        "fields": 5
+      },
+      {
+        "name": "AlertGroupCardProps",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/calm/CalmMetricCard/index.tsx",
+    "loc": 80,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TrendIndicator",
+        "loc": 11,
+        "props": 2,
+        "nesting": 1,
+        "hooks": 0
+      },
+      {
+        "name": "Icon",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "CalmMetricCard",
+        "loc": 43,
+        "props": 8,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "CalmMetricCardProps",
+        "fields": 9
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/calm/HealthRing/index.tsx",
+    "loc": 111,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "STATUS_COLORS",
+        "loc": 5,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "STATUS_GLOW",
+        "loc": 5,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "HealthRing",
+        "loc": 78,
+        "props": 7,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "HealthStatus",
+        "fields": 0
+      },
+      {
+        "name": "HealthRingProps",
+        "fields": 7
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/calm/HealthSnapshotStrip/index.tsx",
+    "loc": 77,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "HealthSnapshotStrip",
+        "loc": 53,
+        "props": 3,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "ServiceHealthSummary",
+        "fields": 5
+      },
+      {
+        "name": "HealthSnapshotStripProps",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/calm/ServiceFlyInPanel/index.tsx",
+    "loc": 119,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "STATUS_COLOR",
+        "loc": 5,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "ServiceFlyInPanel",
+        "loc": 84,
+        "props": 5,
+        "nesting": 5,
+        "hooks": 1
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "ServiceSnapshot",
+        "fields": 4
+      },
+      {
+        "name": "ServiceFlyInPanelProps",
+        "fields": 5
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/calm/UnifiedSignalPanel/index.tsx",
+    "loc": 158,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "SignalColumn",
+        "loc": 25,
+        "props": 5,
+        "nesting": 1,
+        "hooks": 0
+      },
+      {
+        "name": "UnifiedSignalPanel",
+        "loc": 119,
+        "props": 0,
+        "nesting": 3,
+        "hooks": 1
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/calm/index.ts",
+    "loc": 16,
+    "exportCount": 11,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/ConfigurableChartCard.tsx",
+    "loc": 335,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DASHBOARD_COMPONENT_MAP",
+        "loc": 18,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "SPECIALIZED_COMPONENT_KEYS",
+        "loc": 15,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "ConfigurableChartCard",
+        "loc": 210,
+        "props": 3,
+        "nesting": 9,
+        "hooks": 3
+      },
+      {
+        "name": "SpecializedRenderer",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "ChartComponent",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "BaseChartComponentProps",
+        "fields": 8
+      },
+      {
+        "name": "ConfigurableChartCardProps",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/dashboard/SpecializedRendererRegistry.tsx",
+    "loc": 34,
+    "exportCount": 16,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "SpecializedDashboardRenderer",
+        "fields": 0
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/dashboard/hooks/useDashboardData.ts",
+    "loc": 23,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useDashboardData",
+        "loc": 12,
+        "props": 2,
+        "nesting": 3,
+        "hooks": 1
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/index.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/renderers/AiBarRenderer.tsx",
+    "loc": 115,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "AiBarRenderer",
+        "loc": 81,
+        "props": 3,
+        "nesting": 8,
+        "hooks": 2
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/renderers/AiLineRenderer.tsx",
+    "loc": 75,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "AiLineRenderer",
+        "loc": 41,
+        "props": 3,
+        "nesting": 3,
+        "hooks": 2
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/renderers/AreaRenderer.tsx",
+    "loc": 89,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "AreaRenderer",
+        "loc": 55,
+        "props": 2,
+        "nesting": 5,
+        "hooks": 2
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/renderers/BarRenderer.tsx",
+    "loc": 44,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BarRenderer",
+        "loc": 10,
+        "props": 3,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/renderers/GaugeRenderer.tsx",
+    "loc": 68,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "GaugeRenderer",
+        "loc": 34,
+        "props": 2,
+        "nesting": 5,
+        "hooks": 1
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/renderers/HeatmapRenderer.tsx",
+    "loc": 94,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "HeatmapRenderer",
+        "loc": 60,
+        "props": 2,
+        "nesting": 4,
+        "hooks": 1
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/renderers/LatencyHeatmapRenderer.tsx",
+    "loc": 44,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "LatencyHeatmapRenderer",
+        "loc": 10,
+        "props": 2,
+        "nesting": 1,
+        "hooks": 1
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/renderers/LatencyHistogramRenderer.tsx",
+    "loc": 58,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "LatencyHistogramRenderer",
+        "loc": 24,
+        "props": 2,
+        "nesting": 5,
+        "hooks": 2
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/renderers/LogHistogramRenderer.tsx",
+    "loc": 55,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "LogHistogramRenderer",
+        "loc": 21,
+        "props": 3,
+        "nesting": 3,
+        "hooks": 2
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/renderers/PieRenderer.tsx",
+    "loc": 91,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "PieRenderer",
+        "loc": 57,
+        "props": 2,
+        "nesting": 5,
+        "hooks": 2
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/renderers/ScorecardRenderer.tsx",
+    "loc": 73,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ScorecardRenderer",
+        "loc": 39,
+        "props": 2,
+        "nesting": 3,
+        "hooks": 1
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/renderers/ServiceMapRenderer.tsx",
+    "loc": 54,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ServiceMapRenderer",
+        "loc": 20,
+        "props": 2,
+        "nesting": 3,
+        "hooks": 3
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/renderers/TableRenderer.tsx",
+    "loc": 73,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TableRenderer",
+        "loc": 39,
+        "props": 2,
+        "nesting": 7,
+        "hooks": 2
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/renderers/TraceWaterfallRenderer.tsx",
+    "loc": 52,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TraceWaterfallRenderer",
+        "loc": 18,
+        "props": 2,
+        "nesting": 3,
+        "hooks": 1
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/utils/dashboardAggregators.tsx",
+    "loc": 349,
+    "exportCount": 16,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/dashboard/utils/dashboardUtils.tsx",
+    "loc": 71,
+    "exportCount": 3,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ICONS",
+        "loc": 6,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "IconComponent",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/data-board/BoardActionBar.tsx",
+    "loc": 76,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BoardActionBar",
+        "loc": 42,
+        "props": 10,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "BoardActionBarProps",
+        "fields": 10
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/data-board/BoardColumnSettingsPopover.tsx",
+    "loc": 51,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BoardColumnSettingsPopover",
+        "loc": 33,
+        "props": 3,
+        "nesting": 4,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "BoardColumnSettingsPopoverProps",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/data-board/BoardEmptyState.tsx",
+    "loc": 41,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BoardEmptyState",
+        "loc": 20,
+        "props": 2,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "EmptyTip",
+        "fields": 2
+      },
+      {
+        "name": "BoardEmptyStateProps",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/data-board/BoardExportMenu.tsx",
+    "loc": 57,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BoardExportMenu",
+        "loc": 37,
+        "props": 4,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "BoardExportMenuProps",
+        "fields": 4
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/data-board/BoardLoadMoreFooter.tsx",
+    "loc": 47,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BoardLoadMoreFooter",
+        "loc": 28,
+        "props": 4,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "BoardLoadMoreFooterProps",
+        "fields": 4
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/data-board/BoardSkeleton.tsx",
+    "loc": 79,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BoardSkeleton",
+        "loc": 47,
+        "props": 9,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "BoardColumn",
+        "fields": 2
+      },
+      {
+        "name": "BoardSkeletonProps",
+        "fields": 9
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/data-board/index.ts",
+    "loc": 7,
+    "exportCount": 6,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/index.ts",
+    "loc": 7,
+    "exportCount": 6,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/metric-lists/UnifiedMetricList.tsx",
+    "loc": 87,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "UnifiedMetricList",
+        "loc": 56,
+        "props": 6,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "UnifiedMetricListColumn",
+        "fields": 4
+      },
+      {
+        "name": "UnifiedMetricListProps",
+        "fields": 6
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/metric-lists/index.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/query-bar/QueryFieldPicker.tsx",
+    "loc": 79,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "QueryFieldPicker",
+        "loc": 48,
+        "props": 6,
+        "nesting": 5,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "QueryField",
+        "fields": 4
+      },
+      {
+        "name": "QueryFieldPickerProps",
+        "fields": 6
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/query-bar/QueryKeyboardHints.tsx",
+    "loc": 22,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "QueryKeyboardHints",
+        "loc": 17,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/components/ui/query-bar/QueryOperatorPicker.tsx",
+    "loc": 56,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "QueryOperatorPicker",
+        "loc": 26,
+        "props": 3,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "QueryOperator",
+        "fields": 3
+      },
+      {
+        "name": "QueryField",
+        "fields": 4
+      },
+      {
+        "name": "QueryOperatorPickerProps",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/components/ui/query-bar/index.ts",
+    "loc": 4,
+    "exportCount": 3,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/config/apiConfig.ts",
+    "loc": 69,
+    "exportCount": 10,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "API_PROXY_BASE",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "API_TIMEOUT_MS",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "API_RETRY_ATTEMPTS",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "DEV_FRONTEND_PORT",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "DEV_BACKEND_HOST",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "DEV_BACKEND_PORT",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "DEV_BACKEND_URL",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "API_ENDPOINTS",
+        "loc": 22,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "API_V1_BASE",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "API_CONFIG",
+        "loc": 8,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/config/colorLiterals.ts",
+    "loc": 295,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "APP_COLORS",
+        "loc": 289,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/config/constants.ts",
+    "loc": 136,
+    "exportCount": 11,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "UI_CONFIG",
+        "loc": 16,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "TIME_RANGES",
+        "loc": 14,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "STATUS_COLORS",
+        "loc": 9,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "LOG_LEVELS",
+        "loc": 10,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "CHART_COLORS",
+        "loc": 14,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "SERVICE_HEALTH",
+        "loc": 8,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "INFRASTRUCTURE_TYPES",
+        "loc": 7,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "TRACE_STATUSES",
+        "loc": 7,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "STORAGE_KEYS",
+        "loc": 13,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "AUTO_REFRESH_INTERVALS",
+        "loc": 10,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/ai/components/index.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/ai/components/tabs/AiCostTab.tsx",
+    "loc": 80,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "AiCostTab",
+        "loc": 50,
+        "props": 5,
+        "nesting": 4,
+        "hooks": 1
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "AiCostTabProps",
+        "fields": 5
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/ai/components/tabs/AiGuideTab.tsx",
+    "loc": 75,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "AiGuideTab",
+        "loc": 53,
+        "props": 0,
+        "nesting": 4,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/ai/components/tabs/AiOverviewTab.tsx",
+    "loc": 138,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "AiOverviewTab",
+        "loc": 95,
+        "props": 5,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "AiOverviewTabProps",
+        "fields": 5
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/ai/components/tabs/AiPerformanceTab.tsx",
+    "loc": 67,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "AiPerformanceTab",
+        "loc": 37,
+        "props": 5,
+        "nesting": 4,
+        "hooks": 1
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "AiPerformanceTabProps",
+        "fields": 5
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/ai/components/tabs/AiSecurityTab.tsx",
+    "loc": 103,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "AiSecurityTab",
+        "loc": 73,
+        "props": 5,
+        "nesting": 4,
+        "hooks": 1
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "AiSecurityTabProps",
+        "fields": 5
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/ai/components/tabs/index.ts",
+    "loc": 6,
+    "exportCount": 5,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/ai/components/tabs/tabHelpers.tsx",
+    "loc": 53,
+    "exportCount": 6,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/ai/constants.ts",
+    "loc": 5,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DOMAIN_KEY",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/ai/index.ts",
+    "loc": 32,
+    "exportCount": 4,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "AiPage",
+        "loc": 2,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/ai/pages/AiObservabilityPage/index.tsx",
+    "loc": 58,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "AiObservabilityPage",
+        "loc": 40,
+        "props": 0,
+        "nesting": 4,
+        "hooks": 3
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/ai/services/aiApi.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/ai/services/aiKeys.ts",
+    "loc": 8,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/ai/types.ts",
+    "loc": 5,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "DomainRecord",
+        "fields": 0
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/ai/utils/index.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/infrastructure/components/index.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/infrastructure/components/nodes/NodeDetailDrawer.tsx",
+    "loc": 79,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "NodeDetailDrawer",
+        "loc": 51,
+        "props": 5,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "NodeDetailDrawerProps",
+        "fields": 5
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/infrastructure/components/nodes/NodeServicesTable.tsx",
+    "loc": 64,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "NodeServicesTable",
+        "loc": 43,
+        "props": 2,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "NodeServicesTableProps",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/infrastructure/components/nodes/NodesTable.tsx",
+    "loc": 111,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "NodesTable",
+        "loc": 86,
+        "props": 3,
+        "nesting": 4,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "NodesTableProps",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/infrastructure/components/nodes/index.ts",
+    "loc": 4,
+    "exportCount": 3,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/infrastructure/components/nodes/nodeConstants.tsx",
+    "loc": 52,
+    "exportCount": 4,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "STATUS_CONFIG",
+        "loc": 7,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "NODE_COLUMNS",
+        "loc": 14,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "NODE_SERVICE_COLUMNS",
+        "loc": 10,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/infrastructure/constants.ts",
+    "loc": 5,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DOMAIN_KEY",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/infrastructure/index.ts",
+    "loc": 33,
+    "exportCount": 5,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "InfrastructurePage",
+        "loc": 2,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/infrastructure/pages/InfrastructureHubPage/index.tsx",
+    "loc": 62,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TAB_ICONS",
+        "loc": 5,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "InfrastructureHubPage",
+        "loc": 39,
+        "props": 0,
+        "nesting": 4,
+        "hooks": 4
+      },
+      {
+        "name": "Icon",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/infrastructure/pages/NodesPage/index.tsx",
+    "loc": 128,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "NodesPage",
+        "loc": 102,
+        "props": 0,
+        "nesting": 3,
+        "hooks": 5
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/infrastructure/services/infrastructureApi.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/infrastructure/services/infrastructureKeys.ts",
+    "loc": 8,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/infrastructure/types.ts",
+    "loc": 5,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "DomainRecord",
+        "fields": 0
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/infrastructure/utils/index.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/log/components/charts/LogsLevelDistributionCard.tsx",
+    "loc": 37,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "LogsLevelDistributionCard",
+        "loc": 17,
+        "props": 2,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "LogsLevelDistributionCardProps",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/log/components/charts/LogsVolumeSection.tsx",
+    "loc": 31,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "LogsVolumeSection",
+        "loc": 12,
+        "props": 2,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "LogsVolumeSectionProps",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/log/components/index.ts",
+    "loc": 5,
+    "exportCount": 4,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/log/components/kpi/LogsKpiRow.tsx",
+    "loc": 61,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "LogsKpiRow",
+        "loc": 36,
+        "props": 4,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "LogsKpiRowProps",
+        "fields": 4
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/log/components/log/KpiCard.tsx",
+    "loc": 44,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "KpiCard",
+        "loc": 19,
+        "props": 7,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "KpiCardProps",
+        "fields": 7
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/log/components/log/LevelDistribution.tsx",
+    "loc": 52,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "LEVEL_COLORS",
+        "loc": 7,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "LevelDistribution",
+        "loc": 24,
+        "props": 1,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "LevelDistributionProps",
+        "fields": 1
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/log/components/log/LogRow.tsx",
+    "loc": 205,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "LEVEL_STYLES",
+        "loc": 8,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "LevelBadge",
+        "loc": 23,
+        "props": 1,
+        "nesting": 1,
+        "hooks": 0
+      },
+      {
+        "name": "LogRow",
+        "loc": 112,
+        "props": 5,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "LevelBadgeProps",
+        "fields": 1
+      },
+      {
+        "name": "LogRowProps",
+        "fields": 5
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/log/components/log/LogVolumeChart.tsx",
+    "loc": 216,
+    "exportCount": 3,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "LEVEL_COLORS",
+        "loc": 7,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "EMPTY_TOTALS",
+        "loc": 6,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "VolumeBar",
+        "loc": 31,
+        "props": 2,
+        "nesting": 2,
+        "hooks": 0
+      },
+      {
+        "name": "LogVolumeChart",
+        "loc": 34,
+        "props": 2,
+        "nesting": 3,
+        "hooks": 1
+      },
+      {
+        "name": "VolumeLegend",
+        "loc": 36,
+        "props": 1,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "VolumeLegendTotals",
+        "fields": 5
+      },
+      {
+        "name": "VolumeLevelKey",
+        "fields": 0
+      },
+      {
+        "name": "VolumeBarProps",
+        "fields": 2
+      },
+      {
+        "name": "LogVolumeChartProps",
+        "fields": 2
+      },
+      {
+        "name": "VolumeLegendProps",
+        "fields": 1
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/log/components/log/ServicePills.tsx",
+    "loc": 40,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ServicePills",
+        "loc": 21,
+        "props": 3,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "ServicePillsProps",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/log/components/table/LogsTableSection.tsx",
+    "loc": 209,
+    "exportCount": 6,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "LogsTableSection",
+        "loc": 134,
+        "props": 4,
+        "nesting": 5,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "LogsFiltersState",
+        "fields": 9
+      },
+      {
+        "name": "LogsPaginationState",
+        "fields": 5
+      },
+      {
+        "name": "LogsDataState",
+        "fields": 3
+      },
+      {
+        "name": "LogsTableConfig",
+        "fields": 3
+      },
+      {
+        "name": "LogsTableSectionProps",
+        "fields": 4
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/log/constants.ts",
+    "loc": 5,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DOMAIN_KEY",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/log/hooks/useLogsHubData.ts",
+    "loc": 288,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useLogsHubData",
+        "loc": 135,
+        "props": 6,
+        "nesting": 6,
+        "hooks": 11
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "UseLogsHubDataProps",
+        "fields": 6
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/log/index.ts",
+    "loc": 31,
+    "exportCount": 3,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "LogsPage",
+        "loc": 2,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/log/pages/LogsHubPage/index.tsx",
+    "loc": 320,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "LOG_FILTER_FIELDS",
+        "loc": 36,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "LOG_COLUMNS",
+        "loc": 10,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "LOGS_URL_FILTER_CONFIG",
+        "loc": 7,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "LogsHubPage",
+        "loc": 195,
+        "props": 0,
+        "nesting": 3,
+        "hooks": 8
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/log/services/logsApi.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/log/services/logsKeys.ts",
+    "loc": 11,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/log/types.ts",
+    "loc": 143,
+    "exportCount": 13,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "DomainRecord",
+        "fields": 0
+      },
+      {
+        "name": "LogRecord",
+        "fields": 15
+      },
+      {
+        "name": "LogFacet",
+        "fields": 2
+      },
+      {
+        "name": "LogVolumeBucket",
+        "fields": 8
+      },
+      {
+        "name": "LogColumn",
+        "fields": 5
+      },
+      {
+        "name": "LogFilterOperator",
+        "fields": 3
+      },
+      {
+        "name": "LogFilterField",
+        "fields": 5
+      },
+      {
+        "name": "LogsBoardRenderContext",
+        "fields": 2
+      },
+      {
+        "name": "LogStructuredFilter",
+        "fields": 0
+      },
+      {
+        "name": "LogsBackendParams",
+        "fields": 0
+      },
+      {
+        "name": "LogsListResponse",
+        "fields": 2
+      },
+      {
+        "name": "LogsStatsResponse",
+        "fields": 2
+      },
+      {
+        "name": "LogsVolumeResponse",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/log/utils/index.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/components/MetricsFilterBar.tsx",
+    "loc": 59,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "MetricsFilterBar",
+        "loc": 37,
+        "props": 5,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "MetricsFilterBarProps",
+        "fields": 5
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/metrics/components/ServiceMetricsGrid.tsx",
+    "loc": 69,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ServiceMetricsGrid",
+        "loc": 51,
+        "props": 2,
+        "nesting": 4,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "ServiceMetricsGridProps",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/metrics/components/database/DatabaseSystemBreakdown.tsx",
+    "loc": 184,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DB_SYSTEM_META",
+        "loc": 11,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "SystemBreakdownCard",
+        "loc": 94,
+        "props": 1,
+        "nesting": 1,
+        "hooks": 0
+      },
+      {
+        "name": "DatabaseSystemBreakdown",
+        "loc": 38,
+        "props": 1,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "DatabaseSystemBreakdownProps",
+        "fields": 1
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/metrics/components/database/index.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/components/index.ts",
+    "loc": 5,
+    "exportCount": 4,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/components/messaging/MessagingSystemsPills.tsx",
+    "loc": 59,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "MessagingSystemsPills",
+        "loc": 42,
+        "props": 1,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "MessagingSystemsPillsProps",
+        "fields": 1
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/metrics/components/messaging/TopQueuesTable.tsx",
+    "loc": 117,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TopQueuesTable",
+        "loc": 98,
+        "props": 1,
+        "nesting": 5,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "TopQueuesTableProps",
+        "fields": 1
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/metrics/components/messaging/index.ts",
+    "loc": 3,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/components/messaging/messagingMeta.ts",
+    "loc": 33,
+    "exportCount": 3,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "MQ_SYSTEM_META",
+        "loc": 10,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/constants.ts",
+    "loc": 5,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DOMAIN_KEY",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/hooks/useMetricsQueries.ts",
+    "loc": 124,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useMetricsQueries",
+        "loc": 88,
+        "props": 3,
+        "nesting": 3,
+        "hooks": 7
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/hooks/useMetricsState.ts",
+    "loc": 57,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "METRICS_URL_FILTER_CONFIG",
+        "loc": 5,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "useMetricsState",
+        "loc": 32,
+        "props": 0,
+        "nesting": 3,
+        "hooks": 2
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "UseMetricsStateResult",
+        "fields": 7
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/metrics/index.ts",
+    "loc": 51,
+    "exportCount": 11,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "MetricsPage",
+        "loc": 2,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 0
+      },
+      {
+        "name": "SaturationHubPage",
+        "loc": 2,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/pages/DatabaseCachePerformancePage/index.tsx",
+    "loc": 139,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DatabaseCachePerformancePage",
+        "loc": 116,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 7
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/pages/LatencyAnalysisPage/index.tsx",
+    "loc": 223,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "HISTOGRAM_BUCKETS",
+        "loc": 11,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "LatencyAnalysisPage",
+        "loc": 173,
+        "props": 1,
+        "nesting": 5,
+        "hooks": 9
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/pages/MessagingQueueMonitoringPage/index.tsx",
+    "loc": 107,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "MessagingQueueMonitoringPage",
+        "loc": 88,
+        "props": 0,
+        "nesting": 7,
+        "hooks": 8
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/pages/MetricsPage/index.tsx",
+    "loc": 21,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "MetricsPage",
+        "loc": 11,
+        "props": 0,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/pages/ResourceUtilizationPage/index.tsx",
+    "loc": 144,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ResourceUtilizationPage",
+        "loc": 124,
+        "props": 0,
+        "nesting": 7,
+        "hooks": 3
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/pages/SaturationHubPage/index.tsx",
+    "loc": 26,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "SaturationHubPage",
+        "loc": 15,
+        "props": 0,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/pages/SaturationPage/index.tsx",
+    "loc": 335,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "SaturationPage",
+        "loc": 285,
+        "props": 0,
+        "nesting": 4,
+        "hooks": 12
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/services/metricsApi.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/services/metricsKeys.ts",
+    "loc": 10,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/types.ts",
+    "loc": 83,
+    "exportCount": 8,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "DomainRecord",
+        "fields": 0
+      },
+      {
+        "name": "MetricsServiceOption",
+        "fields": 3
+      },
+      {
+        "name": "MetricSummary",
+        "fields": 6
+      },
+      {
+        "name": "MetricTimeSeriesPoint",
+        "fields": 7
+      },
+      {
+        "name": "ServiceMetricPoint",
+        "fields": 7
+      },
+      {
+        "name": "EndpointMetricPoint",
+        "fields": 2
+      },
+      {
+        "name": "UseMetricsQueriesParams",
+        "fields": 3
+      },
+      {
+        "name": "UseMetricsQueriesResult",
+        "fields": 8
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/metrics/utils/index.ts",
+    "loc": 8,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/utils/metricNormalizers.ts",
+    "loc": 104,
+    "exportCount": 4,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/metrics/utils/trendCalculators.ts",
+    "loc": 47,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "EMPTY_TRENDS",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "WINDOW_SIZE",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "TrendSnapshot",
+        "fields": 2
+      },
+      {
+        "name": "TrendPoint",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/overview/components/index.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/overview/components/slo/SloComplianceTable.tsx",
+    "loc": 142,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "SloComplianceTable",
+        "loc": 115,
+        "props": 4,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "SloComplianceTableProps",
+        "fields": 4
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/overview/components/slo/SloHealthGauges.tsx",
+    "loc": 200,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "SloGauge",
+        "loc": 64,
+        "props": 5,
+        "nesting": 2,
+        "hooks": 0
+      },
+      {
+        "name": "SloHealthGauges",
+        "loc": 73,
+        "props": 12,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "SloHealthGaugesProps",
+        "fields": 12
+      },
+      {
+        "name": "SloGaugeProps",
+        "fields": 5
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/overview/components/slo/index.ts",
+    "loc": 3,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/overview/constants.ts",
+    "loc": 5,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DOMAIN_KEY",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/overview/hooks/useAnomalyNarration.ts",
+    "loc": 35,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BASE",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "useAnomalyNarration",
+        "loc": 19,
+        "props": 0,
+        "nesting": 4,
+        "hooks": 2
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/overview/hooks/useServiceHealthSummary.ts",
+    "loc": 33,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useServiceHealthSummary",
+        "loc": 17,
+        "props": 0,
+        "nesting": 4,
+        "hooks": 1
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/overview/index.ts",
+    "loc": 41,
+    "exportCount": 7,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "OverviewPage",
+        "loc": 2,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 0
+      },
+      {
+        "name": "ErrorDashboardPage",
+        "loc": 2,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/overview/pages/ErrorDashboardPage/index.tsx",
+    "loc": 282,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ErrorDashboardPage",
+        "loc": 227,
+        "props": 0,
+        "nesting": 4,
+        "hooks": 14
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/overview/pages/OverviewHubPage/index.tsx",
+    "loc": 61,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "OverviewHubPage",
+        "loc": 44,
+        "props": 0,
+        "nesting": 5,
+        "hooks": 5
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/overview/pages/OverviewPage/index.tsx",
+    "loc": 303,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "OverviewPage",
+        "loc": 273,
+        "props": 0,
+        "nesting": 5,
+        "hooks": 16
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/overview/pages/SloSliDashboardPage/index.tsx",
+    "loc": 138,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "AVAILABILITY_TARGET",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "P95_TARGET_MS",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "SloSliDashboardPage",
+        "loc": 114,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 5
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/overview/services/overviewApi.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/overview/services/overviewKeys.ts",
+    "loc": 8,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/overview/types.ts",
+    "loc": 5,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "DomainRecord",
+        "fields": 0
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/overview/utils/index.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/services/components/detail/ServiceDetailStatsRow.tsx",
+    "loc": 84,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ServiceDetailStatsRow",
+        "loc": 56,
+        "props": 6,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "ServiceStats",
+        "fields": 1
+      },
+      {
+        "name": "ServiceDetailStatsRowProps",
+        "fields": 6
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/services/components/detail/index.ts",
+    "loc": 3,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/services/components/detail/tabs/ServiceDetailDependenciesTab.tsx",
+    "loc": 70,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ServiceDetailDependenciesTab",
+        "loc": 46,
+        "props": 3,
+        "nesting": 4,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "ServiceDependency",
+        "fields": 3
+      },
+      {
+        "name": "ServiceDetailDependenciesTabProps",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/services/components/detail/tabs/ServiceDetailErrorsTab.tsx",
+    "loc": 41,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ServiceDetailErrorsTab",
+        "loc": 24,
+        "props": 3,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "ServiceDetailErrorsTabProps",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/services/components/detail/tabs/ServiceDetailLogsTab.tsx",
+    "loc": 36,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ServiceDetailLogsTab",
+        "loc": 20,
+        "props": 4,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "ServiceDetailLogsTabProps",
+        "fields": 4
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/services/components/detail/tabs/ServiceDetailOverviewTab.tsx",
+    "loc": 97,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ServiceDetailOverviewTab",
+        "loc": 72,
+        "props": 6,
+        "nesting": 4,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "ServiceDetailOverviewTabProps",
+        "fields": 6
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/services/components/detail/tabs/index.ts",
+    "loc": 5,
+    "exportCount": 4,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/services/components/services-page/ServiceOverviewTab.tsx",
+    "loc": 280,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "SERVICE_COLUMNS",
+        "loc": 8,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "ServiceOverviewTab",
+        "loc": 225,
+        "props": 11,
+        "nesting": 5,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "ServiceOverviewTabProps",
+        "fields": 11
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/services/components/services-page/ServiceTopologyTab.tsx",
+    "loc": 235,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DEP_COLUMNS",
+        "loc": 7,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "ServiceTopologyTab",
+        "loc": 172,
+        "props": 13,
+        "nesting": 5,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "ServiceTopologyTabProps",
+        "fields": 13
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/services/constants.ts",
+    "loc": 5,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DOMAIN_KEY",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/services/hooks/useServiceDetailData.ts",
+    "loc": 228,
+    "exportCount": 7,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useServiceDetailData",
+        "loc": 150,
+        "props": 2,
+        "nesting": 5,
+        "hooks": 10
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "UseServiceDetailDataProps",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/services/hooks/useServiceHealthSummary.ts",
+    "loc": 39,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useServiceHealthSummary",
+        "loc": 28,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 4
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/services/hooks/useServiceMetrics.ts",
+    "loc": 135,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useServiceMetrics",
+        "loc": 114,
+        "props": 3,
+        "nesting": 7,
+        "hooks": 8
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/services/hooks/useServiceTopology.ts",
+    "loc": 189,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useServiceTopology",
+        "loc": 161,
+        "props": 2,
+        "nesting": 6,
+        "hooks": 13
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/services/hooks/useServicesData.ts",
+    "loc": 29,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useServicesData",
+        "loc": 18,
+        "props": 1,
+        "nesting": 1,
+        "hooks": 3
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/services/index.ts",
+    "loc": 43,
+    "exportCount": 9,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ServicesPage",
+        "loc": 2,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 0
+      },
+      {
+        "name": "ServiceDetailPage",
+        "loc": 2,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/services/pages/ServiceDetailPage/index.tsx",
+    "loc": 367,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ServiceDetailPage",
+        "loc": 333,
+        "props": 0,
+        "nesting": 4,
+        "hooks": 5
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/services/pages/ServiceMapPage/index.tsx",
+    "loc": 21,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ServiceMapPage",
+        "loc": 11,
+        "props": 0,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/services/pages/ServicesPage/index.tsx",
+    "loc": 143,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ServicesPage",
+        "loc": 116,
+        "props": 0,
+        "nesting": 3,
+        "hooks": 10
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/services/services/serviceMapApi.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/services/services/servicesApi.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/services/services/servicesKeys.ts",
+    "loc": 10,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/services/types.ts",
+    "loc": 210,
+    "exportCount": 19,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "DomainRecord",
+        "fields": 0
+      },
+      {
+        "name": "ServiceStatus",
+        "fields": 0
+      },
+      {
+        "name": "ServiceViewMode",
+        "fields": 0
+      },
+      {
+        "name": "ServiceSortOrder",
+        "fields": 0
+      },
+      {
+        "name": "ServiceSortField",
+        "fields": 0
+      },
+      {
+        "name": "ServiceMetric",
+        "fields": 7
+      },
+      {
+        "name": "ServiceTimeSeriesPoint",
+        "fields": 10
+      },
+      {
+        "name": "ServiceTopologyNode",
+        "fields": 7
+      },
+      {
+        "name": "ServiceTopologyEdge",
+        "fields": 5
+      },
+      {
+        "name": "ServiceTableRow",
+        "fields": 9
+      },
+      {
+        "name": "ServiceDependencyRow",
+        "fields": 9
+      },
+      {
+        "name": "ServiceTopologyStats",
+        "fields": 4
+      },
+      {
+        "name": "ServiceHealthOption",
+        "fields": 4
+      },
+      {
+        "name": "ServicesDataParams",
+        "fields": 4
+      },
+      {
+        "name": "ServicesDataResult",
+        "fields": 15
+      },
+      {
+        "name": "ServiceEndpointRow",
+        "fields": 8
+      },
+      {
+        "name": "ServiceErrorGroupRow",
+        "fields": 8
+      },
+      {
+        "name": "ServiceLogRow",
+        "fields": 5
+      },
+      {
+        "name": "ServiceDependency",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/services/utils/index.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/services/utils/servicesUtils.ts",
+    "loc": 148,
+    "exportCount": 11,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/settings/components/tabs/SettingsPreferencesTab.tsx",
+    "loc": 112,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "SettingsPreferencesTab",
+        "loc": 95,
+        "props": 6,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "SettingsPreferencesTabProps",
+        "fields": 6
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/settings/components/tabs/SettingsProfileTab.tsx",
+    "loc": 93,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "SettingsProfileTab",
+        "loc": 74,
+        "props": 6,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "SettingsProfileTabProps",
+        "fields": 6
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/settings/components/tabs/SettingsTeamTab.tsx",
+    "loc": 64,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "SettingsTeamTab",
+        "loc": 45,
+        "props": 2,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "TeamInfo",
+        "fields": 3
+      },
+      {
+        "name": "SettingsTeamTabProps",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/settings/components/tabs/index.ts",
+    "loc": 4,
+    "exportCount": 3,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/settings/constants.ts",
+    "loc": 5,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DOMAIN_KEY",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/settings/index.ts",
+    "loc": 24,
+    "exportCount": 4,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "SettingsPage",
+        "loc": 2,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/settings/pages/SettingsPage/index.tsx",
+    "loc": 148,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "SettingsPage",
+        "loc": 124,
+        "props": 0,
+        "nesting": 4,
+        "hooks": 4
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/settings/services/settingsApi.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/settings/services/settingsKeys.ts",
+    "loc": 8,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/settings/types.ts",
+    "loc": 5,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "DomainRecord",
+        "fields": 0
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/settings/utils/index.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/traces/components/charts/TopServicesPanel.tsx",
+    "loc": 33,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TopServicesPanel",
+        "loc": 22,
+        "props": 1,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "TopServicesPanelProps",
+        "fields": 1
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/traces/components/filters/TracesServicePills.tsx",
+    "loc": 40,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TracesServicePills",
+        "loc": 26,
+        "props": 4,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "TracesServicePillsProps",
+        "fields": 4
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/traces/components/index.ts",
+    "loc": 7,
+    "exportCount": 6,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/traces/components/kpi/TracesKpiCard.tsx",
+    "loc": 55,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TracesKpiCard",
+        "loc": 31,
+        "props": 6,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "KpiCardStyle",
+        "fields": 3
+      },
+      {
+        "name": "TracesKpiCardProps",
+        "fields": 6
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/traces/components/table/TraceMethodBadge.tsx",
+    "loc": 13,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TraceMethodBadge",
+        "loc": 4,
+        "props": 1,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "TraceMethodBadgeProps",
+        "fields": 1
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/traces/components/table/TraceStatusBadge.tsx",
+    "loc": 20,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TraceStatusBadge",
+        "loc": 11,
+        "props": 1,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "TraceStatusBadgeProps",
+        "fields": 1
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/traces/components/table/TracesTableRow.tsx",
+    "loc": 144,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TracesTableRow",
+        "loc": 117,
+        "props": 7,
+        "nesting": 6,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "TracesTableRowProps",
+        "fields": 7
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/traces/constants.ts",
+    "loc": 5,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DOMAIN_KEY",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/traces/hooks/useTracesExplorer.ts",
+    "loc": 227,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TRACES_URL_FILTER_CONFIG",
+        "loc": 7,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "useTracesExplorer",
+        "loc": 199,
+        "props": 0,
+        "nesting": 9,
+        "hooks": 11
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/traces/index.ts",
+    "loc": 39,
+    "exportCount": 5,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TracesPage",
+        "loc": 2,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 0
+      },
+      {
+        "name": "TraceDetailPage",
+        "loc": 2,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/traces/pages/TraceDetailPage/index.tsx",
+    "loc": 423,
+    "exportCount": 1,
+    "hasUseEffect": 1,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TraceDetailPage",
+        "loc": 356,
+        "props": 0,
+        "nesting": 7,
+        "hooks": 11
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/traces/pages/TracesPage/index.tsx",
+    "loc": 400,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TRACE_COLUMNS",
+        "loc": 8,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "TracesPage",
+        "loc": 341,
+        "props": 0,
+        "nesting": 3,
+        "hooks": 4
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/traces/services/tracesApi.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/traces/services/tracesKeys.ts",
+    "loc": 9,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/traces/types.ts",
+    "loc": 31,
+    "exportCount": 3,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "TraceRecord",
+        "fields": 9
+      },
+      {
+        "name": "TraceColumn",
+        "fields": 5
+      },
+      {
+        "name": "ServiceBadge",
+        "fields": 0
+      }
+    ]
+  },
+  {
+    "file": "/src/domains/traces/utils/index.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/domains/traces/utils/tracesUtils.ts",
+    "loc": 167,
+    "exportCount": 7,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TRACE_FILTER_FIELDS",
+        "loc": 66,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "TraceFilterOperator",
+        "fields": 3
+      },
+      {
+        "name": "TraceFilterField",
+        "fields": 5
+      },
+      {
+        "name": "TracesSummary",
+        "fields": 8
+      },
+      {
+        "name": "TracesResponse",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/hooks/useAutoRefresh.ts",
+    "loc": 66,
+    "exportCount": 1,
+    "hasUseEffect": 2,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useAutoRefresh",
+        "loc": 36,
+        "props": 2,
+        "nesting": 5,
+        "hooks": 7
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "UseAutoRefreshOptions",
+        "fields": 2
+      },
+      {
+        "name": "UseAutoRefreshResult",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/hooks/useChartTimeBuckets.ts",
+    "loc": 34,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useChartTimeBuckets",
+        "loc": 12,
+        "props": 0,
+        "nesting": 4,
+        "hooks": 2
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/hooks/useComponentDataFetcher.ts",
+    "loc": 128,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useComponentDataFetcher",
+        "loc": 94,
+        "props": 2,
+        "nesting": 7,
+        "hooks": 4
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "UseComponentDataFetcherResult",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/hooks/useDashboardConfig.ts",
+    "loc": 44,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useDashboardConfig",
+        "loc": 26,
+        "props": 1,
+        "nesting": 5,
+        "hooks": 3
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "UseDashboardConfigResult",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/hooks/useDataSourceFetcher.ts",
+    "loc": 80,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useDataSourceFetcher",
+        "loc": 60,
+        "props": 2,
+        "nesting": 6,
+        "hooks": 3
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "UseDataSourceFetcherResult",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/hooks/useDebouncedValue.ts",
+    "loc": 17,
+    "exportCount": 1,
+    "hasUseEffect": 1,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useDebouncedValue",
+        "loc": 7,
+        "props": 2,
+        "nesting": 4,
+        "hooks": 2
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/hooks/useInfiniteLogs.ts",
+    "loc": 145,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useInfiniteLogs",
+        "loc": 102,
+        "props": 3,
+        "nesting": 6,
+        "hooks": 4
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "LogRow",
+        "fields": 9
+      },
+      {
+        "name": "UseInfiniteLogsOptions",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/hooks/useKeyboardShortcut.ts",
+    "loc": 34,
+    "exportCount": 1,
+    "hasUseEffect": 1,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useKeyboardShortcut",
+        "loc": 17,
+        "props": 3,
+        "nesting": 6,
+        "hooks": 1
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "KeyboardShortcutOptions",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/hooks/usePageTabs.ts",
+    "loc": 34,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "usePageTabs",
+        "loc": 15,
+        "props": 1,
+        "nesting": 2,
+        "hooks": 2
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "UsePageTabsResult",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/hooks/usePagesConfig.ts",
+    "loc": 34,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "usePagesConfig",
+        "loc": 15,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 2
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "UsePagesConfigResult",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/hooks/usePersistedColumns.ts",
+    "loc": 104,
+    "exportCount": 2,
+    "hasUseEffect": 1,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "usePersistedColumns",
+        "loc": 48,
+        "props": 2,
+        "nesting": 8,
+        "hooks": 3
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "VisibleColumnsState",
+        "fields": 0
+      }
+    ]
+  },
+  {
+    "file": "/src/hooks/useRealtimeRefresh.ts",
+    "loc": 120,
+    "exportCount": 1,
+    "hasUseEffect": 1,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "SIGNAL_QUERY_KEYS",
+        "loc": 4,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "DEBOUNCE_MS",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "useRealtimeRefresh",
+        "loc": 71,
+        "props": 1,
+        "nesting": 10,
+        "hooks": 6
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "SignalType",
+        "fields": 0
+      },
+      {
+        "name": "UseRealtimeRefreshOptions",
+        "fields": 1
+      }
+    ]
+  },
+  {
+    "file": "/src/hooks/useResizableColumns.ts",
+    "loc": 81,
+    "exportCount": 2,
+    "hasUseEffect": 1,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useResizableColumns",
+        "loc": 46,
+        "props": 3,
+        "nesting": 6,
+        "hooks": 3
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "ColumnWidthMap",
+        "fields": 0
+      },
+      {
+        "name": "UseResizableColumnsOptions",
+        "fields": 3
+      },
+      {
+        "name": "UseResizableColumnsResult",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/hooks/useSSE.ts",
+    "loc": 189,
+    "exportCount": 4,
+    "hasUseEffect": 1,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useSSE",
+        "loc": 118,
+        "props": 1,
+        "nesting": 9,
+        "hooks": 10
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "SSEEvent",
+        "fields": 2
+      },
+      {
+        "name": "SSEStatus",
+        "fields": 0
+      },
+      {
+        "name": "UseSSEOptions",
+        "fields": 1
+      },
+      {
+        "name": "SSEHandler",
+        "fields": 0
+      },
+      {
+        "name": "EventListeners",
+        "fields": 0
+      }
+    ]
+  },
+  {
+    "file": "/src/hooks/useTabComponents.ts",
+    "loc": 43,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useTabComponents",
+        "loc": 23,
+        "props": 2,
+        "nesting": 3,
+        "hooks": 3
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "UseTabComponentsResult",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/hooks/useTimeRangeQuery.ts",
+    "loc": 90,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useTimeRangeQuery",
+        "loc": 21,
+        "props": 3,
+        "nesting": 3,
+        "hooks": 2
+      },
+      {
+        "name": "useTimeRange",
+        "loc": 14,
+        "props": 0,
+        "nesting": 2,
+        "hooks": 1
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "QueryTime",
+        "fields": 0
+      },
+      {
+        "name": "TimeRangeBounds",
+        "fields": 2
+      },
+      {
+        "name": "TimeRangeQueryFunction",
+        "fields": 0
+      },
+      {
+        "name": "TimeRangeQueryOptions",
+        "fields": 0
+      }
+    ]
+  },
+  {
+    "file": "/src/hooks/useURLFilters.ts",
+    "loc": 247,
+    "exportCount": 6,
+    "hasUseEffect": 2,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useURLFilters",
+        "loc": 122,
+        "props": 1,
+        "nesting": 9,
+        "hooks": 12
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "StructuredFilter",
+        "fields": 3
+      },
+      {
+        "name": "URLFilterType",
+        "fields": 0
+      },
+      {
+        "name": "URLFilterValue",
+        "fields": 0
+      },
+      {
+        "name": "URLFilterValues",
+        "fields": 0
+      },
+      {
+        "name": "URLFilterSetter",
+        "fields": 0
+      },
+      {
+        "name": "URLFilterSetters",
+        "fields": 0
+      },
+      {
+        "name": "URLFilterParam",
+        "fields": 3
+      },
+      {
+        "name": "URLFilterConfig",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/hooks/useUrlSyncedTab.ts",
+    "loc": 71,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useUrlSyncedTab",
+        "loc": 49,
+        "props": 4,
+        "nesting": 5,
+        "hooks": 5
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "UseUrlSyncedTabOptions",
+        "fields": 4
+      },
+      {
+        "name": "UseUrlSyncedTabResult",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/main.tsx",
+    "loc": 35,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/services/aiService.ts",
+    "loc": 110,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BASE",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/services/api/client.ts",
+    "loc": 45,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "ApiEnvelope",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/services/api/interceptors/authInterceptor.ts",
+    "loc": 29,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/services/api/interceptors/errorInterceptor.ts",
+    "loc": 91,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "ApiErrorShape",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/services/api/interceptors/retryInterceptor.ts",
+    "loc": 41,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": true,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "RetryConfig",
+        "fields": 1
+      }
+    ]
+  },
+  {
+    "file": "/src/services/api/service-types.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/services/api.ts",
+    "loc": 3,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/services/auth/authService.ts",
+    "loc": 120,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "AuthPayload",
+        "fields": 7
+      }
+    ]
+  },
+  {
+    "file": "/src/services/auth/authStorage.ts",
+    "loc": 120,
+    "exportCount": 14,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "AUTH_PRESENT_KEY",
+        "loc": 3,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/services/authService.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/services/dashboardConfigService.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/services/defaultConfigService.ts",
+    "loc": 50,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BASE",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/services/deploymentsService.ts",
+    "loc": 46,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BASE",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/services/latencyService.ts",
+    "loc": 35,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BASE",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/services/logsService.ts",
+    "loc": 82,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BASE",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/services/metricsService.ts",
+    "loc": 365,
+    "exportCount": 5,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BASE",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "MetricRow",
+        "fields": 0
+      },
+      {
+        "name": "ServiceMetric",
+        "fields": 9
+      },
+      {
+        "name": "EndpointMetric",
+        "fields": 2
+      },
+      {
+        "name": "TimeSeriesPoint",
+        "fields": 8
+      },
+      {
+        "name": "MetricsSummary",
+        "fields": 6
+      }
+    ]
+  },
+  {
+    "file": "/src/services/overviewService.ts",
+    "loc": 108,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BASE",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/services/saturationService.ts",
+    "loc": 107,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BASE",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/services/service-types.ts",
+    "loc": 27,
+    "exportCount": 3,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "QueryParamValue",
+        "fields": 0
+      },
+      {
+        "name": "QueryParams",
+        "fields": 0
+      },
+      {
+        "name": "RequestTime",
+        "fields": 0
+      }
+    ]
+  },
+  {
+    "file": "/src/services/serviceMapService.ts",
+    "loc": 26,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BASE",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/services/servicesPageService.ts",
+    "loc": 70,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BASE",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/services/settingsService.ts",
+    "loc": 29,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "SettingsPayload",
+        "fields": 0
+      }
+    ]
+  },
+  {
+    "file": "/src/services/tracesService.ts",
+    "loc": 37,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BASE",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/services/v1Service.ts",
+    "loc": 60,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/shared/components/data-board/DataTable.tsx",
+    "loc": 76,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "DataTable",
+        "loc": 43,
+        "props": 13,
+        "nesting": 2,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "DataTableProps",
+        "fields": 13
+      }
+    ]
+  },
+  {
+    "file": "/src/shared/components/data-board/DatabaseTopTablesList.tsx",
+    "loc": 216,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "CHART_COLORS",
+        "loc": 11,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "DB_BADGE_COLORS",
+        "loc": 11,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "DatabaseTopTablesList",
+        "loc": 152,
+        "props": 3,
+        "nesting": 7,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "DatabaseSystem",
+        "fields": 0
+      },
+      {
+        "name": "DatabaseTopTableItem",
+        "fields": 6
+      },
+      {
+        "name": "DatabaseTopTablesListProps",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/shared/components/data-board/ObservabilityDataBoard.tsx",
+    "loc": 510,
+    "exportCount": 11,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BOARD_ROW_HEIGHT",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "BOARD_CHROME_HEIGHT",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "DEFAULT_COLUMN_WIDTH",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "MIN_COLUMN_WIDTH",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "SKELETON_ROW_COUNT",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "COPY_CONFIRMATION_DURATION_MS",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "EMPTY_VALUE_PLACEHOLDER",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "SKELETON_BASE_WIDTH_PERCENT",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "SKELETON_WIDTH_RANGE_PERCENT",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "SKELETON_FLEX_BASE_WIDTH_PERCENT",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "SKELETON_FLEX_WIDTH_RANGE_PERCENT",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "BoardClickableCell",
+        "loc": 25,
+        "props": 5,
+        "nesting": 3,
+        "hooks": 0
+      },
+      {
+        "name": "CopyableValue",
+        "loc": 32,
+        "props": 1,
+        "nesting": 7,
+        "hooks": 1
+      },
+      {
+        "name": "ObservabilityDetailPanel",
+        "loc": 86,
+        "props": 11,
+        "nesting": 7,
+        "hooks": 1
+      },
+      {
+        "name": "ObservabilityDataBoard",
+        "loc": 154,
+        "props": 4,
+        "nesting": 5,
+        "hooks": 6
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "BoardFilterValue",
+        "fields": 0
+      },
+      {
+        "name": "BoardFilterOperator",
+        "fields": 0
+      },
+      {
+        "name": "BoardFilter",
+        "fields": 3
+      },
+      {
+        "name": "BoardColumn",
+        "fields": 5
+      },
+      {
+        "name": "ColumnWidths",
+        "fields": 0
+      },
+      {
+        "name": "VisibleColumns",
+        "fields": 0
+      },
+      {
+        "name": "EmptyTip",
+        "fields": 2
+      },
+      {
+        "name": "RenderRowContext",
+        "fields": 3
+      },
+      {
+        "name": "BoardClickableCellProps",
+        "fields": 5
+      },
+      {
+        "name": "CopyableValueProps",
+        "fields": 1
+      },
+      {
+        "name": "DetailPanelField",
+        "fields": 4
+      },
+      {
+        "name": "ObservabilityDetailPanelProps",
+        "fields": 11
+      },
+      {
+        "name": "BoardDataState",
+        "fields": 3
+      },
+      {
+        "name": "BoardPaginationState",
+        "fields": 3
+      },
+      {
+        "name": "BoardConfig",
+        "fields": 6
+      },
+      {
+        "name": "BoardActions",
+        "fields": 3
+      },
+      {
+        "name": "ObservabilityDataBoardProps",
+        "fields": 4
+      }
+    ]
+  },
+  {
+    "file": "/src/shared/components/data-board/QueueMetricsList.tsx",
+    "loc": 229,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "CHART_COLORS",
+        "loc": 11,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "QueueMetricsList",
+        "loc": 120,
+        "props": 5,
+        "nesting": 7,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "QueueMetricsListType",
+        "fields": 0
+      },
+      {
+        "name": "QueueMetricsItem",
+        "fields": 7
+      },
+      {
+        "name": "QueueMetricsListProps",
+        "fields": 5
+      },
+      {
+        "name": "QueueRowDisplayConfig",
+        "fields": 4
+      }
+    ]
+  },
+  {
+    "file": "/src/shared/components/data-board/Timeline.tsx",
+    "loc": 70,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "Timeline",
+        "loc": 39,
+        "props": 1,
+        "nesting": 3,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "TimelineTag",
+        "fields": 2
+      },
+      {
+        "name": "TimelineItemData",
+        "fields": 5
+      },
+      {
+        "name": "TimelineProps",
+        "fields": 1
+      }
+    ]
+  },
+  {
+    "file": "/src/shared/components/data-board/TopEndpointsList.tsx",
+    "loc": 201,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "CHART_COLORS",
+        "loc": 11,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "TopEndpointsList",
+        "loc": 118,
+        "props": 5,
+        "nesting": 7,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "TopEndpointsListType",
+        "fields": 0
+      },
+      {
+        "name": "TopEndpointListItem",
+        "fields": 7
+      },
+      {
+        "name": "TopEndpointsListProps",
+        "fields": 5
+      },
+      {
+        "name": "RowDisplayConfig",
+        "fields": 4
+      }
+    ]
+  },
+  {
+    "file": "/src/shared/components/data-board/index.ts",
+    "loc": 17,
+    "exportCount": 7,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/shared/components/feedback/EmptyState.tsx",
+    "loc": 22,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "EmptyState",
+        "loc": 16,
+        "props": 4,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/shared/components/feedback/ErrorBoundary.tsx",
+    "loc": 86,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/shared/components/feedback/Loading.tsx",
+    "loc": 24,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "Loading",
+        "loc": 18,
+        "props": 3,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/shared/components/feedback/Skeleton.tsx",
+    "loc": 11,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "Skeleton",
+        "loc": 5,
+        "props": 2,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/shared/components/feedback/StatusBadge.tsx",
+    "loc": 32,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TRACE_STATUS_COLORS",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "STATUS_MAPS",
+        "loc": 9,
+        "props": 0,
+        "nesting": 1,
+        "hooks": 0
+      },
+      {
+        "name": "StatusBadge",
+        "loc": 9,
+        "props": 2,
+        "nesting": 1,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/shared/components/feedback/TrendIndicator.tsx",
+    "loc": 42,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "TrendIndicator",
+        "loc": 34,
+        "props": 3,
+        "nesting": 3,
+        "hooks": 0
+      },
+      {
+        "name": "Icon",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/shared/components/feedback/index.ts",
+    "loc": 18,
+    "exportCount": 7,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/shared/components/feedback/types.ts",
+    "loc": 70,
+    "exportCount": 8,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "ErrorBoundaryProps",
+        "fields": 4
+      },
+      {
+        "name": "ErrorBoundaryState",
+        "fields": 3
+      },
+      {
+        "name": "EmptyStateProps",
+        "fields": 4
+      },
+      {
+        "name": "StatusBadgeType",
+        "fields": 0
+      },
+      {
+        "name": "StatusBadgeProps",
+        "fields": 2
+      },
+      {
+        "name": "TrendIndicatorProps",
+        "fields": 3
+      },
+      {
+        "name": "LoadingProps",
+        "fields": 3
+      },
+      {
+        "name": "FeedbackSkeletonProps",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/shared/components/index.ts",
+    "loc": 3,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/shared/constants/routes.ts",
+    "loc": 26,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ROUTES",
+        "loc": 19,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "AppRoutePath",
+        "fields": 0
+      }
+    ]
+  },
+  {
+    "file": "/src/shared/hooks/useFeatureFlag.ts",
+    "loc": 26,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "FEATURE_PREFIX",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "useFeatureFlag",
+        "loc": 2,
+        "props": 1,
+        "nesting": 2,
+        "hooks": 1
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/shared/hooks/useQueryState.ts",
+    "loc": 33,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "useQueryState",
+        "loc": 25,
+        "props": 2,
+        "nesting": 5,
+        "hooks": 3
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/shared/types/api.ts",
+    "loc": 20,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "ApiError",
+        "fields": 4
+      },
+      {
+        "name": "ApiResponseEnvelope",
+        "fields": 4
+      }
+    ]
+  },
+  {
+    "file": "/src/shared/types/common.ts",
+    "loc": 23,
+    "exportCount": 4,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "EntityId",
+        "fields": 0
+      },
+      {
+        "name": "TimestampValue",
+        "fields": 0
+      },
+      {
+        "name": "StatusValue",
+        "fields": 0
+      },
+      {
+        "name": "NamedEntity",
+        "fields": 2
+      }
+    ]
+  },
+  {
+    "file": "/src/shared/types/filters.ts",
+    "loc": 10,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "FilterValue",
+        "fields": 0
+      },
+      {
+        "name": "QueryFilters",
+        "fields": 0
+      }
+    ]
+  },
+  {
+    "file": "/src/shared/types/pagination.ts",
+    "loc": 17,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "PaginationRequest",
+        "fields": 2
+      },
+      {
+        "name": "PaginationMeta",
+        "fields": 3
+      }
+    ]
+  },
+  {
+    "file": "/src/store/appStore.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/store/authStore.ts",
+    "loc": 2,
+    "exportCount": 1,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/test/setupTests.ts",
+    "loc": 77,
+    "exportCount": 0,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "MemoryStorage",
+        "fields": 0
+      }
+    ]
+  },
+  {
+    "file": "/src/types/dashboardConfig.ts",
+    "loc": 107,
+    "exportCount": 11,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "DashboardDataSources",
+        "fields": 0
+      },
+      {
+        "name": "DashboardExtraContext",
+        "fields": 0
+      },
+      {
+        "name": "DashboardLayout",
+        "fields": 2
+      },
+      {
+        "name": "DashboardQuerySpec",
+        "fields": 3
+      },
+      {
+        "name": "DashboardComponentSpec",
+        "fields": 10
+      },
+      {
+        "name": "DefaultConfigPage",
+        "fields": 10
+      },
+      {
+        "name": "DefaultConfigTab",
+        "fields": 4
+      },
+      {
+        "name": "DataSourceSpec",
+        "fields": 3
+      },
+      {
+        "name": "StatCardSpec",
+        "fields": 5
+      },
+      {
+        "name": "TabSpec",
+        "fields": 5
+      },
+      {
+        "name": "DashboardRenderConfig",
+        "fields": 1
+      }
+    ]
+  },
+  {
+    "file": "/src/types/index.ts",
+    "loc": 88,
+    "exportCount": 8,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": [
+      {
+        "name": "ApiError",
+        "fields": 3
+      },
+      {
+        "name": "ApiResponse",
+        "fields": 4
+      },
+      {
+        "name": "User",
+        "fields": 5
+      },
+      {
+        "name": "Team",
+        "fields": 3
+      },
+      {
+        "name": "TimeRange",
+        "fields": 7
+      },
+      {
+        "name": "MetricData",
+        "fields": 3
+      },
+      {
+        "name": "LogEntry",
+        "fields": 6
+      },
+      {
+        "name": "TraceSpan",
+        "fields": 9
+      }
+    ]
+  },
+  {
+    "file": "/src/utils/chartHelpers.ts",
+    "loc": 180,
+    "exportCount": 7,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "BASE_CHART_OPTIONS",
+        "loc": 37,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "DAY",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/utils/chartSetup.ts",
+    "loc": 31,
+    "exportCount": 0,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/utils/formatters.ts",
+    "loc": 168,
+    "exportCount": 10,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "ONE_THOUSAND",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "ONE_MILLION",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "ONE_BILLION",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "ONE_MINUTE_MS",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "ONE_DAY_HOURS",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "THIRTY_DAYS",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      },
+      {
+        "name": "MICROSECONDS_MULTIPLIER",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  },
+  {
+    "file": "/src/utils/logUtils.ts",
+    "loc": 380,
+    "exportCount": 13,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "STEP_MS_BY_LABEL",
+        "loc": 11,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": [
+      {
+        "name": "LogLike",
+        "fields": 9
+      },
+      {
+        "name": "PageLike",
+        "fields": 12
+      },
+      {
+        "name": "CursorValue",
+        "fields": 0
+      }
+    ]
+  },
+  {
+    "file": "/src/utils/storage.ts",
+    "loc": 99,
+    "exportCount": 11,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [],
+    "interfaces": []
+  },
+  {
+    "file": "/src/utils/time.ts",
+    "loc": 44,
+    "exportCount": 2,
+    "hasUseEffect": 0,
+    "hasDataFetching": false,
+    "hasDirectAxiosOrFetch": false,
+    "components": [
+      {
+        "name": "EMPTY_LABEL",
+        "loc": 0,
+        "props": 0,
+        "nesting": 0,
+        "hooks": 0
+      }
+    ],
+    "interfaces": []
+  }
+]

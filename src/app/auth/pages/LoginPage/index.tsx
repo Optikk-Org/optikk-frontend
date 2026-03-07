@@ -1,4 +1,3 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Form, Input, Button, Card, Typography, Space } from 'antd';
 import { Mail, Lock, Layers } from 'lucide-react';
 import { useEffect } from 'react';
@@ -7,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { useAppStore } from '@store/appStore';
 import { useAuthStore } from '@store/authStore';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 import './LoginPage.css';
 

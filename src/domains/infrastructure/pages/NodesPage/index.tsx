@@ -1,21 +1,23 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Col, Row } from 'antd';
 import { AlertTriangle, Box, CheckCircle2, Server, XCircle } from 'lucide-react';
 import { useState } from 'react';
-import type { ChangeEvent } from 'react';
 
 import StatCard from '@components/common/cards/StatCard';
 import FilterBar from '@components/common/forms/FilterBar';
 import PageHeader from '@components/common/layout/PageHeader';
-
-import { NodeDetailDrawer, NodesTable } from '../../components';
-import { deriveNodeStatus } from '../../components/nodes/nodeConstants';
 
 import { v1Service } from '@services/v1Service';
 
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
 
 import { formatNumber } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
+
+import { NodeDetailDrawer, NodesTable } from '../../components';
+import { deriveNodeStatus } from '../../components/nodes/nodeConstants';
+
+import type { ChangeEvent } from 'react';
 
 /**
  *
@@ -66,34 +68,26 @@ export default function NodesPage() {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Healthy Nodes"
-            value={stats.healthy}
-            icon={<CheckCircle2 size={20} />}
-            iconColor={APP_COLORS.hex_73c991}
+            metric={{ title: 'Healthy Nodes', value: stats.healthy }}
+            visuals={{ icon: <CheckCircle2 size={20} />, iconColor: APP_COLORS.hex_73c991 }}
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Degraded Nodes"
-            value={stats.degraded}
-            icon={<AlertTriangle size={20} />}
-            iconColor={APP_COLORS.hex_f79009}
+            metric={{ title: 'Degraded Nodes', value: stats.degraded }}
+            visuals={{ icon: <AlertTriangle size={20} />, iconColor: APP_COLORS.hex_f79009 }}
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Unhealthy Nodes"
-            value={stats.unhealthy}
-            icon={<XCircle size={20} />}
-            iconColor={APP_COLORS.hex_f04438}
+            metric={{ title: 'Unhealthy Nodes', value: stats.unhealthy }}
+            visuals={{ icon: <XCircle size={20} />, iconColor: APP_COLORS.hex_f04438 }}
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Total Pods"
-            value={formatNumber(stats.totalPods)}
-            icon={<Box size={20} />}
-            iconColor={APP_COLORS.hex_5e60ce}
+            metric={{ title: 'Total Pods', value: formatNumber(stats.totalPods) }}
+            visuals={{ icon: <Box size={20} />, iconColor: APP_COLORS.hex_5e60ce }}
           />
         </Col>
       </Row>

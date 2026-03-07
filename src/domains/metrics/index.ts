@@ -1,5 +1,5 @@
-import { lazy } from 'react';
 import { BarChart3, Gauge } from 'lucide-react';
+import { lazy } from 'react';
 
 import type { DomainConfig } from '@/app/registry/domainRegistry';
 import { ROUTES } from '@/shared/constants/routes';
@@ -11,7 +11,10 @@ const SaturationHubPage = lazy(() =>
   import('./pages/SaturationHubPage').then((module) => ({ default: module.default })),
 );
 
-export const metricsConfig: DomainConfig = {
+export /**
+ *
+ */
+const metricsConfig: DomainConfig = {
   key: 'metrics',
   label: 'Metrics',
   permissions: ['metrics:read'],

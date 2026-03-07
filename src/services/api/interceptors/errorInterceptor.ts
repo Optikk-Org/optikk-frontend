@@ -1,8 +1,12 @@
 import axios from 'axios';
-import type { AxiosError, AxiosInstance } from 'axios';
 
 import { clearAuthStorage } from '@services/auth/authStorage';
 
+import type { AxiosError, AxiosInstance } from 'axios';
+
+/**
+ *
+ */
 export interface ApiErrorShape {
   readonly status: number;
   readonly message: string;
@@ -75,6 +79,9 @@ function normalizeError(error: unknown): ApiErrorShape {
   };
 }
 
+/**
+ *
+ */
 export function attachErrorInterceptor(instance: AxiosInstance): number {
   return instance.interceptors.response.use(
     (response) => response,

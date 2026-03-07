@@ -10,4 +10,3 @@ export default function TraceMethodBadge({ method }: TraceMethodBadgeProps): JSX
   const normalizedMethod = method.toUpperCase();
   return <span className={`traces-method-badge ${normalizedMethod}`}>{normalizedMethod}</span>;
 }
-

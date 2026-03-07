@@ -7,6 +7,9 @@ import {
   type SetStateAction,
 } from 'react';
 
+/**
+ *
+ */
 export type ColumnWidthMap = Record<string, number>;
 
 interface UseResizableColumnsOptions {

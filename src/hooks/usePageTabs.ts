@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { defaultConfigService } from '@services/defaultConfigService';
 import type { DefaultConfigTab } from '@/types/dashboardConfig';
+
+import { defaultConfigService } from '@services/defaultConfigService';
+
 import { useAppStore } from '@store/appStore';
 
 interface UsePageTabsResult {
@@ -10,6 +12,9 @@ interface UsePageTabsResult {
   error: Error | null;
 }
 
+/**
+ *
+ */
 export function usePageTabs(pageId: string): UsePageTabsResult {
   const { selectedTeamId } = useAppStore();
 

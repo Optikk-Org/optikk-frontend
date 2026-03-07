@@ -1,10 +1,11 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Badge, Card, Empty, Progress, Skeleton, Table, Tag, Tooltip } from 'antd';
 import { useMemo } from 'react';
 
 import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
 
 import { formatNumber } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 import { n, naSpan, rateColor } from './tabHelpers';
 

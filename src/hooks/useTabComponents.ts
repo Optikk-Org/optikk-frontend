@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
+
+import type { DashboardComponentSpec } from '@/types/dashboardConfig';
 
 import { defaultConfigService } from '@services/defaultConfigService';
-import type { DashboardComponentSpec } from '@/types/dashboardConfig';
+
 import { useAppStore } from '@store/appStore';
 
 interface UseTabComponentsResult {
@@ -11,6 +13,9 @@ interface UseTabComponentsResult {
   error: Error | null;
 }
 
+/**
+ *
+ */
 export function useTabComponents(pageId: string, tabId: string): UseTabComponentsResult {
   const { selectedTeamId } = useAppStore();
 

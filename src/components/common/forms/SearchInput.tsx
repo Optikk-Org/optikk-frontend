@@ -1,6 +1,7 @@
 import { Input } from 'antd';
 import { Search } from 'lucide-react';
 import { useState, useCallback, useRef } from 'react';
+
 import type { CSSProperties, ChangeEvent } from 'react';
 
 interface SearchInputProps {

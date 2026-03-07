@@ -1,4 +1,3 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Card, Col, Row } from 'antd';
 import {
   Activity,
@@ -13,6 +12,8 @@ import {
   ShieldCheck,
   Zap,
 } from 'lucide-react';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 /**
  *

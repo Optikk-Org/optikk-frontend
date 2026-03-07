@@ -21,14 +21,18 @@ export default function ServiceDetailLogsTab({
   return (
     <Card className="chart-card" size="small">
       <DataTable
-        columns={logColumns}
-        data={logs}
-        loading={logsLoading}
-        rowKey={(record: any) => `${record.timestamp}-${record.trace_id}-${record.span_id}`}
-        onRow={(record: any) => ({
-          onClick: () => record.trace_id && onTraceNavigate(record.trace_id),
-          style: { cursor: record.trace_id ? 'pointer' : 'default' },
-        })}
+        data={{
+          columns: logColumns,
+          rows: logs,
+          loading: logsLoading,
+          rowKey: (record: any) => `${record.timestamp}-${record.trace_id}-${record.span_id}`,
+        }}
+        config={{
+          onRow: (record: any) => ({
+            onClick: () => record.trace_id && onTraceNavigate(record.trace_id),
+            style: { cursor: record.trace_id ? 'pointer' : 'default' },
+          }),
+        }}
       />
     </Card>
   );

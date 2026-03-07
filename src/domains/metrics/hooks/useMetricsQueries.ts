@@ -5,6 +5,13 @@ import { v1Service } from '@services/v1Service';
 
 import { useAppStore } from '@store/appStore';
 
+import {
+  normalizeEndpointMetric,
+  normalizeMetricSummary,
+  normalizeServiceMetric,
+  normalizeTimeSeriesPoint,
+} from '../utils/metricNormalizers';
+
 import type {
   EndpointMetricPoint,
   MetricSummary,
@@ -14,12 +21,6 @@ import type {
   UseMetricsQueriesParams,
   UseMetricsQueriesResult,
 } from '../types';
-import {
-  normalizeEndpointMetric,
-  normalizeMetricSummary,
-  normalizeServiceMetric,
-  normalizeTimeSeriesPoint,
-} from '../utils/metricNormalizers';
 
 function asArray<T>(value: unknown, normalize: (row: unknown) => T): T[] {
   if (!Array.isArray(value)) {
@@ -28,6 +29,9 @@ function asArray<T>(value: unknown, normalize: (row: unknown) => T): T[] {
   return value.map(normalize);
 }
 
+/**
+ *
+ */
 export function useMetricsQueries({
   selectedService,
   showErrorsOnly,

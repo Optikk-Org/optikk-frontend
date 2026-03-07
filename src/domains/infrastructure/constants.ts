@@ -1,1 +1,4 @@
-export const DOMAIN_KEY = 'infrastructure';
+export /**
+ *
+ */
+const DOMAIN_KEY = 'infrastructure';

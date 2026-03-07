@@ -1,7 +1,8 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Empty } from 'antd';
 
 import { formatNumber } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 import { getMqMeta, n } from './messagingMeta';
 

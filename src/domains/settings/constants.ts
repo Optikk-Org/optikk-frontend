@@ -1,1 +1,4 @@
-export const DOMAIN_KEY = 'settings';
+export /**
+ *
+ */
+const DOMAIN_KEY = 'settings';

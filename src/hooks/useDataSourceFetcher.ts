@@ -2,7 +2,9 @@ import { useQueries } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import type { DataSourceSpec } from '@/types/dashboardConfig';
+
 import { api } from '@services/api/client';
+
 import { useAppStore } from '@store/appStore';
 
 interface UseDataSourceFetcherResult {

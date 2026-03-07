@@ -5,14 +5,14 @@ import { useMemo } from 'react';
 import { PageHeader, StatCard, DatabaseTopTablesList } from '@components/common';
 import ConfigurableDashboard from '@components/dashboard/ConfigurableDashboard';
 
-import { DatabaseSystemBreakdown } from '../../components';
-
 import { v1Service } from '@services/v1Service';
 
 import { useDashboardConfig } from '@hooks/useDashboardConfig';
 import { useTimeRangeQuery } from '@hooks/useTimeRangeQuery';
 
 import { formatNumber, formatPercentage } from '@utils/formatters';
+
+import { DatabaseSystemBreakdown } from '../../components';
 
 const n = (v: any) => (v == null || Number.isNaN(Number(v)) ? 0 : Number(v));
 
@@ -92,16 +92,44 @@ export default function DatabaseCachePerformancePage() {
       {/* Stat cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>
-          <StatCard title="Avg DB / Pool Latency" value={`${n(summary.avg_query_latency_ms).toFixed(1)} ms`} icon={<Timer size={18} />} loading={isLoading} description="Mongo query latency plus SQL pool usage latency" />
+          <StatCard
+            metric={{
+              title: 'Avg DB / Pool Latency',
+              value: `${n(summary.avg_query_latency_ms).toFixed(1)} ms`,
+              description: 'Mongo query latency plus SQL pool usage latency',
+            }}
+            visuals={{ icon: <Timer size={18} />, loading: isLoading }}
+          />
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <StatCard title="P95 DB / Pool Latency" value={`${n(summary.p95_query_latency_ms).toFixed(1)} ms`} icon={<Zap size={18} />} loading={isLoading} description="95th percentile Mongo query or SQL pool usage latency" />
+          <StatCard
+            metric={{
+              title: 'P95 DB / Pool Latency',
+              value: `${n(summary.p95_query_latency_ms).toFixed(1)} ms`,
+              description: '95th percentile Mongo query or SQL pool usage latency',
+            }}
+            visuals={{ icon: <Zap size={18} />, loading: isLoading }}
+          />
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <StatCard title="Cache Hit Ratio" value={formatPercentage(cache.cacheHitRatio, 1)} icon={<Layers3 size={18} />} loading={isLoading} description={`${formatNumber(cache.cacheHits || 0)} hits / ${formatNumber((cache.cacheHits || 0) + (cache.cacheMisses || 0))} total`} />
+          <StatCard
+            metric={{
+              title: 'Cache Hit Ratio',
+              value: formatPercentage(cache.cacheHitRatio, 1),
+              description: `${formatNumber(cache.cacheHits || 0)} hits / ${formatNumber((cache.cacheHits || 0) + (cache.cacheMisses || 0))} total`,
+            }}
+            visuals={{ icon: <Layers3 size={18} />, loading: isLoading }}
+          />
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <StatCard title="Database Systems" value={totalSystems} icon={<Database size={18} />} loading={isLoading} description={`${formatNumber(totalSpans)} total spans`} />
+          <StatCard
+            metric={{
+              title: 'Database Systems',
+              value: totalSystems,
+              description: `${formatNumber(totalSpans)} total spans`,
+            }}
+            visuals={{ icon: <Database size={18} />, loading: isLoading }}
+          />
         </Col>
       </Row>
 

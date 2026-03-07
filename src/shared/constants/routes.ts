@@ -1,4 +1,7 @@
-export const ROUTES = {
+export /**
+ *
+ */
+const ROUTES = {
   login: '/login',
   home: '/',
   overview: '/overview',
@@ -16,4 +19,7 @@ export const ROUTES = {
   latencyAlias: '/latency',
 } as const;
 
+/**
+ *
+ */
 export type AppRoutePath = (typeof ROUTES)[keyof typeof ROUTES];

@@ -1,9 +1,7 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { useQuery } from '@tanstack/react-query';
 import { Card, Row, Col, Tabs, Tag } from 'antd';
 import { Timer } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import type { ChangeEvent } from 'react';
 
 import StatCard from '@components/common/cards/StatCard';
 import DataTable from '@components/common/data-display/DataTable';
@@ -17,6 +15,10 @@ import { useDashboardConfig } from '@hooks/useDashboardConfig';
 import { useTimeRange } from '@hooks/useTimeRangeQuery';
 
 import { formatNumber } from '@utils/formatters';
+
+import { APP_COLORS } from '@config/colorLiterals';
+
+import type { ChangeEvent } from 'react';
 
 const HISTOGRAM_BUCKETS = [
   { label: '0-10ms', key: '0_10ms' },
@@ -133,12 +135,14 @@ export default function LatencyAnalysisPage({ embedded = false }) {
       children: (
         <Card>
           <DataTable
-            columns={percentileColumns}
-            data={histogram}
-            loading={histLoading}
-            rowKey={(record: Record<string, unknown>, idx?: number) => {
-              const bucket = record.bucket;
-              return typeof bucket === 'string' ? bucket : `row-${idx ?? 0}`;
+            data={{
+              columns: percentileColumns,
+              rows: histogram,
+              loading: histLoading,
+              rowKey: (record: Record<string, unknown>, idx?: number) => {
+                const bucket = record.bucket;
+                return typeof bucket === 'string' ? bucket : `row-${idx ?? 0}`;
+              },
             }}
           />
         </Card>
@@ -174,38 +178,26 @@ export default function LatencyAnalysisPage({ embedded = false }) {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="P50 Latency"
-            value={stats.p50}
-            icon={<Timer size={20} />}
-            iconColor={APP_COLORS.hex_73c991}
-            description="Median latency"
+            metric={{ title: 'P50 Latency', value: stats.p50, description: 'Median latency' }}
+            visuals={{ icon: <Timer size={20} />, iconColor: APP_COLORS.hex_73c991 }}
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="P95 Latency"
-            value={stats.p95}
-            icon={<Timer size={20} />}
-            iconColor={APP_COLORS.hex_f79009}
-            description="95th percentile"
+            metric={{ title: 'P95 Latency', value: stats.p95, description: '95th percentile' }}
+            visuals={{ icon: <Timer size={20} />, iconColor: APP_COLORS.hex_f79009 }}
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="P99 Latency"
-            value={stats.p99}
-            icon={<Timer size={20} />}
-            iconColor={APP_COLORS.hex_f04438}
-            description="99th percentile"
+            metric={{ title: 'P99 Latency', value: stats.p99, description: '99th percentile' }}
+            visuals={{ icon: <Timer size={20} />, iconColor: APP_COLORS.hex_f04438 }}
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Avg Latency"
-            value={stats.avg}
-            icon={<Timer size={20} />}
-            iconColor={APP_COLORS.hex_5e60ce}
-            description="Mean latency"
+            metric={{ title: 'Avg Latency', value: stats.avg, description: 'Mean latency' }}
+            visuals={{ icon: <Timer size={20} />, iconColor: APP_COLORS.hex_5e60ce }}
           />
         </Col>
       </Row>

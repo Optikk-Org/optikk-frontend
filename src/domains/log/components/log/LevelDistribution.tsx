@@ -1,9 +1,10 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { formatNumber } from '@utils/formatters';
 
-import type { LogFacet } from '../../types';
+import { APP_COLORS } from '@config/colorLiterals';
 
 import { LevelBadge } from './LogRow';
+
+import type { LogFacet } from '../../types';
 
 const LEVEL_COLORS: Record<string, string> = {
   errors: APP_COLORS.hex_f04438,

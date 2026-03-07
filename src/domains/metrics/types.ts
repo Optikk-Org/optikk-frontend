@@ -1,11 +1,20 @@
+/**
+ *
+ */
 export type DomainRecord = Record<string, unknown>;
 
+/**
+ *
+ */
 export interface MetricsServiceOption extends DomainRecord {
   name?: string;
   service_name?: string;
   serviceName?: string;
 }
 
+/**
+ *
+ */
 export interface MetricSummary extends DomainRecord {
   total_requests: number;
   error_count: number;
@@ -15,6 +24,9 @@ export interface MetricSummary extends DomainRecord {
   p99_latency: number;
 }
 
+/**
+ *
+ */
 export interface MetricTimeSeriesPoint extends DomainRecord {
   timestamp: string;
   request_count: number;
@@ -25,6 +37,9 @@ export interface MetricTimeSeriesPoint extends DomainRecord {
   p99: number;
 }
 
+/**
+ *
+ */
 export interface ServiceMetricPoint extends DomainRecord {
   service_name: string;
   request_count: number;
@@ -35,17 +50,26 @@ export interface ServiceMetricPoint extends DomainRecord {
   p99_latency: number;
 }
 
+/**
+ *
+ */
 export interface EndpointMetricPoint extends ServiceMetricPoint {
   operation_name: string;
   http_method: string;
 }
 
+/**
+ *
+ */
 export interface UseMetricsQueriesParams {
   selectedService: string | null;
   showErrorsOnly: boolean;
   activeTab: 'overview' | 'latency' | 'services';
 }
 
+/**
+ *
+ */
 export interface UseMetricsQueriesResult {
   servicesData: MetricsServiceOption[] | undefined;
   summaryData: MetricSummary | undefined;

@@ -17,6 +17,9 @@ function readFlag(flagName: string): boolean {
   return false;
 }
 
+/**
+ *
+ */
 export function useFeatureFlag(flagName: string): boolean {
   return useMemo(() => readFlag(flagName), [flagName]);
 }

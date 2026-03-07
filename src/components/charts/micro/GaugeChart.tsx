@@ -1,5 +1,6 @@
-import { APP_COLORS } from '@config/colorLiterals';
 import { Doughnut } from 'react-chartjs-2';
+
+import { APP_COLORS } from '@config/colorLiterals';
 
 interface GaugeChartProps {
   value?: number;

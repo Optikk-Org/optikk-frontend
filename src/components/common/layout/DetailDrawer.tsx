@@ -7,7 +7,7 @@ const { Text } = Typography;
 interface DetailDrawerField {
   label: string;
   key: string;
-  render?: (value: any, data: any) => ReactNode;
+  render?: (value: unknown, data: Record<string, unknown>) => ReactNode;
 }
 
 interface DetailDrawerSection {
@@ -21,7 +21,7 @@ interface DetailDrawerProps {
   title?: string;
   width?: number;
   sections?: DetailDrawerSection[];
-  data: any;
+  data: Record<string, unknown>;
   extra?: ReactNode;
 }
 
@@ -79,7 +79,7 @@ export default function DetailDrawer({
   );
 }
 
-function renderValue(value: any) {
+function renderValue(value: unknown) {
   if (value == null) return <Text type="secondary">-</Text>;
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   if (typeof value === 'object') return <pre style={{ margin: 0, fontSize: 12 }}>{JSON.stringify(value, null, 2)}</pre>;
