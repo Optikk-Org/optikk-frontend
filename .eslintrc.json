@@ -100,7 +100,9 @@
     "@typescript-eslint/prefer-readonly": "error",
     "@typescript-eslint/prefer-ts-expect-error": "off",
     "@typescript-eslint/strict-boolean-expressions": "off",
-    "import/no-default-export": "off",
+    "@typescript-eslint/consistent-type-imports": "error",
+    "@typescript-eslint/await-thenable": "error",
+    "import/no-cycle": "error",
     "import/no-unresolved": "error",
     "import/order": [
       "error",
@@ -186,6 +188,8 @@
     "jsdoc/require-returns-type": "off",
     "react/prop-types": "off",
     "react/react-in-jsx-scope": "off",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "error",
     "react-refresh/only-export-components": "off",
     "valid-jsdoc": "off"
   }

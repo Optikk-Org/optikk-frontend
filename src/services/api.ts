@@ -1,2 +1,2 @@
-export { api } from './api/client';
-export { default } from './api/client';
+export { default } from '@shared/api/api';
+export * from '@shared/api/api';

@@ -1,12 +1,12 @@
 
-import { aiConfig } from '@/domains/ai';
-import { infrastructureConfig } from '@/domains/infrastructure';
-import { logsConfig } from '@/domains/log';
-import { metricsConfig } from '@/domains/metrics';
-import { overviewConfig } from '@/domains/overview';
-import { servicesConfig } from '@/domains/services';
-import { settingsConfig } from '@/domains/settings';
-import { tracesConfig } from '@/domains/traces';
+import { aiConfig } from '@/features/ai';
+import { infrastructureConfig } from '@/features/infrastructure';
+import { logsConfig } from '@/features/log';
+import { metricsConfig } from '@/features/metrics';
+import { overviewConfig } from '@/features/overview';
+import { servicesConfig } from '@/features/services';
+import { settingsConfig } from '@/features/settings';
+import { tracesConfig } from '@/features/traces';
 
 import type { LucideIcon } from 'lucide-react';
 import type { ComponentType, LazyExoticComponent } from 'react';

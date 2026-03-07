@@ -1,10 +1,10 @@
-import { lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
-import { ServiceDetailPageView } from '@/domains/services';
-import { SettingsPageView } from '@/domains/settings';
-import { TraceDetailPageView } from '@/domains/traces';
-import { ErrorBoundary } from '@/shared/components/feedback';
+import ServiceDetailPage from '@/pages/services/ServiceDetailPage';
+import SettingsPage from '@/pages/settings';
+import TraceDetailPage from '@/pages/traces/TraceDetailPage';
+import { ErrorBoundary, Loading } from '@/shared/components/ui/feedback';
 import { ROUTES } from '@/shared/constants/routes';
 
 import BackendDrivenPage from './BackendDrivenPage';
@@ -23,7 +23,14 @@ function toNestedRoutePath(path: string): string {
 export default function AppRoutes(): JSX.Element {
   return (
     <Routes>
-      <Route path={ROUTES.login} element={<LoginPage />} />
+      <Route
+        path={ROUTES.login}
+        element={(
+          <Suspense fallback={<Loading fullscreen />}>
+            <LoginPage />
+          </Suspense>
+        )}
+      />
 
       <Route
         path={ROUTES.home}
@@ -38,7 +45,7 @@ export default function AppRoutes(): JSX.Element {
           path={toNestedRoutePath(ROUTES.settings)}
           element={(
             <ErrorBoundary>
-              <SettingsPageView />
+              <SettingsPage />
             </ErrorBoundary>
           )}
         />
@@ -46,7 +53,7 @@ export default function AppRoutes(): JSX.Element {
           path={toNestedRoutePath(ROUTES.traceDetail)}
           element={(
             <ErrorBoundary>
-              <TraceDetailPageView />
+              <TraceDetailPage />
             </ErrorBoundary>
           )}
         />
@@ -54,7 +61,7 @@ export default function AppRoutes(): JSX.Element {
           path={toNestedRoutePath(ROUTES.serviceDetail)}
           element={(
             <ErrorBoundary>
-              <ServiceDetailPageView />
+              <ServiceDetailPage />
             </ErrorBoundary>
           )}
         />

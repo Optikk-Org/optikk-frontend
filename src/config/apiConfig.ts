@@ -33,19 +33,19 @@ export /**
  */
 const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: '/auth/v1/login',
-    LOGOUT: '/auth/logout',
-    VALIDATE: '/auth/validate',
-    ME: '/auth/me',
+    LOGIN: '/v1/auth/login',
+    LOGOUT: '/v1/auth/logout',
+    VALIDATE: '/v1/auth/validate',
+    ME: '/v1/auth/me',
   },
   TEAMS: {
-    LIST: '/teams',
-    SWITCH: '/teams/switch',
+    LIST: '/v1/teams',
+    SWITCH: '/v1/teams/switch',
   },
   V1_BASE: '/v1',
   SETTINGS: {
-    PROFILE: '/settings/profile',
-    PREFERENCES: '/settings/preferences',
+    PROFILE: '/v1/settings/profile',
+    PREFERENCES: '/v1/settings/preferences',
   },
   EVENTS: {
     STREAM: '/v1/events/stream',

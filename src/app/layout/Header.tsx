@@ -3,9 +3,9 @@ import { RefreshCw, ChevronDown, Moon, Sun } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
-import { TimeRangePicker } from '@components/common/TimeSelector';
+import { TimeRangePicker } from '@shared/components/ui/TimeSelector';
 
-import { useAutoRefresh } from '@hooks/useAutoRefresh';
+import { useAutoRefresh } from '@shared/hooks/useAutoRefresh';
 
 import { useAppStore } from '@store/appStore';
 import { useAuthStore } from '@store/authStore';

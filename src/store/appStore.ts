@@ -1,1 +1,1 @@
-export * from '@/app/store/appStore';
+export * from '@/shared/store/appStore';

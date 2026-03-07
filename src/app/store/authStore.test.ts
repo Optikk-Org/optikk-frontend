@@ -25,7 +25,7 @@ async function loadStore({
   authServiceMock.isAuthenticated.mockReturnValue(isAuthenticated);
 
   vi.resetModules();
-  vi.doMock('@services/authService', () => ({
+  vi.doMock('@shared/api/authService', () => ({
     authService: authServiceMock,
   }));
   vi.doMock('@store/appStore', () => ({

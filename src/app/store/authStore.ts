@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 import type { Team, User } from '@/types';
 
-import { authService } from '@services/authService';
+import { authService } from '@shared/api/authService';
 
 import { useAppStore } from '@store/appStore';
 

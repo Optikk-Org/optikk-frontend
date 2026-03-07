@@ -2,7 +2,7 @@ import { Layout } from 'antd';
 import { useState, useEffect, useCallback } from 'react';
 import { Outlet } from 'react-router-dom';
 
-import CommandPalette from '@components/common/overlay/CommandPalette';
+import CommandPalette from '@shared/components/ui/overlay/CommandPalette';
 
 import { useAppStore } from '@store/appStore';
 

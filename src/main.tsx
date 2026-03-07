@@ -2,14 +2,14 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
-import { ErrorBoundary } from '@/shared/components/feedback';
+import { ErrorBoundary } from '@shared/components/ui/feedback';
 
 import App from './App';
 import AppQueryClientProvider, {
   queryClient,
 } from './app/providers/QueryClientProvider';
 import ThemeProvider from './app/providers/ThemeProvider';
-import './utils/chartSetup';
+import '@shared/utils/chartSetup';
 import './index.css';
 
 export { queryClient };

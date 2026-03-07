@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { getDashboardIcon } from '@/components/ui/dashboard/SpecializedRendererRegistry';
+import { getDashboardIcon } from '@shared/components/ui/dashboard/SpecializedRendererRegistry';
 import { usePagesConfig } from '@/hooks/usePagesConfig';
 import { ROUTES } from '@/shared/constants/routes';
 
