@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import QueryFieldPicker from './QueryFieldPicker';
 import QueryKeyboardHints from './QueryKeyboardHints';
 import QueryOperatorPicker from './QueryOperatorPicker';
+import QueryValuePicker from './QueryValuePicker';
 
 import {
   useQueryBarState,
@@ -30,6 +31,7 @@ interface ObservabilityQueryBarProps {
   placeholder?: string;
   className?: string;
   rightSlot?: ReactNode;
+  valueHints?: Record<string, string[]>;
 }
 
 /**
@@ -45,6 +47,7 @@ export default function ObservabilityQueryBar({
   placeholder,
   className = '',
   rightSlot,
+  valueHints,
 }: ObservabilityQueryBarProps): JSX.Element {
   const { state, refs, actions } = useQueryBarState({
     fields,
@@ -86,7 +89,7 @@ export default function ObservabilityQueryBar({
 
   const groups = [...new Set(filteredFields.map((field) => field.group || 'Other'))];
   const operators = pendingField?.operators || DEFAULT_OPERATORS;
-  const showDropdown = step === 1 || step === 2;
+  const showDropdown = step === 1 || step === 2 || (step === 3 && !!valueHints && !!pendingField && !!valueHints[pendingField.key]);
 
   const inputPlaceholder =
     placeholder ||
@@ -217,6 +220,15 @@ export default function ObservabilityQueryBar({
               pendingField={pendingField}
               operators={operators}
               onPickOperator={pickOperator}
+            />
+          )}
+
+          {step === 3 && pendingField && valueHints && valueHints[pendingField.key] && (
+            <QueryValuePicker
+              pendingField={pendingField}
+              valueInput={state.valueInput}
+              hints={valueHints[pendingField.key]}
+              onPickValue={actions.pickValue}
             />
           )}
         </div>

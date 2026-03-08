@@ -1,10 +1,10 @@
 import {
-  Activity, AlertCircle, Clock, Zap, Network, Layers,
+  Activity, AlertCircle, Bug, Clock, Crosshair, Flame, List, Zap, Network, Layers,
   ArrowUpRight, ArrowDownRight, AlertTriangle, Database,
   HardDrive, Cpu, Radio, Gauge, GitPullRequest, Target,
   BarChart3, Server, ShieldCheck, TrendingDown, Box,
   CheckCircle2, Circle, FolderOpen, RefreshCw, XCircle,
-  Brain, FileText, LayoutDashboard, GitBranch,
+  Brain, FileText, LayoutDashboard, GitBranch, Share2, TrendingUp,
 } from 'lucide-react';
 
 import type { DashboardComponentSpec } from '@/types/dashboardConfig';
@@ -14,12 +14,12 @@ import { createLineDataset, getChartColor } from '@shared/utils/chartHelpers';
 import { APP_COLORS } from '@config/colorLiterals';
 
 const ICONS: Record<string, any> = {
-  Activity, AlertCircle, Clock, Zap, Network, Layers,
+  Activity, AlertCircle, Bug, Clock, Crosshair, Flame, List, Zap, Network, Layers,
   ArrowUpRight, ArrowDownRight, AlertTriangle, Database,
   HardDrive, Cpu, Radio, Gauge, GitPullRequest, Target,
   BarChart3, Server, ShieldCheck, TrendingDown, Box,
   CheckCircle2, Circle, FolderOpen, RefreshCw, XCircle,
-  Brain, FileText, LayoutDashboard, GitBranch,
+  Brain, FileText, LayoutDashboard, GitBranch, Share2, TrendingUp,
 };
 
 /**

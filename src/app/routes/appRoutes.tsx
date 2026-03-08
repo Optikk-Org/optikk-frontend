@@ -1,17 +1,17 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
-import ServiceDetailPage from '@/pages/services/ServiceDetailPage';
-import SettingsPage from '@/pages/settings';
-import TraceDetailPage from '@/pages/traces/TraceDetailPage';
 import { ErrorBoundary, Loading } from '@/shared/components/ui/feedback';
 import { ROUTES } from '@/shared/constants/routes';
 
-import BackendDrivenPage from './BackendDrivenPage';
 import ProtectedRoute from './ProtectedRoute';
 import MainLayout from '../layout/MainLayout';
 
 const LoginPage = lazy(() => import('@/app/auth'));
+const ServiceDetailPage = lazy(() => import('@/pages/services/ServiceDetailPage'));
+const SettingsPage = lazy(() => import('@/pages/settings'));
+const TraceDetailPage = lazy(() => import('@/pages/traces/TraceDetailPage'));
+const BackendDrivenPage = lazy(() => import('./BackendDrivenPage'));
 
 function toNestedRoutePath(path: string): string {
   if (!path || path === ROUTES.home) {
@@ -45,7 +45,9 @@ export default function AppRoutes(): JSX.Element {
           path={toNestedRoutePath(ROUTES.settings)}
           element={(
             <ErrorBoundary>
-              <SettingsPage />
+              <Suspense fallback={<Loading fullscreen />}>
+                <SettingsPage />
+              </Suspense>
             </ErrorBoundary>
           )}
         />
@@ -53,7 +55,9 @@ export default function AppRoutes(): JSX.Element {
           path={toNestedRoutePath(ROUTES.traceDetail)}
           element={(
             <ErrorBoundary>
-              <TraceDetailPage />
+              <Suspense fallback={<Loading fullscreen />}>
+                <TraceDetailPage />
+              </Suspense>
             </ErrorBoundary>
           )}
         />
@@ -61,7 +65,9 @@ export default function AppRoutes(): JSX.Element {
           path={toNestedRoutePath(ROUTES.serviceDetail)}
           element={(
             <ErrorBoundary>
-              <ServiceDetailPage />
+              <Suspense fallback={<Loading fullscreen />}>
+                <ServiceDetailPage />
+              </Suspense>
             </ErrorBoundary>
           )}
         />
@@ -81,7 +87,9 @@ export default function AppRoutes(): JSX.Element {
           path="*"
           element={(
             <ErrorBoundary>
-              <BackendDrivenPage />
+              <Suspense fallback={<Loading fullscreen />}>
+                <BackendDrivenPage />
+              </Suspense>
             </ErrorBoundary>
           )}
         />

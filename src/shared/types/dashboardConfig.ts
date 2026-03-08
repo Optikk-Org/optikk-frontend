@@ -28,6 +28,15 @@ export interface DashboardQuerySpec extends Record<string, any> {
 /**
  *
  */
+export interface ComponentGroup {
+  id: string;
+  label: string;
+  order: number;
+}
+
+/**
+ *
+ */
 export interface DashboardComponentSpec extends Record<string, any> {
   id: string;
   componentKey: string;
@@ -39,6 +48,7 @@ export interface DashboardComponentSpec extends Record<string, any> {
   dataSource?: string;
   type?: string;
   key?: string;
+  groupId?: string;
 }
 
 /**
@@ -103,4 +113,5 @@ export interface TabSpec {
  */
 export interface DashboardRenderConfig extends Record<string, any> {
   components: DashboardComponentSpec[];
+  groups?: ComponentGroup[];
 }

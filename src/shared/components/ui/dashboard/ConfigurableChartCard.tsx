@@ -28,6 +28,7 @@ import {
   AiLineRenderer,
   AreaRenderer,
   BarRenderer,
+  DbSystemsRenderer,
   GaugeRenderer,
   HeatmapRenderer,
   LatencyHeatmapRenderer,
@@ -70,6 +71,7 @@ const DASHBOARD_COMPONENT_MAP: Record<string, ComponentType<any>> = {
   pie: PieRenderer,
   'service-map': ServiceMapRenderer,
   'trace-waterfall': TraceWaterfallRenderer,
+  'db-systems-overview': DbSystemsRenderer,
 };
 
 const SPECIALIZED_COMPONENT_KEYS = new Set([
@@ -87,6 +89,7 @@ const SPECIALIZED_COMPONENT_KEYS = new Set([
   'heatmap',
   'service-map',
   'trace-waterfall',
+  'db-systems-overview',
 ]);
 
 import {

@@ -126,6 +126,10 @@ export default function LogsTableSection({
           searchText={searchText}
           setSearchText={setSearchText}
           onClearAll={clearAll}
+          valueHints={{
+            'service_name': serviceFacets.map(f => f.value),
+            'level': ['INFO', 'ERROR', 'WARN', 'DEBUG', 'FATAL']
+          }}
           placeholder="Search log messages, filter by service, level, host…"
           rightSlot={(
             <Tooltip title="Show only error and fatal logs">

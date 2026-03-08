@@ -34,7 +34,7 @@ export default function DashboardPage({ pageId, pathParams }: DashboardPageProps
   });
 
   const selectedTabId = activeTab || defaultTabId;
-  const { components, isLoading: componentsLoading } = useTabComponents(pageId, selectedTabId);
+  const { components, groups, isLoading: componentsLoading } = useTabComponents(pageId, selectedTabId);
 
   if ((tabsLoading || componentsLoading) && tabs.length === 0) {
     return (
@@ -60,12 +60,12 @@ export default function DashboardPage({ pageId, pathParams }: DashboardPageProps
           size="large"
           tabBarStyle={{ marginBottom: 16 }}
         />
-        <DashboardTabContent components={components} pathParams={pathParams} />
+        <DashboardTabContent components={components} groups={groups} pathParams={pathParams} />
       </>
     );
   }
 
-  return <DashboardTabContent components={components} pathParams={pathParams} />;
+  return <DashboardTabContent components={components} groups={groups} pathParams={pathParams} />;
 }
 
 /**

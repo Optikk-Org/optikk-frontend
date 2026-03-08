@@ -15,11 +15,11 @@ export default function ConfiguredTabPanel({
   tabId,
   pathParams,
 }: ConfiguredTabPanelProps) {
-  const { components, isLoading } = useTabComponents(pageId, tabId);
+  const { components, groups, isLoading } = useTabComponents(pageId, tabId);
 
   if (isLoading && components.length === 0) {
     return <Skeleton active paragraph={{ rows: 6 }} />;
   }
 
-  return <DashboardTabContent components={components} pathParams={pathParams} />;
+  return <DashboardTabContent components={components} groups={groups} pathParams={pathParams} />;
 }

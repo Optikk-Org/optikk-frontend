@@ -5,6 +5,7 @@ import type {
   BoardPaginationState,
   BoardFilter
 } from './ObservabilityDataBoard';
+import { Virtuoso } from 'react-virtuoso';
 import BoardLoadMoreFooter from './BoardLoadMoreFooter';
 
 export interface BoardTableProps<RowType> {
@@ -37,7 +38,7 @@ export function BoardTable<RowType extends Record<string, unknown>>({
   const { hasNextPage = false, isFetchingNextPage = false, fetchNextPage } = pagination;
 
   return (
-    <div className="oboard__tbody">
+    <div className="oboard__tbody" style={{ display: 'flex', flexDirection: 'column', height: '100%', paddingBottom: 0 }}>
       <div className="oboard__thead">
         {fixedColumns.map((column) => (
           <div key={column.key} className="oboard__th" style={{ width: colWidths[column.key] }}>
@@ -51,18 +52,32 @@ export function BoardTable<RowType extends Record<string, unknown>>({
         {flexColumn && <div className="oboard__th oboard__th--flex">{flexColumn.label}</div>}
       </div>
 
-      {rows.map((row, index) => (
-        <div key={rowKey(row, index)} className="oboard__row">
-          {renderRow(row, { colWidths, visibleCols, onAddFilter })}
-        </div>
-      ))}
-
-      <BoardLoadMoreFooter
-        entityName={entityName}
-        hasNextPage={hasNextPage}
-        isFetchingNextPage={isFetchingNextPage}
-        onFetchNextPage={fetchNextPage}
-      />
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <Virtuoso
+          style={{ height: '100%' }}
+          data={rows}
+          endReached={() => {
+            if (hasNextPage && !isFetchingNextPage && fetchNextPage) {
+              fetchNextPage();
+            }
+          }}
+          itemContent={(index, row) => (
+            <div key={rowKey(row, index)} className="oboard__row">
+              {renderRow(row, { colWidths, visibleCols, onAddFilter })}
+            </div>
+          )}
+          components={{
+            Footer: () => (
+              <BoardLoadMoreFooter
+                entityName={entityName}
+                hasNextPage={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                onFetchNextPage={fetchNextPage}
+              />
+            )
+          }}
+        />
+      </div>
     </div>
   );
 }

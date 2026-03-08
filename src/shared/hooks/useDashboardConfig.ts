@@ -19,6 +19,7 @@ export function useDashboardConfig(pageId: string): UseDashboardConfigResult {
   const defaultTabId = tabs[0]?.id ?? '';
   const {
     components,
+    groups,
     isLoading: componentsLoading,
     error: componentsError,
   } = useTabComponents(pageId, defaultTabId);
@@ -32,8 +33,9 @@ export function useDashboardConfig(pageId: string): UseDashboardConfigResult {
         ...component,
         dataSource: component.dataSource || component.id,
       })),
+      groups,
     };
-  }, [components, defaultTabId]);
+  }, [components, groups, defaultTabId]);
 
   return {
     config,

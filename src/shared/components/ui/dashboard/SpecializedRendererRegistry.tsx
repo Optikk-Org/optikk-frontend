@@ -22,6 +22,7 @@ export * from './renderers/ScorecardRenderer';
 export * from './renderers/HeatmapRenderer';
 export * from './renderers/ServiceMapRenderer';
 export * from './renderers/TraceWaterfallRenderer';
+export * from './renderers/DbSystemsRenderer';
 
 /**
  *

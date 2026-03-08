@@ -1,4 +1,5 @@
 import type {
+  ComponentGroup,
   DashboardComponentSpec,
   DefaultConfigPage,
   DefaultConfigTab,
@@ -30,13 +31,17 @@ const defaultConfigService = {
     _teamId: number | null,
     pageId: string,
     tabId: string,
-  ): Promise<DashboardComponentSpec[]> {
+  ): Promise<{ components: DashboardComponentSpec[]; groups: ComponentGroup[] }> {
     const response = await api.get(
       `${BASE}/default-config/pages/${pageId}/tabs/${tabId}/components`,
     ) as {
       components?: DashboardComponentSpec[];
+      groups?: ComponentGroup[];
     };
-    return Array.isArray(response.components) ? response.components : [];
+    return {
+      components: Array.isArray(response.components) ? response.components : [],
+      groups: Array.isArray(response.groups) ? response.groups : [],
+    };
   },
 
   async savePageOverride(

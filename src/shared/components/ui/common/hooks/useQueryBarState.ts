@@ -114,10 +114,11 @@ export function useQueryBarState({
     requestAnimationFrame(() => inputRef.current?.focus());
   };
 
-  const commitFilter = (): void => {
+  const commitFilter = (overrideValue?: string): void => {
     if (!pendingField || !pendingOp) return;
 
-    const trimmedValue = valueInput.trim();
+    const finalValue = typeof overrideValue === 'string' ? overrideValue : valueInput;
+    const trimmedValue = finalValue.trim();
     if (!trimmedValue) return;
 
     setFilters([
@@ -133,6 +134,11 @@ export function useQueryBarState({
       },
     ]);
     closeDropdown();
+  };
+
+  const pickValue = (value: string): void => {
+    setValueInput(value);
+    commitFilter(value);
   };
 
   const removeFilter = (index: number): void => {
@@ -231,6 +237,7 @@ export function useQueryBarState({
       closeDropdown,
       pickField,
       pickOperator,
+      pickValue,
       commitFilter,
       removeFilter,
       clearAll,

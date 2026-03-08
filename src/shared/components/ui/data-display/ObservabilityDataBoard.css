@@ -143,7 +143,9 @@
 /* ── Scrollable table area ── */
 .oboard__table {
     flex: 1;
-    overflow: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 /* ── Sticky header ── */
@@ -199,8 +201,10 @@
 
 /* ── Table body ── */
 .oboard__tbody {
-    padding-bottom: 24px;
-    min-width: fit-content;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 100%;
 }
 
 /* ── Individual row ── */
