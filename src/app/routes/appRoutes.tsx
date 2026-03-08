@@ -8,6 +8,13 @@ import ProtectedRoute from './ProtectedRoute';
 import MainLayout from '../layout/MainLayout';
 
 const LoginPage = lazy(() => import('@/app/auth'));
+const PricingPage = lazy(() => import('@/app/auth/pages/Pricing'));
+const OAuthCallbackSuccess = lazy(() =>
+  import('@/app/auth/pages/OAuthCallback').then((m) => ({ default: m.OAuthCallbackSuccess }))
+);
+const OAuthSignupPage = lazy(() =>
+  import('@/app/auth/pages/OAuthCallback').then((m) => ({ default: m.OAuthSignupPage }))
+);
 const ServiceDetailPage = lazy(() => import('@/features/services').then((m) => ({ default: m.ServiceDetailPageView })));
 const SettingsPage = lazy(() => import('@/features/settings').then((m) => ({ default: m.SettingsPageView })));
 const TraceDetailPage = lazy(() => import('@/features/traces').then((m) => ({ default: m.TraceDetailPageView })));
@@ -28,6 +35,33 @@ export default function AppRoutes(): JSX.Element {
         element={(
           <Suspense fallback={<Loading fullscreen />}>
             <LoginPage />
+          </Suspense>
+        )}
+      />
+
+      <Route
+        path={ROUTES.pricing}
+        element={(
+          <Suspense fallback={<Loading fullscreen />}>
+            <PricingPage />
+          </Suspense>
+        )}
+      />
+
+      <Route
+        path="/oauth/success"
+        element={(
+          <Suspense fallback={<Loading fullscreen />}>
+            <OAuthCallbackSuccess />
+          </Suspense>
+        )}
+      />
+
+      <Route
+        path="/oauth/signup"
+        element={(
+          <Suspense fallback={<Loading fullscreen />}>
+            <OAuthSignupPage />
           </Suspense>
         )}
       />

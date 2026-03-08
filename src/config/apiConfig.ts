@@ -26,6 +26,12 @@ const API_ENDPOINTS = {
     VALIDATE: '/v1/auth/validate',
     ME: '/v1/auth/me',
   },
+  OAUTH: {
+    GOOGLE: '/api/v1/auth/google',
+    GITHUB: '/api/v1/auth/github',
+    COMPLETE_SIGNUP: '/v1/auth/oauth/complete-signup',
+    FORGOT_PASSWORD: '/v1/auth/forgot-password',
+  },
   TEAMS: {
     LIST: '/v1/teams',
     SWITCH: '/v1/teams/switch',

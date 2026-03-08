@@ -17,6 +17,7 @@ const ROUTES = {
   aiObservability: '/ai-observability',
   settings: '/settings',
   latencyAlias: '/latency',
+  pricing: '/pricing',
 } as const;
 
 /**

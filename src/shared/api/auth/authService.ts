@@ -116,4 +116,29 @@ const authService = {
       return false;
     }
   },
+
+  /**
+   * Stores a JWT received from an OAuth redirect and fetches the user profile.
+   * Used by the /oauth/success callback page.
+   */
+  async loginWithToken(token: string): Promise<void> {
+    clearAuthStorage();
+    setStoredToken(token);
+    setAuthPresentFlag();
+
+    try {
+      const response = await api.get(API_CONFIG.ENDPOINTS.AUTH.ME);
+      const payload = this.normalizeAuthPayload(response);
+      if (payload?.user) {
+        setStoredUser(payload.user as never);
+
+        const teamId = resolveTeamId(payload);
+        if (teamId != null) {
+          setStoredTeamId(teamId);
+        }
+      }
+    } catch (_error: unknown) {
+      // Auth flag + token are already set; user/team will load lazily
+    }
+  },
 };
