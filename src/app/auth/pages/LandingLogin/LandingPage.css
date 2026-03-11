@@ -2,9 +2,8 @@
   background-color: #0A0B0F;
   color: #F8FAFC;
   font-family: 'Inter', sans-serif;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
-  overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -247,16 +246,36 @@
   flex: 0 0 40%;
   background: linear-gradient(135deg, rgba(10, 11, 15, 0.7) 0%, rgba(15, 17, 26, 0.9) 100%);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  padding: 40px 24px;
   position: relative;
   border-left: 1px solid rgba(255, 255, 255, 0.05);
   z-index: 10;
 }
 
+.right-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.right-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.right-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.right-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 .login-card {
   width: 100%;
   max-width: 440px;
+  margin: auto;
   padding: 48px;
   background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(24px);
@@ -266,8 +285,8 @@
               inset 0 1px 0 rgba(255, 255, 255, 0.1);
   position: relative;
   opacity: 0;
-  transform: scale(0.97) translateY(10px);
-  animation: cardEntrance 0.8s forwards cubic-bezier(0.4, 0, 0.2, 1) 0.5s;
+  transform: scale(0.95) translateY(20px);
+  animation: cardEntrance 1s forwards cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s;
 }
 
 /* Card glowing gradient border mask */

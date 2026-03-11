@@ -185,18 +185,18 @@ const LandingPage: React.FC = () => {
             <div className="brand">
               <div className="brand-icon">
                 <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  {/* Optikk SVG Layered Stack */}
-                  <rect x="4" y="15" width="24" height="13" rx="4" stroke="#6366F1" strokeWidth="2" fill="rgba(99, 102, 241, 0.15)" />
-                  <rect x="8" y="9" width="16" height="13" rx="4" stroke="#22D3EE" strokeWidth="2" fill="rgba(34, 211, 238, 0.1)" />
-                  <rect x="12" y="3" width="8" height="13" rx="4" stroke="#FFFFFF" strokeWidth="2" fill="none" />
-
-                  {/* Trace nodes */}
-                  <circle cx="16" cy="9.5" r="2.5" fill="#FFFFFF" />
-                  <circle cx="16" cy="15.5" r="2.5" fill="#22D3EE" />
-                  <circle cx="16" cy="21.5" r="2.5" fill="#6366F1" />
-
-                  {/* Connecting line */}
-                  <line x1="16" y1="9.5" x2="16" y2="21.5" stroke="#FFFFFF" strokeWidth="1.5" strokeDasharray="2 2" opacity="0.6" />
+                  <defs>
+                    <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#6366F1" />
+                      <stop offset="100%" stopColor="#22D3EE" />
+                    </linearGradient>
+                  </defs>
+                  <rect width="32" height="32" rx="8" fill="url(#logo-grad)" />
+                  <g transform="translate(4, 4)">
+                    <polygon points="12 2 22 8.5 12 15 2 8.5 12 2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <polyline points="2 12 12 18.5 22 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <polyline points="2 15.5 12 22 22 15.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </g>
                 </svg>
               </div>
               Optikk
@@ -299,9 +299,12 @@ const LandingPage: React.FC = () => {
                 <div className="card-header">
                   <div className="brand-icon">
                     <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="4" y="15" width="24" height="13" rx="4" stroke="#6366F1" strokeWidth="2" fill="rgba(99, 102, 241, 0.15)" />
-                      <rect x="8" y="9" width="16" height="13" rx="4" stroke="#22D3EE" strokeWidth="2" fill="rgba(34, 211, 238, 0.1)" />
-                      <rect x="12" y="3" width="8" height="13" rx="4" stroke="#FFFFFF" strokeWidth="2" fill="none" />
+                      <rect width="32" height="32" rx="8" fill="url(#logo-grad)" />
+                      <g transform="translate(4, 4)">
+                        <polygon points="12 2 22 8.5 12 15 2 8.5 12 2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <polyline points="2 12 12 18.5 22 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <polyline points="2 15.5 12 22 22 15.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </g>
                     </svg>
                   </div>
                   <h2 className="card-title">Welcome back</h2>
