@@ -11,6 +11,7 @@ import type {
 } from '@/types/dashboardConfig';
 
 import ErrorRateChart from '@shared/components/ui/charts/time-series/ErrorRateChart';
+import ExceptionTypeLineChart from '@shared/components/ui/charts/time-series/ExceptionTypeLineChart';
 import LatencyChart from '@shared/components/ui/charts/time-series/LatencyChart';
 import RequestChart from '@shared/components/ui/charts/time-series/RequestChart';
 import StatCard from '@shared/components/ui/cards/StatCard';
@@ -56,6 +57,7 @@ interface BaseChartComponentProps {
 const DASHBOARD_COMPONENT_MAP: Record<string, ComponentType<any>> = {
   request: RequestChart,
   'error-rate': ErrorRateChart,
+  'exception-type-line': ExceptionTypeLineChart,
   latency: LatencyChart,
   'log-histogram': LogHistogramRenderer,
   'latency-histogram': LatencyHistogramRenderer,

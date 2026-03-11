@@ -4,6 +4,7 @@ export { default as EndpointList } from './micro/EndpointList';
 export { default as SparklineChart } from './micro/SparklineChart';
 export { default as GaugeChart } from './micro/GaugeChart';
 export { default as ErrorRateChart } from './time-series/ErrorRateChart';
+export { default as ExceptionTypeLineChart } from './time-series/ExceptionTypeLineChart';
 export { default as RequestChart } from './time-series/RequestChart';
 export { default as LatencyChart } from './time-series/LatencyChart';
 export { default as WaterfallChart } from './specialized/WaterfallChart';

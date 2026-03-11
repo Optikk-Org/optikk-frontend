@@ -15,7 +15,7 @@ const CHART_COLORS = [
   APP_COLORS.hex_5e35b1,
 ];
 
-type TopEndpointsListType = 'requests' | 'errorRate' | 'latency';
+type TopEndpointsListType = 'requests' | 'errorRate' | 'latency' | 'count';
 
 interface TopEndpointListItem {
   key?: string;

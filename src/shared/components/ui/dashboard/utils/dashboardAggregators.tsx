@@ -154,6 +154,7 @@ export function groupTimeseries(rows: any[], groupByKey: string) {
     const queueName = strValue(row, ['queue_name', 'queueName', 'queue'], 'unknown');
     const tableName = strValue(row, ['table_name', 'tableName', 'table'], 'unknown');
     const podName = strValue(row, ['pod', 'pod_name', 'podName']);
+    const exceptionType = strValue(row, ['exceptionType', 'exception_type'], 'unknown');
     let key;
     if (groupByKey === 'queue') {
       key = `${queueName || 'unknown'}::${serviceName || 'unknown'}`;
@@ -165,6 +166,8 @@ export function groupTimeseries(rows: any[], groupByKey: string) {
       key = podName;
     } else if (groupByKey === 'endpoint') {
       key = buildEndpointKey(row);
+    } else if (groupByKey === 'exceptionType') {
+      key = exceptionType;
     } else {
       key = serviceName || queueName || '';
     }
@@ -274,6 +277,7 @@ export function defaultListTypeForChart(chartConfig: DashboardComponentSpec) {
   const componentKey = resolveComponentKey(chartConfig);
   if (componentKey === 'error-rate') return 'errorRate';
   if (componentKey === 'latency') return 'latency';
+  if (componentKey === 'exception-type-line') return 'count';
   return 'requests';
 }
 
@@ -285,6 +289,7 @@ export function defaultListTitleForChart(chartConfig: DashboardComponentSpec) {
   const listType = defaultListTypeForChart(chartConfig);
   if (listType === 'errorRate') return 'Average Error Rate';
   if (listType === 'latency') return 'Average Latency';
+  if (listType === 'count') return 'Count';
   if (listType === 'requests') return 'Requests';
   return listType;
 }
@@ -327,7 +332,7 @@ export function buildGroupedListFromTimeseries(serviceTimeseriesMap: Record<stri
 
       return {
         endpoint: groupName,
-        service: groupName,
+        service: chartConfig.groupByKey === 'service' ? groupName : '',
         key: groupName,
         request_count: valueTotal > 0 ? valueTotal : requestCount,
         error_count: errorCount,
