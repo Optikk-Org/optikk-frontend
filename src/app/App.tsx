@@ -2,6 +2,7 @@ import { Skeleton } from 'antd';
 import { Suspense } from 'react';
 
 import { APP_COLORS } from '@config/colorLiterals';
+import { useAuthValidation } from '@shared/hooks/useAuthValidation';
 
 import AuthExpiryListener from './providers/AuthExpiryListener';
 import AppRoutes from './routes/appRoutes';
@@ -25,28 +26,45 @@ function PageLoader(): JSX.Element {
   );
 }
 
-export default function App(): JSX.Element {
+/**
+ * Inner component rendered inside BrowserRouter so that useNavigate works.
+ * Probes the backend session once on mount; shows a loader while in-flight.
+ */
+function AppContent(): JSX.Element {
+  const authState = useAuthValidation();
 
+  if (authState === 'pending') {
+    return <PageLoader />;
+  }
+
+  return (
+    <>
+      <AuthExpiryListener />
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: -1,
+          background: `
+            radial-gradient(circle at 15% 50%, ${APP_COLORS.rgba_94_96_206_0p08}, transparent 25%),
+            radial-gradient(circle at 85% 30%, ${APP_COLORS.rgba_78_168_222_0p08}, transparent 25%)
+          `,
+          pointerEvents: 'none',
+        }}
+      />
+      <AppRoutes />
+    </>
+  );
+}
+
+export default function App(): JSX.Element {
   return (
     <ErrorBoundary>
       <Suspense fallback={<PageLoader />}>
-        <AuthExpiryListener />
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: -1,
-            background: `
-              radial-gradient(circle at 15% 50%, ${APP_COLORS.rgba_94_96_206_0p08}, transparent 25%),
-              radial-gradient(circle at 85% 30%, ${APP_COLORS.rgba_78_168_222_0p08}, transparent 25%)
-            `,
-            pointerEvents: 'none',
-          }}
-        />
-        <AppRoutes />
+        <AppContent />
       </Suspense>
     </ErrorBoundary>
   );

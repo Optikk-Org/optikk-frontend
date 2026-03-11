@@ -24,14 +24,21 @@ const CUSTOM_SHELLS = {
 
 export default function BackendDrivenPage(): JSX.Element {
   const location = useLocation();
-  const { pages, isLoading } = usePagesConfig();
+  const { pages, isLoading, error } = usePagesConfig();
 
+  // Still fetching on first load — show skeleton.
   if (isLoading && pages.length === 0) {
     return (
       <div style={{ padding: 24 }}>
         <Skeleton active paragraph={{ rows: 6 }} />
       </div>
     );
+  }
+
+  // Query failed and no cached pages — redirect to root so the app doesn't
+  // get stuck on a skeleton indefinitely.
+  if (error && pages.length === 0) {
+    return <Navigate to={ROUTES.overview} replace />;
   }
 
   const matchedPage = pages.find((page) => page.path === location.pathname);
@@ -50,3 +57,4 @@ export default function BackendDrivenPage(): JSX.Element {
     </div>
   );
 }
+
