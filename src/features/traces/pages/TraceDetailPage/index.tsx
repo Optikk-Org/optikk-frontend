@@ -1,10 +1,9 @@
 import { Row, Col, Spin, Empty, Tag, Table } from 'antd';
-import { GitBranch, Layers, Clock, AlertCircle, ArrowLeft, FileText, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { GitBranch, Layers, Clock, AlertCircle, ArrowLeft, FileText, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import WaterfallChart from '@shared/components/ui/charts/specialized/WaterfallChart';
-import { ObservabilityDetailPanel } from '@shared/components/ui';
 import StatCard from '@shared/components/ui/cards/StatCard';
 import PageHeader from '@shared/components/ui/layout/PageHeader';
 
@@ -13,11 +12,12 @@ import { formatDuration, formatTimestamp, formatNumber } from '@shared/utils/for
 import { APP_COLORS } from '@config/colorLiterals';
 
 import { useTraceDetailData } from '../../hooks/useTraceDetailData';
+import { useTraceDetailEnhanced } from '../../hooks/useTraceDetailEnhanced';
+import SpanDetailDrawer from '../../components/SpanDetailDrawer';
+import SpanKindBreakdown from '../../components/SpanKindBreakdown';
+import ServicePills from '../../components/ServicePills';
 import './TraceDetailPage.css';
 
-/**
- * Enterprise trace detail page with waterfall visualization and associated logs.
- */
 export default function TraceDetailPage() {
   const { traceId } = useParams();
   const traceIdParam = traceId ?? '';
@@ -36,16 +36,19 @@ export default function TraceDetailPage() {
     logsLoading,
   } = useTraceDetailData(selectedTeamId, traceIdParam);
 
+  const {
+    criticalPathSpanIds,
+    errorPathSpanIds,
+    spanKindBreakdown,
+    spanEvents,
+    spanSelfTimes,
+    relatedTraces,
+    spanAttributes,
+    spanAttributesLoading,
+  } = useTraceDetailEnhanced(traceIdParam, selectedSpanId);
+
   const handleSpanClick = (span: { span_id?: string }) => {
     setSelectedSpanId(span.span_id ?? null);
-  };
-
-  const handleCloseDrawer = () => {
-    setSelectedSpanId(null);
-  };
-
-  const handleBackClick = () => {
-    navigate('/traces');
   };
 
   const logColumns = [
@@ -56,15 +59,11 @@ export default function TraceDetailPage() {
       width: 190,
       render: (value: unknown) => {
         try {
-          if (
-            typeof value === 'string' ||
-            typeof value === 'number' ||
-            value instanceof Date
-          ) {
+          if (typeof value === 'string' || typeof value === 'number' || value instanceof Date) {
             return formatTimestamp(value);
           }
           return '-';
-        } catch (e) {
+        } catch {
           return '-';
         }
       },
@@ -111,27 +110,6 @@ export default function TraceDetailPage() {
     },
   ];
 
-  // Build fields for the detail panel
-  const spanDetailFields = selectedSpan ? [
-    { key: 'span_id', label: 'Span ID', value: selectedSpan.span_id },
-    { key: 'parent_span_id', label: 'Parent Span ID', value: selectedSpan.parent_span_id || '—' },
-    { key: 'service_name', label: 'Service', value: selectedSpan.service_name, filterable: true },
-    { key: 'span_kind', label: 'Span Kind', value: selectedSpan.span_kind },
-    { key: 'status', label: 'Status', value: selectedSpan.status || 'UNSET' },
-    ...(selectedSpan.status_message ? [{ key: 'status_message', label: 'Status Message', value: selectedSpan.status_message }] : []),
-    { key: 'start_time', label: 'Start Time', value: formatTimestamp(selectedSpan.start_time) },
-    { key: 'end_time', label: 'End Time', value: formatTimestamp(selectedSpan.end_time) },
-    { key: 'duration', label: 'Duration', value: formatDuration(selectedSpan.duration_ms) },
-    { key: 'trace_id', label: 'Trace ID', value: selectedSpan.trace_id },
-    ...(selectedSpan.http_method ? [
-      { key: 'http_method', label: 'HTTP Method', value: selectedSpan.http_method },
-      { key: 'http_url', label: 'HTTP URL', value: selectedSpan.http_url },
-      { key: 'http_status_code', label: 'HTTP Status', value: String(selectedSpan.http_status_code) },
-    ] : []),
-    ...((selectedSpan).host ? [{ key: 'host', label: 'Host', value: (selectedSpan).host }] : []),
-    ...((selectedSpan).pod ? [{ key: 'pod', label: 'Pod', value: (selectedSpan).pod }] : []),
-  ].filter((f) => f.value && f.value !== '0') : [];
-
   return (
     <div className="trace-detail-page">
       <PageHeader
@@ -142,31 +120,12 @@ export default function TraceDetailPage() {
           { label: traceIdParam },
         ]}
         actions={
-          <button className="trace-detail-back-btn" onClick={handleBackClick}>
+          <button className="trace-detail-back-btn" onClick={() => navigate('/traces')}>
             <ArrowLeft size={16} />
             Back to Traces
           </button>
         }
       />
-
-      {selectedSpan && (
-        <ObservabilityDetailPanel
-          title="Span Detail"
-          titleBadge={
-            <Tag
-              color={selectedSpan.status === 'ERROR' ? 'red' : selectedSpan.status === 'OK' ? 'green' : 'default'}
-              style={{ marginLeft: 8, fontSize: 11 }}
-            >
-              {selectedSpan.status || 'UNSET'}
-            </Tag>
-          }
-          metaLine={selectedSpan.operation_name}
-          metaRight={formatDuration((selectedSpan).duration_ms)}
-          fields={spanDetailFields}
-          rawData={selectedSpan}
-          onClose={handleCloseDrawer}
-        />
-      )}
 
       {isLoading ? (
         <div className="trace-detail-loading">
@@ -176,54 +135,29 @@ export default function TraceDetailPage() {
         <Empty description="No spans found for this trace" />
       ) : (
         <>
-          {/* Statistics Cards */}
-          <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+          {/* Stats row */}
+          <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
             <Col xs={24} sm={12} lg={6}>
               <StatCard
-                metric={{
-                  title: 'Total Spans',
-                  value: stats.totalSpans,
-                  formatter: formatNumber,
-                }}
-                visuals={{
-                  icon: <Layers size={20} />,
-                  iconColor: APP_COLORS.hex_5e60ce,
-                }}
+                metric={{ title: 'Total Spans', value: stats.totalSpans, formatter: formatNumber }}
+                visuals={{ icon: <Layers size={20} />, iconColor: APP_COLORS.hex_5e60ce }}
               />
             </Col>
             <Col xs={24} sm={12} lg={6}>
               <StatCard
-                metric={{
-                  title: 'Duration',
-                  value: stats.duration,
-                  formatter: formatDuration,
-                }}
-                visuals={{
-                  icon: <Clock size={20} />,
-                  iconColor: APP_COLORS.hex_73c991,
-                }}
+                metric={{ title: 'Duration', value: stats.duration, formatter: formatDuration }}
+                visuals={{ icon: <Clock size={20} />, iconColor: APP_COLORS.hex_73c991 }}
               />
             </Col>
             <Col xs={24} sm={12} lg={6}>
               <StatCard
-                metric={{
-                  title: 'Services',
-                  value: stats.services.size,
-                  formatter: formatNumber,
-                }}
-                visuals={{
-                  icon: <GitBranch size={20} />,
-                  iconColor: APP_COLORS.hex_06aed5,
-                }}
+                metric={{ title: 'Services', value: stats.services.size, formatter: formatNumber }}
+                visuals={{ icon: <GitBranch size={20} />, iconColor: APP_COLORS.hex_06aed5 }}
               />
             </Col>
             <Col xs={24} sm={12} lg={6}>
               <StatCard
-                metric={{
-                  title: 'Errors',
-                  value: stats.errors,
-                  formatter: formatNumber,
-                }}
+                metric={{ title: 'Errors', value: stats.errors, formatter: formatNumber }}
                 visuals={{
                   icon: <AlertCircle size={20} />,
                   iconColor: stats.errors > 0 ? APP_COLORS.hex_f04438 : APP_COLORS.hex_73c991,
@@ -232,53 +166,83 @@ export default function TraceDetailPage() {
             </Col>
           </Row>
 
-          {/* Waterfall Chart */}
+          {/* Service pills + span kind breakdown */}
           <div
             className="glass-panel"
             style={{
               background: 'var(--glass-bg)',
               backdropFilter: 'var(--glass-blur)',
               WebkitBackdropFilter: 'var(--glass-blur)',
-              borderRadius: '16px',
+              borderRadius: 12,
+              border: '1px solid var(--glass-border)',
+              padding: '14px 20px',
+              marginBottom: 16,
+              display: 'flex',
+              gap: 24,
+              alignItems: 'flex-start',
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 240 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: 8 }}>
+                Services
+              </div>
+              <ServicePills spans={spans} activeService={null} onSelect={() => {}} />
+            </div>
+            {spanKindBreakdown.length > 0 && (
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: 8 }}>
+                  Span Kind Breakdown
+                </div>
+                <SpanKindBreakdown data={spanKindBreakdown} />
+              </div>
+            )}
+          </div>
+
+          {/* Waterfall */}
+          <div
+            className="glass-panel"
+            style={{
+              background: 'var(--glass-bg)',
+              backdropFilter: 'var(--glass-blur)',
+              WebkitBackdropFilter: 'var(--glass-blur)',
+              borderRadius: 16,
               border: '1px solid var(--glass-border)',
               padding: waterfallCollapsed ? '12px 24px' : '24px',
               boxShadow: 'var(--shadow-lg)',
-              marginBottom: '24px',
+              marginBottom: 16,
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: waterfallCollapsed ? 0 : '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: waterfallCollapsed ? 0 : 16 }}>
               <span
-                style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 600, fontSize: '16px' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 600, fontSize: 16 }}
                 onClick={() => setWaterfallCollapsed((c) => !c)}
               >
                 {waterfallCollapsed ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
                 Trace Timeline
               </span>
-              <button
-                onClick={() => setWaterfallCollapsed((c) => !c)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  padding: 4,
-                  borderRadius: 4,
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                title={waterfallCollapsed ? 'Expand waterfall' : 'Collapse waterfall'}
-              >
-                <X size={16} />
-              </button>
             </div>
             {!waterfallCollapsed && (
               <WaterfallChart
                 spans={spans}
                 onSpanClick={handleSpanClick}
                 selectedSpanId={selectedSpanId}
+                criticalPathSpanIds={criticalPathSpanIds}
+                errorPathSpanIds={errorPathSpanIds}
               />
             )}
           </div>
+
+          {/* Span detail drawer */}
+          <SpanDetailDrawer
+            selectedSpanId={selectedSpanId}
+            selectedSpan={selectedSpan ?? null}
+            spanAttributes={spanAttributes}
+            spanAttributesLoading={spanAttributesLoading}
+            spanEvents={spanEvents}
+            spanSelfTimes={spanSelfTimes}
+            relatedTraces={relatedTraces}
+          />
 
           {/* Associated Logs */}
           <div
@@ -287,20 +251,23 @@ export default function TraceDetailPage() {
               background: 'var(--glass-bg)',
               backdropFilter: 'var(--glass-blur)',
               WebkitBackdropFilter: 'var(--glass-blur)',
-              borderRadius: '12px',
+              borderRadius: 12,
               border: '1px solid var(--glass-border)',
               padding: '20px 24px',
               boxShadow: 'var(--shadow-md)',
               display: 'flex',
               flexDirection: 'column',
-              gap: '16px',
+              gap: 16,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, fontSize: '15px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, fontSize: 15 }}>
               <FileText size={18} />
               <span>Associated Logs</span>
               {traceLogs.length > 0 && (
-                <Tag color="default" style={{ marginLeft: 8, background: APP_COLORS.rgba_255_255_255_0p06_2, border: 'none', color: 'var(--text-secondary)' }}>
+                <Tag
+                  color="default"
+                  style={{ marginLeft: 8, background: APP_COLORS.rgba_255_255_255_0p06_2, border: 'none', color: 'var(--text-secondary)' }}
+                >
                   {traceLogs.length} events
                 </Tag>
               )}

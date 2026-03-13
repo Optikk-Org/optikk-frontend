@@ -1,0 +1,30 @@
+name: Docker Publish
+
+on:
+  workflow_dispatch:
+
+jobs:
+  docker-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Compute version
+        id: version
+        run: |
+          BASE="1.0"
+          RUN="${{ github.run_number }}"
+          echo "value=v${BASE}.${RUN}" >> $GITHUB_OUTPUT
+
+      - name: Build and push
+        run: |
+          docker build -t ghcr.io/optikk-org/optikk-lens-frontend:latest \
+                       -t ghcr.io/optikk-org/optikk-lens-frontend:${{ steps.version.outputs.value }} .
+          docker push ghcr.io/optikk-org/optikk-lens-frontend:latest
+          docker push ghcr.io/optikk-org/optikk-lens-frontend:${{ steps.version.outputs.value }}

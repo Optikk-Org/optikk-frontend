@@ -33,4 +33,34 @@ export const tracesService = {
   async getTraceLogs(_teamId: number | null, traceId: string): Promise<unknown> {
     return api.get(`${BASE}/traces/${traceId}/logs`);
   },
+
+  async getSpanEvents(traceId: string): Promise<unknown> {
+    return api.get(`${BASE}/traces/${traceId}/span-events`);
+  },
+
+  async getSpanKindBreakdown(traceId: string): Promise<unknown> {
+    return api.get(`${BASE}/traces/${traceId}/span-kind-breakdown`);
+  },
+
+  async getCriticalPath(traceId: string): Promise<unknown> {
+    return api.get(`${BASE}/traces/${traceId}/critical-path`);
+  },
+
+  async getSpanSelfTimes(traceId: string): Promise<unknown> {
+    return api.get(`${BASE}/traces/${traceId}/span-self-times`);
+  },
+
+  async getErrorPath(traceId: string): Promise<unknown> {
+    return api.get(`${BASE}/traces/${traceId}/error-path`);
+  },
+
+  async getSpanAttributes(traceId: string, spanId: string): Promise<unknown> {
+    return api.get(`${BASE}/traces/${traceId}/spans/${spanId}/attributes`);
+  },
+
+  async getRelatedTraces(traceId: string, startMs?: number, endMs?: number): Promise<unknown> {
+    return api.get(`${BASE}/traces/${traceId}/related`, {
+      params: { startMs, endMs },
+    });
+  },
 };

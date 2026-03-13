@@ -1,12 +1,14 @@
 import { Select, Switch, Tooltip } from 'antd';
-import { AlertCircle, FileText } from 'lucide-react';
-import { ReactNode } from 'react';
+import { AlertCircle, FileText, Download } from 'lucide-react';
+import { ReactNode, useCallback, useState } from 'react';
 
 import { ObservabilityDataBoard, ObservabilityQueryBar, boardHeight } from '@shared/components/ui';
 
 import { formatNumber } from '@shared/utils/formatters';
 
 import ServicePills from '../log/ServicePills';
+import SavedSearches from '../toolbar/SavedSearches';
+import ColumnPresets from '../toolbar/ColumnPresets';
 
 import type {
   LogColumn,
@@ -69,6 +71,8 @@ export interface LogsTableSectionProps {
   pagination: LogsPaginationState;
   filters: LogsFiltersState;
   config: LogsTableConfig;
+  onExport?: (format: 'json' | 'csv') => void;
+  focusedLogIndex?: number;
 }
 
 export default function LogsTableSection({
@@ -76,6 +80,7 @@ export default function LogsTableSection({
   pagination,
   filters,
   config,
+  onExport,
 }: LogsTableSectionProps) {
   const { logs, isLoading, serviceFacets } = data;
   const { page, pageSize, total, setPage, setPageSize } = pagination;
@@ -96,6 +101,25 @@ export default function LogsTableSection({
   const offset = (page - 1) * pageSize;
   const pageCount = Math.max(1, Math.ceil(resolvedTotal / pageSize));
 
+  // Export dropdown state
+  const [exportOpen, setExportOpen] = useState(false);
+
+  // Column presets need to remount the board to pick up new localStorage value
+  const [boardKey, setBoardKey] = useState(0);
+
+  const handlePresetApplied = useCallback(() => {
+    setBoardKey((k) => k + 1);
+  }, []);
+
+  const handleApplySavedSearch = useCallback(
+    (savedSearchText: string, savedFilters: LogStructuredFilter[]) => {
+      setSearchText(savedSearchText);
+      setFilters(savedFilters);
+      setPage(1);
+    },
+    [setSearchText, setFilters, setPage],
+  );
+
   return (
     <div className="logs-table-card">
       <div className="logs-table-card-header">
@@ -105,7 +129,118 @@ export default function LogsTableSection({
           <span className="logs-count-badge">
             {formatNumber(logs.length)} of {formatNumber(resolvedTotal)}
           </span>
+          <span
+            style={{
+              fontSize: 10,
+              color: 'var(--text-muted)',
+              fontWeight: 400,
+              marginLeft: 4,
+              letterSpacing: '0.02em',
+              userSelect: 'none',
+            }}
+          >
+            ⌨ j/k navigate · / search · esc close
+          </span>
         </span>
+
+        {/* Toolbar buttons: column presets, saved searches, export */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <ColumnPresets onPresetApplied={handlePresetApplied} />
+
+          <SavedSearches
+            currentSearchText={searchText}
+            currentFilters={structuredFilters}
+            onApply={handleApplySavedSearch}
+          />
+
+          {onExport && (
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setExportOpen((o) => !o)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '4px 10px',
+                  borderRadius: 6,
+                  border: '1px solid var(--glass-border)',
+                  background: exportOpen
+                    ? 'var(--literal-rgba-94-96-206-0p12)'
+                    : 'transparent',
+                  color: 'var(--text-secondary)',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  transition: 'background 0.15s',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <Download size={13} />
+                Export
+              </button>
+
+              {exportOpen && (
+                <>
+                  <div
+                    style={{ position: 'fixed', inset: 0, zIndex: 999 }}
+                    onClick={() => setExportOpen(false)}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      right: 0,
+                      marginTop: 4,
+                      zIndex: 1000,
+                      minWidth: 140,
+                      background: 'var(--glass-bg)',
+                      backdropFilter: 'var(--glass-blur)',
+                      WebkitBackdropFilter: 'var(--glass-blur)',
+                      border: '1px solid var(--glass-border)',
+                      borderRadius: 8,
+                      boxShadow: 'var(--shadow-lg, 0 8px 32px rgba(0,0,0,0.4))',
+                      padding: 6,
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {(['json', 'csv'] as const).map((fmt) => (
+                      <div
+                        key={fmt}
+                        onClick={() => {
+                          onExport(fmt);
+                          setExportOpen(false);
+                        }}
+                        style={{
+                          padding: '7px 12px',
+                          fontSize: 12,
+                          color: 'var(--text-secondary)',
+                          cursor: 'pointer',
+                          borderRadius: 5,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                          fontWeight: 500,
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLElement).style.background =
+                            'var(--literal-rgba-255-255-255-0p04)';
+                          (e.currentTarget as HTMLElement).style.color =
+                            'var(--text-primary)';
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLElement).style.background =
+                            'transparent';
+                          (e.currentTarget as HTMLElement).style.color =
+                            'var(--text-secondary)';
+                        }}
+                      >
+                        Download .{fmt}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {serviceFacets.length > 0 && (
@@ -127,8 +262,8 @@ export default function LogsTableSection({
           setSearchText={setSearchText}
           onClearAll={clearAll}
           valueHints={{
-            'service_name': serviceFacets.map(f => f.value),
-            'level': ['INFO', 'ERROR', 'WARN', 'DEBUG', 'FATAL']
+            'service_name': serviceFacets.map((f) => f.value),
+            'level': ['INFO', 'ERROR', 'WARN', 'DEBUG', 'FATAL'],
           }}
           placeholder="Search log messages, filter by service, level, host…"
           rightSlot={(
@@ -153,6 +288,7 @@ export default function LogsTableSection({
 
       <div style={{ height: boardHeight(pageSize), display: 'flex', flexDirection: 'column' }}>
         <ObservabilityDataBoard<LogRecord>
+          key={boardKey}
           data={{ rows: logs, isLoading, serverTotal: resolvedTotal }}
           config={{
             columns,
@@ -170,7 +306,7 @@ export default function LogsTableSection({
               { num: 1, text: <>Widen the <strong>time range</strong> in the top bar</> },
               { num: 2, text: <>Remove active <strong>filters</strong> or clear the search</> },
               { num: 3, text: <>Ensure your services emit logs via <strong>OTLP</strong></> },
-            ]
+            ],
           }}
         />
       </div>
@@ -178,7 +314,8 @@ export default function LogsTableSection({
       {!isLoading && (resolvedTotal > 0 || logs.length > 0) && (
         <div className="logs-pagination">
           <span className="logs-pagination-info">
-            Showing {offset + 1}–{Math.min(offset + pageSize, resolvedTotal)} of {formatNumber(resolvedTotal)}
+            Showing {offset + 1}–{Math.min(offset + pageSize, resolvedTotal)} of{' '}
+            {formatNumber(resolvedTotal)}
           </span>
           <div className="logs-pagination-controls">
             <Select<number>
@@ -191,7 +328,11 @@ export default function LogsTableSection({
               options={[20, 50, 100, 200].map((n) => ({ label: `${n} / page`, value: n }))}
               style={{ width: 110 }}
             />
-            <button className="logs-nav-btn" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+            <button
+              className="logs-nav-btn"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
               ← Prev
             </button>
             <span className="logs-pagination-pages">

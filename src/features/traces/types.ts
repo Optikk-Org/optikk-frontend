@@ -20,3 +20,73 @@ export interface TraceColumn {
  *
  */
 export type ServiceBadge = [string, number];
+
+// ── Trace Detail Enhancement Types ────────────────────────────────────────────
+
+export interface SpanEvent {
+  spanId: string;
+  traceId: string;
+  eventName: string;
+  timestamp: string;
+  attributes: string; // JSON string
+}
+
+export interface SpanKindDuration {
+  spanKind: string;
+  totalDurationMs: number;
+  spanCount: number;
+  pctOfTrace: number;
+}
+
+export interface CriticalPathSpan {
+  spanId: string;
+  operationName: string;
+  serviceName: string;
+  durationMs: number;
+}
+
+export interface SpanSelfTime {
+  spanId: string;
+  operationName: string;
+  totalDurationMs: number;
+  selfTimeMs: number;
+  childTimeMs: number;
+}
+
+export interface ErrorPathSpan {
+  spanId: string;
+  parentSpanId: string;
+  operationName: string;
+  serviceName: string;
+  status: string;
+  statusMessage: string;
+  startTime: string;
+  durationMs: number;
+}
+
+export interface SpanAttributes {
+  spanId: string;
+  traceId: string;
+  operationName: string;
+  serviceName: string;
+  attributesString: Record<string, string>;
+  resourceAttributes: Record<string, string>;
+  exceptionType?: string;
+  exceptionMessage?: string;
+  exceptionStacktrace?: string;
+  dbSystem?: string;
+  dbName?: string;
+  dbStatement?: string;
+  dbStatementNormalized?: string;
+  attributes?: Record<string, string>;
+}
+
+export interface RelatedTrace {
+  traceId: string;
+  spanId: string;
+  operationName: string;
+  serviceName: string;
+  durationMs: number;
+  status: string;
+  startTime: string;
+}
