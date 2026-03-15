@@ -61,8 +61,8 @@ export default memo(function ErrorRateChart({
   const buildServiceDatasets = (endpointList: any[]) => {
     const targetMap: Record<string, any> = {};
     for (const ep of endpointList) {
-      const key = ep.key || firstValue(ep, ['service_name', 'serviceName', 'service'], '');
-      const label = ep.endpoint || firstValue(ep, ['service_name', 'serviceName', 'service'], '') || key;
+      const key = ep.key || firstValue(ep, ['service_name'], '');
+      const label = ep.endpoint || firstValue(ep, ['service_name'], '') || key;
       if (!targetMap[key]) targetMap[key] = { label };
     }
     const stepMs = timeBuckets.length >= 2 ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime() : 60000;
@@ -71,15 +71,15 @@ export default memo(function ErrorRateChart({
       const tsData = (serviceTimeseriesMap)[key] || [];
       const tsMap: Record<string, { total: number, errors: number }> = {};
       for (const row of tsData) {
-        const rowTimestamp = firstValue(row, ['timestamp', 'time_bucket', 'timeBucket'], '');
+        const rowTimestamp = firstValue(row, ['timestamp', 'time_bucket'], '');
         if (!rowTimestamp) continue;
         const rowTime = tsMs(rowTimestamp);
         if (Number.isNaN(rowTime)) continue;
         const alignedTimeMs = Math.floor(rowTime / stepMs) * stepMs;
         const bucketKey = tsKey(new Date(alignedTimeMs).toISOString());
 
-        const total = Number(firstValue(row, ['request_count', 'requestCount'], 0));
-        const errors = Number(firstValue(row, ['error_count', 'errorCount'], 0));
+        const total = Number(firstValue(row, ['request_count'], 0));
+        const errors = Number(firstValue(row, ['error_count'], 0));
 
         if (!tsMap[bucketKey]) {
           tsMap[bucketKey] = { total: 0, errors: 0 };
@@ -104,9 +104,9 @@ export default memo(function ErrorRateChart({
         ? (endpoints as any[]).filter((ep) => {
           const key = ep.key || (() => {
             const method = String(firstValue(ep, ['http_method', 'httpMethod'], '')).toUpperCase();
-            const op = String(firstValue(ep, ['operation_name', 'operationName', 'endpoint_name', 'endpointName'], 'Unknown'));
+            const op = String(firstValue(ep, ['operation_name', 'endpoint_name'], 'Unknown'));
             const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
-            const serviceName = firstValue(ep, ['service_name', 'serviceName'], '');
+            const serviceName = firstValue(ep, ['service_name'], '');
             return `${method} ${cleanOp}_${serviceName}`;
           })();
           return selectedEndpoints.includes(key);
@@ -117,8 +117,8 @@ export default memo(function ErrorRateChart({
         datasets = buildServiceDatasets(list);
       } else {
         datasets = (list as any[]).map((ep, idx) => {
-          const method = firstValue(ep, ['http_method', 'httpMethod'], 'N/A');
-          const operation = firstValue(ep, ['operation_name', 'operationName', 'endpoint_name', 'endpointName'], 'Unknown');
+          const method = firstValue(ep, ['http_method'], 'N/A');
+          const operation = firstValue(ep, ['operation_name', 'endpoint_name'], 'Unknown');
           return createLineDataset(
             `${method} ${operation}`,
             timeBuckets.map(() => 0),
@@ -132,15 +132,15 @@ export default memo(function ErrorRateChart({
       datasets = Object.entries(serviceTimeseriesMap).slice(0, 10).map(([svcName, rows]: [string, any], idx) => {
         const tsMap: Record<string, { total: number, errors: number }> = {};
         for (const row of rows as any[]) {
-          const rowTimestamp = firstValue(row, ['timestamp', 'time_bucket', 'timeBucket'], '');
+          const rowTimestamp = firstValue(row, ['timestamp', 'time_bucket'], '');
           if (!rowTimestamp) continue;
           const rowTime = tsMs(rowTimestamp);
           if (Number.isNaN(rowTime)) continue;
           const alignedTimeMs = Math.floor(rowTime / stepMs) * stepMs;
           const bucketKey = tsKey(new Date(alignedTimeMs).toISOString());
 
-          const total = Number(firstValue(row, ['request_count', 'requestCount'], 0));
-          const errors = Number(firstValue(row, ['error_count', 'errorCount'], 0));
+          const total = Number(firstValue(row, ['request_count'], 0));
+          const errors = Number(firstValue(row, ['error_count'], 0));
 
           if (!tsMap[bucketKey]) {
             tsMap[bucketKey] = { total: 0, errors: 0 };
@@ -159,8 +159,8 @@ export default memo(function ErrorRateChart({
     } else {
       const dataMap: Record<string, number> = {};
       for (const d of data as any[]) {
-        const ts = firstValue(d, ['timestamp', 'time_bucket', 'timeBucket'], '');
-        dataMap[tsKey(ts)] = Number(firstValue(d, ['value', 'error_rate', 'errorRate'], 0));
+        const ts = firstValue(d, ['timestamp', 'time_bucket'], '');
+        dataMap[tsKey(ts)] = Number(firstValue(d, ['value', 'error_rate'], 0));
       }
       datasets = [createLineDataset(datasetLabel, timeBuckets.map((ts) => dataMap[tsKey(ts)] ?? 0), color, true)];
     }
@@ -194,20 +194,20 @@ export default memo(function ErrorRateChart({
   }, [data, endpoints, selectedEndpoints, serviceTimeseriesMap, hasServiceData, targetThreshold, timeBuckets, labels]);
 
   const allDataValues = useMemo(() => {
-    const vals: number[] = (data as any[]).map((d) => Number(firstValue(d, ['value', 'error_rate', 'errorRate'], 0)));
+    const vals: number[] = (data as any[]).map((d) => Number(firstValue(d, ['value', 'error_rate'], 0)));
     if (Object.keys(serviceTimeseriesMap).length > 0) {
       Object.values(serviceTimeseriesMap).forEach((rows: any) => {
         rows.forEach((r: any) => {
-          const total = Number(firstValue(r, ['request_count', 'requestCount'], 0));
-          const errors = Number(firstValue(r, ['error_count', 'errorCount'], 0));
+          const total = Number(firstValue(r, ['request_count'], 0));
+          const errors = Number(firstValue(r, ['error_count'], 0));
           if (total > 0) vals.push((errors / total) * 100);
         });
       });
     }
     (endpoints as any[]).forEach((ep) => {
-      const requestCount = Number(firstValue(ep, ['request_count', 'requestCount'], 0));
-      const errorCount = Number(firstValue(ep, ['error_count', 'errorCount'], 0));
-      const explicitRate = firstValue(ep, ['error_rate', 'errorRate'], null);
+      const requestCount = Number(firstValue(ep, ['request_count'], 0));
+      const errorCount = Number(firstValue(ep, ['error_count'], 0));
+      const explicitRate = firstValue(ep, ['error_rate'], null);
       const rate = explicitRate != null ? Number(explicitRate)
         : (requestCount > 0 ? (errorCount / requestCount) * 100 : 0);
       if (rate > 0) vals.push(rate);

@@ -20,32 +20,32 @@ const n = (v: any) => (v == null || Number.isNaN(Number(v)) ? 0 : Number(v));
 
 const normalizeErrorGroup = (row: any = {}) => ({
   ...row,
-  service_name: row.service_name ?? row.serviceName ?? '',
-  operation_name: row.operation_name ?? row.operationName ?? '',
-  status_message: row.status_message ?? row.statusMessage ?? '',
-  http_status_code: n(row.http_status_code ?? row.httpStatusCode),
-  error_count: n(row.error_count ?? row.errorCount),
-  last_occurrence: row.last_occurrence ?? row.lastOccurrence ?? '',
-  sample_trace_id: row.sample_trace_id ?? row.sampleTraceId ?? '',
+  service_name: row.service_name ?? '',
+  operation_name: row.operation_name ?? '',
+  status_message: row.status_message ?? '',
+  http_status_code: n(row.http_status_code),
+  error_count: n(row.error_count),
+  last_occurrence: row.last_occurrence ?? '',
+  sample_trace_id: row.sample_trace_id ?? '',
 });
 
 const normalizeServiceMetric = (row: any = {}) => ({
   ...row,
-  service_name: row.service_name ?? row.serviceName ?? row.service ?? '',
-  request_count: n(row.request_count ?? row.requestCount),
-  error_count: n(row.error_count ?? row.errorCount),
-  avg_latency: n(row.avg_latency ?? row.avgLatency),
-  p95_latency: n(row.p95_latency ?? row.p95Latency),
-  p99_latency: n(row.p99_latency ?? row.p99Latency),
+  service_name: row.service_name ?? row.service ?? '',
+  request_count: n(row.request_count),
+  error_count: n(row.error_count),
+  avg_latency: n(row.avg_latency),
+  p95_latency: n(row.p95_latency),
+  p99_latency: n(row.p99_latency),
 });
 
 const normalizeTimeSeriesPoint = (row: any = {}) => ({
   ...row,
-  timestamp: row.timestamp ?? row.time_bucket ?? row.timeBucket ?? '',
-  service_name: row.service_name ?? row.serviceName ?? '',
-  request_count: n(row.request_count ?? row.requestCount),
-  error_count: n(row.error_count ?? row.errorCount),
-  avg_latency: n(row.avg_latency ?? row.avgLatency),
+  timestamp: row.timestamp ?? row.time_bucket ?? '',
+  service_name: row.service_name ?? '',
+  request_count: n(row.request_count),
+  error_count: n(row.error_count),
+  avg_latency: n(row.avg_latency),
 });
 
 /**

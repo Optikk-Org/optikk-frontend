@@ -16,8 +16,6 @@ import {
 describe('logUtils', () => {
   it('extracts logs from supported page shapes', () => {
     expect(getLogsFromPage({ logs: [{ id: 1 }] })).toEqual([{ id: 1 }]);
-    expect(getLogsFromPage({ items: [{ id: 2 }] })).toEqual([{ id: 2 }]);
-    expect(getLogsFromPage({ rows: [{ id: 3 }] })).toEqual([{ id: 3 }]);
     expect(getLogsFromPage(null)).toEqual([]);
   });
 
@@ -61,19 +59,19 @@ describe('logUtils', () => {
   });
 
   it('reads common log fields and derives stable row keys', () => {
-    expect(getLogValue({ serviceName: 'api' }, 'service_name')).toBe('api');
+    expect(getLogValue({ service_name: 'api' }, 'service_name')).toBe('api');
     expect(getLogValue({ trace_id: 't-1' }, 'trace_id')).toBe('t-1');
-    expect(getLogValue({ spanId: 's-1' }, 'span_id')).toBe('s-1');
+    expect(getLogValue({ span_id: 's-1' }, 'span_id')).toBe('s-1');
     expect(getLogValue({ message: 'hello' }, 'message')).toBe('hello');
 
     expect(rowKey({ id: '55', timestamp: 'a' }, 0)).toBe('log-55');
-    expect(rowKey({ traceId: 'trace', spanId: 'span', timestamp: '2026-03-01' }, 1)).toBe('trace-span-2026-03-01');
+    expect(rowKey({ trace_id: 'trace', span_id: 'span', timestamp: '2026-03-01' }, 1)).toBe('trace-span-2026-03-01');
     expect(rowKey({ timestamp: '2026-03-01' }, 7)).toBe('log-7-2026-03-01');
   });
 
   it('extracts the server total from common metadata shapes', () => {
-    expect(extractServerTotal([{ pagination: { total_count: 33 } }])).toBe(33);
-    expect(extractServerTotal([{ totalCount: 21 }])).toBe(21);
+    expect(extractServerTotal([{ total_count: 33 }])).toBe(33);
+    expect(extractServerTotal([{ total: 21 }])).toBe(21);
     expect(extractServerTotal([])).toBe(0);
   });
 });

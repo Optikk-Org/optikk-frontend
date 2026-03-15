@@ -47,12 +47,20 @@ export const calculateTraceStats = (spans: TraceRecord[]): TraceStats => {
 export function normalizeSpan(span: any): TraceRecord {
   return {
     ...span,
-    span_id: span.span_id || span.id,
-    trace_id: span.trace_id || span.traceId,
-    duration_ms: Number(span.duration_ms || span.duration || 0),
-    start_time: span.start_time || span.startTime,
-    end_time: span.end_time || span.endTime,
+    span_id: span.span_id,
+    trace_id: span.trace_id,
+    service_name: span.service_name,
+    operation_name: span.operation_name,
+    parent_span_id: span.parent_span_id,
+    span_kind: span.span_kind,
+    duration_ms: Number(span.duration_ms || 0),
+    start_time: span.start_time,
+    end_time: span.end_time,
     status: span.status || (span.error ? 'ERROR' : 'OK'),
+    status_message: span.status_message,
+    http_method: span.http_method,
+    http_url: span.http_url,
+    http_status_code: span.http_status_code,
   };
 }
 
@@ -62,7 +70,11 @@ export function normalizeSpan(span: any): TraceRecord {
 export function normalizeTraceLog(log: any): any {
   return {
     ...log,
-    timestamp: log.timestamp || log.time,
-    level: log.level || log.severityText || 'INFO',
+    timestamp: log.timestamp,
+    service_name: log.service_name,
+    trace_id: log.trace_id,
+    span_id: log.span_id,
+    level: log.level || 'INFO',
+    message: log.message || '',
   };
 }

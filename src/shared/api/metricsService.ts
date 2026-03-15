@@ -11,23 +11,14 @@ const BASE = API_CONFIG.ENDPOINTS.V1_BASE;
 
 interface MetricRow extends Record<string, unknown> {
   service_name?: string;
-  serviceName?: string;
   operation_name?: string;
-  operationName?: string;
   request_count?: number;
-  requestCount?: number;
   error_count?: number;
-  errorCount?: number;
   error_rate?: number;
-  errorRate?: number;
   avg_latency?: number;
-  avgLatency?: number;
   p50_latency?: number;
-  p50Latency?: number;
   p95_latency?: number;
-  p95Latency?: number;
   p99_latency?: number;
-  p99Latency?: number;
 }
 
 /**
@@ -112,14 +103,14 @@ function normalizeServiceMetric(input: unknown): ServiceMetric {
   const row = asMetricRow(input);
   return {
     ...row,
-    serviceName: getString(row, ['service_name', 'serviceName']),
-    requestCount: getNumber(row, ['request_count', 'requestCount']),
-    errorCount: getNumber(row, ['error_count', 'errorCount']),
-    errorRate: getNumber(row, ['error_rate', 'errorRate']),
-    avgLatency: getNumber(row, ['avg_latency', 'avgLatency']),
-    p50Latency: getNumber(row, ['p50_latency', 'p50Latency']),
-    p95Latency: getNumber(row, ['p95_latency', 'p95Latency']),
-    p99Latency: getNumber(row, ['p99_latency', 'p99Latency']),
+    serviceName: getString(row, ['service_name']),
+    requestCount: getNumber(row, ['request_count']),
+    errorCount: getNumber(row, ['error_count']),
+    errorRate: getNumber(row, ['error_rate']),
+    avgLatency: getNumber(row, ['avg_latency']),
+    p50Latency: getNumber(row, ['p50_latency']),
+    p95Latency: getNumber(row, ['p95_latency']),
+    p99Latency: getNumber(row, ['p99_latency']),
   };
 }
 
@@ -127,8 +118,8 @@ function normalizeEndpointMetric(input: unknown): EndpointMetric {
   const row = asMetricRow(input);
   return {
     ...normalizeServiceMetric(row),
-    operationName: getString(row, ['operation_name', 'operationName']),
-    httpMethod: getString(row, ['http_method', 'httpMethod']),
+    operationName: getString(row, ['operation_name']),
+    httpMethod: getString(row, ['http_method']),
   };
 }
 
@@ -137,12 +128,12 @@ function normalizeTimeSeriesPoint(input: unknown): TimeSeriesPoint {
   return {
     ...row,
     timestamp: getString(row, ['timestamp']),
-    serviceName: getString(row, ['service_name', 'serviceName']),
-    operationName: getString(row, ['operation_name', 'operationName']),
-    httpMethod: getString(row, ['http_method', 'httpMethod']),
-    requestCount: getNumber(row, ['request_count', 'requestCount']),
-    errorCount: getNumber(row, ['error_count', 'errorCount']),
-    avgLatency: getNumber(row, ['avg_latency', 'avgLatency']),
+    serviceName: getString(row, ['service_name']),
+    operationName: getString(row, ['operation_name']),
+    httpMethod: getString(row, ['http_method']),
+    requestCount: getNumber(row, ['request_count']),
+    errorCount: getNumber(row, ['error_count']),
+    avgLatency: getNumber(row, ['avg_latency']),
   };
 }
 
@@ -208,12 +199,12 @@ export const metricsService = {
     const response = await api.get(`${BASE}/metrics/summary`, { params: { startTime, endTime } });
     const row = asMetricRow(response);
     return {
-      totalRequests: getNumber(row, ['total_requests', 'totalRequests']),
-      errorCount: getNumber(row, ['error_count', 'errorCount']),
-      errorRate: getNumber(row, ['error_rate', 'errorRate']),
-      avgLatency: getNumber(row, ['avg_latency', 'avgLatency']),
-      p95Latency: getNumber(row, ['p95_latency', 'p95Latency']),
-      p99Latency: getNumber(row, ['p99_latency', 'p99Latency']),
+      totalRequests: getNumber(row, ['total_requests']),
+      errorCount: getNumber(row, ['error_count']),
+      errorRate: getNumber(row, ['error_rate']),
+      avgLatency: getNumber(row, ['avg_latency']),
+      p95Latency: getNumber(row, ['p95_latency']),
+      p99Latency: getNumber(row, ['p99_latency']),
     };
   },
 
@@ -379,25 +370,6 @@ export const metricsService = {
     return api.get(`${BASE}/infrastructure/nodes/${encodeURIComponent(host)}/services`, {
       params: { startTime, endTime },
     });
-  },
-
-  // Overview endpoints (formerly overviewService)
-  async getOverviewSummary(
-    _teamId: number | null,
-    startTime: RequestTime,
-    endTime: RequestTime,
-  ): Promise<unknown> {
-    return api.get(`${BASE}/overview/summary`, { params: { startTime, endTime } });
-  },
-
-  async getOverviewTimeSeries(
-    _teamId: number | null,
-    startTime: RequestTime,
-    endTime: RequestTime,
-    serviceName?: string,
-    interval = '5m',
-  ): Promise<unknown> {
-    return api.get(`${BASE}/overview/timeseries`, { params: { startTime, endTime, serviceName, interval } });
   },
 
   async getOverviewServices(

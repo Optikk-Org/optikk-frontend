@@ -40,12 +40,12 @@ const normalizeMetricSummary = (summary: unknown = {}): MetricSummary => {
   const row = asRecord(summary);
   return {
     ...row,
-    total_requests: num(row, 'total_requests', 'totalRequests'),
-    error_count: num(row, 'error_count', 'errorCount'),
-    error_rate: num(row, 'error_rate', 'errorRate'),
-    avg_latency: num(row, 'avg_latency', 'avgLatency'),
-    p95_latency: num(row, 'p95_latency', 'p95Latency'),
-    p99_latency: num(row, 'p99_latency', 'p99Latency'),
+    total_requests: num(row, 'total_requests'),
+    error_count: num(row, 'error_count'),
+    error_rate: num(row, 'error_rate'),
+    avg_latency: num(row, 'avg_latency'),
+    p95_latency: num(row, 'p95_latency'),
+    p99_latency: num(row, 'p99_latency'),
   };
 };
 
@@ -56,13 +56,13 @@ const normalizeTimeSeriesPoint = (point: unknown = {}): MetricTimeSeriesPoint =>
   const row = asRecord(point);
   return {
     ...row,
-    timestamp: str(row, 'timestamp', 'time_bucket', 'timeBucket'),
-    request_count: num(row, 'request_count', 'requestCount'),
-    error_count: num(row, 'error_count', 'errorCount'),
-    avg_latency: num(row, 'avg_latency', 'avgLatency'),
-    p50: num(row, 'p50', 'p50_latency', 'p50Latency'),
-    p95: num(row, 'p95', 'p95_latency', 'p95Latency'),
-    p99: num(row, 'p99', 'p99_latency', 'p99Latency'),
+    timestamp: str(row, 'timestamp', 'time_bucket'),
+    request_count: num(row, 'request_count'),
+    error_count: num(row, 'error_count'),
+    avg_latency: num(row, 'avg_latency'),
+    p50: num(row, 'p50', 'p50_latency'),
+    p95: num(row, 'p95', 'p95_latency'),
+    p99: num(row, 'p99', 'p99_latency'),
   };
 };
 
@@ -73,13 +73,13 @@ const normalizeServiceMetric = (metric: unknown = {}): ServiceMetricPoint => {
   const row = asRecord(metric);
   return {
     ...row,
-    service_name: str(row, 'service_name', 'serviceName', 'name'),
-    request_count: num(row, 'request_count', 'requestCount'),
-    error_count: num(row, 'error_count', 'errorCount'),
-    avg_latency: num(row, 'avg_latency', 'avgLatency'),
-    p50_latency: num(row, 'p50_latency', 'p50Latency'),
-    p95_latency: num(row, 'p95_latency', 'p95Latency'),
-    p99_latency: num(row, 'p99_latency', 'p99Latency'),
+    service_name: str(row, 'service_name', 'name'),
+    request_count: num(row, 'request_count'),
+    error_count: num(row, 'error_count'),
+    avg_latency: num(row, 'avg_latency'),
+    p50_latency: num(row, 'p50_latency'),
+    p95_latency: num(row, 'p95_latency'),
+    p99_latency: num(row, 'p99_latency'),
   };
 };
 
@@ -90,14 +90,14 @@ const normalizeEndpointMetric = (metric: unknown = {}): EndpointMetricPoint => {
   const row = asRecord(metric);
   return {
     ...row,
-    service_name: str(row, 'service_name', 'serviceName'),
-    operation_name: str(row, 'operation_name', 'operationName'),
-    http_method: str(row, 'http_method', 'httpMethod'),
-    request_count: num(row, 'request_count', 'requestCount'),
-    error_count: num(row, 'error_count', 'errorCount'),
-    avg_latency: num(row, 'avg_latency', 'avgLatency'),
-    p50_latency: num(row, 'p50_latency', 'p50Latency'),
-    p95_latency: num(row, 'p95_latency', 'p95Latency'),
-    p99_latency: num(row, 'p99_latency', 'p99Latency'),
+    service_name: str(row, 'service_name'),
+    operation_name: str(row, 'operation_name'),
+    http_method: str(row, 'http_method'),
+    request_count: num(row, 'request_count'),
+    error_count: num(row, 'error_count'),
+    avg_latency: num(row, 'avg_latency'),
+    p50_latency: num(row, 'p50_latency'),
+    p95_latency: num(row, 'p95_latency'),
+    p99_latency: num(row, 'p99_latency'),
   };
 };

@@ -43,9 +43,9 @@ export function HeatmapRenderer({
     return <Empty description="No data" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: 20 }} />;
   }
 
-  const xKey = chartConfig.xKey || 'operationName';
-  const yKey = chartConfig.yKey || 'serviceName';
-  const valueKey = chartConfig.valueKey || 'errorRate';
+  const xKey = chartConfig.xKey || 'operation_name';
+  const yKey = chartConfig.yKey || 'service_name';
+  const valueKey = chartConfig.valueKey || 'error_rate';
 
   const xValues = Array.from(new Set(rows.map((r: any) => String(r[xKey] ?? '')))).slice(0, 20);
   const yValues = Array.from(new Set(rows.map((r: any) => String(r[yKey] ?? ''))));

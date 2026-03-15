@@ -18,40 +18,40 @@ const n = (value: unknown): number => (value == null || Number.isNaN(Number(valu
 
 export const normalizeEndpoint = (row: Record<string, unknown> = {}): ServiceEndpointRow => ({
   ...row,
-  service_name: String(row.service_name ?? row.serviceName ?? ''),
-  operation_name: String(row.operation_name ?? row.operationName ?? ''),
-  http_method: String(row.http_method ?? row.httpMethod ?? ''),
-  request_count: n(row.request_count ?? row.requestCount),
-  error_count: n(row.error_count ?? row.errorCount),
-  avg_latency: n(row.avg_latency ?? row.avgLatency),
-  p95_latency: n(row.p95_latency ?? row.p95Latency),
-  p99_latency: n(row.p99_latency ?? row.p99Latency),
+  service_name: String(row.service_name ?? ''),
+  operation_name: String(row.operation_name ?? ''),
+  http_method: String(row.http_method ?? ''),
+  request_count: n(row.request_count),
+  error_count: n(row.error_count),
+  avg_latency: n(row.avg_latency),
+  p95_latency: n(row.p95_latency),
+  p99_latency: n(row.p99_latency),
 });
 
 export const normalizeErrorGroup = (row: Record<string, unknown> = {}): ServiceErrorGroupRow => ({
   ...row,
-  service_name: String(row.service_name ?? row.serviceName ?? ''),
-  operation_name: String(row.operation_name ?? row.operationName ?? ''),
-  status_message: String(row.status_message ?? row.statusMessage ?? ''),
-  http_status_code: n(row.http_status_code ?? row.httpStatusCode),
-  error_count: n(row.error_count ?? row.errorCount),
-  last_occurrence: String(row.last_occurrence ?? row.lastOccurrence ?? ''),
-  first_occurrence: String(row.first_occurrence ?? row.firstOccurrence ?? ''),
-  sample_trace_id: String(row.sample_trace_id ?? row.sampleTraceId ?? ''),
+  service_name: String(row.service_name ?? ''),
+  operation_name: String(row.operation_name ?? ''),
+  status_message: String(row.status_message ?? ''),
+  http_status_code: n(row.http_status_code),
+  error_count: n(row.error_count),
+  last_occurrence: String(row.last_occurrence ?? ''),
+  first_occurrence: String(row.first_occurrence ?? ''),
+  sample_trace_id: String(row.sample_trace_id ?? ''),
 });
 
 export const normalizeTimeSeriesPoint = (row: Record<string, unknown> = {}): ServiceTimeSeriesPoint => ({
   ...row,
-  timestamp: String(row.timestamp ?? row.time_bucket ?? row.timeBucket ?? ''),
-  service_name: String(row.service_name ?? row.serviceName ?? ''),
-  operation_name: String(row.operation_name ?? row.operationName ?? ''),
-  http_method: String(row.http_method ?? row.httpMethod ?? ''),
-  request_count: n(row.request_count ?? row.requestCount),
-  error_count: n(row.error_count ?? row.errorCount),
-  avg_latency: n(row.avg_latency ?? row.avgLatency),
-  p50: n(row.p50 ?? row.p50_latency ?? row.p50Latency),
-  p95: n(row.p95 ?? row.p95_latency ?? row.p95Latency),
-  p99: n(row.p99 ?? row.p99_latency ?? row.p99Latency),
+  timestamp: String(row.timestamp ?? ''),
+  service_name: String(row.service_name ?? ''),
+  operation_name: String(row.operation_name ?? ''),
+  http_method: String(row.http_method ?? ''),
+  request_count: n(row.request_count),
+  error_count: n(row.error_count),
+  avg_latency: n(row.avg_latency),
+  p50: n(row.p50),
+  p95: n(row.p95),
+  p99: n(row.p99),
 });
 
 export const normalizeLog = (row: Record<string, unknown> = {}): ServiceLogRow => ({
@@ -59,15 +59,15 @@ export const normalizeLog = (row: Record<string, unknown> = {}): ServiceLogRow =
   timestamp: String(row.timestamp ?? ''),
   level: String(row.level ?? 'INFO'),
   message: String(row.message ?? ''),
-  trace_id: String(row.trace_id ?? row.traceId ?? ''),
-  span_id: String(row.span_id ?? row.spanId ?? ''),
+  trace_id: String(row.trace_id ?? ''),
+  span_id: String(row.span_id ?? ''),
 });
 
 export const normalizeDependency = (row: Record<string, unknown> = {}): ServiceDependency => ({
   ...row,
   source: String(row.source ?? ''),
   target: String(row.target ?? ''),
-  call_count: n(row.call_count ?? row.callCount),
+  call_count: n(row.call_count),
 });
 
 export interface UseServiceDetailDataProps {

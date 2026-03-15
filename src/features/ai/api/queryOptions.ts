@@ -1,6 +1,8 @@
 import { queryOptions } from '@tanstack/react-query';
 import { aiRunsApi } from './aiRunsApi';
 import { aiRunDetailApi } from './aiRunDetailApi';
+import { aiTracesApi } from './aiTracesApi';
+import { aiConversationsApi } from './aiConversationsApi';
 import type { RequestTime } from '@shared/api/service-types';
 import type { LLMRunFilters } from '../types';
 
@@ -85,5 +87,57 @@ export const aiRunDetailQueries = {
       queryFn: () => aiRunDetailApi.getContext(teamId, spanId, traceId),
       enabled: !!teamId && !!spanId && !!traceId,
       staleTime: 60000,
+    }),
+};
+
+export const aiTraceKeys = {
+  all: ['ai-traces'] as const,
+  trace: (teamId: number | null, traceId: string) =>
+    [...aiTraceKeys.all, 'trace', { teamId, traceId }] as const,
+  summary: (teamId: number | null, traceId: string) =>
+    [...aiTraceKeys.all, 'summary', { teamId, traceId }] as const,
+};
+
+export const aiTraceQueries = {
+  trace: (teamId: number | null, traceId: string) =>
+    queryOptions({
+      queryKey: aiTraceKeys.trace(teamId, traceId),
+      queryFn: () => aiTracesApi.getTrace(teamId, traceId),
+      enabled: !!teamId && !!traceId,
+      staleTime: 60000,
+    }),
+
+  summary: (teamId: number | null, traceId: string) =>
+    queryOptions({
+      queryKey: aiTraceKeys.summary(teamId, traceId),
+      queryFn: () => aiTracesApi.getSummary(teamId, traceId),
+      enabled: !!teamId && !!traceId,
+      staleTime: 60000,
+    }),
+};
+
+export const aiConversationKeys = {
+  all: ['ai-conversations'] as const,
+  list: (teamId: number | null, startTime: RequestTime, endTime: RequestTime) =>
+    [...aiConversationKeys.all, 'list', { teamId, startTime, endTime }] as const,
+  detail: (teamId: number | null, conversationId: string, startTime: RequestTime, endTime: RequestTime) =>
+    [...aiConversationKeys.all, 'detail', { teamId, conversationId, startTime, endTime }] as const,
+};
+
+export const aiConversationQueries = {
+  list: (teamId: number | null, startTime: RequestTime, endTime: RequestTime) =>
+    queryOptions({
+      queryKey: aiConversationKeys.list(teamId, startTime, endTime),
+      queryFn: () => aiConversationsApi.list(teamId, startTime, endTime),
+      enabled: !!teamId,
+      staleTime: 30000,
+    }),
+
+  detail: (teamId: number | null, conversationId: string, startTime: RequestTime, endTime: RequestTime) =>
+    queryOptions({
+      queryKey: aiConversationKeys.detail(teamId, conversationId, startTime, endTime),
+      queryFn: () => aiConversationsApi.get(teamId, conversationId, startTime, endTime),
+      enabled: !!teamId && !!conversationId,
+      staleTime: 30000,
     }),
 };

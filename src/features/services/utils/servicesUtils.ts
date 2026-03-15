@@ -54,13 +54,13 @@ const normalizeServiceMetric = (service: unknown = {}): ServiceMetric => {
   const row = asRecord(service);
   return {
     ...row,
-    service_name: toStringValue(row.service_name ?? row.serviceName ?? row.name),
-    request_count: toNumber(row.request_count ?? row.requestCount),
-    error_count: toNumber(row.error_count ?? row.errorCount),
-    avg_latency: toNumber(row.avg_latency ?? row.avgLatency),
-    p50_latency: toNumber(row.p50_latency ?? row.p50Latency),
-    p95_latency: toNumber(row.p95_latency ?? row.p95Latency),
-    p99_latency: toNumber(row.p99_latency ?? row.p99Latency),
+    service_name: toStringValue(row.service_name),
+    request_count: toNumber(row.request_count),
+    error_count: toNumber(row.error_count),
+    avg_latency: toNumber(row.avg_latency),
+    p50_latency: toNumber(row.p50_latency),
+    p95_latency: toNumber(row.p95_latency),
+    p99_latency: toNumber(row.p99_latency),
   };
 };
 
@@ -71,16 +71,16 @@ const normalizeTimeSeriesPoint = (point: unknown = {}): ServiceTimeSeriesPoint =
   const row = asRecord(point);
   return {
     ...row,
-    timestamp: toStringValue(row.timestamp ?? row.time_bucket ?? row.timeBucket),
-    service_name: toStringValue(row.service_name ?? row.serviceName),
-    operation_name: toStringValue(row.operation_name ?? row.operationName),
-    http_method: toStringValue(row.http_method ?? row.httpMethod),
-    request_count: toNumber(row.request_count ?? row.requestCount),
-    error_count: toNumber(row.error_count ?? row.errorCount),
-    avg_latency: toNumber(row.avg_latency ?? row.avgLatency),
-    p50: toNumber(row.p50 ?? row.p50_latency ?? row.p50Latency),
-    p95: toNumber(row.p95 ?? row.p95_latency ?? row.p95Latency),
-    p99: toNumber(row.p99 ?? row.p99_latency ?? row.p99Latency),
+    timestamp: toStringValue(row.timestamp),
+    service_name: toStringValue(row.service_name),
+    operation_name: toStringValue(row.operation_name),
+    http_method: toStringValue(row.http_method),
+    request_count: toNumber(row.request_count),
+    error_count: toNumber(row.error_count),
+    avg_latency: toNumber(row.avg_latency),
+    p50: toNumber(row.p50),
+    p95: toNumber(row.p95),
+    p99: toNumber(row.p99),
   };
 };
 
@@ -91,10 +91,10 @@ const normalizeTopologyNode = (node: unknown = {}): ServiceTopologyNode => {
   const row = asRecord(node);
   return {
     ...row,
-    name: toStringValue(row.name ?? row.service_name ?? row.serviceName),
-    requestCount: toNumber(row.requestCount ?? row.request_count),
-    errorRate: toNumber(row.errorRate ?? row.error_rate),
-    avgLatency: toNumber(row.avgLatency ?? row.avg_latency),
+    name: toStringValue(row.name),
+    requestCount: toNumber(row.request_count),
+    errorRate: toNumber(row.error_rate),
+    avgLatency: toNumber(row.avg_latency),
     status: toStringValue(row.status),
   };
 };
@@ -106,11 +106,11 @@ const normalizeTopologyEdge = (edge: unknown = {}): ServiceTopologyEdge => {
   const row = asRecord(edge);
   return {
     ...row,
-    source: toStringValue(row.source ?? row.source_service ?? row.sourceService),
-    target: toStringValue(row.target ?? row.target_service ?? row.targetService),
-    callCount: toNumber(row.callCount ?? row.call_count),
-    avgLatency: toNumber(row.avgLatency ?? row.avg_latency),
-    errorRate: toNumber(row.errorRate ?? row.error_rate),
+    source: toStringValue(row.source),
+    target: toStringValue(row.target),
+    callCount: toNumber(row.call_count),
+    avgLatency: toNumber(row.avg_latency),
+    errorRate: toNumber(row.error_rate),
   };
 };
 

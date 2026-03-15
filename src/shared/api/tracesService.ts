@@ -58,9 +58,15 @@ export const tracesService = {
     return api.get(`${BASE}/traces/${traceId}/spans/${spanId}/attributes`);
   },
 
-  async getRelatedTraces(traceId: string, startMs?: number, endMs?: number): Promise<unknown> {
+  async getRelatedTraces(
+    traceId: string,
+    serviceName?: string,
+    operationName?: string,
+    startMs?: number,
+    endMs?: number,
+  ): Promise<unknown> {
     return api.get(`${BASE}/traces/${traceId}/related`, {
-      params: { startMs, endMs },
+      params: { service: serviceName, operation: operationName, startTime: startMs, endTime: endMs },
     });
   },
 };

@@ -6,35 +6,18 @@
 interface LogLike {
   id?: string | number | bigint | null;
   timestamp?: string | number | Date;
-  traceId?: string;
   trace_id?: string;
-  spanId?: string;
   span_id?: string;
-  serviceName?: string;
   service_name?: string;
   [key: string]: unknown;
 }
 
 interface PageLike {
   logs?: unknown[];
-  items?: unknown[];
-  rows?: unknown[];
-  hasMore?: boolean;
   has_more?: boolean;
-  nextCursor?: unknown;
   next_cursor?: unknown;
   total?: unknown;
-  totalCount?: unknown;
   total_count?: unknown;
-  pagination?: {
-    hasMore?: boolean;
-    has_more?: boolean;
-    nextCursor?: unknown;
-    next_cursor?: unknown;
-    total?: unknown;
-    totalCount?: unknown;
-    total_count?: unknown;
-  };
   [key: string]: unknown;
 }
 
@@ -66,8 +49,6 @@ export function getLogsFromPage(page: unknown): unknown[] {
   const pageLike = asPageLike(page);
   if (!pageLike) return [];
   if (Array.isArray(pageLike.logs)) return pageLike.logs;
-  if (Array.isArray(pageLike.items)) return pageLike.items;
-  if (Array.isArray(pageLike.rows)) return pageLike.rows;
   return [];
 }
 
@@ -83,12 +64,7 @@ export function getHasMoreFromPage(
   pageSize: number,
 ): boolean {
   const pageLike = asPageLike(page);
-  const explicitFlags = [
-    pageLike?.hasMore,
-    pageLike?.has_more,
-    pageLike?.pagination?.hasMore,
-    pageLike?.pagination?.has_more,
-  ];
+  const explicitFlags = [pageLike?.has_more];
 
   const explicitFlag = explicitFlags.find((value) => typeof value === 'boolean');
   if (typeof explicitFlag === 'boolean') return explicitFlag;
@@ -96,11 +72,7 @@ export function getHasMoreFromPage(
   const pageLogs = getLogsFromPage(page);
   const totalCandidates = [
     pageLike?.total,
-    pageLike?.totalCount,
     pageLike?.total_count,
-    pageLike?.pagination?.total,
-    pageLike?.pagination?.totalCount,
-    pageLike?.pagination?.total_count,
   ];
 
   for (const candidate of totalCandidates) {
@@ -123,12 +95,7 @@ export function getHasMoreFromPage(
 export function getNextCursorFromPage(page: unknown): CursorValue | undefined {
   const pageLike = asPageLike(page);
   const pageLogs = getLogsFromPage(page);
-  const candidates = [
-    pageLike?.nextCursor,
-    pageLike?.next_cursor,
-    pageLike?.pagination?.nextCursor,
-    pageLike?.pagination?.next_cursor,
-  ];
+  const candidates = [pageLike?.next_cursor];
 
   for (const candidate of candidates) {
     if (candidate != null && candidate !== '' && candidate !== 0 && candidate !== '0') {
@@ -273,19 +240,19 @@ export function compareIdsDesc(aId: unknown, bId: unknown): number {
 export function getLogValue(log: unknown, key: string): unknown {
   const logLike = asLogLike(log);
   if (key === 'service_name' || key === 'service') {
-    return logLike.serviceName || logLike.service_name || logLike.service || '';
+    return logLike.service_name || logLike.service || '';
   }
   if (key === 'trace_id') {
-    return logLike.traceId || logLike.trace_id || '';
+    return logLike.trace_id || '';
   }
   if (key === 'span_id') {
-    return logLike.spanId || logLike.span_id || '';
+    return logLike.span_id || '';
   }
   if (key === 'message') {
     return logLike.message || logLike.body || '';
   }
   if (key === 'level') {
-    return logLike.level || logLike.severityText || '';
+    return logLike.level || logLike.severity_text || '';
   }
   return logLike[key] ?? '';
 }
@@ -302,8 +269,8 @@ export function rowKey(log: unknown, i: number): string {
   const id = String(logLike.id ?? '').trim();
   if (id && id !== '0') return `log-${id}`;
 
-  const traceId = logLike.traceId || logLike.trace_id || '';
-  const spanId = logLike.spanId || logLike.span_id || '';
+  const traceId = logLike.trace_id || '';
+  const spanId = logLike.span_id || '';
   if (traceId && spanId) return `${traceId}-${spanId}-${String(logLike.timestamp ?? '')}`;
 
   return `log-${i}-${String(logLike.timestamp ?? '')}`;
@@ -321,11 +288,7 @@ export function extractServerTotal(pages: unknown): number {
 
   return Number(
     firstPage?.total
-    ?? firstPage?.totalCount
     ?? firstPage?.total_count
-    ?? firstPage?.pagination?.total
-    ?? firstPage?.pagination?.totalCount
-    ?? firstPage?.pagination?.total_count
     ?? 0,
   );
 }

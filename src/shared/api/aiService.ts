@@ -156,4 +156,34 @@ export const aiService = {
   async getRunContext(_teamId: number | null, spanId: string, traceId: string): Promise<unknown> {
     return api.get(`${BASE}/ai/runs/${spanId}/context`, { params: { traceId } });
   },
+
+  // --- LLM Traces ---
+
+  async getLLMTrace(_teamId: number | null, traceId: string): Promise<unknown> {
+    return api.get(`${BASE}/ai/traces/${traceId}`);
+  },
+
+  async getLLMTraceSummary(_teamId: number | null, traceId: string): Promise<unknown> {
+    return api.get(`${BASE}/ai/traces/${traceId}/summary`);
+  },
+
+  // --- Conversations ---
+
+  async getConversations(
+    _teamId: number | null,
+    startTime: RequestTime,
+    endTime: RequestTime,
+    limit?: number,
+  ): Promise<unknown> {
+    return api.get(`${BASE}/ai/conversations`, { params: { startTime, endTime, limit } });
+  },
+
+  async getConversation(
+    _teamId: number | null,
+    conversationId: string,
+    startTime: RequestTime,
+    endTime: RequestTime,
+  ): Promise<unknown> {
+    return api.get(`${BASE}/ai/conversations/${conversationId}`, { params: { startTime, endTime } });
+  },
 };

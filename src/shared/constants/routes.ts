@@ -21,6 +21,9 @@ const ROUTES = {
   aiObservability: '/ai-observability',
   aiRuns: '/ai-runs',
   aiRunDetail: '/ai-runs/:spanId',
+  aiTraceDetail: '/ai-traces/:traceId',
+  aiConversations: '/ai-conversations',
+  aiConversationDetail: '/ai-conversations/:conversationId',
   settings: '/settings',
   latencyAlias: '/latency',
 } as const;

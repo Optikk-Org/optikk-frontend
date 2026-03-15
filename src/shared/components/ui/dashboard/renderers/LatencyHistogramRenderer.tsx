@@ -40,7 +40,7 @@ export function LatencyHistogramRenderer({
   const { rawData } = useDashboardData(chartConfig, dataSources);
   const traces = useMemo(() => {
     const arr = Array.isArray(rawData) ? rawData : [];
-    if (arr.length > 0 && (arr[0].duration_ms != null || arr[0].durationMs != null)) return arr;
+    if (arr.length > 0 && arr[0].duration_ms != null) return arr;
     const bucketMidpoint = (bucket: string): number => ({
       '0_10ms': 5, '10_25ms': 17, '25_50ms': 37, '50_100ms': 75,
       '100_250ms': 175, '250_500ms': 375, '500ms_1s': 750,

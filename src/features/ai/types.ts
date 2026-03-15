@@ -90,6 +90,59 @@ export interface LLMRunContext {
   children: ChainSpan[];
 }
 
+export interface LLMTraceSpan {
+  spanId: string;
+  parentSpanId?: string;
+  serviceName: string;
+  operationName: string;
+  startTime: string;
+  durationMs: number;
+  hasError: boolean;
+  spanKind: string;
+  role: string;
+  model?: string;
+  inputTokens?: number;
+  outputTokens?: number;
+}
+
+export interface LLMTraceSummary {
+  totalSpans: number;
+  llmCalls: number;
+  toolCalls: number;
+  totalTokens: number;
+  modelsUsed: string[];
+  totalMs: number;
+  llmMs: number;
+  llmTimePct: number;
+  hasErrors: boolean;
+  serviceCount: number;
+}
+
+export interface Conversation {
+  conversationId: string;
+  serviceName: string;
+  model: string;
+  turnCount: number;
+  totalTokens: number;
+  firstTurn: string;
+  lastTurn: string;
+  hasErrors: boolean;
+}
+
+export interface ConversationTurn {
+  spanId: string;
+  traceId: string;
+  model: string;
+  operationType?: string;
+  startTime: string;
+  durationMs: number;
+  inputTokens: number;
+  outputTokens: number;
+  hasError: boolean;
+  inputPreview?: string;
+  outputPreview?: string;
+}
+
 export interface LLMRunFilters {
   models?: string[];
   providers?: string[];

@@ -45,7 +45,7 @@ export default function TraceDetailPage() {
     relatedTraces,
     spanAttributes,
     spanAttributesLoading,
-  } = useTraceDetailEnhanced(traceIdParam, selectedSpanId);
+  } = useTraceDetailEnhanced(traceIdParam, selectedSpanId, selectedSpan ?? spans[0] ?? null);
 
   const handleSpanClick = (span: { span_id?: string }) => {
     setSelectedSpanId(span.span_id ?? null);

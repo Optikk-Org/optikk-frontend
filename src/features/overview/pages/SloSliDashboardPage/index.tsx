@@ -33,8 +33,8 @@ export default function SloSliDashboardPage() {
   const serviceOptions = [
     { label: 'All Services', value: '' },
     ...(Array.isArray(services) ? services : []).map((s: any) => ({
-      label: s.service_name || s.serviceName || s.name,
-      value: s.service_name || s.serviceName || s.name,
+      label: s.service_name || s.name,
+      value: s.service_name || s.name,
     })),
   ];
 
@@ -49,9 +49,9 @@ export default function SloSliDashboardPage() {
     Array.isArray((data as any)?.timeseries) ? (data as any).timeseries : []
     , [data]);
 
-  const availabilityPct = n(status.availabilityPercent);
-  const p95Ms = n(status.p95LatencyMs);
-  const errorBudget = n(status.errorBudgetRemainingPercent);
+  const availabilityPct = n(status.availability_percent);
+  const p95Ms = n(status.p95_latency_ms);
+  const errorBudget = n(status.error_budget_remaining_percent);
   const isCompliant = availabilityPct >= AVAILABILITY_TARGET && p95Ms <= P95_TARGET_MS;
 
   const breachedCount = timeseries.filter((row: any) => n(row.availability_percent) < AVAILABILITY_TARGET).length;

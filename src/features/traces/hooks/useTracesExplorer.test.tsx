@@ -76,9 +76,9 @@ describe('useTracesExplorer', () => {
         ],
         total: 2,
         summary: {
-          errorTraces: 1,
-          p95Duration: 180,
-          p99Duration: 180,
+          error_traces: 1,
+          p95_duration: 180,
+          p99_duration: 180,
         },
       },
       isLoading: false,

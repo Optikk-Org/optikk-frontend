@@ -27,10 +27,6 @@ export interface LogsBackendParams extends QueryParams {
 export const logsStatsSchema = z.object({
   total: z.number(),
   fields: z.object({
-    // Backend returns severity_text and service
-    severity_text: z.array(z.object({ value: z.string(), count: z.number() })).optional(),
-    service: z.array(z.object({ value: z.string(), count: z.number() })).optional(),
-    // Legacy / Frontend aliases
     level: z.array(z.object({ value: z.string(), count: z.number() })).optional(),
     service_name: z.array(z.object({ value: z.string(), count: z.number() })).optional(),
   }),
@@ -77,13 +73,12 @@ export type LogsVolume = z.infer<typeof logsVolumeSchema>;
 function normalizeLog(raw: z.infer<typeof logEntrySchema>): LogEntry {
   return {
     ...raw,
-    // Prefer snake_case primary fields, fall back to legacy camelCase aliases
-    level: raw.severity_text ?? raw.level ?? raw.severityText ?? '',
+    level: raw.severity_text ?? raw.level ?? '',
     message: raw.body ?? raw.message ?? '',
-    service: raw.service_name ?? raw.service ?? raw.serviceName ?? '',
-    service_name: raw.service_name ?? raw.service ?? raw.serviceName ?? '',
-    trace_id: raw.trace_id ?? raw.traceId ?? '',
-    span_id: raw.span_id ?? raw.spanId ?? '',
+    service: raw.service_name ?? raw.service ?? '',
+    service_name: raw.service_name ?? raw.service ?? '',
+    trace_id: raw.trace_id ?? '',
+    span_id: raw.span_id ?? '',
   };
 }
 
@@ -128,12 +123,11 @@ export const logsApi = {
 
     const parsed = logsStatsSchema.parse(response);
     
-    // Normalize backend fields to frontend names
     return {
       total: parsed.total,
       fields: {
-        level: parsed.fields.level ?? parsed.fields.severity_text ?? [],
-        service_name: parsed.fields.service_name ?? parsed.fields.service ?? [],
+        level: parsed.fields.level ?? [],
+        service_name: parsed.fields.service_name ?? [],
       }
     } as LogsStats;
   },

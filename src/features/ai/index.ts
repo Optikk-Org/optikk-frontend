@@ -16,6 +16,18 @@ const AiRunDetailPage = lazy(() =>
   import('./pages/AiRunDetailPage').then((module) => ({ default: module.default })),
 );
 
+const AiTraceDetailPage = lazy(() =>
+  import('./pages/AiTraceDetailPage').then((module) => ({ default: module.default })),
+);
+
+const AiConversationsPage = lazy(() =>
+  import('./pages/AiConversationsPage').then((module) => ({ default: module.default })),
+);
+
+const AiConversationDetailPage = lazy(() =>
+  import('./pages/AiConversationDetailPage').then((module) => ({ default: module.default })),
+);
+
 export const aiConfig: DomainConfig = {
   key: 'ai',
   label: 'AI Observability',
@@ -38,6 +50,9 @@ export const aiConfig: DomainConfig = {
     { path: ROUTES.aiObservability, page: AiPage },
     { path: ROUTES.aiRuns, page: AiRunsPage },
     { path: ROUTES.aiRunDetail, page: AiRunDetailPage },
+    { path: ROUTES.aiTraceDetail, page: AiTraceDetailPage },
+    { path: ROUTES.aiConversations, page: AiConversationsPage },
+    { path: ROUTES.aiConversationDetail, page: AiConversationDetailPage },
   ],
 };
 

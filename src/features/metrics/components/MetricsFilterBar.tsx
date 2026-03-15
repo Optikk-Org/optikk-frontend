@@ -28,7 +28,7 @@ export function MetricsFilterBar({
   const serviceOptions = [
     { label: 'All Services', value: '' },
     ...services.map((service) => {
-      const name = service.name ?? service.service_name ?? service.serviceName ?? 'Unknown';
+      const name = service.service_name ?? 'Unknown';
       return { label: name, value: name };
     }),
   ];

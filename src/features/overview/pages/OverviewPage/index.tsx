@@ -1,10 +1,9 @@
 import { Row, Col, Card, Skeleton, Empty, Progress } from 'antd';
-import { Activity, AlertCircle, Clock, Zap, Server } from 'lucide-react';
+import { Activity, AlertCircle, Clock, Zap } from 'lucide-react';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import {
-  normalizeMetricSummary,
   normalizeTimeSeriesPoint,
   normalizeServiceMetric,
   normalizeEndpointMetric,
@@ -21,6 +20,7 @@ import { useTimeRangeQuery } from '@shared/hooks/useTimeRangeQuery';
 import { formatNumber, formatDuration } from '@shared/utils/formatters';
 
 import { APP_COLORS } from '@config/colorLiterals';
+import { buildOverviewSparklines, buildOverviewSummary } from './summary';
 import './OverviewPage.css';
 
 /**
@@ -30,16 +30,10 @@ export default function OverviewPage() {
   const navigate = useNavigate();
   const { config } = useDashboardConfig('overview');
 
-  // Metrics summary (primary source — spans table via v1 API)
-  const { data: summaryRaw, isLoading: summaryLoading, error: summaryError } = useTimeRangeQuery(
-    'metrics-summary',
-    (teamId, start, end) => metricsService.getOverviewSummary(teamId, start, end),
-  );
-
   // Metrics timeseries for charts
-  const { data: timeseriesRaw } = useTimeRangeQuery(
+  const { data: timeseriesRaw, isLoading: timeseriesLoading, error: timeseriesError } = useTimeRangeQuery(
     'metrics-timeseries',
-    (teamId, start, end) => metricsService.getOverviewTimeSeries(teamId, start, end, undefined, '5m'),
+    (teamId, start, end) => metricsService.getMetricsTimeSeries(teamId, start, end, undefined, '5m'),
   );
 
   // Per-endpoint timeseries from backend
@@ -49,7 +43,7 @@ export default function OverviewPage() {
   );
 
   // Service metrics for health grid
-  const { data: servicesRaw } = useTimeRangeQuery(
+  const { data: servicesRaw, isLoading: servicesLoading, error: servicesError } = useTimeRangeQuery(
     'services-metrics',
     (teamId, startTime, endTime) => metricsService.getOverviewServices(teamId, startTime, endTime),
   );
@@ -61,38 +55,22 @@ export default function OverviewPage() {
   );
 
   // === Normalize data shapes ===
-  const summary = useMemo(() => {
-    return normalizeMetricSummary(summaryRaw ?? {});
-  }, [summaryRaw]);
-
   const timeseries = useMemo(() => {
     if (!timeseriesRaw) return [];
     return Array.isArray(timeseriesRaw) ? timeseriesRaw.map(normalizeTimeSeriesPoint) : [];
   }, [timeseriesRaw]);
 
   // Build sparkline data from timeseries
-  const requestsSparkline = useMemo(
-    () => timeseries.map((d) => Number(d.request_count || 0)),
-    [timeseries],
-  );
-  const errorsSparkline = useMemo(
-    () => timeseries.map((d) => {
-      const total = Number(d.request_count || 0);
-      const errors = Number(d.error_count || 0);
-      return total > 0 ? (errors / total * 100) : 0;
-    }),
-    [timeseries],
-  );
-  const latencySparkline = useMemo(
-    () => timeseries.map((d) => Number(d.avg_latency || 0)),
-    [timeseries],
-  );
-
   // Services
   const services = useMemo(() => {
     if (!servicesRaw) return [];
     return Array.isArray(servicesRaw) ? servicesRaw.map(normalizeServiceMetric) : [];
   }, [servicesRaw]);
+
+  const summary = useMemo(() => buildOverviewSummary(services), [services]);
+  const sparklines = useMemo(() => buildOverviewSparklines(timeseries), [timeseries]);
+  const summaryLoading = servicesLoading;
+  const summaryError = servicesError ?? timeseriesError;
 
   // Compute SLO metrics
   const sloMetrics = useMemo(() => {
@@ -175,7 +153,7 @@ export default function OverviewPage() {
               icon: <Activity size={20} />,
               iconColor: APP_COLORS.hex_5e60ce,
               loading: summaryLoading,
-              sparklineData: requestsSparkline,
+              sparklineData: sparklines.requests,
               sparklineColor: APP_COLORS.hex_5e60ce,
             },
           },
@@ -190,7 +168,7 @@ export default function OverviewPage() {
               icon: <AlertCircle size={20} />,
               iconColor: APP_COLORS.hex_f04438,
               loading: summaryLoading,
-              sparklineData: errorsSparkline,
+              sparklineData: sparklines.errors,
               sparklineColor: APP_COLORS.hex_f04438,
             },
           },
@@ -205,7 +183,7 @@ export default function OverviewPage() {
               icon: <Clock size={20} />,
               iconColor: APP_COLORS.hex_f79009,
               loading: summaryLoading,
-              sparklineData: latencySparkline,
+              sparklineData: sparklines.latency,
               sparklineColor: APP_COLORS.hex_f79009,
             },
           },

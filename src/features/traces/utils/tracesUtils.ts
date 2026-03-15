@@ -16,13 +16,9 @@ interface TraceFilterField {
 
 interface TracesSummary extends Record<string, unknown> {
   total_traces?: number;
-  totalTraces?: number;
   error_traces?: number;
-  errorTraces?: number;
   p95_duration?: number;
-  p95Duration?: number;
   p99_duration?: number;
-  p99Duration?: number;
 }
 
 /**
@@ -71,7 +67,7 @@ export function normalizeTracesResponse(value: unknown): TracesResponse {
   const row = asRecord(value);
   const traces = Array.isArray(row.traces) ? row.traces.map((trace) => normalizeTrace(trace)) : [];
   const summary = asRecord(row.summary) as TracesSummary;
-  const total = toNumber(row.total ?? summary.total_traces ?? summary.totalTraces);
+  const total = toNumber(row.total ?? summary.total_traces);
   return { traces, total, summary };
 }
 
@@ -82,17 +78,17 @@ export function normalizeTrace(input: unknown): TraceRecord {
   const row = asRecord(input);
   return {
     ...row,
-    span_id: toStringValue(row.span_id ?? row.spanId),
-    trace_id: toStringValue(row.trace_id ?? row.traceId),
-    service_name: toStringValue(row.service_name ?? row.serviceName),
-    operation_name: toStringValue(row.operation_name ?? row.operationName),
-    start_time: toStringValue(row.start_time ?? row.startTime),
-    end_time: toStringValue(row.end_time ?? row.endTime),
-    duration_ms: toNumber(row.duration_ms ?? row.durationMs),
+    span_id: toStringValue(row.span_id),
+    trace_id: toStringValue(row.trace_id),
+    service_name: toStringValue(row.service_name),
+    operation_name: toStringValue(row.operation_name),
+    start_time: toStringValue(row.start_time),
+    end_time: toStringValue(row.end_time),
+    duration_ms: toNumber(row.duration_ms),
     status: toStringValue(row.status) || 'UNSET',
-    span_kind: toStringValue(row.span_kind ?? row.spanKind),
-    http_method: toStringValue(row.http_method ?? row.httpMethod),
-    http_status_code: toNumber(row.http_status_code ?? row.httpStatusCode),
+    span_kind: toStringValue(row.span_kind),
+    http_method: toStringValue(row.http_method),
+    http_status_code: toNumber(row.http_status_code),
   };
 }
 

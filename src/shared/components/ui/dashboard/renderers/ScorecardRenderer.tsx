@@ -46,10 +46,10 @@ export function ScorecardRenderer({
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, padding: 8 }}>
       {rows.map((row: any, i: number) => {
-        const name = row.service_name || row.serviceName || row.service || `Service ${i + 1}`;
-        const rps = Number(row.rps ?? row.requestRate ?? 0).toFixed(1);
-        const errPct = Number(row.error_pct ?? row.errorPct ?? row.error_rate ?? 0).toFixed(1);
-        const p95 = Number(row.p95_ms ?? row.p95 ?? row.p95LatencyMs ?? 0).toFixed(0);
+        const name = row.service_name || row.service || `Service ${i + 1}`;
+        const rps = Number(row.rps ?? 0).toFixed(1);
+        const errPct = Number(row.error_pct ?? row.error_rate ?? 0).toFixed(1);
+        const p95 = Number(row.p95_ms ?? row.p95 ?? 0).toFixed(0);
         return (
           <div key={name} style={{
             background: 'var(--glass-bg, rgba(255,255,255,0.05))',
