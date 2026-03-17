@@ -1,10 +1,7 @@
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type { TimeRange } from '@/types';
-
-import { getStoredTeamIds, setStoredTeamIds } from '@shared/api/auth/authStorage';
-
-import { safeGet, safeGetJSON, safeSet, safeSetJSON } from '@shared/utils/storage';
 
 import { STORAGE_KEYS, TIME_RANGES } from '@config/constants';
 
@@ -17,20 +14,19 @@ interface ViewPreferences {
   [key: string]: unknown;
 }
 
-interface QueryClientLike {
-  invalidateQueries: () => Promise<void> | void;
-}
-
-interface AppState {
+interface PersistedAppState {
   readonly selectedTeamId: number | null;
   readonly selectedTeamIds: number[];
   readonly timeRange: TimeRange;
   readonly sidebarCollapsed: boolean;
-  readonly refreshKey: number;
   readonly autoRefreshInterval: number;
   readonly theme: string;
   readonly notificationsEnabled: boolean;
   readonly viewPreferences: ViewPreferences;
+}
+
+interface AppState extends PersistedAppState {
+  readonly refreshKey: number;
   readonly setSelectedTeamId: (teamId: number | null) => void;
   readonly setSelectedTeamIds: (teamIds: number[]) => void;
   readonly setTimeRange: (valueOrRange: string | TimeRange) => void;
@@ -43,11 +39,32 @@ interface AppState {
   readonly setViewPreference: (key: string, value: unknown) => void;
 }
 
+function readStorage(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function readLegacyJSON<T>(key: string, fallback: T): T {
+  const raw = readStorage(key);
+  if (!raw) {
+    return fallback;
+  }
+
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
 function asTimeRange(value: unknown): TimeRange | null {
   if (typeof value !== 'object' || value === null) {
     return null;
   }
-  // Time ranges are configured as dynamic objects in constants.ts.
+
   return value as TimeRange;
 }
 
@@ -60,127 +77,159 @@ function getDefaultTimeRange(): TimeRange {
   return { label: '1h', value: '1h', minutes: 60 };
 }
 
-function getInitialTimeRange(savedTimeRange: string | null): TimeRange {
-  if (!savedTimeRange) {
-    return getDefaultTimeRange();
-  }
-
-  const resolved = TIME_RANGES.find((candidate) => candidate.value === savedTimeRange);
-  return asTimeRange(resolved) ?? getDefaultTimeRange();
+function findPresetTimeRange(value: string): TimeRange | null {
+  return asTimeRange(TIME_RANGES.find((candidate) => candidate.value === value));
 }
 
-async function invalidateQueryClientCache(): Promise<void> {
-  try {
-    const moduleRef = await import('../../main');
-    if (!('queryClient' in moduleRef)) {
-      return;
-    }
-    // Runtime import type is unknown to TS here; narrow to optional queryClient.
-    const queryClient = (moduleRef as { queryClient?: QueryClientLike }).queryClient;
-    if (queryClient?.invalidateQueries) {
-      await queryClient.invalidateQueries();
-    }
-  } catch (error: unknown) {
-    if (import.meta.env.DEV) {
-      console.warn('Unable to invalidate query cache on team switch', error);
-    }
+function resolveTimeRange(value: unknown): TimeRange {
+  if (typeof value === 'string') {
+    return findPresetTimeRange(value) ?? getDefaultTimeRange();
   }
+
+  const parsed = asTimeRange(value);
+  if (parsed?.value === 'custom') {
+    return parsed;
+  }
+  if (parsed?.value) {
+    return asTimeRange(TIME_RANGES.find((candidate) => candidate.value === parsed.value)) ?? parsed;
+  }
+
+  return getDefaultTimeRange();
 }
 
-const savedTeamId = safeGet(STORAGE_KEYS.TEAM_ID);
-const savedTeamIds = getStoredTeamIds();
-const savedTimeRange = safeGet(STORAGE_KEYS.TIME_RANGE);
-const savedCollapsed = safeGet(STORAGE_KEYS.SIDEBAR_COLLAPSED);
-const savedAutoRefresh = safeGet(STORAGE_KEYS.AUTO_REFRESH);
+function readLegacyTeamIDs(): number[] {
+  const raw = readStorage(STORAGE_KEYS.TEAM_IDS);
+  if (!raw) {
+    return [];
+  }
 
-/**
- * Global app-level UI and query coordination store.
- */
-export const useAppStore = create<AppState>((set) => ({
-  selectedTeamId: savedTeamId ? Number(savedTeamId) : null,
-  selectedTeamIds: savedTeamIds.length > 0 ? savedTeamIds : (savedTeamId ? [Number(savedTeamId)] : []),
-  timeRange: getInitialTimeRange(savedTimeRange),
-  sidebarCollapsed: savedCollapsed === 'true',
-  refreshKey: 0,
-  autoRefreshInterval: savedAutoRefresh !== null ? Number(savedAutoRefresh) : 10_000,
-  theme: safeGet(STORAGE_KEYS.THEME, 'dark'),
-  notificationsEnabled: safeGet(STORAGE_KEYS.NOTIFICATIONS) !== 'false',
-  viewPreferences: safeGetJSON<ViewPreferences>(STORAGE_KEYS.VIEW_PREFS, {}),
+  return raw
+    .split(',')
+    .map(Number)
+    .filter((teamId) => Number.isFinite(teamId) && teamId > 0);
+}
 
-  setSelectedTeamId: (teamId: number | null): void => {
-    if (teamId !== null) {
-      safeSet(STORAGE_KEYS.TEAM_ID, String(teamId));
-    } else {
-      safeSet(STORAGE_KEYS.TEAM_ID, '');
+function loadLegacyAppState(): PersistedAppState {
+  const selectedTeamIdRaw = readStorage(STORAGE_KEYS.TEAM_ID);
+  const selectedTeamId =
+    selectedTeamIdRaw && Number.isFinite(Number(selectedTeamIdRaw))
+      ? Number(selectedTeamIdRaw)
+      : null;
+  const selectedTeamIds = readLegacyTeamIDs();
+
+  return {
+    selectedTeamId,
+    selectedTeamIds:
+      selectedTeamIds.length > 0 ? selectedTeamIds : selectedTeamId != null ? [selectedTeamId] : [],
+    timeRange: resolveTimeRange(readStorage(STORAGE_KEYS.TIME_RANGE)),
+    sidebarCollapsed: readStorage(STORAGE_KEYS.SIDEBAR_COLLAPSED) === 'true',
+    autoRefreshInterval: Number(readStorage(STORAGE_KEYS.AUTO_REFRESH) ?? '10000') || 10_000,
+    theme: readStorage(STORAGE_KEYS.THEME) ?? 'dark',
+    notificationsEnabled: readStorage(STORAGE_KEYS.NOTIFICATIONS) !== 'false',
+    viewPreferences: readLegacyJSON<ViewPreferences>(STORAGE_KEYS.VIEW_PREFS, {}),
+  };
+}
+
+function initialState(): PersistedAppState {
+  return loadLegacyAppState();
+}
+
+const defaultPersistedState = initialState();
+
+export const useAppStore = create<AppState>()(
+  persist(
+    (set) => ({
+      ...defaultPersistedState,
+      refreshKey: 0,
+
+      setSelectedTeamId: (teamId: number | null): void => {
+        set({
+          selectedTeamId: teamId,
+          selectedTeamIds: teamId != null ? [teamId] : [],
+        });
+      },
+
+      setSelectedTeamIds: (teamIds: number[]): void => {
+        const primary = teamIds[0] ?? null;
+        set({
+          selectedTeamIds: teamIds,
+          selectedTeamId: primary,
+        });
+      },
+
+      setTimeRange: (valueOrRange: string | TimeRange): void => {
+        if (typeof valueOrRange === 'string') {
+          const range = findPresetTimeRange(valueOrRange);
+          if (!range) {
+            return;
+          }
+
+          set((state) => ({ timeRange: range, refreshKey: state.refreshKey + 1 }));
+          return;
+        }
+
+        const range = resolveTimeRange(valueOrRange.value);
+        set((state) => ({ timeRange: range, refreshKey: state.refreshKey + 1 }));
+      },
+
+      setCustomTimeRange: (customRange: TimeRange): void => {
+        set((state) => ({ timeRange: customRange, refreshKey: state.refreshKey + 1 }));
+      },
+
+      toggleSidebar: (): void => {
+        set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed }));
+      },
+
+      triggerRefresh: (): void => {
+        set((state) => ({ refreshKey: state.refreshKey + 1 }));
+      },
+
+      setAutoRefreshInterval: (ms: number): void => {
+        set({ autoRefreshInterval: ms });
+      },
+
+      setTheme: (theme: string): void => {
+        set({ theme });
+      },
+
+      setNotificationsEnabled: (enabled: boolean): void => {
+        set({ notificationsEnabled: enabled });
+      },
+
+      setViewPreference: (key: string, value: unknown): void => {
+        set((state) => ({
+          viewPreferences: { ...state.viewPreferences, [key]: value },
+        }));
+      },
+    }),
+    {
+      name: STORAGE_KEYS.APP_STATE,
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state): PersistedAppState => ({
+        selectedTeamId: state.selectedTeamId,
+        selectedTeamIds: state.selectedTeamIds,
+        timeRange: state.timeRange,
+        sidebarCollapsed: state.sidebarCollapsed,
+        autoRefreshInterval: state.autoRefreshInterval,
+        theme: state.theme,
+        notificationsEnabled: state.notificationsEnabled,
+        viewPreferences: state.viewPreferences,
+      }),
+      merge: (persisted, current) => {
+        const snapshot = persisted as Partial<PersistedAppState> | undefined;
+        if (!snapshot) {
+          return current;
+        }
+
+        return {
+          ...current,
+          ...snapshot,
+          timeRange: resolveTimeRange(snapshot.timeRange),
+          selectedTeamIds: snapshot.selectedTeamIds ?? current.selectedTeamIds,
+          selectedTeamId: snapshot.selectedTeamId ?? current.selectedTeamId,
+          viewPreferences: snapshot.viewPreferences ?? current.viewPreferences,
+        };
+      },
     }
-    set({ selectedTeamId: teamId });
-
-    // Intentionally fire-and-forget cache invalidation after team switch.
-    void invalidateQueryClientCache();
-  },
-
-  setSelectedTeamIds: (teamIds: number[]): void => {
-    const primary = teamIds[0] ?? null;
-    if (primary !== null) {
-      safeSet(STORAGE_KEYS.TEAM_ID, String(primary));
-    } else {
-      safeSet(STORAGE_KEYS.TEAM_ID, '');
-    }
-    setStoredTeamIds(teamIds);
-    set({ selectedTeamIds: teamIds, selectedTeamId: primary });
-
-    // Intentionally fire-and-forget cache invalidation after team switch.
-    void invalidateQueryClientCache();
-  },
-
-  setTimeRange: (valueOrRange: string | TimeRange): void => {
-    const value = typeof valueOrRange === 'string' ? valueOrRange : valueOrRange.value;
-    const range = asTimeRange(TIME_RANGES.find((candidate) => candidate.value === value));
-    if (!range) {
-      return;
-    }
-
-    safeSet(STORAGE_KEYS.TIME_RANGE, range.value);
-    set((state) => ({ timeRange: range, refreshKey: state.refreshKey + 1 }));
-  },
-
-  setCustomTimeRange: (customRange: TimeRange): void => {
-    safeSet(STORAGE_KEYS.TIME_RANGE, 'custom');
-    set((state) => ({ timeRange: customRange, refreshKey: state.refreshKey + 1 }));
-  },
-
-  toggleSidebar: (): void => {
-    set((state) => {
-      const sidebarCollapsed = !state.sidebarCollapsed;
-      safeSet(STORAGE_KEYS.SIDEBAR_COLLAPSED, String(sidebarCollapsed));
-      return { sidebarCollapsed };
-    });
-  },
-
-  triggerRefresh: (): void => {
-    set((state) => ({ refreshKey: state.refreshKey + 1 }));
-  },
-
-  setAutoRefreshInterval: (ms: number): void => {
-    safeSet(STORAGE_KEYS.AUTO_REFRESH, String(ms));
-    set({ autoRefreshInterval: ms });
-  },
-
-  setTheme: (theme: string): void => {
-    safeSet(STORAGE_KEYS.THEME, theme);
-    set({ theme });
-  },
-
-  setNotificationsEnabled: (enabled: boolean): void => {
-    safeSet(STORAGE_KEYS.NOTIFICATIONS, String(enabled));
-    set({ notificationsEnabled: enabled });
-  },
-
-  setViewPreference: (key: string, value: unknown): void => {
-    set((state) => {
-      const viewPreferences = { ...state.viewPreferences, [key]: value };
-      safeSetJSON(STORAGE_KEYS.VIEW_PREFS, viewPreferences);
-      return { viewPreferences };
-    });
-  },
-}));
+  )
+);

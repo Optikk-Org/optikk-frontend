@@ -3,11 +3,9 @@
  * Centralized configuration for the entire React application
  */
 
-
-
 export /**
-        *
-        */
+ *
+ */
 const UI_CONFIG = {
   THEME: {
     PRIMARY_COLOR: '#7C7FF2',
@@ -24,8 +22,8 @@ const UI_CONFIG = {
 };
 
 export /**
-        *
-        */
+ *
+ */
 const TIME_RANGES = [
   { label: 'Last 5 minutes', value: '5m', minutes: 5 },
   { label: 'Last 15 minutes', value: '15m', minutes: 15 },
@@ -40,8 +38,8 @@ const TIME_RANGES = [
 ];
 
 export /**
-        *
-        */
+ *
+ */
 const STATUS_COLORS = {
   OK: '#52876B',
   ERROR: '#DC2626',
@@ -51,8 +49,8 @@ const STATUS_COLORS = {
 };
 
 export /**
-        *
-        */
+ *
+ */
 const LOG_LEVELS = {
   TRACE: { label: 'Trace', color: '#6B7280' },
   DEBUG: { label: 'Debug', color: '#4DA6C8' },
@@ -63,8 +61,8 @@ const LOG_LEVELS = {
 };
 
 export /**
-        *
-        */
+ *
+ */
 const CHART_COLORS = [
   '#648FFF',
   '#785EF0',
@@ -78,17 +76,12 @@ const CHART_COLORS = [
   '#52876B',
 ];
 
-
-
-
-
-
-
 export /**
-        *
-        */
+ *
+ */
 const STORAGE_KEYS = {
-  AUTH_TOKEN: 'optikk_auth_token',
+  APP_STATE: 'optikk_app_state',
+  AUTH_STATE: 'optikk_auth_state',
   USER_DATA: 'optikk_user_data',
   TEAM_ID: 'optikk_team_id',
   TEAM_IDS: 'optikk_team_ids',
@@ -102,8 +95,8 @@ const STORAGE_KEYS = {
 
 // Auto-refresh interval options (value = milliseconds, 0 = off)
 export /**
-        *
-        */
+ *
+ */
 const AUTO_REFRESH_INTERVALS = [
   { label: 'Off', value: 0 },
   { label: '10s', value: 10_000 },

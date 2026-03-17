@@ -1,15 +1,19 @@
 import { Avatar, Button, Card, Divider, Form, Input, Spin } from 'antd';
 import { Bell, User } from 'lucide-react';
 
+import type {
+  SettingsProfileFormValues,
+  SettingsProfileViewModel,
+} from '../../types';
 import type { FormInstance } from 'antd/es/form';
 
 interface SettingsProfileTabProps {
-  profileLoading: boolean;
-  profile: Record<string, any> | null;
-  profileForm: FormInstance;
-  isSaving: boolean;
-  getInitials: (name: string) => string;
-  onSubmit: (values: any) => void;
+  readonly profileLoading: boolean;
+  readonly profile: SettingsProfileViewModel | null;
+  readonly profileForm: FormInstance<SettingsProfileFormValues>;
+  readonly isSaving: boolean;
+  readonly getInitials: (name: string) => string;
+  readonly onSubmit: (values: SettingsProfileFormValues) => void;
 }
 
 /**

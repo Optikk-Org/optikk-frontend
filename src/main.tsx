@@ -3,11 +3,10 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
 import { ErrorBoundary } from '@shared/components/ui/feedback';
+import { queryClient } from '@shared/api/queryClient';
 
 import App from './App';
-import AppQueryClientProvider, {
-  queryClient,
-} from './app/providers/QueryClientProvider';
+import AppQueryClientProvider from './app/providers/QueryClientProvider';
 import ThemeProvider from './app/providers/ThemeProvider';
 import '@shared/utils/chartSetup';
 import './index.css';

@@ -3,7 +3,7 @@
     "target": "ESNext",
     "useDefineForClassFields": true,
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "allowJs": true,
+    "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -26,20 +26,20 @@
     "jsx": "react-jsx",
     "types": ["vite/client"],
       "baseUrl": ".",
-      "paths": {
-        "@/*": ["src/*"],
-        "@app/*": ["src/app/*"],
-        "@pages/*": ["src/pages/*"],
-        "@features/*": ["src/features/*"],
+    "paths": {
+      "@/*": ["src/*"],
+      "@app/*": ["src/app/*"],
+      "@pages/*": ["src/pages/*"],
+      "@features/*": ["src/features/*"],
         "@entities/*": ["src/entities/*"],
         "@shared/*": ["src/shared/*"],
         "@config/*": ["src/config/*"],
         "@store/*": ["src/store/*"],
-        "@utils/*": ["src/shared/utils/*"],
-        "@hooks/*": ["src/shared/hooks/*"],
-        "@services/*": ["src/shared/api/*"],
-        "@components/*": ["src/shared/components/*"]
-      }
+      "@utils/*": ["src/shared/utils/*"],
+      "@hooks/*": ["src/shared/hooks/*"],
+      "@services/*": ["src/shared/api/*"],
+      "@components/*": ["src/shared/components/*"]
+    }
   },
   "include": ["src"],
   "exclude": ["src/test_zod_schema.ts"],

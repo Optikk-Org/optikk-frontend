@@ -7,7 +7,7 @@ React + Vite single-page application (SPA) for the Optikk observability platform
 ### Prerequisites
 
 - Node.js 18+ and npm/yarn
-- A running Optikk Lens backend at `http://localhost:9090` (or set `VITE_BACKEND_URL`)
+- A running Optikk Lens backend at `http://localhost:9090` for local development, or set `VITE_API_BASE_URL` if you want the browser bundle to talk to a direct API URL.
 
 ### Local Development
 
@@ -25,7 +25,7 @@ npm run build
 npm run preview
 ```
 
-**Development defaults to proxying `/api/*` to `http://localhost:9090`** — no CORS configuration needed locally.
+**Development defaults to proxying `/api/*` to `VITE_DEV_BACKEND_URL`**, which falls back to `http://localhost:9090` when unset. No CORS configuration is needed locally.
 
 ---
 
@@ -103,7 +103,7 @@ podman run -d --name backend --network observability-net \
   -e PORT=9090 \
   -e MYSQL_HOST=mysql \
   -e CLICKHOUSE_HOST=clickhouse \
-  -e JWT_SECRET=your-secret-key-here \
+  -e SESSION_COOKIE_NAME=optikk_session \
   ghcr.io/optikk-org/optikk-lens:latest
 
 # 4. Frontend
@@ -197,6 +197,7 @@ optic-frontend/
 ```bash
 # Development
 npm run dev              # Start dev server
+npm run ci               # Run type-check, lint, test, and build
 npm run build           # Build for production
 npm run preview         # Preview production build
 npm run lint            # Run ESLint
@@ -217,7 +218,7 @@ The frontend uses JWT token-based authentication:
 3. **Auto-Refresh** — Token refresh happens automatically before expiry
 4. **Logout** — Clears the JWT cookie
 
-All `/api/v1/*` requests include the JWT in the `Authorization: Bearer <token>` header.
+Authenticated `/api/v1/*` requests rely on the server-side session cookie and `withCredentials: true`.
 
 ---
 
@@ -228,11 +229,11 @@ All `/api/v1/*` requests include the JWT in the `Authorization: Bearer <token>` 
 Create a `.env.local` file or use system variables:
 
 ```env
-VITE_BACKEND_URL=http://localhost:9090
-VITE_API_TIMEOUT=30000
+VITE_API_BASE_URL=http://localhost:9090
+VITE_DEV_BACKEND_URL=http://localhost:9090
 ```
 
-These are injected at build time into the frontend bundle.
+`VITE_API_BASE_URL` is used by the browser client when you want a direct API URL. `VITE_DEV_BACKEND_URL` is used by the Vite dev proxy for `/api/*` requests.
 
 ### Dashboard Customization
 
@@ -343,11 +344,11 @@ Ensure no `any` types and all types are properly defined.
 
 **Production:** Backend must have `ALLOWED_ORIGINS` env var set to the frontend domain (e.g., `https://observability.example.com`).
 
-### JWT Token Expired
+### Session Expired
 
-The frontend automatically refreshes tokens before expiry. If you see "Unauthorized" errors:
-1. Check browser console for JWT errors
-2. Verify backend's `JWT_SECRET` matches across deployments
+The frontend relies on the backend session cookie. If you see "Unauthorized" errors:
+1. Check browser DevTools to confirm the session cookie is being sent with requests
+2. Verify backend `ALLOWED_ORIGINS` and cookie settings match your frontend origin
 3. Clear cookies and re-login
 
 ### Slow Dashboard Loads

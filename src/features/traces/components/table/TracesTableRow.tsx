@@ -19,6 +19,8 @@ interface TracesTableRowProps {
   columns: TraceColumn[];
   onRowClick: (spanId: string) => void;
   onOpenDetail: (trace: TraceRecord) => void;
+  isSelected?: boolean;
+  onSelect?: (traceId: string, selected: boolean) => void;
 }
 
 /**
@@ -32,6 +34,8 @@ export const TracesTableRow = React.memo(function TracesTableRow({
   columns,
   onRowClick,
   onOpenDetail,
+  isSelected = false,
+  onSelect,
 }: TracesTableRowProps): JSX.Element {
   const fixedColumns = columns.filter((column) => !column.flex && visibleCols[column.key]);
   const flexColumn = columns.find((column) => column.flex && visibleCols[column.key]);
@@ -139,7 +143,18 @@ export const TracesTableRow = React.memo(function TracesTableRow({
       ))}
       {flexColumn && (
         <div className="oboard__td oboard__td--flex" onClick={() => onOpenDetail(trace)}>
-          {renderCell(flexColumn.key)}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
+            {onSelect && (
+              <input 
+                type="checkbox" 
+                checked={isSelected}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => onSelect(trace.trace_id, e.target.checked)}
+                className="trace-select-checkbox"
+              />
+            )}
+            {renderCell(flexColumn.key)}
+          </div>
         </div>
       )}
     </>

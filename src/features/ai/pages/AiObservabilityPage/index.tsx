@@ -7,8 +7,6 @@ import ConfiguredTabPanel from '@shared/components/ui/dashboard/ConfiguredTabPan
 
 import { usePageTabs } from '@shared/hooks/usePageTabs';
 
-import { AiGuideTab } from '../../components';
-
 import './AiObservabilityPage.css';
 
 /**
@@ -32,9 +30,7 @@ export default function AiObservabilityPage() {
     return {
       key: tab.id,
       label: <span>{icon}{tab.label}</span>,
-      children: tab.id === 'guide'
-        ? <AiGuideTab />
-        : <ConfiguredTabPanel pageId="ai-observability" tabId={tab.id} />,
+      children: <ConfiguredTabPanel pageId="ai-observability" tabId={tab.id} />,
     };
   }), [tabs]);
 

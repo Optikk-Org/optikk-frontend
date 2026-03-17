@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite --host",
     "build": "tsc && vite build",
+    "ci": "npm run type-check && npm run lint && npm run test && npm run build",
     "preview": "vite preview",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint . --ext ts,tsx --quiet --report-unused-disable-directives",
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "lint:colors": "node scripts/check-no-raw-colors.mjs",
     "format": "prettier --write .",
@@ -35,6 +36,7 @@
     "react-hot-toast": "^2.4.1",
     "react-router-dom": "^6.22.0",
     "react-syntax-highlighter": "^16.1.1",
+    "react-use": "^17.6.0",
     "react-virtuoso": "^4.18.3",
     "recharts": "^3.7.0",
     "zod": "^4.3.6",

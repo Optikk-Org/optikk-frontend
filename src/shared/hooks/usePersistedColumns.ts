@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
+import { useLocalStorage } from 'react-use';
 
 /**
  *
@@ -9,44 +10,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function loadPersistedColumns(
-  storageKey: string | undefined,
-  defaults: VisibleColumnsState,
-): VisibleColumnsState {
-  if (!storageKey) return defaults;
-
-  try {
-    const raw = localStorage.getItem(storageKey);
-    if (!raw) return defaults;
-
-    const parsed: unknown = JSON.parse(raw);
-    if (!isRecord(parsed)) return defaults;
-
-    const merged: VisibleColumnsState = { ...defaults };
-    for (const key of Object.keys(defaults)) {
-      const value = parsed[key];
-      if (typeof value === 'boolean') {
-        merged[key] = value;
-      }
-    }
-    return merged;
-  } catch (_error: unknown) {
-    return defaults;
-  }
-}
-
-function persistColumns(
-  storageKey: string | undefined,
-  value: VisibleColumnsState,
-): void {
-  if (!storageKey) return;
-  try {
-    localStorage.setItem(storageKey, JSON.stringify(value));
-  } catch (_error: unknown) {
-    return;
-  }
-}
-
 /**
  * Provides localStorage-backed column visibility state.
  * @param defaults Default column visibility map.
@@ -54,49 +17,72 @@ function persistColumns(
  */
 export function usePersistedColumns(
   defaults: VisibleColumnsState,
-  storageKey?: string,
+  storageKey?: string
 ): readonly [
   VisibleColumnsState,
-  (
-    updater:
-      | VisibleColumnsState
-      | ((previous: VisibleColumnsState) => VisibleColumnsState),
-  ) => void,
+  (updater: VisibleColumnsState | ((previous: VisibleColumnsState) => VisibleColumnsState)) => void,
 ] {
-  const [visibleColumns, setVisibleColumns] = useState<VisibleColumnsState>(() =>
-    loadPersistedColumns(storageKey, defaults),
-  );
+  const [persistedColumns, setPersistedColumns] = useLocalStorage<
+    VisibleColumnsState | Record<string, unknown>
+  >(storageKey ?? '__disabled__', defaults);
+  const visibleColumns =
+    storageKey && isRecord(persistedColumns)
+      ? Object.keys(defaults).reduce<VisibleColumnsState>(
+          (acc, key) => {
+            acc[key] =
+              typeof persistedColumns[key] === 'boolean'
+                ? Boolean(persistedColumns[key])
+                : defaults[key];
+            return acc;
+          },
+          { ...defaults }
+        )
+      : defaults;
 
   useEffect(() => {
-    setVisibleColumns((previous) => {
+    if (!storageKey) {
+      return;
+    }
+
+    setPersistedColumns((previous) => {
+      if (!isRecord(previous)) {
+        return defaults;
+      }
+
       const merged: VisibleColumnsState = { ...defaults };
       for (const key of Object.keys(defaults)) {
         if (typeof previous[key] === 'boolean') {
-          merged[key] = previous[key];
+          merged[key] = Boolean(previous[key]);
         }
       }
-
-      const hasSameKeys =
-        Object.keys(previous).length === Object.keys(merged).length
-        && Object.keys(merged).every((key) => previous[key] === merged[key]);
-
-      return hasSameKeys ? previous : merged;
+      return merged;
     });
-  }, [defaults]);
+  }, [defaults, setPersistedColumns, storageKey]);
 
   const updateVisibleColumns = useCallback(
     (
-      updater:
-        | VisibleColumnsState
-        | ((previous: VisibleColumnsState) => VisibleColumnsState),
+      updater: VisibleColumnsState | ((previous: VisibleColumnsState) => VisibleColumnsState)
     ): void => {
-      setVisibleColumns((previous) => {
-        const next = typeof updater === 'function' ? updater(previous) : updater;
-        persistColumns(storageKey, next);
-        return next;
+      if (!storageKey) {
+        return;
+      }
+
+      setPersistedColumns((previous) => {
+        const base = isRecord(previous)
+          ? Object.keys(defaults).reduce<VisibleColumnsState>(
+              (acc, key) => {
+                acc[key] =
+                  typeof previous[key] === 'boolean' ? Boolean(previous[key]) : defaults[key];
+                return acc;
+              },
+              { ...defaults }
+            )
+          : { ...defaults };
+        const next = typeof updater === 'function' ? updater(base) : updater;
+        return { ...base, ...next };
       });
     },
-    [storageKey],
+    [defaults, setPersistedColumns, storageKey]
   );
 
   return [visibleColumns, updateVisibleColumns] as const;

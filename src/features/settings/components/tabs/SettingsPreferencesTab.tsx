@@ -1,13 +1,18 @@
 import { Card, Divider, Select, Switch } from 'antd';
 import { Bell, Palette, Settings } from 'lucide-react';
 
+import type {
+  SettingsPreferenceValue,
+  SettingsViewPreferences,
+} from '../../types';
+
 interface SettingsPreferencesTabProps {
-  theme: string;
-  notificationsEnabled: boolean;
-  viewPreferences: Record<string, any> | null;
-  onThemeChange: (checked: boolean) => void;
-  onNotificationsChange: (checked: boolean) => void;
-  onPreferenceChange: (key: string, value: any) => void;
+  readonly theme: string;
+  readonly notificationsEnabled: boolean;
+  readonly viewPreferences: SettingsViewPreferences | null;
+  readonly onThemeChange: (checked: boolean) => void;
+  readonly onNotificationsChange: (checked: boolean) => void;
+  readonly onPreferenceChange: (key: string, value: SettingsPreferenceValue) => void;
 }
 
 /**

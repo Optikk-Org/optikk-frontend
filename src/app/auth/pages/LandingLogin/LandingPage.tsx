@@ -28,7 +28,7 @@ const LandingPage: React.FC = () => {
     let animationFrameId: number;
     let cWidth: number;
     let cHeight: number;
-    let spans: TelemetrySpan[] = [];
+    const spans: TelemetrySpan[] = [];
 
     const resizeCanvas = () => {
       // Only size up if it exists and is visible

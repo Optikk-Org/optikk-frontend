@@ -3,7 +3,6 @@ import { useEffect, useRef } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 import { authService } from '@shared/api/auth/authService';
-import { clearAuthPresentFlag } from '@shared/api/auth/authStorage';
 
 import { useAppStore } from '@store/appStore';
 import { useAuthStore } from '@store/authStore';
@@ -26,6 +25,8 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ children }: ProtectedRouteProps): JSX.Element {
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const applyAuthPayload = useAuthStore((state) => state.applyAuthPayload);
+  const clearSession = useAuthStore((state) => state.clearSession);
   const selectedTeamId = useAppStore((state) => state.selectedTeamId);
   const probeStarted = useRef(false);
 
@@ -38,17 +39,13 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps): JSX.E
     probeStarted.current = true;
 
     void (async () => {
-      const valid = await authService.validateSession();
-      if (!valid) {
-        clearAuthPresentFlag();
-        useAuthStore.setState({ isAuthenticated: false, user: null });
+      const payload = await authService.validateSession();
+      if (!payload || !applyAuthPayload(payload)) {
+        clearSession();
         navigate('/login', { replace: true });
       }
-      // If valid, the backend will eventually supply team info (or the user
-      // will need to select one). Don't redirect — show the skeleton a bit
-      // longer so team-selection flow can complete.
     })();
-  }, [isAuthenticated, selectedTeamId, navigate]);
+  }, [applyAuthPayload, clearSession, isAuthenticated, navigate, selectedTeamId]);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;

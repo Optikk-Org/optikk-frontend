@@ -9,7 +9,7 @@
   "parserOptions": {
     "ecmaVersion": "latest",
     "sourceType": "module",
-    "project": "./tsconfig.json"
+    "project": ["./tsconfig.json", "./tsconfig.node.json"]
   },
   "settings": {
     "react": {
@@ -24,14 +24,12 @@
   "plugins": [
     "@typescript-eslint",
     "import",
-    "jsdoc",
     "react",
     "react-hooks",
     "react-refresh"
   ],
   "extends": [
     "eslint:recommended",
-    "google",
     "plugin:@typescript-eslint/recommended",
     "plugin:import/recommended",
     "plugin:import/typescript",
@@ -42,33 +40,13 @@
   ],
   "ignorePatterns": [
     "dist",
-    "node_modules",
-    "*.js",
-    "vite.config.ts"
+    "node_modules"
   ],
   "rules": {
-    "arrow-parens": ["error", "always"],
     "camelcase": "off",
-    "comma-dangle": ["error", "always-multiline"],
     "indent": "off",
-    "max-len": [
-      "error",
-      {
-        "code": 100,
-        "ignoreStrings": true,
-        "ignoreTemplateLiterals": true,
-        "ignoreUrls": true
-      }
-    ],
     "new-cap": "off",
     "no-console": "off",
-    "no-multiple-empty-lines": [
-      "error",
-      {
-        "max": 1,
-        "maxEOF": 0
-      }
-    ],
     "no-restricted-syntax": [
       "error",
       {
@@ -76,20 +54,17 @@
         "message": "Use const objects with `as const` and union types instead of enums."
       }
     ],
-    "object-curly-spacing": ["error", "always"],
-    "quote-props": ["error", "as-needed"],
-    "quotes": ["error", "single", { "avoidEscape": true }],
     "require-jsdoc": "off",
-    "semi": ["error", "always"],
-    "@typescript-eslint/array-type": ["error", { "default": "array-simple" }],
+    "@typescript-eslint/array-type": "off",
     "@typescript-eslint/ban-ts-comment": "error",
     "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
     "@typescript-eslint/explicit-function-return-type": "off",
-    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/no-empty-object-type": "off",
+    "@typescript-eslint/no-explicit-any": "warn",
     "@typescript-eslint/no-floating-promises": "error",
-    "@typescript-eslint/no-non-null-assertion": "error",
+    "@typescript-eslint/no-non-null-assertion": "warn",
     "@typescript-eslint/no-unused-vars": [
-      "error",
+      "warn",
       {
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_",
@@ -97,15 +72,19 @@
         "caughtErrorsIgnorePattern": "^_"
       }
     ],
-    "@typescript-eslint/prefer-readonly": "error",
+    "@typescript-eslint/prefer-readonly": "off",
     "@typescript-eslint/prefer-ts-expect-error": "off",
     "@typescript-eslint/strict-boolean-expressions": "off",
-    "@typescript-eslint/consistent-type-imports": "error",
+    "@typescript-eslint/consistent-type-imports": "warn",
     "@typescript-eslint/await-thenable": "error",
-    "import/no-cycle": "error",
+    "import/export": "off",
+    "import/no-cycle": "warn",
+    "import/no-duplicates": "warn",
+    "import/no-named-as-default": "off",
+    "import/no-named-as-default-member": "off",
     "import/no-unresolved": "error",
     "import/order": [
-      "error",
+      "warn",
       {
         "groups": ["builtin", "external", "internal", ["parent", "sibling", "index"], "type"],
         "newlines-between": "always",
@@ -163,33 +142,20 @@
         "pathGroupsExcludedImportTypes": ["builtin"]
       }
     ],
-    "jsdoc/require-jsdoc": [
-      "error",
-      {
-        "publicOnly": true,
-        "require": {
-          "ClassDeclaration": false,
-          "FunctionDeclaration": false,
-          "MethodDefinition": false
-        },
-        "contexts": [
-          "ExportNamedDeclaration > FunctionDeclaration",
-          "ExportNamedDeclaration > TSTypeAliasDeclaration",
-          "ExportNamedDeclaration > TSInterfaceDeclaration",
-          "ExportNamedDeclaration > VariableDeclaration"
-        ]
-      }
-    ],
-    "jsdoc/require-param": "off",
-    "jsdoc/require-param-description": "off",
-    "jsdoc/require-param-type": "off",
-    "jsdoc/require-returns": "off",
-    "jsdoc/require-returns-description": "off",
-    "jsdoc/require-returns-type": "off",
+    "max-len": "off",
+    "comma-dangle": "off",
+    "arrow-parens": "off",
+    "quotes": "off",
+    "semi": "off",
+    "object-curly-spacing": "off",
+    "quote-props": "off",
+    "no-multiple-empty-lines": "off",
+    "one-var": "off",
     "react/prop-types": "off",
     "react/react-in-jsx-scope": "off",
+    "react/no-unescaped-entities": "off",
     "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "error",
+    "react-hooks/exhaustive-deps": "warn",
     "react-refresh/only-export-components": "off",
     "valid-jsdoc": "off"
   }

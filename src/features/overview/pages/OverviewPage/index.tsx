@@ -1,5 +1,5 @@
 import { Row, Col, Card, Skeleton, Empty, Progress } from 'antd';
-import { Activity, AlertCircle, Clock, Zap } from 'lucide-react';
+import { Activity, AlertCircle, Clock, Server, Zap } from 'lucide-react';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 

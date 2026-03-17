@@ -1,6 +1,6 @@
-import { Switch, Tooltip, Select } from 'antd';
-import { GitBranch, GitBranch as TraceIcon, AlertCircle, Layers } from 'lucide-react';
-import { useState, useCallback } from 'react';
+import { Switch, Tooltip, Select, Tag } from 'antd';
+import { GitBranch, GitBranch as TraceIcon, AlertCircle, Layers, GitCompare, Radio } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import {
@@ -10,24 +10,19 @@ import {
   ObservabilityDetailPanel,
   boardHeight,
 } from '@shared/components/ui';
-import { ConfiguredTabPanel } from '@shared/components/ui';
 
 import { type StructuredFilter } from '@shared/hooks/useURLFilters';
-
 import { formatTimestamp, formatDuration, formatNumber } from '@shared/utils/formatters';
 import { relativeTime } from '@shared/utils/time';
 import { TracesServicePills, TraceStatusBadge, TracesTableRow } from '../../components';
+import { tracesService } from '@shared/api/tracesService';
 
 import type { TraceRecord } from '../../types';
-
 import './TracesPage.css';
 
 import { useTracesExplorer } from '../../hooks/useTracesExplorer';
 import { useTraceDetailFields } from '../../hooks/useTraceDetailFields';
 import { TRACE_FILTER_FIELDS, TRACE_COLUMNS } from '../../utils/tracesUtils';
-import { TracesKpiRow } from '../../components/TracesKpiRow';
-import { TracesChartsRow } from '../../components/TracesChartsRow';
-
 import { EntityExplorerLayout } from '@/shared/components/layout/EntityExplorerLayout';
 
 export default function TracesPage(): JSX.Element {
@@ -36,9 +31,6 @@ export default function TracesPage(): JSX.Element {
     isLoading, 
     traces, 
     totalTraces, 
-    errorRate, 
-    p95, 
-    p99, 
     serviceBadges, 
     maxDuration, 
     searchText, 
@@ -57,7 +49,34 @@ export default function TracesPage(): JSX.Element {
   } = useTracesExplorer();
   
   const [selectedTrace, setSelectedTrace] = useState<TraceRecord | null>(null);
+  const [selectedTraceIds, setSelectedTraceIds] = useState<string[]>([]);
+  const [isLiveTail, setIsLiveTail] = useState(false);
+  const [activeView, setActiveView] = useState<'explorer' | 'analytics'>('explorer');
+  
   const detailFields = useTraceDetailFields(selectedTrace);
+
+  const handleSelectTrace = useCallback((traceId: string, selected: boolean) => {
+    setSelectedTraceIds(prev => {
+      if (selected) {
+        if (prev.length >= 2) return prev;
+        return [...prev, traceId];
+      }
+      return prev.filter(id => id !== traceId);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isLiveTail) return;
+
+    const url = tracesService.getLiveTailUrl(filters as any);
+    const eventSource = new EventSource(url);
+
+    eventSource.addEventListener('spans', (event) => {
+      console.log('Live spans:', JSON.parse(event.data));
+    });
+
+    return () => eventSource.close();
+  }, [isLiveTail, filters]);
 
   const onRowClick = useCallback((spanId: string) => {
     navigate(`/traces/${spanId}`);
@@ -69,170 +88,196 @@ export default function TracesPage(): JSX.Element {
     <EntityExplorerLayout
       className="traces-page"
       header={<PageHeader title="Traces" icon={<GitBranch size={24} />} />}
-      kpiRow={
-        <TracesKpiRow
-          totalTraces={totalTraces}
-          errorRate={errorRate}
-          p95={p95}
-          p99={p99}
-        />
-      }
-      chartsRow={
-        <TracesChartsRow
-          traces={traces}
-          serviceBadges={serviceBadges}
-          isLoading={isLoading}
-        />
-      }
-      tabPanel={<ConfiguredTabPanel pageId="traces" tabId="default" />}
-      tableSection={
-        <div className="traces-table-card">
-          <div className="traces-table-card-header">
-            <span className="traces-table-card-title">
-              <GitBranch size={15} />
-              Trace Explorer
-              <span className="traces-count-badge">
-                {formatNumber(traces.length)} of {formatNumber(totalTraces)}
-              </span>
-            </span>
+      tabPanel={
+        <div style={{ display: 'flex', gap: 16 }}>
+          <div 
+            className={`explorer-tab ${activeView === 'explorer' ? 'active' : ''}`}
+            onClick={() => setActiveView('explorer')}
+          >
+            Trace Explorer
           </div>
+          <div 
+            className={`explorer-tab ${activeView === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveView('analytics')}
+          >
+            Analytics
+          </div>
+        </div>
+      }
+      tableSection={
+        activeView === 'analytics' ? (
+          <div className="glass-panel" style={{ padding: 24, minHeight: 400 }}>
+            <h3>Trace Analytics</h3>
+            <p style={{ color: 'var(--text-muted)' }}>Interactive analytics and query builder coming soon...</p>
+          </div>
+        ) : (
+          <div className="traces-table-card">
+            <div className="traces-table-card-header">
+              <span className="traces-table-card-title">
+                <GitBranch size={15} />
+                Trace Explorer
+                <span className="traces-count-badge">
+                  {formatNumber(traces.length)} of {formatNumber(totalTraces)}
+                </span>
+              </span>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                {selectedTraceIds.length === 2 && (
+                  <button 
+                    className="traces-compare-btn"
+                    onClick={() => console.log('Comparing', selectedTraceIds)}
+                  >
+                    <GitCompare size={14} /> Compare Selected
+                  </button>
+                )}
+                <div 
+                  className={`live-tail-toggle ${isLiveTail ? 'active' : ''}`}
+                  onClick={() => setIsLiveTail(!isLiveTail)}
+                >
+                  <Radio size={14} className={isLiveTail ? 'pulse-icon' : ''} />
+                  Live Tail
+                </div>
+              </div>
+            </div>
 
-          {serviceBadges.length > 0 && (
+            {serviceBadges.length > 0 && (
+              <div style={{ padding: '10px 18px', borderBottom: '1px solid var(--border-color)' }}>
+                <TracesServicePills
+                  serviceBadges={serviceBadges}
+                  total={totalTraces}
+                  selectedService={selectedService}
+                  onSelect={(serviceName: string | null) => {
+                    setSelectedService(serviceName);
+                    setPage(1);
+                  }}
+                />
+              </div>
+            )}
+
             <div style={{ padding: '10px 18px', borderBottom: '1px solid var(--border-color)' }}>
-              <TracesServicePills
-                serviceBadges={serviceBadges}
-                total={totalTraces}
-                selectedService={selectedService}
-                onSelect={(serviceName: string | null) => {
-                  setSelectedService(serviceName);
+              <ObservabilityQueryBar
+                fields={TRACE_FILTER_FIELDS}
+                filters={filters as StructuredFilter[]}
+                setFilters={(nextFilters: StructuredFilter[]) => {
+                  setFilters(nextFilters);
                   setPage(1);
+                }}
+                searchText={searchText}
+                setSearchText={(value: string) => {
+                  setSearchText(value);
+                  setPage(1);
+                }}
+                onClearAll={clearAll}
+                placeholder="Filter by trace ID, service, status, duration…"
+                rightSlot={
+                  <Tooltip title="Show only traces with errors">
+                    <div
+                      className={`traces-errors-toggle ${errorsOnly ? 'active' : ''}`}
+                      onClick={() => {
+                        setErrorsOnly(!errorsOnly);
+                        setPage(1);
+                      }}
+                    >
+                      <AlertCircle size={13} />
+                      Errors only
+                      <Switch
+                        size="small"
+                        checked={errorsOnly}
+                        onChange={(checked: boolean) => {
+                          setErrorsOnly(checked);
+                          setPage(1);
+                        }}
+                        onClick={(_, event) => event.stopPropagation()}
+                      />
+                    </div>
+                  </Tooltip>
+                }
+              />
+            </div>
+
+            <div style={{ height: boardHeight(pageSize), display: 'flex', flexDirection: 'column' }}>
+              <ObservabilityDataBoard
+                data={{ rows: traces, isLoading, serverTotal: totalTraces }}
+                config={{
+                  columns: TRACE_COLUMNS,
+                  rowKey: (trace, index) => trace['trace_id'] || index,
+                  renderRow: (trace, context) => (
+                    <TracesTableRow
+                      trace={trace}
+                      colWidths={context.colWidths}
+                      visibleCols={context.visibleCols}
+                      maxDuration={maxDuration}
+                      columns={TRACE_COLUMNS}
+                      onRowClick={onRowClick}
+                      onOpenDetail={setSelectedTrace}
+                      isSelected={selectedTraceIds.includes(trace.trace_id)}
+                      onSelect={handleSelectTrace}
+                    />
+                  ),
+                  entityName: 'trace',
+                  storageKey: 'traces_visible_cols_v2',
+                  emptyTips: [
+                    { num: 1, text: <>Widen the <strong>time range</strong> in the top bar</> },
+                    { num: 2, text: <>Remove active <strong>filters</strong> from the query bar</> },
+                    { num: 3, text: <>Ensure your services are sending traces via <strong>OTLP</strong></> },
+                  ]
                 }}
               />
             </div>
-          )}
 
-          <div style={{ padding: '10px 18px', borderBottom: '1px solid var(--border-color)' }}>
-            <ObservabilityQueryBar
-              fields={TRACE_FILTER_FIELDS}
-              filters={filters as StructuredFilter[]}
-              setFilters={(nextFilters: StructuredFilter[]) => {
-                setFilters(nextFilters);
-                setPage(1);
-              }}
-              searchText={searchText}
-              setSearchText={(value: string) => {
-                setSearchText(value);
-                setPage(1);
-              }}
-              onClearAll={clearAll}
-              placeholder="Filter by trace ID, service, status, duration…"
-              rightSlot={
-                <Tooltip title="Show only traces with errors">
-                  <div
-                    className={`traces-errors-toggle ${errorsOnly ? 'active' : ''}`}
-                    onClick={() => {
-                      setErrorsOnly(!errorsOnly);
+            {!isLoading && totalTraces > 0 && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '11px 18px',
+                  borderTop: '1px solid var(--border-color)',
+                }}
+              >
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                  Showing {offset + 1}–{Math.min(offset + pageSize, totalTraces)} of{' '}
+                  {formatNumber(totalTraces)}
+                </span>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <Select
+                    size="small"
+                    value={pageSize}
+                    onChange={(value: number) => {
+                      setPageSize(value);
                       setPage(1);
                     }}
-                  >
-                    <AlertCircle size={13} />
-                    Errors only
-                    <Switch
-                      size="small"
-                      checked={errorsOnly}
-                      onChange={(checked: boolean) => {
-                        setErrorsOnly(checked);
-                        setPage(1);
-                      }}
-                      onClick={(_, event) => event.stopPropagation()}
-                    />
-                  </div>
-                </Tooltip>
-              }
-            />
-          </div>
-
-          <div style={{ height: boardHeight(pageSize), display: 'flex', flexDirection: 'column' }}>
-            <ObservabilityDataBoard
-              data={{ rows: traces, isLoading, serverTotal: totalTraces }}
-              config={{
-                columns: TRACE_COLUMNS,
-                rowKey: (trace, index) => trace['trace_id'] || index,
-                renderRow: (trace, context) => (
-                  <TracesTableRow
-                    trace={trace}
-                    colWidths={context.colWidths}
-                    visibleCols={context.visibleCols}
-                    maxDuration={maxDuration}
-                    columns={TRACE_COLUMNS}
-                    onRowClick={onRowClick}
-                    onOpenDetail={setSelectedTrace}
+                    options={[10, 20, 50, 100].map((value) => ({
+                      label: `${value} / page`,
+                      value,
+                    }))}
+                    style={{ width: 110 }}
                   />
-                ),
-                entityName: 'trace',
-                storageKey: 'traces_visible_cols_v2',
-                emptyTips: [
-                  { num: 1, text: <>Widen the <strong>time range</strong> in the top bar</> },
-                  { num: 2, text: <>Remove active <strong>filters</strong> from the query bar</> },
-                  { num: 3, text: <>Ensure your services are sending traces via <strong>OTLP</strong></> },
-                ]
-              }}
-            />
-          </div>
-
-          {!isLoading && totalTraces > 0 && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '11px 18px',
-                borderTop: '1px solid var(--border-color)',
-              }}
-            >
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                Showing {offset + 1}–{Math.min(offset + pageSize, totalTraces)} of{' '}
-                {formatNumber(totalTraces)}
-              </span>
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <Select
-                  size="small"
-                  value={pageSize}
-                  onChange={(value: number) => {
-                    setPageSize(value);
-                    setPage(1);
-                  }}
-                  options={[10, 20, 50, 100].map((value) => ({
-                    label: `${value} / page`,
-                    value,
-                  }))}
-                  style={{ width: 110 }}
-                />
-                <button
-                  className="traces-export-btn"
-                  disabled={page <= 1}
-                  onClick={() => setPage((previousPage) => Math.max(1, previousPage - 1))}
-                  style={{ opacity: page <= 1 ? 0.4 : 1 }}
-                >
-                  ← Prev
-                </button>
-                <span style={{ fontSize: 12, color: 'var(--text-secondary)', padding: '0 4px' }}>
-                  Page {page} of {Math.max(1, Math.ceil((totalTraces) / pageSize))}
-                </span>
-                <button
-                  className="traces-export-btn"
-                  disabled={page >= Math.ceil((totalTraces) / pageSize)}
-                  onClick={() => setPage((previousPage) => previousPage + 1)}
-                  style={{
-                    opacity: page >= Math.ceil((totalTraces) / pageSize) ? 0.4 : 1,
-                  }}
-                >
-                  Next →
-                </button>
+                  <button
+                    className="traces-export-btn"
+                    disabled={page <= 1}
+                    onClick={() => setPage((previousPage) => Math.max(1, previousPage - 1))}
+                    style={{ opacity: page <= 1 ? 0.4 : 1 }}
+                  >
+                    ← Prev
+                  </button>
+                  <span style={{ fontSize: 12, color: 'var(--text-secondary)', padding: '0 4px' }}>
+                    Page {page} of {Math.max(1, Math.ceil((totalTraces) / pageSize))}
+                  </span>
+                  <button
+                    className="traces-export-btn"
+                    disabled={page >= Math.ceil((totalTraces) / pageSize)}
+                    onClick={() => setPage((previousPage) => previousPage + 1)}
+                    style={{
+                      opacity: page >= Math.ceil((totalTraces) / pageSize) ? 0.4 : 1,
+                    }}
+                  >
+                    Next →
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )
       }
       detailSidebar={
         selectedTrace && (
@@ -243,13 +288,7 @@ export default function TracesPage(): JSX.Element {
             metaRight={selectedTrace['start_time'] ? relativeTime(selectedTrace['start_time'] as string) : ''}
             summaryNode={
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span
-                  style={{
-                    fontWeight: 600,
-                    color: 'var(--text-primary)',
-                    fontSize: 12.5,
-                  }}
-                >
+                <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 12.5 }}>
                   {selectedTrace['operation_name'] as string}
                 </span>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>

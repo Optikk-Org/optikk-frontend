@@ -1,7 +1,5 @@
 import axios from 'axios';
 
-import { clearAuthStorage } from '@shared/api/auth/authStorage';
-
 import type { AxiosError, AxiosInstance } from 'axios';
 
 /**
@@ -42,7 +40,6 @@ function normalizeError(error: unknown): ApiErrorShape {
       const data = axiosError.response.data;
 
       if (status === 401) {
-        clearAuthStorage();
         window.dispatchEvent(new CustomEvent('auth:expired'));
       }
 
@@ -85,6 +82,6 @@ function normalizeError(error: unknown): ApiErrorShape {
 export function attachErrorInterceptor(instance: AxiosInstance): number {
   return instance.interceptors.response.use(
     (response) => response,
-    (error: unknown) => Promise.reject(normalizeError(error)),
+    (error: unknown) => Promise.reject(normalizeError(error))
   );
 }

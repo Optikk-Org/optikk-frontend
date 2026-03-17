@@ -66,6 +66,11 @@ export type LogsAggregateRow = z.infer<typeof logsAggregateRowSchema>;
 
 export type LogsVolume = z.infer<typeof logsVolumeSchema>;
 
+const logsListResponseSchema = z.object({
+  logs: z.array(logEntrySchema).default([]),
+  total: z.union([z.number(), z.string()]).optional(),
+}).passthrough();
+
 /**
  * Normalizes a parsed log entry, ensuring legacy frontend fields
  * (level, message, service) are populated from OTLP fields if missing.
@@ -98,13 +103,12 @@ export const logsApi = {
       params.startTime,
       params.endTime,
       params.backendParams
-    ) as any;
-
-    const parsedLogs = z.array(logEntrySchema).parse(response.logs || []);
+    );
+    const parsed = logsListResponseSchema.parse(response);
 
     return {
-      logs: parsedLogs.map(normalizeLog),
-      total: Number(response.total || 0),
+      logs: parsed.logs.map(normalizeLog),
+      total: Number(parsed.total ?? 0),
     };
   },
 
@@ -119,8 +123,7 @@ export const logsApi = {
       params.startTime,
       params.endTime,
       params.backendParams
-    ) as any;
-
+    );
     const parsed = logsStatsSchema.parse(response);
     
     return {
@@ -145,7 +148,7 @@ export const logsApi = {
       params.endTime,
       params.step,
       params.backendParams
-    ) as any;
+    );
 
     const parsed = logsVolumeSchema.parse(response);
 
@@ -171,7 +174,7 @@ export const logsApi = {
       params.topN,
       params.metric,
       params.backendParams,
-    ) as any;
+    );
     return logsAggregateSchema.parse(response);
   },
 };

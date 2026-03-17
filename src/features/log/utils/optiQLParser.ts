@@ -1,4 +1,5 @@
 import type { LogsBackendParams } from '../api/logsApi';
+import type { QueryParamValue } from '@shared/api/service-types';
 
 export interface ParsedOptiQL {
   ast: ASTNode[];
@@ -12,7 +13,32 @@ export interface ASTNode {
   operator?: '=' | '!=' | '~=' | ':' | '!:' | 'contains';
 }
 
-const KNOWN_KEYS_MAP: Record<string, keyof LogsBackendParams> = {
+type ArrayBackendParamKey =
+  | 'services'
+  | 'severities'
+  | 'hosts'
+  | 'pods'
+  | 'containers'
+  | 'excludeServices'
+  | 'excludeSeverities'
+  | 'excludeHosts';
+
+type ScalarBackendParamKey = 'traceId' | 'spanId';
+
+type BackendParamKey = ArrayBackendParamKey | ScalarBackendParamKey;
+
+const ARRAY_BACKEND_PARAM_KEYS: readonly ArrayBackendParamKey[] = [
+  'services',
+  'severities',
+  'hosts',
+  'pods',
+  'containers',
+  'excludeServices',
+  'excludeSeverities',
+  'excludeHosts',
+] as const;
+
+const KNOWN_KEYS_MAP: Record<string, BackendParamKey> = {
   service: 'services',
   services: 'services',
   level: 'severities',
@@ -26,13 +52,32 @@ const KNOWN_KEYS_MAP: Record<string, keyof LogsBackendParams> = {
   spanId: 'spanId',
 };
 
-const NEGATION_KEYS_MAP: Record<string, keyof LogsBackendParams> = {
+const NEGATION_KEYS_MAP: Record<string, BackendParamKey> = {
   service: 'excludeServices',
   services: 'excludeServices',
   level: 'excludeSeverities',
   severity: 'excludeSeverities',
   host: 'excludeHosts',
 };
+
+function isArrayBackendParamKey(value: BackendParamKey): value is ArrayBackendParamKey {
+  return ARRAY_BACKEND_PARAM_KEYS.includes(value as ArrayBackendParamKey);
+}
+
+function appendBackendParam(
+  params: Record<string, QueryParamValue>,
+  key: BackendParamKey,
+  value: string,
+): void {
+  if (isArrayBackendParamKey(key)) {
+    const current = params[key];
+    const next = Array.isArray(current) ? [...current, value] : [value];
+    params[key] = next;
+    return;
+  }
+
+  params[key] = value;
+}
 
 /**
  * Parses a LogQL-like string into structured backend parameters.
@@ -44,7 +89,7 @@ export function parseOptiQL(query: string): ParsedOptiQL {
   }
 
   const ast: ASTNode[] = [];
-  const params: LogsBackendParams & Record<string, any> = {};
+  const params: Record<string, QueryParamValue> = {};
 
   // Regex to match key:value, key="value", -key=value, or "free text"
   // Group 1: negation (- or !)
@@ -56,8 +101,8 @@ export function parseOptiQL(query: string): ParsedOptiQL {
   // Group 7: free text (unquoted)
   const tokenRegex = /(?:([!-])?([\w.]+)(:|!=|~=|!:=|=)(?:"([^"]*)"|([^"\s]+)))|(?:"([^"]*)")|([^\s]+)/g;
 
-  let match;
-  let freeTextParts: string[] = [];
+  let match: RegExpExecArray | null;
+  const freeTextParts: string[] = [];
 
   while ((match = tokenRegex.exec(query)) !== null) {
     const [
@@ -98,16 +143,7 @@ export function parseOptiQL(query: string): ParsedOptiQL {
           : normalizedKey;
 
         if (targetParam) {
-          // If the backend param is an array (services, severities, etc.)
-          if (['services', 'severities', 'hosts', 'pods', 'containers', 'excludeServices', 'excludeSeverities', 'excludeHosts'].includes(targetParam)) {
-            if (!params[targetParam]) {
-              (params as any)[targetParam] = [];
-            }
-            (params as any)[targetParam].push(val);
-          } else {
-            // singular, like traceId
-            (params as any)[targetParam] = val;
-          }
+          appendBackendParam(params, targetParam, val);
         }
       } else {
         // Unrecognized key -> Map to attr.*
@@ -129,7 +165,7 @@ export function parseOptiQL(query: string): ParsedOptiQL {
     params.search = freeTextParts.join(' ');
   }
 
-  return { ast, backendParams: params };
+  return { ast, backendParams: params as LogsBackendParams };
 }
 
 /**

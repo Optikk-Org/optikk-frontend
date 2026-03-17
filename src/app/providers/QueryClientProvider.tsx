@@ -1,23 +1,9 @@
-import {
-  QueryClient,
-  QueryClientProvider as TanstackQueryClientProvider,
-} from '@tanstack/react-query';
+import { QueryClientProvider as TanstackQueryClientProvider } from '@tanstack/react-query';
 
 import type { ReactNode } from 'react';
+import { queryClient } from '@shared/api/queryClient';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      refetchOnMount: 'always',
-      refetchOnReconnect: true,
-      retry: 2,
-      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10_000),
-      staleTime: 5_000,
-      gcTime: 30_000,
-    },
-  },
-});
+import QueryLifecycleBridge from './QueryLifecycleBridge';
 
 export { queryClient };
 
@@ -30,7 +16,7 @@ export default function AppQueryClientProvider({
 }: AppQueryClientProviderProps): JSX.Element {
   return (
     <TanstackQueryClientProvider client={queryClient}>
-      {children}
+      <QueryLifecycleBridge>{children}</QueryLifecycleBridge>
     </TanstackQueryClientProvider>
   );
 }

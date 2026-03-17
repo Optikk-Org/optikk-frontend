@@ -1,12 +1,14 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 
+import { getDomainRoutes } from '@/app/registry/domainRegistry';
 import { ErrorBoundary, Loading } from '@/shared/components/ui/feedback';
 import { ROUTES } from '@/shared/constants/routes';
 
 import ProtectedRoute from './ProtectedRoute';
 import MainLayout from '../layout/MainLayout';
+import { lazy } from 'react';
 
 const LoginPage = lazy(() => import('@/app/auth'));
 const ProductPage = lazy(() => import('@/app/auth/pages/Pricing'));
@@ -16,9 +18,6 @@ const OAuthCallbackSuccess = lazy(() =>
 const OAuthSignupPage = lazy(() =>
   import('@/app/auth/pages/OAuthCallback').then((m) => ({ default: m.OAuthSignupPage }))
 );
-const ServiceDetailPage = lazy(() => import('@/features/services').then((m) => ({ default: m.ServiceDetailPageView })));
-const SettingsPage = lazy(() => import('@/features/settings').then((m) => ({ default: m.SettingsPageView })));
-const TraceDetailPage = lazy(() => import('@/features/traces').then((m) => ({ default: m.TraceDetailPageView })));
 const BackendDrivenPage = lazy(() => import('./BackendDrivenPage'));
 
 function toNestedRoutePath(path: string): string {
@@ -42,8 +41,25 @@ function PageTransition({ children }: { children: React.ReactNode }) {
   );
 }
 
+function renderProtectedRoute(path: string, Page: React.ComponentType<object>): JSX.Element {
+  return (
+    <Route
+      key={path}
+      path={toNestedRoutePath(path)}
+      element={(
+        <ErrorBoundary>
+          <Suspense fallback={<Loading fullscreen />}>
+            <Page />
+          </Suspense>
+        </ErrorBoundary>
+      )}
+    />
+  );
+}
+
 export default function AppRoutes(): JSX.Element {
   const location = useLocation();
+  const protectedDomainRoutes = getDomainRoutes();
 
   return (
     <AnimatePresence mode="wait">
@@ -97,36 +113,7 @@ export default function AppRoutes(): JSX.Element {
         }
       >
         <Route index element={<Navigate to={ROUTES.overview} replace />} />
-        <Route
-          path={toNestedRoutePath(ROUTES.settings)}
-          element={(
-            <ErrorBoundary>
-              <Suspense fallback={<Loading fullscreen />}>
-                <SettingsPage />
-              </Suspense>
-            </ErrorBoundary>
-          )}
-        />
-        <Route
-          path={toNestedRoutePath(ROUTES.traceDetail)}
-          element={(
-            <ErrorBoundary>
-              <Suspense fallback={<Loading fullscreen />}>
-                <TraceDetailPage />
-              </Suspense>
-            </ErrorBoundary>
-          )}
-        />
-        <Route
-          path={toNestedRoutePath(ROUTES.serviceDetail)}
-          element={(
-            <ErrorBoundary>
-              <Suspense fallback={<Loading fullscreen />}>
-                <ServiceDetailPage />
-              </Suspense>
-            </ErrorBoundary>
-          )}
-        />
+        {protectedDomainRoutes.map((route) => renderProtectedRoute(route.path, route.page))}
         <Route
           path="errors"
           element={<Navigate to={`${ROUTES.overview}?tab=errors`} replace />}

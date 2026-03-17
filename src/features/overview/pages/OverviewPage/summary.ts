@@ -1,10 +1,22 @@
 import type {
   MetricSummary,
-  MetricTimeSeriesPoint,
-  ServiceMetricPoint,
 } from '@features/metrics/types';
 
-export function buildOverviewSummary(services: ServiceMetricPoint[]): MetricSummary {
+interface OverviewServiceMetricPoint extends Record<string, unknown> {
+  request_count: number;
+  error_count: number;
+  avg_latency: number;
+  p95_latency: number;
+  p99_latency: number;
+}
+
+interface OverviewTimeSeriesPoint extends Record<string, unknown> {
+  request_count: number;
+  error_count: number;
+  avg_latency: number;
+}
+
+export function buildOverviewSummary(services: OverviewServiceMetricPoint[]): MetricSummary {
   const totalRequests = services.reduce((sum, service) => sum + Number(service.request_count || 0), 0);
   const errorCount = services.reduce((sum, service) => sum + Number(service.error_count || 0), 0);
   const weightedLatencySum = services.reduce(
@@ -29,7 +41,7 @@ export function buildOverviewSummary(services: ServiceMetricPoint[]): MetricSumm
   };
 }
 
-export function buildOverviewSparklines(timeseries: MetricTimeSeriesPoint[]): {
+export function buildOverviewSparklines(timeseries: OverviewTimeSeriesPoint[]): {
   requests: number[];
   errors: number[];
   latency: number[];

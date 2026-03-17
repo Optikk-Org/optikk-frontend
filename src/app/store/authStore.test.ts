@@ -2,27 +2,36 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@/types';
 
+import { STORAGE_KEYS } from '@config/constants';
+
 const authServiceMock = {
-  getCurrentUser: vi.fn(),
-  isAuthenticated: vi.fn(),
   login: vi.fn(),
   logout: vi.fn(),
 };
 
 const appStoreMock = {
-  setSelectedTeamId: vi.fn(),
+  setSelectedTeamIds: vi.fn(),
   setState: vi.fn(),
 };
 
 async function loadStore({
   currentUser = null,
-  isAuthenticated = false,
 }: {
   currentUser?: User | null;
-  isAuthenticated?: boolean;
 } = {}): Promise<typeof import('./authStore').useAuthStore> {
-  authServiceMock.getCurrentUser.mockReturnValue(currentUser);
-  authServiceMock.isAuthenticated.mockReturnValue(isAuthenticated);
+  localStorage.clear();
+  if (currentUser) {
+    localStorage.setItem(
+      STORAGE_KEYS.AUTH_STATE,
+      JSON.stringify({
+        state: {
+          user: currentUser,
+          isAuthenticated: true,
+        },
+        version: 0,
+      })
+    );
+  }
 
   vi.resetModules();
   vi.doMock('@shared/api/authService', () => ({
@@ -47,7 +56,7 @@ describe('authStore', () => {
 
   it('hydrates initial auth state from the auth service', async () => {
     const user = { id: 1, email: 'engineer@example.com' };
-    const useAuthStore = await loadStore({ currentUser: user, isAuthenticated: true });
+    const useAuthStore = await loadStore({ currentUser: user });
 
     expect(useAuthStore.getState()).toMatchObject({
       user,
@@ -60,7 +69,6 @@ describe('authStore', () => {
   it('logs in successfully and merges team data', async () => {
     const useAuthStore = await loadStore();
     authServiceMock.login.mockResolvedValue({
-      token: 'token-1',
       user: { id: 7, email: 'engineer@example.com' },
       teams: [{ id: 12, name: 'Platform' }],
     });
@@ -79,12 +87,12 @@ describe('authStore', () => {
         teams: [{ id: 12, name: 'Platform' }],
       },
     });
-    expect(appStoreMock.setSelectedTeamId).toHaveBeenCalledWith(12);
+    expect(appStoreMock.setSelectedTeamIds).toHaveBeenCalledWith([12]);
   });
 
   it('stores an error when the login payload is incomplete', async () => {
     const useAuthStore = await loadStore();
-    authServiceMock.login.mockResolvedValue({ user: { id: 1 } });
+    authServiceMock.login.mockResolvedValue({});
 
     await expect(useAuthStore.getState().login('bad@example.com', 'secret')).resolves.toEqual({
       success: false,
@@ -117,7 +125,6 @@ describe('authStore', () => {
   it('logs out and clears auth state', async () => {
     const useAuthStore = await loadStore({
       currentUser: { id: 1, email: 'engineer@example.com' },
-      isAuthenticated: true,
     });
 
     authServiceMock.logout.mockResolvedValue(undefined);
@@ -125,7 +132,10 @@ describe('authStore', () => {
     await useAuthStore.getState().logout();
 
     expect(authServiceMock.logout).toHaveBeenCalledTimes(1);
-    expect(appStoreMock.setState).toHaveBeenCalledWith({ selectedTeamId: null });
+    expect(appStoreMock.setState).toHaveBeenCalledWith({
+      selectedTeamId: null,
+      selectedTeamIds: [],
+    });
     expect(useAuthStore.getState()).toMatchObject({
       user: null,
       isAuthenticated: false,

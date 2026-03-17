@@ -5,13 +5,15 @@ import { z } from 'zod';
  * Prevents the application from starting with invalid or missing configuration.
  */
 const envSchema = z.object({
-  VITE_API_URL: z.string().url().default('http://localhost:9090'),
+  VITE_API_BASE_URL: z.string().url().optional(),
+  VITE_DEV_BACKEND_URL: z.string().url().optional(),
   MODE: z.enum(['development', 'production', 'test']).default('development'),
   BASE_URL: z.string().default('/'),
 });
 
 const processEnv = {
-  VITE_API_URL: import.meta.env['VITE_API_URL'],
+  VITE_API_BASE_URL: import.meta.env['VITE_API_BASE_URL'],
+  VITE_DEV_BACKEND_URL: import.meta.env['VITE_DEV_BACKEND_URL'],
   MODE: import.meta.env['MODE'],
   BASE_URL: import.meta.env['BASE_URL'],
 };

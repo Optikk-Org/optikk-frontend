@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type { Team, User } from '@/types';
 
@@ -6,32 +7,34 @@ import { authService } from '@shared/api/authService';
 
 import { useAppStore } from '@store/appStore';
 
+import { STORAGE_KEYS } from '@config/constants';
+
 interface AuthState {
   readonly user: User | null;
   readonly isAuthenticated: boolean;
   readonly isLoading: boolean;
   readonly error: string | null;
-  readonly login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  readonly login: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; error?: string }>;
   readonly logout: () => Promise<void>;
+  readonly applyAuthPayload: (payload: unknown) => boolean;
+  readonly clearSession: () => void;
   readonly clearError: () => void;
 }
 
 interface LoginPayload {
-  readonly token?: string;
   readonly user?: User;
   readonly teams?: Team[];
   readonly currentTeam?: Team;
-}
-
-interface QueryClientLike {
-  clear: () => void;
 }
 
 function asLoginPayload(value: unknown): LoginPayload | null {
   if (typeof value !== 'object' || value === null) {
     return null;
   }
-  // Login payloads are dynamic server objects with optional team metadata.
+
   return value as LoginPayload;
 }
 
@@ -48,84 +51,104 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
-async function clearQueryClientCache(): Promise<void> {
-  try {
-    const moduleRef = await import('../../main');
-    if (!('queryClient' in moduleRef)) {
-      return;
-    }
-
-    // Runtime import type is unknown to TS here; narrow to the optional queryClient shape.
-    const queryClient = (moduleRef as { queryClient?: QueryClientLike }).queryClient;
-    if (queryClient?.clear) {
-      queryClient.clear();
-    }
-  } catch (error: unknown) {
-    if (import.meta.env.DEV) {
-      console.warn('Unable to clear query cache after logout', error);
-    }
-  }
+function extractTeamIds(payload: LoginPayload): number[] {
+  const teams = payload.teams ?? payload.user?.teams ?? [];
+  return teams
+    .map((team) => Number(team.id))
+    .filter((teamId) => Number.isFinite(teamId) && teamId > 0);
 }
 
-/**
- * Authentication store for user session state and auth actions.
- */
-export const useAuthStore = create<AuthState>((set) => ({
-  user: authService.getCurrentUser(),
-  isAuthenticated: authService.isAuthenticated(),
-  isLoading: false,
-  error: null,
+function applyAuthPayloadToState(
+  set: (partial: Partial<AuthState> | ((state: AuthState) => Partial<AuthState>)) => void,
+  payload: unknown
+): boolean {
+  const parsed = asLoginPayload(payload);
+  if (!parsed?.user) {
+    return false;
+  }
 
-  login: async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    set({ isLoading: true, error: null });
-    try {
-      const payload = asLoginPayload(await authService.login(email, password));
-      if (payload?.token && payload.user) {
-        const userData: User = {
-          ...payload.user,
-          teams: payload.teams || payload.user.teams || [],
-        };
-        const teamId =
-          payload.currentTeam?.id ??
-          payload.teams?.[0]?.id ??
-          payload.user.teams?.[0]?.id ??
-          null;
+  const userData: User = {
+    ...parsed.user,
+    teams: parsed.teams ?? parsed.user.teams ?? [],
+  };
+  const teamIds = extractTeamIds(parsed);
 
-        if (teamId != null) {
-          useAppStore.getState().setSelectedTeamIds([teamId]);
-        }
-
-        set({
-          user: userData,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-        });
-        return { success: true };
-      }
-
-      const message = 'Login failed';
-      set({ isLoading: false, error: message });
-      return { success: false, error: message };
-    } catch (error: unknown) {
-      const message = getErrorMessage(error, 'Login failed');
-      set({ isLoading: false, error: message });
-      return { success: false, error: message };
-    }
-  },
-
-  logout: async (): Promise<void> => {
-    await authService.logout();
+  if (teamIds.length > 0) {
+    useAppStore.getState().setSelectedTeamIds(teamIds);
+  } else {
     useAppStore.setState({ selectedTeamId: null, selectedTeamIds: [] });
-    // Intentionally fire-and-forget cache clearing after local auth state reset.
-    void clearQueryClientCache();
-    set({
+  }
+
+  set({
+    user: userData,
+    isAuthenticated: true,
+    isLoading: false,
+    error: null,
+  });
+  return true;
+}
+
+function clearSessionState(
+  set: (partial: Partial<AuthState> | ((state: AuthState) => Partial<AuthState>)) => void
+): void {
+  useAppStore.setState({ selectedTeamId: null, selectedTeamIds: [] });
+  set({
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+    error: null,
+  });
+}
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
       user: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
-    });
-  },
 
-  clearError: (): void => set({ error: null }),
-}));
+      login: async (
+        email: string,
+        password: string
+      ): Promise<{ success: boolean; error?: string }> => {
+        set({ isLoading: true, error: null });
+        try {
+          const payload = await authService.login(email, password);
+          if (applyAuthPayloadToState(set, payload)) {
+            return { success: true };
+          }
+
+          const message = 'Login failed';
+          set({ isLoading: false, error: message });
+          return { success: false, error: message };
+        } catch (error: unknown) {
+          const message = getErrorMessage(error, 'Login failed');
+          set({ isLoading: false, error: message });
+          return { success: false, error: message };
+        }
+      },
+
+      logout: async (): Promise<void> => {
+        await authService.logout();
+        clearSessionState(set);
+      },
+
+      applyAuthPayload: (payload: unknown): boolean => applyAuthPayloadToState(set, payload),
+
+      clearSession: (): void => {
+        clearSessionState(set);
+      },
+
+      clearError: (): void => set({ error: null }),
+    }),
+    {
+      name: STORAGE_KEYS.AUTH_STATE,
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
+    }
+  )
+);

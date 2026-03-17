@@ -4,7 +4,6 @@ import { API_CONFIG } from '@config/apiConfig';
 
 import { attachAuthInterceptor } from './interceptors/authInterceptor';
 import { attachErrorInterceptor } from './interceptors/errorInterceptor';
-import { attachRetryInterceptor } from './interceptors/retryInterceptor';
 
 interface ApiEnvelope {
   readonly success: boolean;
@@ -30,7 +29,6 @@ const api = axios.create({
 });
 
 attachAuthInterceptor(api);
-attachRetryInterceptor(api, API_CONFIG.RETRY_ATTEMPTS);
 api.interceptors.response.use((response) => {
   const data = response.data;
   if (isApiEnvelope(data)) {

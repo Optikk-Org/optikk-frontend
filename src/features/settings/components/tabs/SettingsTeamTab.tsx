@@ -1,15 +1,11 @@
 import { Card, Descriptions, Divider, Spin } from 'antd';
 import { Key, Users } from 'lucide-react';
 
-interface TeamInfo {
-  name?: string;
-  apiKey?: string;
-  role?: string;
-}
+import type { SettingsTeamViewModel } from '../../types';
 
 interface SettingsTeamTabProps {
-  profileLoading: boolean;
-  teams: TeamInfo[];
+  readonly profileLoading: boolean;
+  readonly teams: SettingsTeamViewModel[];
 }
 
 /**
@@ -38,7 +34,7 @@ export default function SettingsTeamTab({
 
       <Descriptions column={1} bordered>
         {teams.map((team, index) => (
-          <Descriptions.Item key={index} label={`Team ${index + 1}`}>
+          <Descriptions.Item key={`${team.name ?? 'team'}-${index}`} label={`Team ${index + 1}`}>
             <div className="team-info">
               <div className="team-main">
                 <span className="team-name">{team.name}</span>

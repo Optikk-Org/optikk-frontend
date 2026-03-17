@@ -11,6 +11,8 @@ import MarketingNav from './MarketingNav';
 import MarketingFooter from './MarketingFooter';
 import CodeTabs from './CodeTabs';
 
+const OPTIKK_TOKEN = import.meta.env['VITE_OPTIKK_TOKEN'] ?? 'YOUR_TOKEN';
+
 export default function ProductPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'traces' | 'map'>('overview');
@@ -175,10 +177,10 @@ volumes:
       <section className="features-section">
         <div className="features-grid">
           {[
-            { title: 'Real-time Metrics', desc: 'PromQL compatible, custom dashboards, ML anomaly detection.' },
+            { title: 'Real-time Metrics', desc: 'PromQL compatible, backend-driven dashboards, and instant service visibility.' },
             { title: 'Distributed Tracing', desc: 'OpenTelemetry native, flame graphs, trace-to-log correlation.' },
             { title: 'Centralized Logs', desc: 'Full-text search, structured + unstructured, live tail.' },
-            { title: 'SLOs & Alerting', desc: 'Error budgets, burn rate alerts, multi-channel notifications.' },
+            { title: 'SLOs & Reliability', desc: 'Error budgets, burn-rate analysis, and service health tracking.' },
             { title: 'Service Maps', desc: 'Auto-discovered topology, dependency graphs, health overlays.' },
             { title: 'AI Observability', desc: 'LLM token usage, latency, hallucination rate tracking.' }
           ].map((f, i) => (
@@ -284,13 +286,13 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import { resourceFromAttributes } from '@opentelemetry/resources'
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions'
 
-const sdk = new NodeSDK({
-  resource: resourceFromAttributes({
-    [ATTR_SERVICE_NAME]: 'my-service',
-  }),
-  traceExporter: new OTLPTraceExporter({
-    url: 'https://ingest.optikk.io:4318/v1/traces',
-    headers: { 'x-optikk-token': process.env.OPTIKK_TOKEN },
+  const sdk = new NodeSDK({
+    resource: resourceFromAttributes({
+      [ATTR_SERVICE_NAME]: 'my-service',
+    }),
+    traceExporter: new OTLPTraceExporter({
+      url: 'https://ingest.optikk.io:4318/v1/traces',
+      headers: { 'x-optikk-token': '${OPTIKK_TOKEN}' },
   }),
 })
 sdk.start()`

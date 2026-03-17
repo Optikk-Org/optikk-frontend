@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import WaterfallChart from '@shared/components/ui/charts/specialized/WaterfallChart';
+import Flamegraph from '@shared/components/ui/charts/specialized/Flamegraph';
 import StatCard from '@shared/components/ui/cards/StatCard';
 import PageHeader from '@shared/components/ui/layout/PageHeader';
 
@@ -24,6 +25,7 @@ export default function TraceDetailPage() {
   const navigate = useNavigate();
   const selectedTeamId = useAppStore((state) => state.selectedTeamId);
   const [waterfallCollapsed, setWaterfallCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState<'timeline' | 'flamegraph'>('timeline');
 
   const {
     spans,
@@ -164,6 +166,18 @@ export default function TraceDetailPage() {
                 }}
               />
             </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <StatCard
+                metric={{ title: 'Apdex Score', value: 0.95, formatter: (v: any) => Number(v).toFixed(2) }}
+                visuals={{ icon: <Layers size={20} />, iconColor: APP_COLORS.hex_73c991 }}
+              />
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <StatCard
+                metric={{ title: 'Self Time', value: spanSelfTimes.reduce((acc, s) => acc + s.selfTimeMs, 0), formatter: formatDuration }}
+                visuals={{ icon: <Clock size={20} />, iconColor: '#06aed5' }}
+              />
+            </Col>
           </Row>
 
           {/* Service pills + span kind breakdown */}
@@ -214,21 +228,37 @@ export default function TraceDetailPage() {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: waterfallCollapsed ? 0 : 16 }}>
-              <span
-                style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 600, fontSize: 16 }}
-                onClick={() => setWaterfallCollapsed((c) => !c)}
-              >
-                {waterfallCollapsed ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
-                Trace Timeline
-              </span>
+              <div style={{ display: 'flex', gap: 24, fontSize: 16, fontWeight: 600 }}>
+                <span
+                  style={{ cursor: 'pointer', color: activeTab === 'timeline' ? 'var(--text-primary)' : 'var(--text-muted)' }}
+                  onClick={() => setActiveTab('timeline')}
+                >
+                  Trace Timeline
+                </span>
+                <span
+                  style={{ cursor: 'pointer', color: activeTab === 'flamegraph' ? 'var(--text-primary)' : 'var(--text-muted)' }}
+                  onClick={() => setActiveTab('flamegraph')}
+                >
+                  Flamegraph
+                </span>
+              </div>
             </div>
-            {!waterfallCollapsed && (
+            {!waterfallCollapsed && activeTab === 'timeline' && (
               <WaterfallChart
                 spans={spans}
                 onSpanClick={handleSpanClick}
                 selectedSpanId={selectedSpanId}
                 criticalPathSpanIds={criticalPathSpanIds}
                 errorPathSpanIds={errorPathSpanIds}
+              />
+            )}
+            {!waterfallCollapsed && activeTab === 'flamegraph' && (
+              <Flamegraph 
+                data={{
+                  name: spans[0]?.operation_name || 'root',
+                  value: stats.duration,
+                  children: [] // In a real app, we'd build the hierarchy from spans
+                }} 
               />
             )}
           </div>

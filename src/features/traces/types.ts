@@ -90,3 +90,40 @@ export interface RelatedTrace {
   status: string;
   startTime: string;
 }
+
+// ── Analytics & Comparison Types ──────────────────────────────────────────────
+
+export interface AnalyticsDimension {
+  key: string;
+  type: 'string' | 'number' | 'boolean';
+  description?: string;
+}
+
+export interface AnalyticsQuery {
+  dimensions: string[];
+  metrics: string[];
+  filters: Record<string, any>;
+  startTime: number;
+  endTime: number;
+}
+
+export interface TraceComparisonResult {
+  traceA: string;
+  traceB: string;
+  structuralDifferences: any[];
+  timingDifferences: any[];
+}
+
+export interface FlamegraphNode {
+  name: string;
+  value: number;
+  children?: FlamegraphNode[];
+  metadata?: Record<string, any>;
+}
+
+export interface REDMetricsSummary {
+  requestRate: number;
+  errorRate: number;
+  p95Latency: number;
+  timestamp: string;
+}

@@ -8,6 +8,7 @@ import { useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { getDomainNavigationItems } from '@/app/registry/domainRegistry';
 import { getDashboardIcon } from '@shared/components/ui/dashboard/SpecializedRendererRegistry';
 import { usePagesConfig } from '@/hooks/usePagesConfig';
 import { ROUTES } from '@/shared/constants/routes';
@@ -30,16 +31,35 @@ export default function Sidebar() {
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
   const { pages } = usePagesConfig();
-  const navEntries = useMemo(
-    () => pages
-      .filter((page) => page.navigable)
-      .map((page) => ({
-        path: page.path,
-        label: page.label,
-        group: page.group,
-        iconNode: getDashboardIcon(page.icon, 18),
+
+  const staticNavEntries = useMemo(
+    () =>
+      getDomainNavigationItems().map((entry) => ({
+        path: entry.path,
+        label: entry.label,
+        group: entry.group,
+        iconNode: <entry.icon size={18} />,
       })),
-    [pages],
+    [],
+  );
+
+  const dynamicNavEntries = useMemo(
+    () =>
+      pages
+        .filter((page) => page.navigable)
+        .filter((page) => !staticNavEntries.some((entry) => entry.path === page.path))
+        .map((page) => ({
+          path: page.path,
+          label: page.label,
+          group: page.group,
+          iconNode: getDashboardIcon(page.icon, 18),
+        })),
+    [pages, staticNavEntries],
+  );
+
+  const navEntries = useMemo(
+    () => [...staticNavEntries, ...dynamicNavEntries],
+    [dynamicNavEntries, staticNavEntries],
   );
 
   const observeItems = useMemo(

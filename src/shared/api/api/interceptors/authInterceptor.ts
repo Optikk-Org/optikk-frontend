@@ -1,4 +1,4 @@
-import { getStoredTeamId, getStoredTeamIds, getStoredToken } from '@shared/api/auth/authStorage';
+import { useAppStore } from '@store/appStore';
 
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
@@ -13,18 +13,14 @@ export function attachAuthInterceptor(instance: AxiosInstance): number {
     headers.Pragma = 'no-cache';
     headers.Expires = '0';
 
-    const teamIds = getStoredTeamIds();
-    const teamId = teamIds.length > 0 ? teamIds[0] : getStoredTeamId();
+    const { selectedTeamId, selectedTeamIds } = useAppStore.getState();
+    const teamIds = selectedTeamIds;
+    const teamId = teamIds.length > 0 ? teamIds[0] : selectedTeamId;
     if (teamId != null) {
       headers['X-Team-Id'] = String(teamId);
     }
     if (teamIds.length > 1) {
       headers['X-Team-Ids'] = teamIds.join(',');
-    }
-
-    const token = getStoredToken();
-    if (token && !headers['Authorization']) {
-      headers['Authorization'] = `Bearer ${token}`;
     }
 
     return config;

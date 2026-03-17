@@ -1,8 +1,9 @@
 import { Form, Input, Button, Card, Typography, Space } from 'antd';
 import { Mail, Lock, Layers } from 'lucide-react';
 import { useEffect } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { z } from 'zod';
 
 import { useAppStore } from '@store/appStore';
 import { useAuthStore } from '@store/authStore';
@@ -18,6 +19,15 @@ interface LoginFormValues {
   password: string;
 }
 
+const loginFormSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Please enter your email')
+    .email('Please enter a valid email'),
+  password: z.string().min(1, 'Please enter your password'),
+});
+
 /**
  *
  */
@@ -25,7 +35,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { login, isAuthenticated, isLoading, error, clearError } = useAuthStore();
   const { setTimeRange } = useAppStore();
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<LoginFormValues>();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -41,7 +51,13 @@ export default function LoginPage() {
   }, [error, clearError]);
 
   const handleSubmit = async (values: LoginFormValues): Promise<void> => {
-    const result = await login(values.email, values.password);
+    const parsed = loginFormSchema.safeParse(values);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? 'Please check your login details');
+      return;
+    }
+
+    const result = await login(parsed.data.email, parsed.data.password);
     if (result.success) {
       // Normalize post-login view window for load-test verification.
       setTimeRange('30m');

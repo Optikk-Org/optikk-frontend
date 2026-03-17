@@ -2,10 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Form, Tabs } from 'antd';
 import { Palette, Settings, User, Users } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-
-import { PageHeader } from '@shared/components/ui/layout';
+import { z } from 'zod';
 
 import { settingsService } from '@shared/api/settingsService';
+import { PageHeader } from '@shared/components/ui/layout';
 
 import { useAppStore } from '@/shared/store/appStore';
 
@@ -15,14 +15,84 @@ import {
   SettingsTeamTab,
 } from '../../components/tabs';
 
+import type {
+  SettingsPreferenceValue,
+  SettingsProfileCommand,
+  SettingsProfileFormValues,
+  SettingsProfileViewModel,
+} from '../../types';
+
 import './SettingsPage.css';
+
+const settingsProfileQueryKey = ['settings-profile'] as const;
+
+const optionalTextSchema = z.preprocess((value) => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}, z.string().optional());
+
+const settingsTeamSchema = z.object({
+  name: z.string().optional(),
+  apiKey: z.string().optional(),
+  role: z.string().optional(),
+}).passthrough();
+
+const settingsProfileSchema = z.object({
+  name: z.string().optional(),
+  email: z.string().optional(),
+  avatarUrl: z.string().optional(),
+  role: z.string().optional(),
+  teams: z.array(settingsTeamSchema).optional(),
+}).passthrough();
+
+const profileCommandSchema = z.object({
+  name: z.string().trim().min(1, 'Please enter your name'),
+  avatarUrl: optionalTextSchema,
+});
+
+const preferenceValueSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+]);
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return fallback;
+}
+
+function parseProfileResponse(response: unknown): SettingsProfileViewModel {
+  const parsed = settingsProfileSchema.safeParse(response);
+  if (!parsed.success) {
+    throw new Error('Invalid profile response');
+  }
+
+  return parsed.data;
+}
+
+function toProfileCommand(values: SettingsProfileFormValues): SettingsProfileCommand | null {
+  const parsed = profileCommandSchema.safeParse(values);
+  if (!parsed.success) {
+    toast.error(parsed.error.issues[0]?.message ?? 'Please check the profile form');
+    return null;
+  }
+
+  return parsed.data;
+}
 
 /**
  * Settings page container that coordinates profile/preferences/team tabs.
  */
 export default function SettingsPage(): JSX.Element {
   const queryClient = useQueryClient();
-  const [profileForm] = Form.useForm();
+  const [profileForm] = Form.useForm<SettingsProfileFormValues>();
 
   const {
     theme,
@@ -33,33 +103,38 @@ export default function SettingsPage(): JSX.Element {
     setViewPreference,
   } = useAppStore();
 
-  const { data: profileRaw, isLoading: profileLoading } = useQuery({
-    queryKey: ['settings-profile'],
-    queryFn: () => settingsService.getProfile(),
+  const { data: profileData, isLoading: profileLoading } = useQuery<SettingsProfileViewModel>({
+    queryKey: settingsProfileQueryKey,
+    queryFn: async () => parseProfileResponse(await settingsService.getProfile()),
   });
 
-  const profile = (profileRaw as Record<string, any> | null) ?? null;
-  const teams = Array.isArray(profile?.['teams']) ? profile?.['teams'] : [];
+  const profile = profileData ?? null;
+  const teams = profile?.teams ?? [];
+  const normalizedPreferences = viewPreferences;
 
   const updateProfileMutation = useMutation({
-    mutationFn: (data: Record<string, any>) => settingsService.updateProfile(data),
+    mutationFn: (command: SettingsProfileCommand) => settingsService.updateProfile(command),
     onMutate: async (newProfile) => {
-      await queryClient.cancelQueries({ queryKey: ['settings-profile'] });
-      const previousProfile = queryClient.getQueryData(['settings-profile']);
-      queryClient.setQueryData(['settings-profile'], (old: any) => ({
-        ...old,
+      await queryClient.cancelQueries({ queryKey: settingsProfileQueryKey });
+      const previousProfile =
+        queryClient.getQueryData<SettingsProfileViewModel>(settingsProfileQueryKey);
+
+      queryClient.setQueryData<SettingsProfileViewModel>(settingsProfileQueryKey, (old) => ({
+        ...(old ?? {}),
         ...newProfile,
       }));
+
       return { previousProfile };
     },
-    onError: (err: any, _newProfile, context) => {
+    onError: (error: unknown, _newProfile, context) => {
       if (context?.previousProfile) {
-        queryClient.setQueryData(['settings-profile'], context.previousProfile);
+        queryClient.setQueryData(settingsProfileQueryKey, context.previousProfile);
       }
-      toast.error(err?.message || 'Failed to update profile');
+
+      toast.error(getErrorMessage(error, 'Failed to update profile'));
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['settings-profile'] });
+      void queryClient.invalidateQueries({ queryKey: settingsProfileQueryKey });
     },
     onSuccess: () => {
       toast.success('Profile updated successfully');
@@ -67,17 +142,20 @@ export default function SettingsPage(): JSX.Element {
   });
 
   const updatePreferencesMutation = useMutation({
-    mutationFn: (prefs: Record<string, any>) => settingsService.updatePreferences(prefs),
-    onError: (err: any) => {
-      toast.error(err?.message || 'Failed to sync preferences');
+    mutationFn: (preferences: Record<string, SettingsPreferenceValue>) =>
+      settingsService.updatePreferences(preferences),
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, 'Failed to sync preferences'));
     },
   });
 
-  const handleProfileSubmit = (values: Record<string, any>): void => {
-    updateProfileMutation.mutate({
-      name: values['name'],
-      avatarUrl: values['avatarUrl'],
-    });
+  const handleProfileSubmit = (values: SettingsProfileFormValues): void => {
+    const command = toProfileCommand(values);
+    if (!command) {
+      return;
+    }
+
+    updateProfileMutation.mutate(command);
   };
 
   const handleThemeChange = (checked: boolean): void => {
@@ -93,14 +171,23 @@ export default function SettingsPage(): JSX.Element {
     toast.success(`Notifications ${checked ? 'enabled' : 'disabled'}`);
   };
 
-  const handlePreferenceChange = (key: string, value: any): void => {
-    setViewPreference(key, value);
-    updatePreferencesMutation.mutate({ [key]: value });
+  const handlePreferenceChange = (key: string, value: SettingsPreferenceValue): void => {
+    const parsedValue = preferenceValueSchema.safeParse(value);
+    if (!parsedValue.success) {
+      toast.error('Unsupported preference value');
+      return;
+    }
+
+    setViewPreference(key, parsedValue.data);
+    updatePreferencesMutation.mutate({ [key]: parsedValue.data });
     toast.success('Preference updated');
   };
 
   const getInitials = (name: string): string => {
-    if (!name) return 'U';
+    if (!name) {
+      return 'U';
+    }
+
     return name
       .split(' ')
       .map((part) => part[0])
@@ -148,7 +235,7 @@ export default function SettingsPage(): JSX.Element {
               <SettingsPreferencesTab
                 theme={theme}
                 notificationsEnabled={notificationsEnabled}
-                viewPreferences={(viewPreferences as Record<string, any>) ?? null}
+                viewPreferences={normalizedPreferences}
                 onThemeChange={handleThemeChange}
                 onNotificationsChange={handleNotificationsChange}
                 onPreferenceChange={handlePreferenceChange}

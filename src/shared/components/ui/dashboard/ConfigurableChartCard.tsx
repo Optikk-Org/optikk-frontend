@@ -153,6 +153,56 @@ export default function ConfigurableChartCard({
 
   const componentRenderer = componentKey ? DASHBOARD_COMPONENT_MAP[componentKey] : undefined;
   const rawData = resolveComponentData(chartConfig, dataSources);
+  const timeseriesData = (chartConfig.dataKey
+    ? (Array.isArray((rawData as any)?.[chartConfig.dataKey as string])
+      ? (rawData as any)[chartConfig.dataKey as string]
+      : [])
+    : (Array.isArray(rawData) ? rawData : [])) as any[];
+
+  const serviceTimeseriesMap = useMemo(() => {
+    if (chartConfig.groupByKey) {
+      return groupTimeseries(timeseriesData, chartConfig.groupByKey as string);
+    }
+    const endpointDataSourceId = chartConfig.endpointDataSource;
+    if (endpointDataSourceId && dataSources?.[endpointDataSourceId as string]) {
+      const endpointData = Array.isArray(dataSources[endpointDataSourceId as string])
+        ? dataSources[endpointDataSourceId as string]
+        : [];
+      return groupTimeseries(endpointData as any[], 'endpoint');
+    }
+    return {};
+  }, [timeseriesData, dataSources, chartConfig]);
+
+  const endpoints = useMemo(() => {
+    if (chartConfig.groupByKey === 'queue') {
+      const topQueues = (rawData as any)?.topQueues;
+      return buildQueueEndpoints(
+        topQueues,
+        (chartConfig.listSortField as string) || (chartConfig.valueKey as string),
+        (chartConfig.listType as string) || 'default',
+      );
+    }
+
+    const metricsSourceId = chartConfig.endpointMetricsSource;
+    if (metricsSourceId && dataSources?.[metricsSourceId as string]) {
+      const metricsData = Array.isArray(dataSources[metricsSourceId as string])
+        ? dataSources[metricsSourceId as string]
+        : [];
+      const listType = defaultListTypeForChart(chartConfig);
+      const metricEndpoints = chartConfig.groupByKey === 'service'
+        ? buildServiceListFromMetrics(metricsData as any[], listType)
+        : buildEndpointList(metricsData as any[], listType);
+      if (metricEndpoints.length > 0) {
+        return metricEndpoints;
+      }
+    }
+
+    if (chartConfig.groupByKey) {
+      return buildGroupedListFromTimeseries(serviceTimeseriesMap, chartConfig);
+    }
+
+    return [];
+  }, [rawData, dataSources, serviceTimeseriesMap, chartConfig]);
 
   if (componentKey === 'stat-card') {
     const value = resolveFieldValue(rawData, chartConfig.valueField as string | undefined);
@@ -208,58 +258,7 @@ export default function ConfigurableChartCard({
       </Card>
     );
   }
-
   const ChartComponent = componentRenderer as ComponentType<BaseChartComponentProps>;
-  const timeseriesData = (chartConfig.dataKey
-    ? (Array.isArray((rawData as any)?.[chartConfig.dataKey as string])
-      ? (rawData as any)[chartConfig.dataKey as string]
-      : [])
-    : (Array.isArray(rawData) ? rawData : [])) as any[];
-
-  const serviceTimeseriesMap = useMemo(() => {
-    if (chartConfig.groupByKey) {
-      return groupTimeseries(timeseriesData, chartConfig.groupByKey as string);
-    }
-    const endpointDataSourceId = chartConfig.endpointDataSource;
-    if (endpointDataSourceId && dataSources?.[endpointDataSourceId as string]) {
-      const endpointData = Array.isArray(dataSources[endpointDataSourceId as string])
-        ? dataSources[endpointDataSourceId as string]
-        : [];
-      return groupTimeseries(endpointData as any[], 'endpoint');
-    }
-    return {};
-  }, [timeseriesData, dataSources, chartConfig]);
-
-  const endpoints = useMemo(() => {
-    if (chartConfig.groupByKey === 'queue') {
-      const topQueues = (rawData as any)?.topQueues;
-      return buildQueueEndpoints(
-        topQueues,
-        (chartConfig.listSortField as string) || (chartConfig.valueKey as string),
-        (chartConfig.listType as string) || 'default',
-      );
-    }
-
-    const metricsSourceId = chartConfig.endpointMetricsSource;
-    if (metricsSourceId && dataSources?.[metricsSourceId as string]) {
-      const metricsData = Array.isArray(dataSources[metricsSourceId as string])
-        ? dataSources[metricsSourceId as string]
-        : [];
-      const listType = defaultListTypeForChart(chartConfig);
-      const metricEndpoints = chartConfig.groupByKey === 'service'
-        ? buildServiceListFromMetrics(metricsData as any[], listType)
-        : buildEndpointList(metricsData as any[], listType);
-      if (metricEndpoints.length > 0) {
-        return metricEndpoints;
-      }
-    }
-
-    if (chartConfig.groupByKey) {
-      return buildGroupedListFromTimeseries(serviceTimeseriesMap, chartConfig);
-    }
-
-    return [];
-  }, [rawData, dataSources, serviceTimeseriesMap, chartConfig]);
 
   const chartProps: BaseChartComponentProps = {
     serviceTimeseriesMap,
