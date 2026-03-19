@@ -1,4 +1,7 @@
+import { Link } from 'react-router-dom';
+
 import { formatNumber } from '@shared/utils/formatters';
+import { buildInterpolatedPath } from '@shared/utils/placeholderInterpolation';
 
 import { APP_COLORS } from '@config/colorLiterals';
 
@@ -29,6 +32,7 @@ interface QueueMetricsItem {
   max_consumer_lag?: number;
   avg_publish_rate?: number;
   avg_receive_rate?: number;
+  [key: string]: unknown;
 }
 
 interface QueueMetricsListProps {
@@ -37,6 +41,7 @@ interface QueueMetricsListProps {
   selectedQueues?: string[];
   onToggle?: (queueKey: string) => void;
   type?: QueueMetricsListType;
+  drilldownRouteTemplate?: string;
 }
 
 interface QueueRowDisplayConfig {
@@ -111,6 +116,7 @@ export default function QueueMetricsList({
   selectedQueues = [],
   onToggle,
   type = 'depth', // 'depth', 'consumerLag', 'productionRate', 'consumptionRate'
+  drilldownRouteTemplate,
 }: QueueMetricsListProps): JSX.Element | null {
   if (queues.length === 0) return null;
 
@@ -143,6 +149,11 @@ export default function QueueMetricsList({
               <th style={{ padding: '4px 8px', fontWeight: 500, textAlign: 'right' }}>
                 {title}
               </th>
+              {drilldownRouteTemplate ? (
+                <th style={{ padding: '4px 8px', fontWeight: 500, textAlign: 'right' }}>
+                  Details
+                </th>
+              ) : null}
             </tr>
           </thead>
           <tbody>
@@ -150,6 +161,10 @@ export default function QueueMetricsList({
               const queueKey =
                 queue.key ??
                 `${queue.queue_name ?? 'unknown'}::${queue.service_name ?? 'unknown'}::${index}`;
+              const detailHref = buildInterpolatedPath(
+                drilldownRouteTemplate,
+                queue as Record<string, unknown>,
+              );
               const isSelected = selectedQueues.includes(queueKey);
               const isFaded = selectedQueues.length > 0 && !isSelected;
               const { selectedBg, hoverBg, valueColor, displayValue } = getQueueDisplayConfig(
@@ -233,6 +248,27 @@ export default function QueueMetricsList({
                   >
                     {displayValue}
                   </td>
+                  {drilldownRouteTemplate ? (
+                    <td
+                      style={{
+                        padding: '4px 8px',
+                        textAlign: 'right',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {detailHref ? (
+                        <Link
+                          to={detailHref}
+                          onClick={(event) => event.stopPropagation()}
+                          style={{ color: APP_COLORS.hex_48cae4, fontSize: '12px', fontWeight: 500 }}
+                        >
+                          View
+                        </Link>
+                      ) : (
+                        <span style={{ color: APP_COLORS.hex_8e8e8e, fontSize: '12px' }}>—</span>
+                      )}
+                    </td>
+                  ) : null}
                 </tr>
               );
             })}

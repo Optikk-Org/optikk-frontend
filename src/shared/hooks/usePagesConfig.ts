@@ -22,7 +22,8 @@ export function usePagesConfig(): UsePagesConfigResult {
     queryKey: ['default-config', 'pages', selectedTeamId],
     queryFn: () => defaultConfigService.listPages(selectedTeamId),
     enabled: !!selectedTeamId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 
   return {

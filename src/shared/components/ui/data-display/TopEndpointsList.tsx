@@ -1,4 +1,7 @@
+import { Link } from 'react-router-dom';
+
 import { formatNumber, formatDuration } from '@shared/utils/formatters';
+import { buildInterpolatedPath } from '@shared/utils/placeholderInterpolation';
 
 import { APP_COLORS } from '@config/colorLiterals';
 
@@ -25,6 +28,7 @@ interface TopEndpointListItem {
   errorRate?: number;
   value?: number;
   latency?: number;
+  [key: string]: unknown;
 }
 
 interface TopEndpointsListProps {
@@ -33,6 +37,7 @@ interface TopEndpointsListProps {
   selectedEndpoints?: string[];
   onToggle?: (endpointKey: string) => void;
   type?: TopEndpointsListType;
+  drilldownRouteTemplate?: string;
 }
 
 interface RowDisplayConfig {
@@ -85,6 +90,7 @@ export default function TopEndpointsList({
   selectedEndpoints = [],
   onToggle,
   type = 'requests', // 'requests', 'errorRate', 'latency'
+  drilldownRouteTemplate,
 }: TopEndpointsListProps): JSX.Element | null {
   if (endpoints.length === 0) return null;
 
@@ -117,11 +123,20 @@ export default function TopEndpointsList({
               <th style={{ padding: '4px 8px', fontWeight: 500, textAlign: 'right' }}>
                 {title}
               </th>
+              {drilldownRouteTemplate ? (
+                <th style={{ padding: '4px 8px', fontWeight: 500, textAlign: 'right' }}>
+                  Details
+                </th>
+              ) : null}
             </tr>
           </thead>
           <tbody>
             {endpoints.map((endpoint, index) => {
               const endpointKey = endpoint.key ?? `${endpoint.endpoint ?? 'unknown'}-${index}`;
+              const detailHref = buildInterpolatedPath(
+                drilldownRouteTemplate,
+                endpoint as Record<string, unknown>,
+              );
               const isSelected = selectedEndpoints.includes(endpointKey);
               const isFaded = selectedEndpoints.length > 0 && !isSelected;
               const { selectedBg, hoverBg, valueColor, displayValue } = getRowDisplayConfig(
@@ -198,6 +213,27 @@ export default function TopEndpointsList({
                   >
                     {displayValue}
                   </td>
+                  {drilldownRouteTemplate ? (
+                    <td
+                      style={{
+                        padding: '4px 8px',
+                        textAlign: 'right',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {detailHref ? (
+                        <Link
+                          to={detailHref}
+                          onClick={(event) => event.stopPropagation()}
+                          style={{ color: APP_COLORS.hex_48cae4, fontSize: '12px', fontWeight: 500 }}
+                        >
+                          View
+                        </Link>
+                      ) : (
+                        <span style={{ color: APP_COLORS.hex_8e8e8e, fontSize: '12px' }}>—</span>
+                      )}
+                    </td>
+                  ) : null}
                 </tr>
               );
             })}

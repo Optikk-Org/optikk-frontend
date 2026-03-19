@@ -24,7 +24,8 @@ export function useTabComponents(pageId: string, tabId: string): UseTabComponent
     queryKey: ['default-config', 'components', selectedTeamId, pageId, tabId],
     queryFn: () => defaultConfigService.listTabComponents(selectedTeamId, pageId, tabId),
     enabled: !!selectedTeamId && !!pageId && !!tabId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 
   const components = useMemo(

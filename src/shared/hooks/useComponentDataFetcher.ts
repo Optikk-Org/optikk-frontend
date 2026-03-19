@@ -5,6 +5,7 @@ import type { DashboardComponentSpec } from '@/types/dashboardConfig';
 
 import { api } from '@shared/api/api/client';
 import type { ApiErrorShape } from '@shared/api/api/interceptors/errorInterceptor';
+import { interpolateValue } from '@shared/utils/placeholderInterpolation';
 
 import { useAppStore } from '@store/appStore';
 
@@ -51,13 +52,14 @@ function toApiErrorShape(error: unknown): ApiErrorShape {
 function buildRequestKey(
   component: DashboardComponentSpec,
   resolvedEndpoint: string,
+  resolvedParams: Record<string, unknown>,
   startMs: number,
   endMs: number,
 ) {
   return JSON.stringify({
     method: component.query!.method || 'GET',
     endpoint: resolvedEndpoint,
-    params: component.query!.params || {},
+    params: resolvedParams,
     startMs,
     endMs,
   });
@@ -101,11 +103,23 @@ export function useComponentDataFetcher(
 
     components.forEach((component) => {
       if (!component.query) return;
-      const resolvedEndpoint = pathParams
-        ? component.query.endpoint.replace(/\{(\w+)\}/g, (_, key) => pathParams[key] ?? `{${key}}`)
-        : component.query.endpoint;
+      const interpolationValues = pathParams ?? {};
+      const resolvedEndpoint = interpolateValue(
+        component.query.endpoint,
+        interpolationValues,
+      );
+      const resolvedParams = interpolateValue(
+        component.query.params || {},
+        interpolationValues,
+      ) as Record<string, unknown>;
       const method = String(component.query.method || 'GET').toUpperCase();
-      const requestKey = buildRequestKey(component, resolvedEndpoint, startMs, endMs);
+      const requestKey = buildRequestKey(
+        component,
+        resolvedEndpoint,
+        resolvedParams,
+        startMs,
+        endMs,
+      );
 
       const current = entries.get(requestKey);
       if (current) {
@@ -117,7 +131,7 @@ export function useComponentDataFetcher(
         componentIds: [component.id],
         endpoint: resolvedEndpoint,
         method,
-        params: component.query.params || {},
+        params: resolvedParams,
       });
     });
 

@@ -10,6 +10,12 @@ const MetricsPage = lazy(() =>
 const SaturationHubPage = lazy(() =>
   import('./pages/SaturationHubPage').then((module) => ({ default: module.default })),
 );
+const KafkaTopicDetailPage = lazy(() =>
+  import('./pages/KafkaTopicDetailPage').then((module) => ({ default: module.default })),
+);
+const KafkaGroupDetailPage = lazy(() =>
+  import('./pages/KafkaGroupDetailPage').then((module) => ({ default: module.default })),
+);
 
 export /**
  *
@@ -35,6 +41,8 @@ const metricsConfig: DomainConfig = {
   routes: [
     { path: ROUTES.metrics, page: MetricsPage },
     { path: ROUTES.saturation, page: SaturationHubPage },
+    { path: ROUTES.kafkaTopicDetail, page: KafkaTopicDetailPage },
+    { path: ROUTES.kafkaGroupDetail, page: KafkaGroupDetailPage },
   ],
 };
 
@@ -46,6 +54,8 @@ export { default as ResourceUtilizationPageView } from './pages/ResourceUtilizat
 
 
 export { default as MessagingQueueMonitoringPageView } from './pages/MessagingQueueMonitoringPage';
+export { default as KafkaTopicDetailPageView } from './pages/KafkaTopicDetailPage';
+export { default as KafkaGroupDetailPageView } from './pages/KafkaGroupDetailPage';
 export * from './components';
 export * from './utils';
 export * from './types';

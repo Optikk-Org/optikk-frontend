@@ -1,4 +1,6 @@
 import type { TraceRecord } from '../types';
+import { asRecord, toNumber, toStringValue } from '@shared/utils/coerce';
+export { asRecord, toNumber, toStringValue };
 
 interface TraceFilterOperator {
   key: string;
@@ -28,36 +30,6 @@ export interface TracesResponse {
   traces: unknown[];
   total: number;
   summary: TracesSummary;
-}
-
-/**
- *
- */
-export function asRecord(value: unknown): Record<string, unknown> {
-  if (typeof value !== 'object' || value === null) {
-    return {};
-  }
-
-  const record: Record<string, unknown> = {};
-  for (const [key, entryValue] of Object.entries(value)) {
-    record[key] = entryValue;
-  }
-  return record;
-}
-
-/**
- *
- */
-export function toNumber(value: unknown): number {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-/**
- *
- */
-export function toStringValue(value: unknown): string {
-  return typeof value === 'string' ? value : '';
 }
 
 /**

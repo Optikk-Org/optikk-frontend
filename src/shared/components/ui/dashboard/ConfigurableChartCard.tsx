@@ -27,7 +27,6 @@ import {
 import {
   AiBarRenderer,
   AiLineRenderer,
-  AreaRenderer,
   BarRenderer,
   DbSystemsRenderer,
   GaugeRenderer,
@@ -66,7 +65,6 @@ const DASHBOARD_COMPONENT_MAP: Record<string, ComponentType<any>> = {
   'ai-bar': AiBarRenderer,
   table: TableRenderer,
   bar: BarRenderer,
-  area: AreaRenderer,
   gauge: GaugeRenderer,
   scorecard: ScorecardRenderer,
   heatmap: HeatmapRenderer,
@@ -84,7 +82,6 @@ const SPECIALIZED_COMPONENT_KEYS = new Set([
   'ai-bar',
   'table',
   'bar',
-  'area',
   'pie',
   'gauge',
   'scorecard',
@@ -323,12 +320,13 @@ export default function ConfigurableChartCard({
         <ChartComponent {...chartProps} />
       </div>
       {showEndpointList && (
-        <TopEndpointsList
+      <TopEndpointsList
           title={String(defaultListTitleForChart(chartConfig))}
           type={endpointListType as any}
           endpoints={endpoints}
           selectedEndpoints={selectedEndpoints}
           onToggle={toggleEndpoint}
+          drilldownRouteTemplate={chartConfig.drilldownRoute as string | undefined}
         />
       )}
       {showQueueList && (
@@ -338,6 +336,7 @@ export default function ConfigurableChartCard({
           queues={endpoints}
           selectedQueues={selectedEndpoints}
           onToggle={toggleEndpoint}
+          drilldownRouteTemplate={chartConfig.drilldownRoute as string | undefined}
         />
       )}
     </Card>

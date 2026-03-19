@@ -2,6 +2,7 @@ import { Tabs } from 'antd';
 import { Database, Network } from 'lucide-react';
 
 import ConfiguredTabPanel from '@shared/components/ui/dashboard/ConfiguredTabPanel';
+import { useUrlSyncedTab } from '@shared/hooks/useUrlSyncedTab';
 import MessagingQueueMonitoringPage from '../MessagingQueueMonitoringPage';
 
 /**
@@ -10,6 +11,11 @@ import MessagingQueueMonitoringPage from '../MessagingQueueMonitoringPage';
  * so adding new charts only requires updating database.json — no frontend changes needed.
  */
 export default function SaturationHubPage() {
+  const { activeTab, onTabChange } = useUrlSyncedTab({
+    allowedTabs: ['database', 'mq'] as const,
+    defaultTab: 'database',
+  });
+
   const items = [
     {
       key: 'database',
@@ -33,5 +39,5 @@ export default function SaturationHubPage() {
     },
   ];
 
-  return <Tabs defaultActiveKey="database" items={items} />;
+  return <Tabs activeKey={activeTab} onChange={onTabChange} items={items} />;
 }

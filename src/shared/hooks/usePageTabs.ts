@@ -22,7 +22,8 @@ export function usePageTabs(pageId: string): UsePageTabsResult {
     queryKey: ['default-config', 'tabs', selectedTeamId, pageId],
     queryFn: () => defaultConfigService.listPageTabs(selectedTeamId, pageId),
     enabled: !!selectedTeamId && !!pageId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 
   return {

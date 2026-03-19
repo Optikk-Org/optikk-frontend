@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { formatRelativeTime } from '@shared/utils/formatters';
 
 interface UseAutoRefreshOptions {
   autoRefreshInterval: number;
@@ -9,17 +10,6 @@ interface UseAutoRefreshResult {
   lastRefreshAt: number;
   refreshLabel: string;
   triggerRefresh: () => void;
-}
-
-function toRelativeLabel(nowMs: number, sinceMs: number): string {
-  const diffSeconds = Math.max(0, Math.floor((nowMs - sinceMs) / 1000));
-  if (diffSeconds < 60) return `${diffSeconds}s ago`;
-
-  const minutes = Math.floor(diffSeconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-
-  const hours = Math.floor(minutes / 60);
-  return `${hours}h ago`;
 }
 
 /**
@@ -57,7 +47,8 @@ export function useAutoRefresh({
   }, [autoRefreshInterval]);
 
   const refreshLabel = useMemo(
-    () => toRelativeLabel(now, lastRefreshAt),
+    () => formatRelativeTime(lastRefreshAt),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [now, lastRefreshAt],
   );
 

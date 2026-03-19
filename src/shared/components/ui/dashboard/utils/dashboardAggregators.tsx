@@ -169,7 +169,8 @@ export function groupTimeseries(rows: any[], groupByKey: string) {
     } else if (groupByKey === 'exceptionType') {
       key = exceptionType;
     } else {
-      key = serviceName || queueName || '';
+      const directValue = strValue(row, [groupByKey], '');
+      key = directValue || serviceName || queueName || '';
     }
     if (!key) continue;
     if (!map[key]) map[key] = [];
@@ -300,6 +301,7 @@ export function defaultListTitleForChart(chartConfig: DashboardComponentSpec) {
 export function buildGroupedListFromTimeseries(serviceTimeseriesMap: Record<string, any[]>, chartConfig: DashboardComponentSpec) {
   const listType = defaultListTypeForChart(chartConfig);
   const valueKey = chartConfig.valueKey || 'request_count';
+  const groupByKey = String(chartConfig.groupByKey || 'group');
 
   const rows = Object.entries(serviceTimeseriesMap || {})
     .map(([groupName, groupRows]) => {
@@ -334,6 +336,7 @@ export function buildGroupedListFromTimeseries(serviceTimeseriesMap: Record<stri
         endpoint: groupName,
         service: chartConfig.groupByKey === 'service' ? groupName : '',
         key: groupName,
+        [groupByKey]: groupName,
         request_count: valueTotal > 0 ? valueTotal : requestCount,
         error_count: errorCount,
         errorRate,

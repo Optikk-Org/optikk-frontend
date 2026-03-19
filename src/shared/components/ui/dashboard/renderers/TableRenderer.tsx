@@ -1,5 +1,6 @@
 import { Empty, Table } from 'antd';
 import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 
 import type {
@@ -23,6 +24,7 @@ import {
 } from '@shared/utils/chartHelpers';
 
 import { APP_COLORS } from '@config/colorLiterals';
+import { buildInterpolatedPath } from '@shared/utils/placeholderInterpolation';
 
 import { useDashboardData } from '../hooks/useDashboardData';
 import { buildAiTimeseries, resolveDataSourceId } from '../utils/dashboardUtils';
@@ -41,7 +43,7 @@ export function TableRenderer({
 
   const columns = useMemo(() => {
     if (rows.length === 0) return [];
-    return Object.keys(rows[0]).slice(0, 8).map((key) => ({
+    const baseColumns = Object.keys(rows[0]).slice(0, 8).map((key) => ({
       title: key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim(),
       dataIndex: key,
       key,
@@ -52,7 +54,23 @@ export function TableRenderer({
         return String(val);
       },
     }));
-  }, [rows]);
+    if (!chartConfig.drilldownRoute) {
+      return baseColumns;
+    }
+
+    return [
+      ...baseColumns,
+      {
+        title: 'Details',
+        key: '__details',
+        align: 'right' as const,
+        render: (_val: unknown, row: Record<string, unknown>) => {
+          const href = buildInterpolatedPath(chartConfig.drilldownRoute as string, row);
+          return href ? <Link to={href}>View</Link> : '—';
+        },
+      },
+    ];
+  }, [chartConfig.drilldownRoute, rows]);
   if (rows.length === 0) {
     return <Empty description="No data" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: 20 }} />;
   }

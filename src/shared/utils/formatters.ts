@@ -7,31 +7,24 @@ import { APP_COLORS } from '@config/colorLiterals';
  * Numeric thresholds used across formatter helpers.
  */
 const ONE_THOUSAND = 1000;
-const ONE_MILLION = 1_000_000;
-const ONE_BILLION = 1_000_000_000;
 const ONE_MINUTE_MS = 60_000;
 const ONE_DAY_HOURS = 24;
 const THIRTY_DAYS = 30;
 const MICROSECONDS_MULTIPLIER = 1000;
 
+const compactFormatter = new Intl.NumberFormat('en', {
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
+
 /**
- * Format large numbers with K, M, B suffixes
+ * Format large numbers with compact notation (K, M, B suffixes).
  * @param num
  */
 export function formatNumber(num: number | string | null | undefined): string {
-  let value = Number(num);
-  value = value === 0 ? 0 : value;
+  const value = Number(num);
   if (!Number.isFinite(value)) return '0';
-  if (value >= ONE_BILLION) {
-    return `${(value / ONE_BILLION).toFixed(1)}B`;
-  }
-  if (value >= ONE_MILLION) {
-    return `${(value / ONE_MILLION).toFixed(1)}M`;
-  }
-  if (value >= ONE_THOUSAND) {
-    return `${(value / ONE_THOUSAND).toFixed(1)}K`;
-  }
-  return value.toString();
+  return compactFormatter.format(value);
 }
 
 /**
@@ -144,16 +137,6 @@ export function getHealthColor(status: string): string {
     unknown: APP_COLORS.hex_98a2b3,
   };
   return colors[status] ?? colors.unknown;
-}
-
-/**
- * Truncate text to maxLength, appending ellipsis if truncated.
- * @param text
- * @param maxLength
- */
-export function truncateText(text: string, maxLength = 100): string {
-  if (!text || text.length <= maxLength) return text;
-  return `${text.substring(0, maxLength)}...`;
 }
 
 /**

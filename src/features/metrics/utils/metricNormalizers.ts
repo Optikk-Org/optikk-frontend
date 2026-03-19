@@ -5,12 +5,10 @@ import type {
   MetricTimeSeriesPoint,
   ServiceMetricPoint,
 } from '../types';
+import { asRecord as _asRecord } from '@shared/utils/coerce';
 
 function asRecord(value: unknown): DomainRecord {
-  if (typeof value !== 'object' || value === null) {
-    return {};
-  }
-  return value as DomainRecord;
+  return _asRecord(value) as DomainRecord;
 }
 
 function num(record: DomainRecord, ...keys: string[]): number {

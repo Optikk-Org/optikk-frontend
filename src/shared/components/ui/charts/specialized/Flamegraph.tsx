@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { FlamegraphNode } from '@features/traces/types';
-import { useResizeObserver } from '@hooks/useResizeObserver';
+import { useMeasure } from 'react-use';
 
 interface FlamegraphProps {
   data: FlamegraphNode;
@@ -9,9 +9,8 @@ interface FlamegraphProps {
 }
 
 export default function Flamegraph({ data, onNodeClick, height = 400 }: FlamegraphProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerRef, dimensions] = useMeasure<HTMLDivElement>();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const dimensions = useResizeObserver(containerRef);
 
   useEffect(() => {
     if (!canvasRef.current || !dimensions.width || !data) return;

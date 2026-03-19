@@ -49,6 +49,7 @@ export interface DashboardComponentSpec extends Record<string, any> {
   type?: string;
   key?: string;
   groupId?: string;
+  drilldownRoute?: string;
 }
 
 /**

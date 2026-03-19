@@ -6,37 +6,12 @@ import type {
   ServiceTopologyEdge,
   ServiceTopologyNode,
 } from '../types';
+import { asRecord as _asRecord, asArray, toNumber, toStringValue } from '@shared/utils/coerce';
 
-/**
- *
- */
+export { asArray, toNumber, toStringValue };
+
 export function asRecord(value: unknown): DomainRecord {
-  if (typeof value !== 'object' || value === null) {
-    return {};
-  }
-  return value as DomainRecord;
-}
-
-/**
- *
- */
-export function asArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
-}
-
-/**
- *
- */
-export function toNumber(value: unknown): number {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-/**
- *
- */
-export function toStringValue(value: unknown): string {
-  return typeof value === 'string' ? value : '';
+  return _asRecord(value) as DomainRecord;
 }
 
 /**

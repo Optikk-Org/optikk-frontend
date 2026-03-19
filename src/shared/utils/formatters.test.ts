@@ -10,7 +10,6 @@ import {
   getErrorRateColor,
   getHealthColor,
   normalizePercentage,
-  truncateText,
 } from './formatters';
 
 describe('formatters', () => {
@@ -52,13 +51,11 @@ describe('formatters', () => {
     expect(formatRelativeTime('2025-12-01T12:00:00.000Z')).toContain('12/1/2025');
   });
 
-  it('returns display helpers for colors and truncation', () => {
+  it('returns display helpers for colors', () => {
     expect(getHealthColor('healthy')).toBe(APP_COLORS.hex_73c991);
     expect(getHealthColor('missing')).toBe(APP_COLORS.hex_98a2b3);
     expect(getErrorRateColor(0.4)).toBe(APP_COLORS.hex_73c991);
     expect(getErrorRateColor(3)).toBe(APP_COLORS.hex_f79009);
     expect(getErrorRateColor(7)).toBe(APP_COLORS.hex_f04438);
-    expect(truncateText('short', 10)).toBe('short');
-    expect(truncateText('1234567890', 5)).toBe('12345...');
   });
 });

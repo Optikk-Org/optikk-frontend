@@ -16,7 +16,6 @@ export * from './renderers/AiBarRenderer';
 export * from './renderers/TableRenderer';
 export * from './renderers/BarRenderer';
 export * from './renderers/PieRenderer';
-export * from './renderers/AreaRenderer';
 export * from './renderers/GaugeRenderer';
 export * from './renderers/ScorecardRenderer';
 export * from './renderers/HeatmapRenderer';
