@@ -1,4 +1,3 @@
-import { Empty, Table } from 'antd';
 import { useMemo } from 'react';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 
@@ -89,7 +88,7 @@ export function AiBarRenderer({
   }, [rows, filterValue, groupKey, labelKey, stacked, chartConfig]);
 
   if (!chartData || !chartData.hasData) {
-    return <Empty description="No data" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: 20 }} />;
+    return <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>No data</div>;
   }
   const tickCallback = chartConfig.yPrefix
     ? (value: any) => `${chartConfig.yPrefix}${Number(value).toFixed(chartConfig.yDecimals ?? 4)}`

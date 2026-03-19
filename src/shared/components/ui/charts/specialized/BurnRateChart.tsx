@@ -3,7 +3,7 @@
  * Renders an SLO burn rate gauge + trend sparkline.
  * Shows the 1h and 6h burn rate windows with threshold indicators.
  */
-import { Card, Row, Col, Statistic } from 'antd';
+import { Surface } from '@shared/design-system';
 import React from 'react';
 import {
     LineChart, Line, XAxis, YAxis, ReferenceLine,
@@ -45,45 +45,28 @@ const BurnRateChart: React.FC<BurnRateChartProps> = ({
     const current6h = latest?.burnRate6h ?? 0;
 
     return (
-        <Card title={title} className="chart-card" size="small">
-            <Row gutter={16} style={{ marginBottom: 12 }}>
-                <Col span={8}>
-                    <Statistic
-                        title={<span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>1h Burn Rate</span>}
-                        value={current1h.toFixed(2)}
-                        suffix="×"
-                        valueStyle={{
-                            fontSize: 'var(--text-xl)',
-                            color: burnRateColor(current1h, fastBurnThreshold, slowBurnThreshold),
-                            fontWeight: 'var(--font-bold)',
-                        }}
-                    />
-                </Col>
-                <Col span={8}>
-                    <Statistic
-                        title={<span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>6h Burn Rate</span>}
-                        value={current6h.toFixed(2)}
-                        suffix="×"
-                        valueStyle={{
-                            fontSize: 'var(--text-xl)',
-                            color: burnRateColor(current6h, fastBurnThreshold * 0.5, slowBurnThreshold),
-                            fontWeight: 'var(--font-bold)',
-                        }}
-                    />
-                </Col>
-                <Col span={8}>
-                    <Statistic
-                        title={<span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>SLO Target</span>}
-                        value={sloTarget}
-                        suffix="%"
-                        valueStyle={{
-                            fontSize: 'var(--text-xl)',
-                            color: 'var(--color-success)',
-                            fontWeight: 'var(--font-bold)',
-                        }}
-                    />
-                </Col>
-            </Row>
+        <Surface className="chart-card" padding="sm">
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>{title}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 12 }}>
+                <div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>1h Burn Rate</div>
+                    <div style={{ fontSize: 'var(--text-xl)', color: burnRateColor(current1h, fastBurnThreshold, slowBurnThreshold), fontWeight: 'var(--font-bold)' }}>
+                        {current1h.toFixed(2)}×
+                    </div>
+                </div>
+                <div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>6h Burn Rate</div>
+                    <div style={{ fontSize: 'var(--text-xl)', color: burnRateColor(current6h, fastBurnThreshold * 0.5, slowBurnThreshold), fontWeight: 'var(--font-bold)' }}>
+                        {current6h.toFixed(2)}×
+                    </div>
+                </div>
+                <div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>SLO Target</div>
+                    <div style={{ fontSize: 'var(--text-xl)', color: 'var(--color-success)', fontWeight: 'var(--font-bold)' }}>
+                        {sloTarget}%
+                    </div>
+                </div>
+            </div>
 
             <ResponsiveContainer width="100%" height={120}>
                 <LineChart data={data}>
@@ -101,7 +84,7 @@ const BurnRateChart: React.FC<BurnRateChartProps> = ({
                     <Line dataKey="burnRate6h" stroke="var(--chart-2)" strokeWidth={2} dot={false} name="6h" strokeDasharray="4 2" />
                 </LineChart>
             </ResponsiveContainer>
-        </Card>
+        </Surface>
     );
 };
 

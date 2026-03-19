@@ -1,4 +1,4 @@
-import { Spin, Tooltip } from 'antd';
+import { Tooltip } from '@shared/design-system';
 import { useMemo } from 'react';
 
 import { formatNumber } from '@shared/utils/formatters';
@@ -127,7 +127,7 @@ function VolumeBar({ bucket, maxTotal, step }: VolumeBarProps) {
   );
 
   return (
-    <Tooltip title={tooltip} placement="top">
+    <Tooltip content={tooltip} placement="top">
       <div
         className={`logs-volume-bar-wrapper${totalCount === 0 ? ' logs-volume-bar-wrapper--empty' : ''}`}
       >
@@ -192,7 +192,7 @@ export default function LogVolumeChart({ buckets, step, isLoading }: LogVolumeCh
     [buckets, step, tickIndices],
   );
 
-  if (isLoading) return <div className="logs-chart-empty"><Spin size="small" /></div>;
+  if (isLoading) return <div className="logs-chart-empty"><div className="ok-spinner" /></div>;
   if (buckets.length === 0) return <div className="logs-chart-empty">No volume data</div>;
 
   return (

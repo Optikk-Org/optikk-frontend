@@ -1,4 +1,5 @@
-import { Row, Col, Spin, Empty, Tag, Table } from 'antd';
+import { Table } from 'antd';
+import { Badge } from '@shared/design-system';
 import { GitBranch, Layers, Clock, AlertCircle, ArrowLeft, FileText, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -76,9 +77,9 @@ export default function TraceDetailPage() {
       key: 'level',
       width: 90,
       render: (level: unknown) => (
-        <Tag color={level === 'ERROR' ? 'red' : level === 'WARN' ? 'orange' : APP_COLORS.hex_73c991}>
+        <Badge color={level === 'ERROR' ? 'red' : level === 'WARN' ? 'orange' : APP_COLORS.hex_73c991}>
           {typeof level === 'string' && level.length > 0 ? level : 'INFO'}
-        </Tag>
+        </Badge>
       ),
     },
     {
@@ -131,33 +132,26 @@ export default function TraceDetailPage() {
 
       {isLoading ? (
         <div className="trace-detail-loading">
-          <Spin size="large" />
+          <div className="ok-spinner" />
         </div>
       ) : spans.length === 0 ? (
-        <Empty description="No spans found for this trace" />
+        <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)' }}>No spans found for this trace</div>
       ) : (
         <>
           {/* Stats row */}
-          <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-            <Col xs={24} sm={12} lg={6}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginBottom: 16 }}>
               <StatCard
                 metric={{ title: 'Total Spans', value: stats.totalSpans, formatter: formatNumber }}
                 visuals={{ icon: <Layers size={20} />, iconColor: APP_COLORS.hex_5e60ce }}
               />
-            </Col>
-            <Col xs={24} sm={12} lg={6}>
               <StatCard
                 metric={{ title: 'Duration', value: stats.duration, formatter: formatDuration }}
                 visuals={{ icon: <Clock size={20} />, iconColor: APP_COLORS.hex_73c991 }}
               />
-            </Col>
-            <Col xs={24} sm={12} lg={6}>
               <StatCard
                 metric={{ title: 'Services', value: stats.services.size, formatter: formatNumber }}
                 visuals={{ icon: <GitBranch size={20} />, iconColor: APP_COLORS.hex_06aed5 }}
               />
-            </Col>
-            <Col xs={24} sm={12} lg={6}>
               <StatCard
                 metric={{ title: 'Errors', value: stats.errors, formatter: formatNumber }}
                 visuals={{
@@ -165,20 +159,15 @@ export default function TraceDetailPage() {
                   iconColor: stats.errors > 0 ? APP_COLORS.hex_f04438 : APP_COLORS.hex_73c991,
                 }}
               />
-            </Col>
-            <Col xs={24} sm={12} lg={6}>
               <StatCard
                 metric={{ title: 'Apdex Score', value: 0.95, formatter: (v: any) => Number(v).toFixed(2) }}
                 visuals={{ icon: <Layers size={20} />, iconColor: APP_COLORS.hex_73c991 }}
               />
-            </Col>
-            <Col xs={24} sm={12} lg={6}>
               <StatCard
                 metric={{ title: 'Self Time', value: spanSelfTimes.reduce((acc, s) => acc + s.selfTimeMs, 0), formatter: formatDuration }}
                 visuals={{ icon: <Clock size={20} />, iconColor: '#06aed5' }}
               />
-            </Col>
-          </Row>
+          </div>
 
           {/* Service pills + span kind breakdown */}
           <div
@@ -294,20 +283,20 @@ export default function TraceDetailPage() {
               <FileText size={18} />
               <span>Associated Logs</span>
               {traceLogs.length > 0 && (
-                <Tag
+                <Badge
                   color="default"
                   style={{ marginLeft: 8, background: APP_COLORS.rgba_255_255_255_0p06_2, border: 'none', color: 'var(--text-secondary)' }}
                 >
                   {traceLogs.length} events
-                </Tag>
+                </Badge>
               )}
             </div>
             {logsLoading ? (
               <div className="trace-detail-loading" style={{ padding: '40px 0', textAlign: 'center' }}>
-                <Spin size="large" />
+                <div className="ok-spinner" />
               </div>
             ) : traceLogs.length === 0 ? (
-              <Empty description="No logs associated with this trace" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)' }}>No logs associated with this trace</div>
             ) : (
               <Table
                 columns={logColumns}

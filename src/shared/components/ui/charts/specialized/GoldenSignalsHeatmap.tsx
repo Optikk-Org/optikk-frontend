@@ -3,7 +3,7 @@
  * Renders a colour-coded matrix of error rates bucketed by service × time.
  * Colours map to severity tokens from the design system (Fix 13).
  */
-import { Card, Tooltip, Typography } from 'antd';
+import { Surface, Tooltip } from '@shared/design-system';
 import React, { useMemo } from 'react';
 
 interface HeatCell {
@@ -38,12 +38,8 @@ const GoldenSignalsHeatmap: React.FC<GoldenSignalsHeatmapProps> = ({
     }, [data]);
 
     return (
-        <Card
-            title={title}
-            className="chart-card"
-            size="small"
-            style={{ overflow: 'auto' }}
-        >
+        <Surface className="chart-card" padding="sm" style={{ overflow: 'auto' }}>
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>{title}</div>
             <div style={{ overflowX: 'auto' }}>
                 <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 'var(--text-xs)' }}>
                     <thead>
@@ -68,7 +64,7 @@ const GoldenSignalsHeatmap: React.FC<GoldenSignalsHeatmapProps> = ({
                                     const rate = lookup.get(`${svc}::${t}`) ?? 0;
                                     return (
                                         <td key={t} style={{ padding: 2 }}>
-                                            <Tooltip title={`${svc} @ ${t}: ${rate.toFixed(2)}% error rate`}>
+                                            <Tooltip content={`${svc} @ ${t}: ${rate.toFixed(2)}% error rate`}>
                                                 <div
                                                     style={{
                                                         width: 28,
@@ -101,13 +97,13 @@ const GoldenSignalsHeatmap: React.FC<GoldenSignalsHeatmapProps> = ({
                 ].map(({ label, color }) => (
                     <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         <div style={{ width: 12, height: 12, borderRadius: 2, background: color }} />
-                        <Typography.Text style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+                        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
                             {label}
-                        </Typography.Text>
+                        </span>
                     </div>
                 ))}
             </div>
-        </Card>
+        </Surface>
     );
 };
 

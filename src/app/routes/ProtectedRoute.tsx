@@ -1,4 +1,3 @@
-import { Skeleton } from 'antd';
 import { useEffect, useRef } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 

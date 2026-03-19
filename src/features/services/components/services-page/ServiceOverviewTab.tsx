@@ -1,4 +1,4 @@
-import { Col, Progress, Row, Segmented, Tag } from 'antd';
+import { Badge } from '@shared/design-system';
 import { Activity, AlertCircle, Layers, LayoutGrid, List, ShieldAlert } from 'lucide-react';
 
 import SparklineChart from '@shared/components/ui/charts/micro/SparklineChart';
@@ -121,21 +121,27 @@ export function ServiceOverviewTab({
           },
         ]}
         actions={
-          <Segmented
-            value={viewMode}
-            onChange={handleViewModeChange}
-            options={[
-              { value: 'table', icon: <List size={14} /> },
-              { value: 'grid', icon: <LayoutGrid size={14} /> },
-            ]}
-          />
+          <div style={{ display: 'inline-flex', borderRadius: 6, border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+            <button
+              onClick={() => handleViewModeChange('table')}
+              style={{ padding: '4px 10px', background: viewMode === 'table' ? 'var(--bg-tertiary)' : 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            >
+              <List size={14} />
+            </button>
+            <button
+              onClick={() => handleViewModeChange('grid')}
+              style={{ padding: '4px 10px', background: viewMode === 'grid' ? 'var(--bg-tertiary)' : 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            >
+              <LayoutGrid size={14} />
+            </button>
+          </div>
         }
       />
 
       <div className="services-health-tags" style={{ marginBottom: 16 }}>
-        <Tag color="green">Healthy ({healthyServices})</Tag>
-        <Tag color="orange">Degraded ({degradedServices})</Tag>
-        <Tag color="red">Unhealthy ({unhealthyServices})</Tag>
+        <Badge style={{ background: 'rgba(115,201,145,0.15)', color: '#73c991', border: '1px solid rgba(115,201,145,0.3)' }}>Healthy ({healthyServices})</Badge>
+        <Badge style={{ background: 'rgba(247,144,9,0.15)', color: '#f79009', border: '1px solid rgba(247,144,9,0.3)' }}>Degraded ({degradedServices})</Badge>
+        <Badge style={{ background: 'rgba(240,68,56,0.15)', color: '#f04438', border: '1px solid rgba(240,68,56,0.3)' }}>Unhealthy ({unhealthyServices})</Badge>
       </div>
 
       {viewMode === 'table' ? (
@@ -201,11 +207,11 @@ export function ServiceOverviewTab({
           />
         </div>
       ) : (
-        <Row gutter={[16, 16]}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
           {tableData.map((service: ServiceTableRow) => {
             const status = service.status;
             return (
-              <Col xs={24} sm={12} md={8} lg={6} key={service.serviceName}>
+              <div key={service.serviceName}>
                 <div
                   className="services-grid-card"
                   onClick={() => onNodeClick(service.serviceName)}
@@ -273,13 +279,9 @@ export function ServiceOverviewTab({
                     </span>
                   </div>
 
-                  <Progress
-                    percent={Math.min(service.errorRate, 100)}
-                    size="small"
-                    showInfo={false}
-                    strokeColor={service.errorRate > 5 ? APP_COLORS.hex_f04438 : service.errorRate > 1 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991}
-                    style={{ marginBottom: 8 }}
-                  />
+                  <div style={{ height: 4, background: 'var(--bg-tertiary)', borderRadius: 2, overflow: 'hidden', marginBottom: 8 }}>
+                    <div style={{ width: `${Math.min(service.errorRate, 100)}%`, height: '100%', background: service.errorRate > 5 ? APP_COLORS.hex_f04438 : service.errorRate > 1 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991, borderRadius: 2 }} />
+                  </div>
 
                   <div
                     style={{
@@ -293,10 +295,10 @@ export function ServiceOverviewTab({
                     <span>P95: {formatDuration(service.p95Latency)}</span>
                   </div>
                 </div>
-              </Col>
+              </div>
             );
           })}
-        </Row>
+        </div>
       )}
     </>
   );

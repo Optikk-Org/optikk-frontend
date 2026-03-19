@@ -21,15 +21,23 @@ const toNumber = (value: unknown): number => {
 
 const toStringValue = (value: unknown): string => (typeof value === 'string' ? value : '');
 
+/**
+ * @param activeDetailTab - The currently active tab in SpanDetailDrawer.
+ *   Queries for events, self-time, and related traces are lazy-loaded —
+ *   they only fire when the user opens the corresponding tab.
+ *   Critical path and error path always load since they're used for waterfall highlighting.
+ */
 export function useTraceDetailEnhanced(
   traceId: string,
   selectedSpanId: string | null,
   relatedContext?: { service_name?: string; operation_name?: string } | null,
   startMs?: number,
   endMs?: number,
+  activeDetailTab: string = 'attributes',
 ) {
   const enabled = !!traceId;
 
+  // Critical path + error path always load — used for waterfall span highlighting
   const { data: criticalPathData } = useQuery({
     queryKey: ['trace-critical-path', traceId],
     queryFn: () => tracesService.getCriticalPath(traceId),
@@ -42,22 +50,25 @@ export function useTraceDetailEnhanced(
     enabled,
   });
 
+  // Span kind breakdown — only when detail drawer is open
   const { data: spanKindData } = useQuery({
     queryKey: ['trace-span-kind-breakdown', traceId],
     queryFn: () => tracesService.getSpanKindBreakdown(traceId),
-    enabled,
+    enabled: enabled && !!selectedSpanId,
   });
 
+  // Events — only when events tab is active
   const { data: spanEventsData } = useQuery({
     queryKey: ['trace-span-events', traceId],
     queryFn: () => tracesService.getSpanEvents(traceId),
-    enabled,
+    enabled: enabled && activeDetailTab === 'events',
   });
 
+  // Self-times — only when self-time tab is active
   const { data: spanSelfTimesData } = useQuery({
     queryKey: ['trace-span-self-times', traceId],
     queryFn: () => tracesService.getSpanSelfTimes(traceId),
-    enabled,
+    enabled: enabled && activeDetailTab === 'selftime',
   });
 
   const { data: relatedTracesData } = useQuery({

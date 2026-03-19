@@ -1,31 +1,28 @@
-import { Tag } from 'antd';
-
-import { getHealthColor } from '@shared/utils/formatters';
-
-import { STATUS_COLORS } from '@config/constants';
+import { Badge } from '@shared/design-system';
+import type { BadgeVariant } from '@shared/design-system/components/Badge';
 
 import type { StatusBadgeProps } from './types';
 
-const TRACE_STATUS_COLORS = STATUS_COLORS as Record<string, string>;
+const HEALTH_VARIANT: Record<string, BadgeVariant> = {
+  healthy: 'success',
+  degraded: 'warning',
+  unhealthy: 'error',
+  unknown: 'default',
+};
 
-const STATUS_MAPS = {
-  service: (status: string) => ({
-    color: getHealthColor(status),
-    label: status?.toUpperCase() || 'UNKNOWN',
-  }),
-  trace: (status: string) => ({
-    color: TRACE_STATUS_COLORS[status] || TRACE_STATUS_COLORS.UNKNOWN,
-    label: status || 'UNKNOWN',
-  }),
+const TRACE_VARIANT: Record<string, BadgeVariant> = {
+  OK: 'success',
+  ERROR: 'error',
+  UNSET: 'default',
 };
 
 export default function StatusBadge({ status, type = 'service' }: StatusBadgeProps): JSX.Element {
-  const resolver = STATUS_MAPS[type];
-  const { color, label } = resolver(status);
+  const label = status?.toUpperCase() || 'UNKNOWN';
 
-  return (
-    <Tag color={color} style={{ borderColor: color }}>
-      {label}
-    </Tag>
-  );
+  if (type === 'trace') {
+    return <Badge variant={TRACE_VARIANT[label] || 'default'}>{label}</Badge>;
+  }
+
+  const variant = HEALTH_VARIANT[status?.toLowerCase()] || 'default';
+  return <Badge variant={variant}>{label}</Badge>;
 }

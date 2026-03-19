@@ -1,6 +1,6 @@
-import { Switch, Tooltip, Select, Tag } from 'antd';
+import { Pagination, Switch, Tooltip } from '@shared/design-system';
 import { GitBranch, GitBranch as TraceIcon, AlertCircle, Layers, GitCompare, Radio } from 'lucide-react';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, type ChangeEvent, type MouseEvent as ReactMouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import {
@@ -89,28 +89,17 @@ export default function TracesPage(): JSX.Element {
       className="traces-page"
       header={<PageHeader title="Traces" icon={<GitBranch size={24} />} />}
       tabPanel={
-        <div style={{ display: 'flex', gap: 16 }}>
-          <div 
+        <div className="flex gap-md">
+          <div
             className={`explorer-tab ${activeView === 'explorer' ? 'active' : ''}`}
             onClick={() => setActiveView('explorer')}
           >
             Trace Explorer
           </div>
-          <div 
-            className={`explorer-tab ${activeView === 'analytics' ? 'active' : ''}`}
-            onClick={() => setActiveView('analytics')}
-          >
-            Analytics
-          </div>
         </div>
       }
       tableSection={
-        activeView === 'analytics' ? (
-          <div className="glass-panel" style={{ padding: 24, minHeight: 400 }}>
-            <h3>Trace Analytics</h3>
-            <p style={{ color: 'var(--text-muted)' }}>Interactive analytics and query builder coming soon...</p>
-          </div>
-        ) : (
+        (
           <div className="traces-table-card">
             <div className="traces-table-card-header">
               <span className="traces-table-card-title">
@@ -120,11 +109,11 @@ export default function TracesPage(): JSX.Element {
                   {formatNumber(traces.length)} of {formatNumber(totalTraces)}
                 </span>
               </span>
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              <div className="flex items-center gap-sm">
                 {selectedTraceIds.length === 2 && (
                   <button 
                     className="traces-compare-btn"
-                    onClick={() => console.log('Comparing', selectedTraceIds)}
+                    onClick={() => navigate(`/traces/compare?a=${selectedTraceIds[0]}&b=${selectedTraceIds[1]}`)}
                   >
                     <GitCompare size={14} /> Compare Selected
                   </button>
@@ -140,7 +129,7 @@ export default function TracesPage(): JSX.Element {
             </div>
 
             {serviceBadges.length > 0 && (
-              <div style={{ padding: '10px 18px', borderBottom: '1px solid var(--border-color)' }}>
+              <div className="px-md py-xs border-b">
                 <TracesServicePills
                   serviceBadges={serviceBadges}
                   total={totalTraces}
@@ -153,7 +142,7 @@ export default function TracesPage(): JSX.Element {
               </div>
             )}
 
-            <div style={{ padding: '10px 18px', borderBottom: '1px solid var(--border-color)' }}>
+            <div className="px-md py-xs border-b">
               <ObservabilityQueryBar
                 fields={TRACE_FILTER_FIELDS}
                 filters={filters as StructuredFilter[]}
@@ -169,7 +158,7 @@ export default function TracesPage(): JSX.Element {
                 onClearAll={clearAll}
                 placeholder="Filter by trace ID, service, status, duration…"
                 rightSlot={
-                  <Tooltip title="Show only traces with errors">
+                  <Tooltip content="Show only traces with errors">
                     <div
                       className={`traces-errors-toggle ${errorsOnly ? 'active' : ''}`}
                       onClick={() => {
@@ -180,13 +169,13 @@ export default function TracesPage(): JSX.Element {
                       <AlertCircle size={13} />
                       Errors only
                       <Switch
-                        size="small"
+                        size="sm"
                         checked={errorsOnly}
-                        onChange={(checked: boolean) => {
-                          setErrorsOnly(checked);
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                          setErrorsOnly(e.target.checked);
                           setPage(1);
                         }}
-                        onClick={(_, event) => event.stopPropagation()}
+                        onClick={(e: ReactMouseEvent<HTMLInputElement>) => e.stopPropagation()}
                       />
                     </div>
                   </Tooltip>
@@ -194,7 +183,7 @@ export default function TracesPage(): JSX.Element {
               />
             </div>
 
-            <div style={{ height: boardHeight(pageSize), display: 'flex', flexDirection: 'column' }}>
+            <div className="flex-col" style={{ height: boardHeight(pageSize) }}>
               <ObservabilityDataBoard
                 data={{ rows: traces, isLoading, serverTotal: totalTraces }}
                 config={{
@@ -225,56 +214,17 @@ export default function TracesPage(): JSX.Element {
             </div>
 
             {!isLoading && totalTraces > 0 && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '11px 18px',
-                  borderTop: '1px solid var(--border-color)',
+              <Pagination
+                page={page}
+                pageSize={pageSize}
+                total={totalTraces}
+                onPageChange={setPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size);
+                  setPage(1);
                 }}
-              >
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  Showing {offset + 1}–{Math.min(offset + pageSize, totalTraces)} of{' '}
-                  {formatNumber(totalTraces)}
-                </span>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                  <Select
-                    size="small"
-                    value={pageSize}
-                    onChange={(value: number) => {
-                      setPageSize(value);
-                      setPage(1);
-                    }}
-                    options={[10, 20, 50, 100].map((value) => ({
-                      label: `${value} / page`,
-                      value,
-                    }))}
-                    style={{ width: 110 }}
-                  />
-                  <button
-                    className="traces-export-btn"
-                    disabled={page <= 1}
-                    onClick={() => setPage((previousPage) => Math.max(1, previousPage - 1))}
-                    style={{ opacity: page <= 1 ? 0.4 : 1 }}
-                  >
-                    ← Prev
-                  </button>
-                  <span style={{ fontSize: 12, color: 'var(--text-secondary)', padding: '0 4px' }}>
-                    Page {page} of {Math.max(1, Math.ceil((totalTraces) / pageSize))}
-                  </span>
-                  <button
-                    className="traces-export-btn"
-                    disabled={page >= Math.ceil((totalTraces) / pageSize)}
-                    onClick={() => setPage((previousPage) => previousPage + 1)}
-                    style={{
-                      opacity: page >= Math.ceil((totalTraces) / pageSize) ? 0.4 : 1,
-                    }}
-                  >
-                    Next →
-                  </button>
-                </div>
-              </div>
+                pageSizeOptions={[10, 20, 50, 100]}
+              />
             )}
           </div>
         )
@@ -287,17 +237,17 @@ export default function TracesPage(): JSX.Element {
             metaLine={selectedTrace['start_time'] ? formatTimestamp(selectedTrace['start_time'] as string) : ''}
             metaRight={selectedTrace['start_time'] ? relativeTime(selectedTrace['start_time'] as string) : ''}
             summaryNode={
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 12.5 }}>
+              <div className="flex-col gap-2xs">
+                <span className="font-semibold text-primary text-sm">
                   {selectedTrace['operation_name'] as string}
                 </span>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <div className="flex items-center gap-xs">
                   {selectedTrace['http_method'] && (
                     <span className={`traces-method-badge ${(selectedTrace['http_method'] as string).toUpperCase()}`}>
                       {(selectedTrace['http_method'] as string).toUpperCase()}
                     </span>
                   )}
-                  <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>
+                  <span className="text-xs text-muted">
                     {formatDuration(selectedTrace['duration_ms'] as number)}
                   </span>
                 </div>

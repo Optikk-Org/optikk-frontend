@@ -1,4 +1,4 @@
-import { Row, Col, Card, Progress } from 'antd';
+import { Surface } from '@shared/design-system';
 
 import { formatNumber, formatDuration } from '@shared/utils/formatters';
 
@@ -20,16 +20,17 @@ export function ServiceMetricsGrid({ serviceMetrics, onServiceSelect }: ServiceM
   }
 
   return (
-    <Row gutter={[16, 16]}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
       {serviceMetrics.slice(0, 12).map((service) => {
         const errorRate = service.request_count > 0
           ? (service.error_count / service.request_count) * 100
           : 0;
 
         return (
-          <Col xs={24} sm={12} md={8} lg={6} key={service.service_name}>
-            <Card
-              size="small"
+          <div key={service.service_name}>
+            <Surface
+              elevation={1}
+              padding="md"
               className="chart-card"
               style={{ cursor: 'pointer' }}
               onClick={() => onServiceSelect(service.service_name)}
@@ -48,21 +49,18 @@ export function ServiceMetricsGrid({ serviceMetrics, onServiceSelect }: ServiceM
                     {errorRate.toFixed(2)}%
                   </span>
                 </div>
-                <Progress
-                  percent={Math.min(errorRate, 100)}
-                  size="small"
-                  strokeColor={errorRate > 5 ? APP_COLORS.hex_f04438 : errorRate > 1 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991}
-                  showInfo={false}
-                />
+                <div style={{ height: 6, borderRadius: 3, background: 'var(--bg-tertiary, #2d2d2d)', overflow: 'hidden' }}>
+                  <div style={{ width: `${Math.min(errorRate, 100)}%`, height: '100%', background: errorRate > 5 ? APP_COLORS.hex_f04438 : errorRate > 1 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991, borderRadius: 3 }} />
+                </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)' }}>
                 <span>Avg: {formatDuration(service.avg_latency)}</span>
                 <span>P95: {formatDuration(service.p95_latency)}</span>
               </div>
-            </Card>
-          </Col>
+            </Surface>
+          </div>
         );
       })}
-    </Row>
+    </div>
   );
 }

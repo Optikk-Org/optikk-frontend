@@ -1,4 +1,4 @@
-import { Switch } from 'antd';
+import { Switch } from '@shared/design-system';
 import { AlertTriangle } from 'lucide-react';
 
 import { FilterBar } from '@shared/components/ui';
@@ -50,7 +50,7 @@ export function MetricsFilterBar({
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <AlertTriangle size={14} style={{ color: showErrorsOnly ? APP_COLORS.hex_f04438 : 'var(--text-muted)' }} />
           <span style={{ fontSize: 13, color: showErrorsOnly ? APP_COLORS.hex_f04438 : 'var(--text-muted)' }}>Errors Only</span>
-          <Switch size="small" checked={showErrorsOnly} onChange={setShowErrorsOnly} />
+          <Switch size="sm" checked={showErrorsOnly} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setShowErrorsOnly(e.target.checked)} />
         </div>
       }
     />

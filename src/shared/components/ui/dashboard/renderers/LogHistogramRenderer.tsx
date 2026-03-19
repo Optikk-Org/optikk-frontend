@@ -1,4 +1,3 @@
-import { Empty, Table } from 'antd';
 import { useMemo } from 'react';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 
@@ -48,5 +47,5 @@ export function LogHistogramRenderer({
   }, [rawData, chartConfig.dataKey]);
   return data.length > 0
     ? <LogHistogram data={data} height={240} startTime={startTime} endTime={endTime} />
-    : <Empty description="No log data" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: 20 }} />;
+    : <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>No data</div>;
 }

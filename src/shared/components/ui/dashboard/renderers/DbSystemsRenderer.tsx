@@ -1,4 +1,3 @@
-import { Col, Empty, Row } from 'antd';
 import { Database } from 'lucide-react';
 
 import type {
@@ -153,21 +152,17 @@ export function DbSystemsRenderer({
 
   if (!systems || systems.length === 0) {
     return (
-      <Empty
-        description="No database systems detected"
-        image={Empty.PRESENTED_IMAGE_SIMPLE}
-        style={{ padding: 32 }}
-      />
+      <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>No data</div>
     );
   }
 
   return (
-    <Row gutter={[14, 14]}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
       {systems.map((system: any) => (
-        <Col key={system.db_system} xs={24} sm={12} lg={8} xl={6}>
+        <div key={system.db_system}>
           <DbSystemCard system={system} />
-        </Col>
+        </div>
       ))}
-    </Row>
+    </div>
   );
 }

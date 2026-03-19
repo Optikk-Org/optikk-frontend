@@ -1,4 +1,4 @@
-import { Skeleton, Tabs } from 'antd';
+import { Tabs, Skeleton } from '@shared/design-system';
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 

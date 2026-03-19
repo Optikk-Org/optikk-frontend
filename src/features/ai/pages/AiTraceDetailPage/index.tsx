@@ -1,4 +1,3 @@
-import { Alert } from 'antd';
 import { Brain } from 'lucide-react';
 import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -80,23 +79,19 @@ export default function AiTraceDetailPage(): JSX.Element {
 
       {spansError && (
         <div style={{ marginBottom: 16 }}>
-          <Alert
-            type="error"
-            showIcon
-            message="The LLM trace could not be loaded."
-            description={getErrorMessage(spansError, 'The backend request for trace spans failed.')}
-          />
+          <div style={{ padding: '12px 16px', borderRadius: 8, background: 'var(--error-bg, rgba(240,68,56,0.08))', border: '1px solid var(--error-border, rgba(240,68,56,0.2))', color: 'var(--error-text, #f04438)' }}>
+            <strong>The LLM trace could not be loaded.</strong>
+            <div style={{ marginTop: 4, fontSize: 13 }}>{getErrorMessage(spansError, 'The backend request for trace spans failed.')}</div>
+          </div>
         </div>
       )}
 
       {summaryError && (
         <div style={{ marginBottom: 16 }}>
-          <Alert
-            type="error"
-            showIcon
-            message="Trace summary is unavailable"
-            description={getErrorMessage(summaryError, 'The backend request for trace summary failed.')}
-          />
+          <div style={{ padding: '12px 16px', borderRadius: 8, background: 'var(--error-bg, rgba(240,68,56,0.08))', border: '1px solid var(--error-border, rgba(240,68,56,0.2))', color: 'var(--error-text, #f04438)' }}>
+            <strong>Trace summary is unavailable</strong>
+            <div style={{ marginTop: 4, fontSize: 13 }}>{getErrorMessage(summaryError, 'The backend request for trace summary failed.')}</div>
+          </div>
         </div>
       )}
 

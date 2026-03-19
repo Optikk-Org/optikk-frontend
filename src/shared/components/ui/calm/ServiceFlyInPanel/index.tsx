@@ -1,4 +1,4 @@
-import { Drawer, Badge, Skeleton } from 'antd';
+import { Badge, Skeleton } from '@shared/design-system';
 import { ArrowUpRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -47,16 +47,12 @@ export default function ServiceFlyInPanel({
     }
   };
 
+  if (!open) return null;
+
   return (
-    <Drawer
-      open={open}
-      onClose={onClose}
-      placement="right"
-      mask={false}
-      width={400}
-      title={null}
+    <div
       className="service-fly-in-panel"
-      styles={{ body: { padding: 0 }, header: { display: 'none' } }}
+      style={{ position: 'fixed', top: 0, right: 0, width: 400, height: '100%', zIndex: 1000, background: 'var(--bg-card, #fff)', boxShadow: '-2px 0 8px rgba(0,0,0,0.12)', overflow: 'auto' }}
     >
       {serviceName && (
         <div className="sfp__content">
@@ -64,18 +60,19 @@ export default function ServiceFlyInPanel({
             <div className="sfp__title-row">
               <span className="sfp__name">{serviceName}</span>
               {snapshot && (
-                <Badge status={STATUS_COLOR[snapshot.status] as any} />
+                <Badge variant={STATUS_COLOR[snapshot.status] as any} />
               )}
             </div>
             <button className="sfp__view-full" onClick={handleViewFull}>
               View full detail
               <ArrowUpRight size={12} />
             </button>
+            <button className="sfp__close" onClick={onClose} aria-label="Close" style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>&times;</button>
           </div>
 
           {loading || !snapshot ? (
             <div className="sfp__loading">
-              <Skeleton active paragraph={{ rows: 4 }} />
+              <Skeleton count={4} />
             </div>
           ) : (
             <div className="sfp__charts">
@@ -113,6 +110,6 @@ export default function ServiceFlyInPanel({
           )}
         </div>
       )}
-    </Drawer>
+    </div>
   );
 }

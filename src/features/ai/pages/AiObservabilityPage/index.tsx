@@ -1,4 +1,4 @@
-import { Tabs } from 'antd';
+import { Tabs } from '@shared/design-system';
 import { Activity, Brain, DollarSign, Eye, Shield, TrendingUp } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -9,28 +9,23 @@ import { usePageTabs } from '@shared/hooks/usePageTabs';
 
 import './AiObservabilityPage.css';
 
-/**
- *
- */
+const TAB_ICONS: Record<string, typeof Activity> = {
+  overview: Activity,
+  performance: TrendingUp,
+  cost: DollarSign,
+  security: Shield,
+};
+
 export default function AiObservabilityPage() {
   const { tabs } = usePageTabs('ai-observability');
   const [activeTab, setActiveTab] = useState(tabs[0]?.id || 'overview');
 
   const tabItems = useMemo(() => tabs.map((tab) => {
-    const icon = tab.id === 'overview'
-      ? <Activity size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
-      : tab.id === 'performance'
-        ? <TrendingUp size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
-        : tab.id === 'cost'
-          ? <DollarSign size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
-          : tab.id === 'security'
-            ? <Shield size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
-            : <Eye size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />;
-
+    const Icon = TAB_ICONS[tab.id] || Eye;
     return {
       key: tab.id,
-      label: <span>{icon}{tab.label}</span>,
-      children: <ConfiguredTabPanel pageId="ai-observability" tabId={tab.id} />,
+      label: tab.label,
+      icon: <Icon size={14} />,
     };
   }), [tabs]);
 
@@ -48,6 +43,8 @@ export default function AiObservabilityPage() {
         items={tabItems}
         className="ai-tabs"
       />
+
+      <ConfiguredTabPanel pageId="ai-observability" tabId={activeTab} />
     </div>
   );
 }

@@ -1,4 +1,3 @@
-import { Empty, Table } from 'antd';
 import { useMemo } from 'react';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 
@@ -42,7 +41,7 @@ export function GaugeRenderer({
   const groupKey = chartConfig.groupByKey;
 
   if (rows.length === 0) {
-    return <Empty description="No data" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: 20 }} />;
+    return <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>No data</div>;
   }
 
   if (groupKey) {

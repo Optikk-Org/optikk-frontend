@@ -1,4 +1,5 @@
-import { Card, Empty, Skeleton, Table, Tag } from 'antd';
+import { Table } from 'antd';
+import { Badge, Skeleton, Surface } from '@shared/design-system';
 import { useMemo } from 'react';
 
 import ConfigurableDashboard from '@shared/components/ui/dashboard/ConfigurableDashboard';
@@ -34,9 +35,9 @@ export default function AiPerformanceTab({
   selectedModel,
 }: AiPerformanceTabProps) {
   const tableColumns = [
-    { title: 'Model', dataIndex: 'model_name', key: 'model_name', render: (value: any) => <Tag className="ai-model-tag">{value || 'unknown'}</Tag> },
+    { title: 'Model', dataIndex: 'model_name', key: 'model_name', render: (value: any) => <Badge variant="default" className="ai-model-tag">{value || 'unknown'}</Badge> },
     { title: 'Provider', dataIndex: 'model_provider', key: 'model_provider', render: (value: any) => value ? <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{value}</span> : naSpan() },
-    { title: 'Type', dataIndex: 'request_type', key: 'request_type', render: (value: any) => value ? <Tag style={{ fontSize: 11 }}>{value}</Tag> : naSpan() },
+    { title: 'Type', dataIndex: 'request_type', key: 'request_type', render: (value: any) => value ? <Badge variant="default" style={{ fontSize: 11 }}>{value}</Badge> : naSpan() },
     { title: 'Requests', dataIndex: 'total_requests', key: 'total_requests', render: (value: any) => formatNumber(Number(value)), sorter: (a: any, b: any) => Number(a.total_requests) - Number(b.total_requests), align: 'right' as const },
     { title: 'QPS', dataIndex: 'avg_qps', key: 'avg_qps', render: (value: any) => { const normalized = n(value); return normalized == null ? naSpan() : <span style={{ fontWeight: 600 }}>{normalized.toFixed(3)}</span>; }, sorter: (a: any, b: any) => (n(a.avg_qps) ?? -1) - (n(b.avg_qps) ?? -1), align: 'right' as const },
     { title: 'Avg Latency', dataIndex: 'avg_latency_ms', key: 'avg_latency_ms', render: (value: any) => { const normalized = n(value); return normalized == null ? naSpan() : <span style={{ color: latColor(normalized), fontWeight: 600 }}>{formatDuration(normalized)}</span>; }, sorter: (a: any, b: any) => (n(a.avg_latency_ms) ?? -1) - (n(b.avg_latency_ms) ?? -1), align: 'right' as const },
@@ -56,11 +57,12 @@ export default function AiPerformanceTab({
   return (
     <>
       <ConfigurableDashboard config={config} dataSources={dataSources} extraContext={{ selectedModel }} />
-      <Card title="Per-Model Performance" className="ai-chart-card" style={{ marginTop: 16 }}>
-        {metricsLoading ? <Skeleton active paragraph={{ rows: 6 }} /> : data.length === 0 ? <Empty description="No data" /> : (
+      <Surface elevation={1} padding="md" className="ai-chart-card" style={{ marginTop: 16 }}>
+        <h4>Per-Model Performance</h4>
+        {metricsLoading ? <Skeleton /> : data.length === 0 ? <div className="text-muted" style={{textAlign:'center',padding:32}}>No data</div> : (
           <Table dataSource={data.map((row: any, index: number) => ({ ...row, key: index }))} columns={tableColumns as any} size="small" pagination={{ pageSize: 20 }} scroll={{ x: 1600 }} />
         )}
-      </Card>
+      </Surface>
     </>
   );
 }

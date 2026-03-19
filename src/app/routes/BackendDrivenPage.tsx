@@ -1,4 +1,4 @@
-import { Skeleton } from 'antd';
+import { Skeleton } from '@shared/design-system';
 import { Navigate, useLocation } from 'react-router-dom';
 
 import { resolveRegisteredDomainRoute } from '@/app/registry/domainRegistry';

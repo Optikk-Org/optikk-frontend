@@ -1,10 +1,13 @@
-import { Button, Layout, Menu } from 'antd';
 import {
   Layers,
   LogOut,
   Settings,
+  ChevronsLeft,
+  ChevronsRight,
+  Clock,
+  Star,
 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -12,24 +15,19 @@ import { getDomainNavigationItems } from '@/app/registry/domainRegistry';
 import { getDashboardIcon } from '@shared/components/ui/dashboard/SpecializedRendererRegistry';
 import { usePagesConfig } from '@/hooks/usePagesConfig';
 import { ROUTES } from '@/shared/constants/routes';
+import { Tooltip } from '@shared/design-system';
 
 import { useAppStore } from '@store/appStore';
 import { useAuthStore } from '@store/authStore';
 
 import './Sidebar.css';
 
-const { Sider } = Layout;
-
-/**
- *
- */
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { sidebarCollapsed, toggleSidebar, theme, selectedTeamId } =
-    useAppStore();
+  const { sidebarCollapsed, toggleSidebar, theme, recentPages, viewPreferences, addRecentPage } = useAppStore();
+  const favorites = viewPreferences?.favorites ?? [];
   const logout = useAuthStore((state) => state.logout);
-  const user = useAuthStore((state) => state.user);
   const { pages } = usePagesConfig();
 
   const staticNavEntries = useMemo(
@@ -63,62 +61,27 @@ export default function Sidebar() {
   );
 
   const observeItems = useMemo(
-    () =>
-      navEntries
-        .filter((entry) => entry.group === 'observe')
-        .map((entry) => {
-          return {
-            key: entry.path,
-            icon: entry.iconNode,
-            label: entry.label,
-          };
-        }),
+    () => navEntries.filter((entry) => entry.group === 'observe'),
     [navEntries],
   );
 
   const operateItems = useMemo(
-    () =>
-      navEntries
-        .filter((entry) => entry.group === 'operate')
-        .map((entry) => {
-          return {
-            key: entry.path,
-            icon: entry.iconNode,
-            label: entry.label,
-          };
-        }),
+    () => navEntries.filter((entry) => entry.group === 'operate'),
     [navEntries],
   );
 
-  const mainMenuItems = useMemo(
-    () => [
-      {
-        key: 'observe-group',
-        type: 'group' as const,
-        label: !sidebarCollapsed ? (
-          <span className="sidebar-group-title">Observe</span>
-        ) : (
-          ''
-        ),
-        children: observeItems,
-      },
-      {
-        key: 'operate-group',
-        type: 'group' as const,
-        label: !sidebarCollapsed ? (
-          <span className="sidebar-group-title">Operate</span>
-        ) : (
-          ''
-        ),
-        children: operateItems,
-      },
-    ],
-    [observeItems, operateItems, sidebarCollapsed],
-  );
-
-  const handleMenuClick = ({ key }: { key: string }) => {
-    navigate(key);
+  const getSelectedKey = () => {
+    const pathname = location.pathname;
+    if (pathname.startsWith(ROUTES.latencyAlias)) return ROUTES.metrics;
+    if (pathname.startsWith('/errors')) return ROUTES.overview;
+    if (pathname.startsWith('/service-map')) return ROUTES.services;
+    const matchedEntry = navEntries.find(
+      (entry) => pathname === entry.path || pathname.startsWith(`${entry.path}/`),
+    );
+    return matchedEntry?.path || pathname;
   };
+
+  const selectedKey = getSelectedKey();
 
   const handleLogout = async () => {
     await logout();
@@ -126,37 +89,56 @@ export default function Sidebar() {
     navigate(ROUTES.login);
   };
 
-  const getSelectedKey = () => {
-    const pathname = location.pathname;
+  // Favorite nav entries
+  const favoriteEntries = useMemo(
+    () => navEntries.filter((e) => favorites.includes(e.path)),
+    [navEntries, favorites],
+  );
 
-    if (pathname.startsWith(ROUTES.latencyAlias)) {
-      return ROUTES.metrics;
+  // Track page visits for recents
+  useEffect(() => {
+    const path = location.pathname;
+    const matched = navEntries.find((e) => path === e.path || path.startsWith(`${e.path}/`));
+    if (matched) {
+      addRecentPage(matched.path, matched.label);
     }
-    if (pathname.startsWith('/errors')) {
-      return ROUTES.overview;
-    }
-    if (pathname.startsWith('/service-map')) {
-      return ROUTES.services;
-    }
+  }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const matchedEntry = navEntries.find((entry) =>
-      pathname === entry.path || pathname.startsWith(`${entry.path}/`),
-    );
+  const renderNavGroup = (label: string, items: typeof observeItems) => (
+    <div className="sidebar-group" key={label}>
+      {!sidebarCollapsed && <div className="sidebar-group-title">{label}</div>}
+      {items.map((item) => {
+        const isActive = selectedKey === item.path;
+        const button = (
+          <button
+            key={item.path}
+            className={`sidebar-nav-item ${isActive ? 'sidebar-nav-item--active' : ''}`}
+            onClick={() => navigate(item.path)}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            <span className="sidebar-nav-icon">{item.iconNode}</span>
+            {!sidebarCollapsed && <span className="sidebar-nav-label">{item.label}</span>}
+          </button>
+        );
 
-    return matchedEntry?.path || pathname;
-  };
+        if (sidebarCollapsed) {
+          return (
+            <Tooltip key={item.path} content={item.label} placement="right">
+              {button}
+            </Tooltip>
+          );
+        }
+        return button;
+      })}
+    </div>
+  );
 
   return (
-    <Sider
-      className="app-sidebar"
-      collapsed={sidebarCollapsed}
-      onCollapse={toggleSidebar}
-      collapsible
-      width={220}
-      collapsedWidth={56}
-      theme={theme === 'light' ? 'light' : 'dark'}
+    <aside
+      className={`app-sidebar ${sidebarCollapsed ? 'app-sidebar--collapsed' : ''}`}
+      data-theme={theme === 'light' ? 'light' : undefined}
     >
-      <div className="sidebar-logo">
+      <div className="sidebar-logo" onClick={() => navigate(ROUTES.overview)}>
         <div className="logo-icon">
           <Layers size={20} />
         </div>
@@ -164,41 +146,75 @@ export default function Sidebar() {
       </div>
 
       <div className="sidebar-menu-container">
-        <div className="sidebar-nav-scroll">
-          <Menu
-            theme={theme === 'light' ? 'light' : 'dark'}
-            mode="inline"
-            selectedKeys={[getSelectedKey()]}
-            items={mainMenuItems}
-            onClick={handleMenuClick}
-            className="sidebar-menu"
-          />
-        </div>
+        <nav className="sidebar-nav-scroll" aria-label="Main navigation">
+          {!sidebarCollapsed && favoriteEntries.length > 0 && (
+            <div className="sidebar-group" key="favorites">
+              <div className="sidebar-group-title">
+                <Star size={9} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                Pinned
+              </div>
+              {favoriteEntries.map((item) => (
+                <button
+                  key={`fav-${item.path}`}
+                  className={`sidebar-nav-item ${selectedKey === item.path ? 'sidebar-nav-item--active' : ''}`}
+                  onClick={() => navigate(item.path)}
+                >
+                  <span className="sidebar-nav-icon">{item.iconNode}</span>
+                  <span className="sidebar-nav-label">{item.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {renderNavGroup('Observe', observeItems)}
+          {renderNavGroup('Operate', operateItems)}
+
+          {!sidebarCollapsed && recentPages.length > 0 && (
+            <div className="sidebar-group" key="recents">
+              <div className="sidebar-group-title">
+                <Clock size={9} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                Recent
+              </div>
+              {recentPages.slice(0, 5).map((recent) => (
+                <button
+                  key={`recent-${recent.path}`}
+                  className={`sidebar-nav-item sidebar-nav-item--recent ${selectedKey === recent.path ? 'sidebar-nav-item--active' : ''}`}
+                  onClick={() => navigate(recent.path)}
+                >
+                  <span className="sidebar-nav-label">{recent.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </nav>
 
         <div className="sidebar-bottom-menu">
           <div className="sidebar-quick-actions">
-            <Button
-              data-testid="sidebar-settings"
-              type="text"
-              className="sidebar-settings-btn"
-              icon={<Settings size={14} />}
+            <button
+              className="sidebar-action-btn sidebar-settings-btn"
               onClick={() => navigate(ROUTES.settings)}
             >
+              <Settings size={14} />
               {!sidebarCollapsed && 'Settings'}
-            </Button>
-
-            <Button
-              data-testid="sidebar-logout"
-              type="text"
-              className="sidebar-logout-btn"
-              icon={<LogOut size={14} />}
+            </button>
+            <button
+              className="sidebar-action-btn sidebar-logout-btn"
               onClick={handleLogout}
             >
+              <LogOut size={14} />
               {!sidebarCollapsed && 'Logout'}
-            </Button>
+            </button>
           </div>
+
+          <button
+            className="sidebar-collapse-btn"
+            onClick={toggleSidebar}
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {sidebarCollapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}
+          </button>
         </div>
       </div>
-    </Sider>
+    </aside>
   );
 }

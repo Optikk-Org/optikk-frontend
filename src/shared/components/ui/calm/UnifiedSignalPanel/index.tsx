@@ -1,4 +1,4 @@
-import { Skeleton } from 'antd';
+import { Skeleton } from '@shared/design-system';
 import { Activity, GitBranch, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
@@ -29,7 +29,7 @@ function SignalColumn({
         <Link to={href} className="usp__col-link">View all →</Link>
       </div>
       <div className="usp__col-body">
-        {loading ? <Skeleton active paragraph={{ rows: 2 }} /> : children}
+        {loading ? <Skeleton count={2} /> : children}
       </div>
     </div>
   );

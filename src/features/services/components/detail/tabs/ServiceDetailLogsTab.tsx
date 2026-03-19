@@ -1,4 +1,4 @@
-import { Card } from 'antd';
+import { Surface } from '@shared/design-system';
 
 import DataTable from '@shared/components/ui/data-display/DataTable';
 
@@ -19,7 +19,7 @@ export default function ServiceDetailLogsTab({
   onTraceNavigate,
 }: ServiceDetailLogsTabProps): JSX.Element {
   return (
-    <Card className="chart-card" size="small">
+    <Surface elevation={1} padding="md" className="chart-card">
       <DataTable
         data={{
           columns: logColumns,
@@ -34,6 +34,6 @@ export default function ServiceDetailLogsTab({
           }),
         }}
       />
-    </Card>
+    </Surface>
   );
 }

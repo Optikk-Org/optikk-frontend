@@ -1,11 +1,10 @@
-import { Layout, Space, Select, Button, Tooltip } from 'antd';
-import { RefreshCw, ChevronDown } from 'lucide-react';
+import { RefreshCw, ChevronDown, Columns2 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 import { TimeRangePicker } from '@shared/components/ui/TimeSelector';
-
 import { useAutoRefresh } from '@shared/hooks/useAutoRefresh';
+import { Button, IconButton, Tooltip, Select } from '@shared/design-system';
 
 import { useAppStore } from '@store/appStore';
 import { useAuthStore } from '@store/authStore';
@@ -14,14 +13,17 @@ import { AUTO_REFRESH_INTERVALS } from '@config/constants';
 
 import './Header.css';
 
-const { Header: AntHeader } = Layout;
-
-/**
- *
- */
 export default function Header() {
   const { user } = useAuthStore();
-  const { selectedTeamIds, setSelectedTeamIds, triggerRefresh, autoRefreshInterval, setAutoRefreshInterval } = useAppStore();
+  const {
+    selectedTeamIds,
+    setSelectedTeamIds,
+    triggerRefresh,
+    autoRefreshInterval,
+    setAutoRefreshInterval,
+    viewPreferences,
+    setViewPreference,
+  } = useAppStore();
   const [intervalPickerOpen, setIntervalPickerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement | null>(null);
   const { refreshLabel, triggerRefresh: triggerHeaderRefresh } = useAutoRefresh({
@@ -34,7 +36,11 @@ export default function Header() {
     toast.success('Data refreshed');
   };
 
-  // Close interval picker on outside click
+  const toggleDensity = () => {
+    const current = viewPreferences?.density || 'comfortable';
+    setViewPreference('density', current === 'comfortable' ? 'compact' : 'comfortable');
+  };
+
   useEffect(() => {
     if (!intervalPickerOpen) return;
     const handler = (event: MouseEvent): void => {
@@ -46,72 +52,67 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handler);
   }, [intervalPickerOpen]);
 
-  const activeInterval = AUTO_REFRESH_INTERVALS.find((o) => o.value === autoRefreshInterval) || AUTO_REFRESH_INTERVALS[0];
+  const activeInterval =
+    AUTO_REFRESH_INTERVALS.find((o) => o.value === autoRefreshInterval) || AUTO_REFRESH_INTERVALS[0];
 
-  // Get teams from user data
   const teams = user?.teams || [];
   const teamOptions = teams.map((team) => ({
     label: team.orgName ? `${team.orgName} / ${team.name}` : team.name,
     value: team.id,
   }));
 
-  const teamSelectLabel = (() => {
-    if (selectedTeamIds.length === 0) return 'Select team';
-    if (selectedTeamIds.length === 1) {
-      const team = teams.find((t) => t.id === selectedTeamIds[0]);
-      return team ? (team.orgName ? `${team.orgName} / ${team.name}` : team.name) : 'Select team';
-    }
-    return `${selectedTeamIds.length} teams`;
-  })();
-
   return (
-    <AntHeader className="app-header">
-      <Space size="middle" className="header-left">
+    <header className="app-header">
+      <div className="header-left">
         <TimeRangePicker />
-      </Space>
+      </div>
 
-      <Space size="middle" className="header-right">
+      <div className="header-right">
         {teams.length > 0 && (
           <div className="header-team-wrap">
             <span className="header-team-label">Workspace</span>
             <Select
-              data-testid="workspace-select"
-              mode="multiple"
+              multiple
               value={selectedTeamIds}
-              onChange={setSelectedTeamIds}
+              onChange={(val) => setSelectedTeamIds(val as number[])}
               options={teamOptions}
               style={{ width: 220 }}
               placeholder="Select team"
-              maxTagCount={0}
-              maxTagPlaceholder={() => teamSelectLabel}
+              size="sm"
             />
           </div>
         )}
 
-        {/* Refresh button + interval picker */}
+        <Tooltip content="Toggle compact mode">
+          <IconButton
+            icon={<Columns2 size={15} />}
+            size="sm"
+            variant={viewPreferences?.density === 'compact' ? 'secondary' : 'ghost'}
+            label="Toggle density"
+            onClick={toggleDensity}
+          />
+        </Tooltip>
+
         <div className="header-refresh-wrap" ref={pickerRef}>
-          <Tooltip title="Refresh now">
+          <Tooltip content="Refresh now">
             <Button
-              data-testid="header-refresh"
-              icon={<RefreshCw size={16} />}
+              variant="ghost"
+              size="sm"
+              icon={<RefreshCw size={14} />}
               onClick={handleRefresh}
-              type="text"
               className="header-refresh-btn"
             >
-              <span>Refresh</span>
+              Refresh
               <span className="header-refresh-meta">{refreshLabel}</span>
             </Button>
           </Tooltip>
 
-          <Tooltip title="Auto-refresh interval">
+          <Tooltip content="Auto-refresh interval">
             <button
-              data-testid="header-autorefresh-toggle"
               className={`header-autorefresh-pill ${autoRefreshInterval ? 'header-autorefresh-pill--active' : ''}`}
               onClick={() => setIntervalPickerOpen((v) => !v)}
             >
-              {activeInterval.value ? (
-                <span className="header-autorefresh-dot" />
-              ) : null}
+              {activeInterval.value ? <span className="header-autorefresh-dot" /> : null}
               {activeInterval.label}
               <ChevronDown size={11} />
             </button>
@@ -134,8 +135,7 @@ export default function Header() {
             </div>
           )}
         </div>
-
-      </Space>
-    </AntHeader>
+      </div>
+    </header>
   );
 }

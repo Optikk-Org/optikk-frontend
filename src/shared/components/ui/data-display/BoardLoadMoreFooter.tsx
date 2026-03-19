@@ -1,4 +1,3 @@
-import { Spin } from 'antd';
 
 interface BoardLoadMoreFooterProps {
   entityName: string;
@@ -34,7 +33,7 @@ export default function BoardLoadMoreFooter({
       >
         {isFetchingNextPage ? (
           <>
-            <Spin size="small" style={{ marginRight: 8 }} />
+            <div className="ok-spinner" style={{ marginRight: 8 }} />
             Loading…
           </>
         ) : (

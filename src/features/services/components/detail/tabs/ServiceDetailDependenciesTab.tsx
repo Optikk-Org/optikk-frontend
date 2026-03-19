@@ -1,4 +1,4 @@
-import { Card, Empty } from 'antd';
+import { Surface } from '@shared/design-system';
 import { Network } from 'lucide-react';
 
 import { formatNumber } from '@shared/utils/formatters';
@@ -26,7 +26,7 @@ export default function ServiceDetailDependenciesTab({
   onNavigateService,
 }: ServiceDetailDependenciesTabProps): JSX.Element {
   return (
-    <Card className="chart-card" size="small">
+    <Surface elevation={1} padding="md" className="chart-card">
       {serviceDependencies.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {serviceDependencies.map((dependency, index) => {
@@ -62,8 +62,8 @@ export default function ServiceDetailDependenciesTab({
           })}
         </div>
       ) : (
-        <Empty description="No dependencies found" />
+        <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>No dependencies found</div>
       )}
-    </Card>
+    </Surface>
   );
 }

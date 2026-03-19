@@ -1,4 +1,4 @@
-import { Select, Switch, Tooltip } from 'antd';
+import { Select } from '@shared/design-system';
 import { AlertCircle, FileText, Download } from 'lucide-react';
 import { ReactNode, useCallback, useState } from 'react';
 
@@ -329,10 +329,10 @@ export default function LogsTableSection({
             {formatNumber(resolvedTotal)}
           </span>
           <div className="logs-pagination-controls">
-            <Select<number>
-              size="small"
+            <Select
+              size="sm"
               value={pageSize}
-              onChange={(value) => {
+              onChange={(value: number) => {
                 setPageSize(value);
                 setPage(1);
               }}

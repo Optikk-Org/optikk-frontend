@@ -1,4 +1,4 @@
-import { Row, Col, Card } from 'antd';
+import { Surface } from '@shared/design-system';
 import { Cpu, HardDrive, Network, Database } from 'lucide-react';
 import { useMemo } from 'react';
 
@@ -112,66 +112,58 @@ export default function ResourceUtilizationPage() {
     <div className="resource-utilization-page">
       <PageHeader title="Resource Utilization" icon={<Cpu size={24} />} subtitle="CPU, memory, disk, network and connection pool utilization by service/instance" />
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard 
-            metric={{ title: 'Avg CPU', value: `${stats.cpu.toFixed(1)}%` }} 
-            visuals={{ icon: <Cpu size={18} />, loading: isLoading }} 
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard 
-            metric={{ title: 'Avg Memory', value: `${stats.memory.toFixed(1)}%` }} 
-            visuals={{ icon: <HardDrive size={18} />, loading: isLoading }} 
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard 
-            metric={{ title: 'Avg Network', value: `${stats.network.toFixed(1)}%` }} 
-            visuals={{ icon: <Network size={18} />, loading: isLoading }} 
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard 
-            metric={{ title: 'Avg Conn Pool', value: `${stats.connPool.toFixed(1)}%` }} 
-            visuals={{ icon: <Database size={18} />, loading: isLoading }} 
-          />
-        </Col>
-      </Row>
-
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24}>
-          <ConfigurableDashboard
-            config={config}
-            dataSources={{
-              'resource-utilization': data,
-            }}
-            isLoading={isLoading}
-          />
-        </Col>
-      </Row>
-
-      <Card title="By Service" style={{ marginBottom: 16 }}>
-        <DataTable 
-          data={{ 
-            columns: serviceCols, 
-            rows: byService.map((r: any, i: number) => ({ ...r, key: `svc-${i}` })), 
-            loading: isLoading, 
-            rowKey: "key" 
-          }} 
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16, marginBottom: 16 }}>
+        <StatCard
+          metric={{ title: 'Avg CPU', value: `${stats.cpu.toFixed(1)}%` }}
+          visuals={{ icon: <Cpu size={18} />, loading: isLoading }}
         />
-      </Card>
-
-      <Card title="By Instance">
-        <DataTable 
-          data={{ 
-            columns: instanceCols, 
-            rows: byInstance.map((r: any, i: number) => ({ ...r, key: `ins-${i}` })), 
-            loading: isLoading, 
-            rowKey: "key" 
-          }} 
+        <StatCard
+          metric={{ title: 'Avg Memory', value: `${stats.memory.toFixed(1)}%` }}
+          visuals={{ icon: <HardDrive size={18} />, loading: isLoading }}
         />
-      </Card>
+        <StatCard
+          metric={{ title: 'Avg Network', value: `${stats.network.toFixed(1)}%` }}
+          visuals={{ icon: <Network size={18} />, loading: isLoading }}
+        />
+        <StatCard
+          metric={{ title: 'Avg Conn Pool', value: `${stats.connPool.toFixed(1)}%` }}
+          visuals={{ icon: <Database size={18} />, loading: isLoading }}
+        />
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <ConfigurableDashboard
+          config={config}
+          dataSources={{
+            'resource-utilization': data,
+          }}
+          isLoading={isLoading}
+        />
+      </div>
+
+      <Surface elevation={1} padding="md" style={{ marginBottom: 16 }}>
+        <h4>By Service</h4>
+        <DataTable
+          data={{
+            columns: serviceCols,
+            rows: byService.map((r: any, i: number) => ({ ...r, key: `svc-${i}` })),
+            loading: isLoading,
+            rowKey: "key"
+          }}
+        />
+      </Surface>
+
+      <Surface elevation={1} padding="md">
+        <h4>By Instance</h4>
+        <DataTable
+          data={{
+            columns: instanceCols,
+            rows: byInstance.map((r: any, i: number) => ({ ...r, key: `ins-${i}` })),
+            loading: isLoading,
+            rowKey: "key"
+          }}
+        />
+      </Surface>
     </div>
   );
 }

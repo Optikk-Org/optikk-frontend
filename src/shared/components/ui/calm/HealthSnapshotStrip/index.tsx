@@ -1,4 +1,4 @@
-import { Skeleton } from 'antd';
+import { Skeleton } from '@shared/design-system';
 
 import HealthRing, { type HealthStatus } from '../HealthRing';
 import './HealthSnapshotStrip.css';
@@ -32,7 +32,7 @@ export default function HealthSnapshotStrip({
   if (loading) {
     return (
       <div className="health-strip health-strip--loading">
-        <Skeleton active paragraph={{ rows: 1 }} />
+        <Skeleton count={1} />
       </div>
     );
   }

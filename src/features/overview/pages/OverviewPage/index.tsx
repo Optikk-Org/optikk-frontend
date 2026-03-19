@@ -1,4 +1,4 @@
-import { Row, Col, Card, Skeleton, Empty, Progress } from 'antd';
+import { Skeleton, Surface } from '@shared/design-system';
 import { Activity, AlertCircle, Clock, Server, Zap } from 'lucide-react';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -106,17 +106,15 @@ export default function OverviewPage() {
     return (
       <div className="overview-page">
         <PageHeader title="Overview" subtitle="Monitor your system health" icon={<Activity size={24} />} />
-        <Row gutter={[16, 16]}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
           {[1, 2, 3, 4].map((i) => (
-            <Col xs={24} sm={12} lg={6} key={i}>
-              <Card><Skeleton active paragraph={{ rows: 2 }} /></Card>
-            </Col>
+            <Surface elevation={1} padding="md" key={i}><Skeleton /></Surface>
           ))}
-        </Row>
-        <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-          <Col xs={24} lg={12}><Card><Skeleton active paragraph={{ rows: 6 }} /></Card></Col>
-          <Col xs={24} lg={12}><Card><Skeleton active paragraph={{ rows: 6 }} /></Card></Col>
-        </Row>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
+          <Surface elevation={1} padding="md"><Skeleton /></Surface>
+          <Surface elevation={1} padding="md"><Skeleton /></Surface>
+        </div>
       </div>
     );
   }
@@ -124,7 +122,7 @@ export default function OverviewPage() {
   if (summaryError && timeseries.length === 0) {
     return (
       <div className="page-error">
-        <Empty description={summaryError.message || 'Failed to load overview data'} />
+        <div className="text-muted" style={{textAlign:'center',padding:32}}>{summaryError.message || 'Failed to load overview data'}</div>
       </div>
     );
   }
@@ -204,67 +202,64 @@ export default function OverviewPage() {
       />
 
       {/* SLO Indicators */}
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24}>
-          <Card title="SLO Indicators" className="chart-card">
-            <div className="slo-row">
-              <div className="slo-item">
-                <Progress
-                  type="circle"
-                  percent={Number(sloMetrics.availability.toFixed(2))}
-                  size={80}
-                  strokeColor={sloMetrics.availability >= 99.9 ? APP_COLORS.hex_73c991 : sloMetrics.availability >= 99 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_f04438}
-                  format={(p) => `${p}%`}
-                />
-                <div className="slo-label">Availability</div>
-                <div className="slo-target">Target: 99.9%</div>
+      <div style={{ marginTop: 16 }}>
+        <Surface elevation={1} padding="md" className="chart-card">
+          <h4>SLO Indicators</h4>
+          <div className="slo-row">
+            <div className="slo-item">
+              <div style={{ position: 'relative', width: 80, height: 80 }}>
+                <svg viewBox="0 0 80 80" width={80} height={80}>
+                  <circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg-tertiary, #2d2d2d)" strokeWidth="6" />
+                  <circle cx="40" cy="40" r="34" fill="none" stroke={sloMetrics.availability >= 99.9 ? APP_COLORS.hex_73c991 : sloMetrics.availability >= 99 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_f04438} strokeWidth="6" strokeDasharray={`${Number(sloMetrics.availability.toFixed(2)) / 100 * 213.6} 213.6`} strokeLinecap="round" transform="rotate(-90 40 40)" />
+                </svg>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>{sloMetrics.availability.toFixed(2)}%</div>
               </div>
-              <div className="slo-item">
-                <Progress
-                  type="circle"
-                  percent={Number(sloMetrics.p95Score.toFixed(0))}
-                  size={80}
-                  strokeColor={sloMetrics.p95Score >= 90 ? APP_COLORS.hex_73c991 : sloMetrics.p95Score >= 70 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_f04438}
-                  format={(p) => `${p}%`}
-                />
-                <div className="slo-label">P95 Latency</div>
-                <div className="slo-target">Target: &lt;500ms</div>
-              </div>
-              <div className="slo-item">
-                <Progress
-                  type="circle"
-                  percent={Number(Math.max(0, sloMetrics.errorBudget).toFixed(0))}
-                  size={80}
-                  strokeColor={sloMetrics.errorBudget >= 50 ? APP_COLORS.hex_73c991 : sloMetrics.errorBudget >= 20 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_f04438}
-                  format={(p) => `${p}%`}
-                />
-                <div className="slo-label">Error Budget</div>
-                <div className="slo-target">Remaining</div>
-              </div>
+              <div className="slo-label">Availability</div>
+              <div className="slo-target">Target: 99.9%</div>
             </div>
-          </Card>
-        </Col>
-      </Row>
+            <div className="slo-item">
+              <div style={{ position: 'relative', width: 80, height: 80 }}>
+                <svg viewBox="0 0 80 80" width={80} height={80}>
+                  <circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg-tertiary, #2d2d2d)" strokeWidth="6" />
+                  <circle cx="40" cy="40" r="34" fill="none" stroke={sloMetrics.p95Score >= 90 ? APP_COLORS.hex_73c991 : sloMetrics.p95Score >= 70 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_f04438} strokeWidth="6" strokeDasharray={`${Number(sloMetrics.p95Score.toFixed(0)) / 100 * 213.6} 213.6`} strokeLinecap="round" transform="rotate(-90 40 40)" />
+                </svg>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>{sloMetrics.p95Score.toFixed(0)}%</div>
+              </div>
+              <div className="slo-label">P95 Latency</div>
+              <div className="slo-target">Target: &lt;500ms</div>
+            </div>
+            <div className="slo-item">
+              <div style={{ position: 'relative', width: 80, height: 80 }}>
+                <svg viewBox="0 0 80 80" width={80} height={80}>
+                  <circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg-tertiary, #2d2d2d)" strokeWidth="6" />
+                  <circle cx="40" cy="40" r="34" fill="none" stroke={sloMetrics.errorBudget >= 50 ? APP_COLORS.hex_73c991 : sloMetrics.errorBudget >= 20 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_f04438} strokeWidth="6" strokeDasharray={`${Number(Math.max(0, sloMetrics.errorBudget).toFixed(0)) / 100 * 213.6} 213.6`} strokeLinecap="round" transform="rotate(-90 40 40)" />
+                </svg>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>{Math.max(0, sloMetrics.errorBudget).toFixed(0)}%</div>
+              </div>
+              <div className="slo-label">Error Budget</div>
+              <div className="slo-target">Remaining</div>
+            </div>
+          </div>
+        </Surface>
+      </div>
 
-      {/* Charts — driven by YAML config */}
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24}>
-          <ConfigurableDashboard
-            config={config}
-            dataSources={dataSources}
-            isLoading={summaryLoading}
-          />
-        </Col>
-      </Row>
+      {/* Charts -- driven by YAML config */}
+      <div style={{ marginTop: 16 }}>
+        <ConfigurableDashboard
+          config={config}
+          dataSources={dataSources}
+          isLoading={summaryLoading}
+        />
+      </div>
 
       {/* Service Health Grid */}
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24} lg={24}>
-          <Card title={<span><Server style={{ marginRight: 8, verticalAlign: 'middle' }} />Services Overview</span>} className="services-overview-card" bodyStyle={{ padding: 0 }}>
+      <div style={{ marginTop: 16 }}>
+        <Surface elevation={1} padding="md" className="services-overview-card">
+          <h4><Server style={{ marginRight: 8, verticalAlign: 'middle' }} />Services Overview</h4>
             {serviceHealth.length > 0 ? (
-              <Row gutter={[16, 16]}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
                 {serviceHealth.map((service) => (
-                  <Col xs={12} sm={8} md={6} key={service.name}>
+                  <div key={service.name}>
                     <div
                       className="service-health-card"
                       onClick={() => navigate(`/services/${encodeURIComponent(service.name)}`)}
@@ -281,15 +276,14 @@ export default function OverviewPage() {
                         {Math.max(0, Number(service.errorRate)).toFixed(2)}% err
                       </div>
                     </div>
-                  </Col>
+                  </div>
                 ))}
-              </Row>
+              </div>
             ) : (
-              <Empty description="No services data available" />
+              <div className="text-muted" style={{textAlign:'center',padding:32}}>No services data available</div>
             )}
-          </Card>
-        </Col>
-      </Row>
+        </Surface>
+      </div>
     </div>
   );
 }

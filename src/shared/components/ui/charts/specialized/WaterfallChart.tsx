@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Input } from 'antd';
+import { Input } from '@shared/design-system';
 
 import { formatDuration } from '@shared/utils/formatters';
 

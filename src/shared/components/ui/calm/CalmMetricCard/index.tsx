@@ -1,4 +1,4 @@
-import { Skeleton } from 'antd';
+import { Skeleton } from '@shared/design-system';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 
 import SparklineChart from '@shared/components/ui/charts/micro/SparklineChart';
@@ -46,7 +46,7 @@ export default function CalmMetricCard({
   if (loading) {
     return (
       <div className="cmcard cmcard--loading">
-        <Skeleton active paragraph={{ rows: 2 }} />
+        <Skeleton count={2} />
       </div>
     );
   }

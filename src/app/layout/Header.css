@@ -1,7 +1,7 @@
 .app-header {
   height: var(--space-header-h, 56px);
   padding: 0 24px;
-  background: var(--bg-card, var(--bg-secondary)) !important;
+  background: var(--bg-card, var(--bg-secondary));
   border-bottom: 1px solid var(--border-color, var(--literal-hex-2d2d2d));
   display: flex;
   align-items: center;
@@ -17,12 +17,6 @@
   display: flex;
   align-items: center;
   min-width: 0;
-}
-
-.header-left .ant-space-item,
-.header-right .ant-space-item {
-  display: inline-flex;
-  align-items: center;
 }
 
 .header-left {
@@ -156,13 +150,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary) !important;
+  color: var(--text-secondary);
   border-radius: 8px;
 }
 
 .header-theme-btn:hover {
-  color: var(--text-primary) !important;
-  background: var(--bg-hover) !important;
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
 .header-autorefresh-dropdown {

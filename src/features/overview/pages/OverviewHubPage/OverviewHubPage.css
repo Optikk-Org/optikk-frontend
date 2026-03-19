@@ -1,5 +1,37 @@
 .overview-hub {
-  padding: 24px;
-  max-width: 1600px;
+  padding: var(--space-page, 20px);
+  max-width: 1920px;
   margin: 0 auto;
+}
+
+.overview-hub__calm-header {
+  margin-bottom: var(--space-sm);
+}
+
+.overview-hub__calm-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-colors);
+}
+
+.overview-hub__calm-toggle:hover {
+  color: var(--text-secondary);
+  border-color: var(--color-primary);
+}
+
+.overview-hub__calm-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
 }

@@ -1,5 +1,5 @@
-import { Card, Divider, Select, Switch } from 'antd';
-import { Bell, Palette, Settings } from 'lucide-react';
+import { Bell, Columns2, Palette, Settings } from 'lucide-react';
+import { Surface, Switch, Select } from '@shared/design-system';
 
 import type {
   SettingsPreferenceValue,
@@ -15,9 +15,21 @@ interface SettingsPreferencesTabProps {
   readonly onPreferenceChange: (key: string, value: SettingsPreferenceValue) => void;
 }
 
-/**
- * Preferences tab content for settings page.
- */
+function PrefRow({ icon, title, description, children }: { icon: React.ReactNode; title: string; description: string; children: React.ReactNode }) {
+  return (
+    <div className="flex justify-between items-center py-sm border-b">
+      <div className="flex items-center gap-sm">
+        <span className="text-secondary">{icon}</span>
+        <div>
+          <div className="font-semibold text-base">{title}</div>
+          <div className="text-xs text-muted">{description}</div>
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 export default function SettingsPreferencesTab({
   theme,
   notificationsEnabled,
@@ -26,55 +38,53 @@ export default function SettingsPreferencesTab({
   onNotificationsChange,
   onPreferenceChange,
 }: SettingsPreferencesTabProps): JSX.Element {
+  const density = viewPreferences?.density || 'comfortable';
+
   return (
-    <Card className="settings-card">
-      <div className="preference-item">
-        <div className="preference-label">
-          <Palette size={20} />
-          <div>
-            <h4>Theme</h4>
-            <p>Switch between light and dark mode</p>
-          </div>
-        </div>
+    <Surface elevation={1} padding="lg" className="settings-card">
+      <PrefRow
+        icon={<Palette size={18} />}
+        title="Theme"
+        description="Switch between light and dark mode"
+      >
         <Switch
-          data-testid="settings-theme-switch"
           checked={theme === 'dark'}
-          onChange={onThemeChange}
-          checkedChildren="Dark"
-          unCheckedChildren="Light"
+          onChange={(e) => onThemeChange(e.target.checked)}
+          label={theme === 'dark' ? 'Dark' : 'Light'}
         />
-      </div>
+      </PrefRow>
 
-      <Divider />
-
-      <div className="preference-item">
-        <div className="preference-label">
-          <Bell size={20} />
-          <div>
-            <h4>Notifications</h4>
-            <p>Enable or disable notifications</p>
-          </div>
-        </div>
+      <PrefRow
+        icon={<Columns2 size={18} />}
+        title="Density"
+        description="Compact mode reduces spacing for more data density"
+      >
         <Switch
-          data-testid="settings-notifications-switch"
-          checked={notificationsEnabled}
-          onChange={onNotificationsChange}
+          checked={density === 'compact'}
+          onChange={(e) => onPreferenceChange('density', e.target.checked ? 'compact' : 'comfortable')}
+          label={density === 'compact' ? 'Compact' : 'Comfortable'}
         />
-      </div>
+      </PrefRow>
 
-      <Divider />
+      <PrefRow
+        icon={<Bell size={18} />}
+        title="Notifications"
+        description="Enable or disable notifications"
+      >
+        <Switch
+          checked={notificationsEnabled}
+          onChange={(e) => onNotificationsChange(e.target.checked)}
+        />
+      </PrefRow>
 
-      <div className="preference-item">
-        <div className="preference-label">
-          <Settings size={20} />
-          <div>
-            <h4>Default Time Range</h4>
-            <p>Select default time range for dashboards</p>
-          </div>
-        </div>
+      <PrefRow
+        icon={<Settings size={18} />}
+        title="Default Time Range"
+        description="Select default time range for dashboards"
+      >
         <Select
-          value={viewPreferences?.defaultTimeRange || '1h'}
-          onChange={(value) => onPreferenceChange('defaultTimeRange', value)}
+          value={viewPreferences?.defaultTimeRange as string || '1h'}
+          onChange={(val) => onPreferenceChange('defaultTimeRange', val as string)}
           style={{ width: 200 }}
           options={[
             { value: '15m', label: 'Last 15 minutes' },
@@ -87,21 +97,16 @@ export default function SettingsPreferencesTab({
             { value: '7d', label: 'Last 7 days' },
           ]}
         />
-      </div>
+      </PrefRow>
 
-      <Divider />
-
-      <div className="preference-item">
-        <div className="preference-label">
-          <Settings size={20} />
-          <div>
-            <h4>Default Page Size</h4>
-            <p>Number of items to display per page</p>
-          </div>
-        </div>
+      <PrefRow
+        icon={<Settings size={18} />}
+        title="Default Page Size"
+        description="Number of items to display per page"
+      >
         <Select
-          value={viewPreferences?.defaultPageSize || 20}
-          onChange={(value) => onPreferenceChange('defaultPageSize', value)}
+          value={viewPreferences?.defaultPageSize as number || 20}
+          onChange={(val) => onPreferenceChange('defaultPageSize', val as number)}
           style={{ width: 200 }}
           options={[
             { value: 10, label: '10' },
@@ -110,7 +115,7 @@ export default function SettingsPreferencesTab({
             { value: 100, label: '100' },
           ]}
         />
-      </div>
-    </Card>
+      </PrefRow>
+    </Surface>
   );
 }

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Card, Row, Col, Tabs, Tag } from 'antd';
+import { Badge, Surface } from '@shared/design-system';
 import { Timer } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -106,7 +106,7 @@ export default function LatencyAnalysisPage({ embedded = false }) {
       render: (b: any) => {
         const found = HISTOGRAM_BUCKETS.find((hb) => hb.key === b);
         const label = found?.label || b;
-        return <Tag color={bucketColor(label)}>{label}</Tag>;
+        return <Badge variant="default" style={{ color: bucketColor(label), borderColor: bucketColor(label) }}>{label}</Badge>;
       },
     },
     { title: 'Span Count', dataIndex: 'span_count', key: 'span_count', render: (v: any) => formatNumber(Number(v) || 0) },
@@ -133,7 +133,7 @@ export default function LatencyAnalysisPage({ embedded = false }) {
       key: 'table',
       label: 'Percentile Table',
       children: (
-        <Card>
+        <Surface elevation={1} padding="md">
           <DataTable
             data={{
               columns: percentileColumns,
@@ -145,7 +145,7 @@ export default function LatencyAnalysisPage({ embedded = false }) {
               },
             }}
           />
-        </Card>
+        </Surface>
       ),
     },
   ];
@@ -175,38 +175,46 @@ export default function LatencyAnalysisPage({ embedded = false }) {
         ]}
       />
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            metric={{ title: 'P50 Latency', value: stats.p50, description: 'Median latency' }}
-            visuals={{ icon: <Timer size={20} />, iconColor: APP_COLORS.hex_73c991 }}
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            metric={{ title: 'P95 Latency', value: stats.p95, description: '95th percentile' }}
-            visuals={{ icon: <Timer size={20} />, iconColor: APP_COLORS.hex_f79009 }}
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            metric={{ title: 'P99 Latency', value: stats.p99, description: '99th percentile' }}
-            visuals={{ icon: <Timer size={20} />, iconColor: APP_COLORS.hex_f04438 }}
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            metric={{ title: 'Avg Latency', value: stats.avg, description: 'Mean latency' }}
-            visuals={{ icon: <Timer size={20} />, iconColor: APP_COLORS.hex_5e60ce }}
-          />
-        </Col>
-      </Row>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16, marginBottom: 16 }}>
+        <StatCard
+          metric={{ title: 'P50 Latency', value: stats.p50, description: 'Median latency' }}
+          visuals={{ icon: <Timer size={20} />, iconColor: APP_COLORS.hex_73c991 }}
+        />
+        <StatCard
+          metric={{ title: 'P95 Latency', value: stats.p95, description: '95th percentile' }}
+          visuals={{ icon: <Timer size={20} />, iconColor: APP_COLORS.hex_f79009 }}
+        />
+        <StatCard
+          metric={{ title: 'P99 Latency', value: stats.p99, description: '99th percentile' }}
+          visuals={{ icon: <Timer size={20} />, iconColor: APP_COLORS.hex_f04438 }}
+        />
+        <StatCard
+          metric={{ title: 'Avg Latency', value: stats.avg, description: 'Mean latency' }}
+          visuals={{ icon: <Timer size={20} />, iconColor: APP_COLORS.hex_5e60ce }}
+        />
+      </div>
 
-      <Tabs
-        activeKey={activeTab}
-        onChange={setActiveTab}
-        items={tabItems}
-      />
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, borderBottom: '1px solid var(--border-color)' }}>
+        {tabItems.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            style={{
+              padding: '8px 16px',
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === tab.key ? '2px solid var(--primary-color, #6366f1)' : '2px solid transparent',
+              color: activeTab === tab.key ? 'var(--text-primary)' : 'var(--text-muted)',
+              cursor: 'pointer',
+              fontWeight: activeTab === tab.key ? 600 : 400,
+              fontSize: 14,
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      {tabItems.find((tab) => tab.key === activeTab)?.children}
     </div>
   );
 }

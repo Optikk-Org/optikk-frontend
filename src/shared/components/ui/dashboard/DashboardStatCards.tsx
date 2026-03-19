@@ -1,5 +1,3 @@
-import { Col, Row } from 'antd';
-
 import type { DashboardDataSources, StatCardSpec } from '@/types/dashboardConfig';
 
 import StatCard from '@shared/components/ui/cards/StatCard';
@@ -49,17 +47,17 @@ export default function DashboardStatCards({
 }: DashboardStatCardsProps) {
   if (statCards.length === 0) return null;
 
-  const colSpan = Math.max(6, Math.floor(24 / statCards.length));
+  const columnCount = Math.min(statCards.length, 4);
 
   return (
-    <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columnCount}, 1fr)`, gap: 16, marginBottom: 16 }}>
       {statCards.map((spec) => {
         const value = resolveValue(spec, dataSources);
         const formatter = applyFormatter(spec);
         const icon = spec.icon ? getDashboardIcon(spec.icon, 20) : undefined;
 
         return (
-          <Col key={spec.title} xs={24} sm={12} lg={colSpan}>
+          <div key={spec.title}>
             <StatCard
               metric={{
                 title: spec.title,
@@ -71,9 +69,9 @@ export default function DashboardStatCards({
                 loading: isLoading,
               }}
             />
-          </Col>
+          </div>
         );
       })}
-    </Row>
+    </div>
   );
 }

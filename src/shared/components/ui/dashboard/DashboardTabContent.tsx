@@ -1,5 +1,3 @@
-import { Alert } from 'antd';
-
 import type { ComponentGroup, DashboardComponentSpec } from '@/types/dashboardConfig';
 
 import { useComponentDataFetcher } from '@shared/hooks/useComponentDataFetcher';
@@ -26,14 +24,14 @@ export default function DashboardTabContent({
     <div className="dashboard-tab-content page-section">
       {hasError && (
         <div style={{ marginBottom: 16 }}>
-          <Alert
-            type="error"
-            showIcon
-            message="Some dashboard data could not be loaded"
-            description={failedRequests
-              .map((request) => `${request.method} ${request.endpoint}: ${request.error.message}`)
-              .join(' ')}
-          />
+          <div style={{ padding: '12px 16px', borderRadius: 8, background: 'rgba(240,68,56,0.08)', border: '1px solid rgba(240,68,56,0.3)', color: '#f04438' }}>
+            <strong>Some dashboard data could not be loaded</strong>
+            <div style={{ marginTop: 4, fontSize: 13, opacity: 0.85 }}>
+              {failedRequests
+                .map((request) => `${request.method} ${request.endpoint}: ${request.error.message}`)
+                .join(' ')}
+            </div>
+          </div>
         </div>
       )}
       <ConfigurableDashboard

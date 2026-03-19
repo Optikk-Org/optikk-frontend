@@ -1,23 +1,18 @@
-import { Spin } from 'antd';
-
 import type { LoadingProps } from './types';
 
 export default function Loading({
   label = 'Loading...',
-  size = 'default',
   fullscreen = false,
 }: LoadingProps): JSX.Element {
   return (
     <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: fullscreen ? '100vh' : '160px',
-        width: '100%',
-      }}
+      className="flex items-center justify-center w-full"
+      style={{ minHeight: fullscreen ? '100vh' : '160px' }}
     >
-      <Spin size={size} tip={label} />
+      <div className="flex-col items-center gap-sm">
+        <div className="ok-spinner" />
+        {label && <span className="text-xs text-muted">{label}</span>}
+      </div>
     </div>
   );
 }

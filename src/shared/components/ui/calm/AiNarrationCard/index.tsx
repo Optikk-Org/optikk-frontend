@@ -1,4 +1,4 @@
-import { Button } from 'antd';
+import { Button } from '@shared/design-system';
 import { Sparkles, X } from 'lucide-react';
 import './AiNarrationCard.css';
 
@@ -38,8 +38,8 @@ export default function AiNarrationCard({ anomaly, onDismiss, onInvestigate }: A
         )}
         <div className="ai-narration__actions">
           <Button
-            size="small"
-            type="default"
+            size="sm"
+            variant="secondary"
             className="ai-narration__btn-investigate"
             onClick={onInvestigate}
           >

@@ -3,7 +3,7 @@
  * Renders a Gantt-style timeline of pod lifecycle events:
  * pending → running → terminated, with restart markers.
  */
-import { Card, Tooltip } from 'antd';
+import { Surface, Tooltip } from '@shared/design-system';
 import React, { useMemo } from 'react';
 
 /**
@@ -47,7 +47,8 @@ const PodLifecycleGantt: React.FC<PodLifecycleGanttProps> = ({
     }), [pods, windowStartMs, windowMs]);
 
     return (
-        <Card title={title} className="chart-card" size="small">
+        <Surface className="chart-card" padding="sm">
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>{title}</div>
             <div style={{ overflowX: 'auto' }}>
                 {rows.map((row, i) => (
                     <div
@@ -76,7 +77,7 @@ const PodLifecycleGantt: React.FC<PodLifecycleGanttProps> = ({
                         {/* Timeline track */}
                         <div style={{ flex: 1, position: 'relative', height: 14, background: 'var(--bg-tertiary)', borderRadius: 3 }}>
                             <Tooltip
-                                title={
+                                content={
                                     `${row.podName} — ${row.phase}\n` +
                                     `Start: ${new Date(row.startTs).toLocaleTimeString()}\n` +
                                     `Restarts: ${row.restarts}`
@@ -130,7 +131,7 @@ const PodLifecycleGantt: React.FC<PodLifecycleGanttProps> = ({
                     </div>
                 )}
             </div>
-        </Card>
+        </Surface>
     );
 };
 

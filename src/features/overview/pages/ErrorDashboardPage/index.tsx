@@ -1,4 +1,5 @@
-import { Row, Col, Card, Select, Tag, Table, Skeleton, Empty, Tooltip } from 'antd';
+import { Table } from 'antd';
+import { Badge, Select, Skeleton, Surface, Tooltip } from '@shared/design-system';
 import { AlertCircle, ExternalLink, Clock } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -129,9 +130,9 @@ export default function ErrorDashboardPage() {
       dataIndex: 'service_name',
       key: 'service_name',
       render: (v: string) => (
-        <Tag style={{ background: APP_COLORS.rgba_94_96_206_0p15_2, color: APP_COLORS.hex_5e60ce, border: `1px solid ${APP_COLORS.rgba_94_96_206_0p3_2}` }}>
+        <Badge variant="default" style={{ background: APP_COLORS.rgba_94_96_206_0p15_2, color: APP_COLORS.hex_5e60ce, border: `1px solid ${APP_COLORS.rgba_94_96_206_0p3_2}` }}>
           {v}
-        </Tag>
+        </Badge>
       ),
       filters: services.map((s) => ({ text: s, value: s })),
       onFilter: (value: any, record: any) => record.service_name === value,
@@ -150,9 +151,9 @@ export default function ErrorDashboardPage() {
       key: 'http_status_code',
       width: 70,
       render: (v: any) => v ? (
-        <Tag style={{ color: statusColor(v), borderColor: statusColor(v), background: 'transparent' }}>
+        <Badge variant="default" style={{ color: statusColor(v), borderColor: statusColor(v), background: 'transparent' }}>
           {v}
-        </Tag>
+        </Badge>
       ) : '-',
     },
     {
@@ -161,7 +162,7 @@ export default function ErrorDashboardPage() {
       key: 'status_message',
       ellipsis: true,
       render: (v: string) => (
-        <Tooltip title={v}>
+        <Tooltip content={v}>
           <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'monospace' }}>
             {v || '-'}
           </span>
@@ -242,25 +243,20 @@ export default function ErrorDashboardPage() {
       />
 
       {/* Error Groups Table */}
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24}>
-          <Card
-            title={
-              <span>
-                Error Groups
-                {!groupsLoading && (
-                  <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)', marginLeft: 12 }}>
-                    {errorGroups.length} groups
-                  </span>
-                )}
+      <div style={{ marginTop: 16 }}>
+        <Surface elevation={1} padding="md" className="err-chart-card">
+          <h4>
+            Error Groups
+            {!groupsLoading && (
+              <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)', marginLeft: 12 }}>
+                {errorGroups.length} groups
               </span>
-            }
-            className="err-chart-card"
-          >
+            )}
+          </h4>
             {groupsLoading ? (
-              <Skeleton active paragraph={{ rows: 8 }} />
+              <Skeleton />
             ) : errorGroups.length === 0 ? (
-              <Empty description="No errors in selected time range" />
+              <div className="text-muted" style={{textAlign:'center',padding:32}}>No errors in selected time range</div>
             ) : (
               <Table
                 dataSource={errorGroups.map((g, i) => ({ ...g, key: i }))}
@@ -273,9 +269,8 @@ export default function ErrorDashboardPage() {
                 }
               />
             )}
-          </Card>
-        </Col>
-      </Row>
+        </Surface>
+      </div>
     </div>
   );
 }

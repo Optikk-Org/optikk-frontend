@@ -1,4 +1,5 @@
-import { Card, Empty, Progress, Skeleton, Table, Tag } from 'antd';
+import { Table } from 'antd';
+import { Badge, Skeleton, Surface } from '@shared/design-system';
 import { useMemo } from 'react';
 
 import ConfigurableDashboard from '@shared/components/ui/dashboard/ConfigurableDashboard';
@@ -39,7 +40,7 @@ export default function AiCostTab({
   }, [costMetrics, selectedModel]);
 
   const tableColumns = [
-    { title: 'Model', dataIndex: 'model_name', key: 'model_name', render: (value: any) => <Tag className="ai-model-tag">{value || 'unknown'}</Tag> },
+    { title: 'Model', dataIndex: 'model_name', key: 'model_name', render: (value: any) => <Badge variant="default" className="ai-model-tag">{value || 'unknown'}</Badge> },
     { title: 'Provider', dataIndex: 'model_provider', key: 'model_provider', render: (value: any) => value ? <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{value}</span> : naSpan() },
     { title: 'Requests', dataIndex: 'total_requests', key: 'total_requests', render: (value: any) => formatNumber(Number(value)), sorter: (a: any, b: any) => Number(a.total_requests) - Number(b.total_requests), align: 'right' as const },
     { title: 'Total Cost', dataIndex: 'total_cost_usd', key: 'total_cost_usd', render: (value: any) => { const normalized = n(value); return normalized == null ? naSpan() : <span style={{ color: APP_COLORS.hex_f79009, fontWeight: 700 }}>{dollar(normalized)}</span>; }, sorter: (a: any, b: any) => (n(a.total_cost_usd) ?? -1) - (n(b.total_cost_usd) ?? -1), align: 'right' as const },
@@ -57,7 +58,7 @@ export default function AiCostTab({
         const color = normalized > 70 ? APP_COLORS.hex_73c991 : normalized > 30 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_f04438;
         return (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Progress percent={Math.min(normalized, 100)} size="small" showInfo={false} strokeColor={color} style={{ width: 60 }} />
+            <div style={{ width: 60, height: 6, borderRadius: 3, background: 'var(--bg-tertiary, #2d2d2d)', overflow: 'hidden' }}><div style={{ width: `${Math.min(normalized, 100)}%`, height: '100%', background: color, borderRadius: 3 }} /></div>
             <span style={{ color, fontWeight: 600, fontSize: 12 }}>{normalized.toFixed(1)}%</span>
           </div>
         );
@@ -69,11 +70,12 @@ export default function AiCostTab({
   return (
     <>
       <ConfigurableDashboard config={config} dataSources={dataSources} extraContext={{ selectedModel }} />
-      <Card title="Per-Model Cost Breakdown" className="ai-chart-card" style={{ marginTop: 16 }}>
-        {costLoading ? <Skeleton active paragraph={{ rows: 6 }} /> : data.length === 0 ? <Empty description="No data" /> : (
+      <Surface elevation={1} padding="md" className="ai-chart-card" style={{ marginTop: 16 }}>
+        <h4>Per-Model Cost Breakdown</h4>
+        {costLoading ? <Skeleton /> : data.length === 0 ? <div className="text-muted" style={{textAlign:'center',padding:32}}>No data</div> : (
           <Table dataSource={data.map((row: any, index: number) => ({ ...row, key: index }))} columns={tableColumns as any} size="small" pagination={{ pageSize: 20 }} scroll={{ x: 1400 }} />
         )}
-      </Card>
+      </Surface>
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { Tooltip } from 'antd';
+import { Tooltip } from '@shared/design-system';
 import type { SpanKindDuration } from '../../types';
 import { formatDuration } from '@shared/utils/formatters';
 
@@ -30,7 +30,7 @@ export default function SpanKindBreakdown({ data }: Props) {
         {data.map((d) => (
           <Tooltip
             key={d.spanKind}
-            title={`${d.spanKind}: ${formatDuration(d.totalDurationMs)} · ${d.pctOfTrace.toFixed(1)}% · ${d.spanCount} spans`}
+            content={`${d.spanKind}: ${formatDuration(d.totalDurationMs)} · ${d.pctOfTrace.toFixed(1)}% · ${d.spanCount} spans`}
           >
             <div
               style={{

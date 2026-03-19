@@ -1,4 +1,4 @@
-import { Skeleton, Tabs } from 'antd';
+import { Tabs, Skeleton } from '@shared/design-system';
 import { Activity, Cpu, Layers, Network } from 'lucide-react';
 import { useMemo } from 'react';
 
@@ -14,9 +14,6 @@ const TAB_ICONS = {
   nodes: Network,
 } as const;
 
-/**
- *
- */
 export default function InfrastructureHubPage() {
   const { tabs, isLoading } = usePageTabs('infrastructure');
 
@@ -37,21 +34,21 @@ export default function InfrastructureHubPage() {
       const Icon = TAB_ICONS[tab.id as keyof typeof TAB_ICONS];
       return {
         key: tab.id,
-        label: (
-          <span>
-            {Icon ? <Icon size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} /> : null}
-            {tab.label}
-          </span>
-        ),
-        children: <ConfiguredTabPanel pageId="infrastructure" tabId={tab.id} />,
+        label: tab.label,
+        icon: Icon ? <Icon size={14} /> : undefined,
       };
     }),
     [tabs],
   );
 
   if (isLoading && tabs.length === 0) {
-    return <Skeleton active paragraph={{ rows: 6 }} />;
+    return <Skeleton variant="rect" height={300} />;
   }
 
-  return <Tabs activeKey={activeTab || defaultTabId} onChange={onTabChange} items={items} size="large" />;
+  return (
+    <div>
+      <Tabs activeKey={activeTab || defaultTabId} onChange={onTabChange} items={items} />
+      <ConfiguredTabPanel pageId="infrastructure" tabId={activeTab || defaultTabId} />
+    </div>
+  );
 }

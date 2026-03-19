@@ -4,7 +4,8 @@
  * DB queries — the classic N+1 pattern.
  * Data comes from the /api/v1/spans/n1 endpoint (aggregated query counts).
  */
-import { Card, Table, Tag, Tooltip } from 'antd';
+import { Table } from 'antd';
+import { Surface, Badge, Tooltip } from '@shared/design-system';
 import React from 'react';
 
 import type { ColumnsType } from 'antd/es/table';
@@ -54,7 +55,7 @@ const N1QueryDetector: React.FC<N1QueryDetectorProps> = ({
             key: 'queryPattern',
             ellipsis: true,
             render: (v) => (
-                <Tooltip title={v}>
+                <Tooltip content={v}>
                     <code style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>{v}</code>
                 </Tooltip>
             ),
@@ -67,7 +68,7 @@ const N1QueryDetector: React.FC<N1QueryDetectorProps> = ({
             sorter: (a, b) => b.callCount - a.callCount,
             defaultSortOrder: 'ascend',
             render: (v) => (
-                <Tag
+                <Badge
                     color={v >= threshold ? 'var(--severity-critical)' : 'var(--severity-medium)'}
                     style={{
                         background: v >= threshold ? 'var(--severity-critical-subtle)' : 'var(--severity-medium-subtle)',
@@ -77,7 +78,7 @@ const N1QueryDetector: React.FC<N1QueryDetectorProps> = ({
                     }}
                 >
                     {v}
-                </Tag>
+                </Badge>
             ),
         },
         {
@@ -104,7 +105,8 @@ const N1QueryDetector: React.FC<N1QueryDetectorProps> = ({
     ];
 
     return (
-        <Card title={title} className="chart-card" size="small">
+        <Surface className="chart-card" padding="sm">
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>{title}</div>
             <Table
                 dataSource={data}
                 columns={columns}
@@ -115,7 +117,7 @@ const N1QueryDetector: React.FC<N1QueryDetectorProps> = ({
                 style={{ fontSize: 'var(--text-sm)' }}
                 scroll={{ x: true }}
             />
-        </Card>
+        </Surface>
     );
 };
 

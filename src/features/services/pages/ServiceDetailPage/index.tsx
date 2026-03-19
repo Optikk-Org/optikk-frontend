@@ -1,4 +1,4 @@
-import { Row, Col, Card, Skeleton, Tabs } from 'antd';
+import { Surface, Skeleton, Tabs } from '@shared/design-system';
 import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -78,13 +78,11 @@ export default function ServiceDetailPage() {
     return (
       <div>
         <PageHeader title={serviceName} breadcrumbs={breadcrumbs} actions={headerActions} />
-        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16, marginBottom: 24 }}>
           {[1, 2, 3, 4].map((index) => (
-            <Col xs={24} sm={12} lg={6} key={index}>
-              <Card><Skeleton active paragraph={{ rows: 2 }} /></Card>
-            </Col>
+            <Surface key={index}><Skeleton count={2} /></Surface>
           ))}
-        </Row>
+        </div>
       </div>
     );
   }
@@ -103,7 +101,7 @@ export default function ServiceDetailPage() {
       />
 
       {/* Tabs for different views */}
-      <Card>
+      <Surface>
         <Tabs
           activeKey={activeTab}
           onChange={(key) => setActiveTab(key as 'overview' | 'errors' | 'logs' | 'dependencies')}
@@ -160,7 +158,7 @@ export default function ServiceDetailPage() {
             },
           ]}
         />
-      </Card>
+      </Surface>
     </div>
   );
 }

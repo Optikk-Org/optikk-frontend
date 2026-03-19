@@ -1,4 +1,3 @@
-import { Alert } from 'antd';
 import { MessageSquare } from 'lucide-react';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -70,12 +69,10 @@ export default function AiConversationsPage(): JSX.Element {
 
         {!isLoading && error && (
           <div style={{ padding: 24 }}>
-            <Alert
-              type="error"
-              showIcon
-              message="Conversations could not be loaded"
-              description={getErrorMessage(error, 'The backend request for conversations failed.')}
-            />
+            <div style={{ padding: '12px 16px', borderRadius: 8, background: 'var(--error-bg, rgba(240,68,56,0.08))', border: '1px solid var(--error-border, rgba(240,68,56,0.2))', color: 'var(--error-text, #f04438)' }}>
+              <strong>Conversations could not be loaded</strong>
+              <div style={{ marginTop: 4, fontSize: 13 }}>{getErrorMessage(error, 'The backend request for conversations failed.')}</div>
+            </div>
           </div>
         )}
 

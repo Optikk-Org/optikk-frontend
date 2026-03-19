@@ -1,4 +1,4 @@
-import { Empty } from 'antd';
+
 import { useMemo, memo } from 'react';
 import { Line } from 'react-chartjs-2';
 
@@ -292,7 +292,7 @@ export default memo(function RequestChart({
   if (data.length === 0 && timeBuckets.length === 0) {
     return (
       <div style={{ height: '100%', minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Empty description="No request data in selected time range" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        <div style={{ color: 'var(--text-muted)' }}>No request data in selected time range</div>
       </div>
     );
   }

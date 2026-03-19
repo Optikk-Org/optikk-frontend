@@ -1,8 +1,6 @@
-import { Button, Result } from 'antd';
 import { AlertCircle } from 'lucide-react';
 import React from 'react';
-
-import { APP_COLORS } from '@config/colorLiterals';
+import { Button } from '@shared/design-system';
 
 import type { ErrorBoundaryProps, ErrorBoundaryState } from './types';
 
@@ -50,33 +48,26 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     }
 
     return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '400px',
-          padding: '24px',
-        }}
-      >
-        <Result
-          status="error"
-          icon={<AlertCircle size={64} color={APP_COLORS.hex_f04438} />}
-          title="Something went wrong"
-          subTitle={
-            this.props.showDetails && this.state.error
+      <div className="flex items-center justify-center" style={{ minHeight: 400, padding: 24 }}>
+        <div className="flex-col items-center gap-lg" style={{ textAlign: 'center', maxWidth: 420 }}>
+          <AlertCircle size={48} color="var(--color-error)" />
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+            Something went wrong
+          </h2>
+          <p className="text-secondary text-sm">
+            {this.props.showDetails && this.state.error
               ? this.state.error.toString()
-              : "We're sorry for the inconvenience. Please try refreshing the page."
-          }
-          extra={[
-            <Button type="primary" key="reset" onClick={this.handleReset}>
+              : "We're sorry for the inconvenience. Please try refreshing the page."}
+          </p>
+          <div className="flex gap-sm">
+            <Button variant="primary" onClick={this.handleReset}>
               Try Again
-            </Button>,
-            <Button key="home" onClick={() => (window.location.href = '/')}>
+            </Button>
+            <Button variant="secondary" onClick={() => (window.location.href = '/')}>
               Go Home
-            </Button>,
-          ]}
-        />
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }

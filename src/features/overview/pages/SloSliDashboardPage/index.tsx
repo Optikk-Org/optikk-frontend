@@ -1,4 +1,3 @@
-import { Alert, Col, Row } from 'antd';
 import { AlertTriangle, CheckCircle, Target } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -14,13 +13,23 @@ import { SloComplianceTable, SloHealthGauges } from '../../components';
 
 const n = (v: any) => (v == null || Number.isNaN(Number(v)) ? 0 : Number(v));
 
-const AVAILABILITY_TARGET = 99.9;
-const P95_TARGET_MS = 300;
+// SLO targets — configurable via Settings > Preferences > SLO targets
+// Falls back to sensible defaults when viewPreferences don't have values
+import { useAppStore } from '@store/appStore';
+
+function useSloTargets() {
+  const viewPreferences = useAppStore((s) => s.viewPreferences);
+  return {
+    availabilityTarget: (viewPreferences?.sloAvailabilityTarget as number) ?? 99.9,
+    p95TargetMs: (viewPreferences?.sloP95TargetMs as number) ?? 300,
+  };
+}
 
 /**
  *
  */
 export default function SloSliDashboardPage() {
+  const { availabilityTarget: AVAILABILITY_TARGET, p95TargetMs: P95_TARGET_MS } = useSloTargets();
   const [selectedService, setSelectedService] = useState('');
   const { config } = useDashboardConfig('slo-sli');
 
@@ -84,17 +93,24 @@ export default function SloSliDashboardPage() {
       {/* Compliance banner */}
       {!isLoading && timeseries.length > 0 && (
         <div style={{ marginBottom: 16 }}>
-          <Alert
-            type={isCompliant ? 'success' : 'error'}
-            showIcon
-            icon={isCompliant ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
-            message={
-              isCompliant
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '12px 16px',
+              borderRadius: 8,
+              border: `1px solid ${isCompliant ? 'var(--color-success, #12b76a)' : 'var(--color-error, #f04438)'}`,
+              background: isCompliant ? 'rgba(18,183,106,0.08)' : 'rgba(240,68,56,0.08)',
+            }}
+          >
+            {isCompliant ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
+            <span>
+              {isCompliant
                 ? `All SLOs are being met — ${compliancePct}% of windows compliant`
-                : `SLO breach detected — ${breachedCount} window${breachedCount !== 1 ? 's' : ''} below ${AVAILABILITY_TARGET}% availability`
-            }
-            style={{ borderRadius: 8 }}
-          />
+                : `SLO breach detected — ${breachedCount} window${breachedCount !== 1 ? 's' : ''} below ${AVAILABILITY_TARGET}% availability`}
+            </span>
+          </div>
         </div>
       )}
 
@@ -114,17 +130,15 @@ export default function SloSliDashboardPage() {
       />
 
       {/* Trend Charts — driven by YAML backend config */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24}>
-          <ConfigurableDashboard
-            config={config}
-            dataSources={{
-              'slo-sli-insights': data,
-            }}
-            isLoading={isLoading}
-          />
-        </Col>
-      </Row>
+      <div style={{ marginBottom: 16 }}>
+        <ConfigurableDashboard
+          config={config}
+          dataSources={{
+            'slo-sli-insights': data,
+          }}
+          isLoading={isLoading}
+        />
+      </div>
 
       <SloComplianceTable
         timeseries={timeseries}

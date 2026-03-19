@@ -1,4 +1,4 @@
-import { Card, Col, Row } from 'antd';
+import { Surface } from '@shared/design-system';
 
 import type { DashboardRenderConfig } from '@/types/dashboardConfig';
 
@@ -31,25 +31,24 @@ export default function ServiceDetailOverviewTab({
 }: ServiceDetailOverviewTabProps): JSX.Element {
   return (
     <>
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24}>
-          <ConfigurableDashboard
-            config={config}
-            dataSources={{
-              'metrics-timeseries': timeSeries,
-              'service-timeseries': timeSeries,
-              'services-timeseries': timeSeries,
-              'endpoint-breakdown': endpoints,
-              'endpoint-metrics': endpoints,
-              'endpoints-metrics': endpoints,
-            }}
-            isLoading={timeSeriesLoading}
-          />
-        </Col>
-      </Row>
+      <div style={{ marginBottom: 24 }}>
+        <ConfigurableDashboard
+          config={config}
+          dataSources={{
+            'metrics-timeseries': timeSeries,
+            'service-timeseries': timeSeries,
+            'services-timeseries': timeSeries,
+            'endpoint-breakdown': endpoints,
+            'endpoint-metrics': endpoints,
+            'endpoints-metrics': endpoints,
+          }}
+          isLoading={timeSeriesLoading}
+        />
+      </div>
 
       {endpoints.length > 0 && (
-        <Card title="Top Endpoints by Latency" style={{ marginBottom: 24 }} className="chart-card" size="small">
+        <Surface elevation={1} padding="md" style={{ marginBottom: 24 }} className="chart-card">
+          <div style={{ fontWeight: 600, marginBottom: 12 }}>Top Endpoints by Latency</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[...endpoints]
               .sort((left, right) => right.avg_latency - left.avg_latency)
@@ -80,10 +79,11 @@ export default function ServiceDetailOverviewTab({
                 );
               })}
           </div>
-        </Card>
+        </Surface>
       )}
 
-      <Card title="Endpoints Breakdown" className="chart-card" size="small">
+      <Surface elevation={1} padding="md" className="chart-card">
+        <div style={{ fontWeight: 600, marginBottom: 12 }}>Endpoints Breakdown</div>
         <DataTable
           data={{
             columns: endpointColumns,
@@ -92,7 +92,7 @@ export default function ServiceDetailOverviewTab({
             rowKey: (record: any) => `${record.operation_name}-${record.http_method}`,
           }}
         />
-      </Card>
+      </Surface>
     </>
   );
 }

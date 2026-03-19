@@ -1,4 +1,4 @@
-import { Card, Col, Empty, Row } from 'antd';
+import { Surface } from '@shared/design-system';
 
 import type { ComponentType } from 'react';
 
@@ -226,33 +226,35 @@ export default function ConfigurableChartCard({
 
   if (componentKey === 'stat') {
     return (
-      <Card title={titleContent} className="chart-card" style={{ height: '100%' }} styles={{ body: { padding: '12px 16px' } }}>
+      <Surface elevation={1} padding="sm" className="chart-card" style={{ height: '100%' }}>
         {renderStatSummary(rawData)}
-      </Card>
+      </Surface>
     );
   }
 
   if (!componentRenderer) {
     console.warn(`Unknown dashboard component key received from backend: ${componentKey || '<empty>'}`);
     return (
-      <Card title={chartConfig.title as string} className="chart-card" style={{ height: '100%' }}>
-        <div style={{ padding: 20, color: 'var(--text-muted)' }}>
+      <Surface elevation={1} padding="md" className="chart-card" style={{ height: '100%' }}>
+        <div className="chart-card__title">{chartConfig.title as string}</div>
+        <div className="p-md text-muted">
           Unknown dashboard component key: {componentKey || '<empty>'}
         </div>
-      </Card>
+      </Surface>
     );
   }
 
   if (SPECIALIZED_COMPONENT_KEYS.has(componentKey)) {
     const SpecializedRenderer = componentRenderer;
     return (
-      <Card title={titleContent} className="chart-card" style={{ height: '100%' }} styles={{ body: { padding: '8px', display: 'flex', flexDirection: 'column', overflow: 'hidden' } }}>
+      <Surface elevation={1} padding="xs" className="chart-card flex-col" style={{ height: '100%', overflow: 'hidden' }}>
+        <div className="chart-card__title">{titleContent}</div>
         <SpecializedRenderer
           chartConfig={chartConfig}
           dataSources={dataSources}
           extraContext={extraContext}
         />
-      </Card>
+      </Surface>
     );
   }
   const ChartComponent = componentRenderer as ComponentType<BaseChartComponentProps>;
@@ -315,7 +317,7 @@ export default function ConfigurableChartCard({
   const showQueueList = isQueueChart && endpoints.length > 0;
 
   return (
-    <Card title={titleContent} className="chart-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }} styles={{ body: { padding: '8px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 260 } }}>
+    <Surface elevation={1} padding="xs" className="chart-card flex-col" style={{ height: '100%' }}>
       <div style={{ height: 260, flexShrink: 0, width: '100%', position: 'relative' }}>
         <ChartComponent {...chartProps} />
       </div>
@@ -339,6 +341,6 @@ export default function ConfigurableChartCard({
           drilldownRouteTemplate={chartConfig.drilldownRoute as string | undefined}
         />
       )}
-    </Card>
+    </Surface>
   );
 }

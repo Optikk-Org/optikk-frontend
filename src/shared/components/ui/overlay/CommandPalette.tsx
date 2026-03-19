@@ -1,19 +1,17 @@
-import { Modal, Input } from 'antd';
 import {
   BarChart3, FileText, GitBranch, Layers, Network,
-  Server, Settings, Activity, RefreshCw, Sun, Search,
+  Server, Settings, Activity, RefreshCw, Sun, Search, Columns2,
 } from 'lucide-react';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { Modal, Input } from '@shared/design-system';
 import { useAppStore } from '@store/appStore';
 
-import type { InputRef } from 'antd';
 import type { LucideIcon } from 'lucide-react';
-import type { KeyboardEvent } from 'react';
 import './CommandPalette.css';
 
-type CommandAction = 'refresh' | 'toggleTheme';
+type CommandAction = 'refresh' | 'toggleTheme' | 'toggleDensity' | 'copyUrl';
 
 interface Command {
   id: string;
@@ -42,20 +40,15 @@ const COMMANDS: Command[] = [
   { id: 'settings', label: 'Go to Settings', icon: Settings, path: '/settings', group: 'Navigate' },
   { id: 'refresh', label: 'Refresh Data', icon: RefreshCw, action: 'refresh', group: 'Actions' },
   { id: 'toggle-theme', label: 'Toggle Theme', icon: Sun, action: 'toggleTheme', group: 'Actions' },
+  { id: 'toggle-density', label: 'Toggle Compact Mode', icon: Columns2, action: 'toggleDensity', group: 'Actions' },
 ];
 
-/**
- *
- * @param root0
- * @param root0.open
- * @param root0.onClose
- */
 export default function CommandPalette({ open, onClose }: CommandPaletteProps): JSX.Element {
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
-  const inputRef = useRef<InputRef | null>(null);
-  const { triggerRefresh, theme, setTheme } = useAppStore();
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const { triggerRefresh, theme, setTheme, viewPreferences, setViewPreference } = useAppStore();
 
   const filtered = COMMANDS.filter((cmd) =>
     cmd.label.toLowerCase().includes(search.toLowerCase()),
@@ -68,11 +61,14 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps): 
       triggerRefresh();
     } else if (cmd.action === 'toggleTheme') {
       setTheme(theme === 'dark' ? 'light' : 'dark');
+    } else if (cmd.action === 'toggleDensity') {
+      const current = viewPreferences?.density || 'comfortable';
+      setViewPreference('density', current === 'comfortable' ? 'compact' : 'comfortable');
     }
     onClose();
     setSearch('');
     setSelectedIndex(0);
-  }, [navigate, onClose, triggerRefresh, theme, setTheme]);
+  }, [navigate, onClose, triggerRefresh, theme, setTheme, viewPreferences, setViewPreference]);
 
   useEffect(() => {
     if (open && inputRef.current) {
@@ -101,25 +97,22 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps): 
   return (
     <Modal
       open={open}
-      onCancel={() => { onClose(); setSearch(''); }}
-      footer={null}
+      onClose={() => { onClose(); setSearch(''); }}
       closable={false}
       className="command-palette-modal"
       width={560}
-      centered
     >
       <div className="command-palette">
         <div className="command-palette-input-wrapper">
           <Search size={16} className="command-palette-search-icon" />
-          <Input
-            data-testid="command-palette-input"
+          <input
             ref={inputRef}
+            data-testid="command-palette-input"
+            className="command-palette-input"
             placeholder="Type a command or search..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={handleKeyDown}
-            variant="borderless"
-            className="command-palette-input"
           />
           <kbd className="command-palette-kbd">ESC</kbd>
         </div>

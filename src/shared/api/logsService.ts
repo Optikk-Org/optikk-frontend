@@ -2,24 +2,32 @@
  * Logs Service — API calls for log ingestion and retrieval.
  */
 import { API_CONFIG } from '@config/apiConfig';
+import { z } from 'zod';
 
 import api from './api';
+import { validateResponse } from './utils/validate';
+import { logRecordSchema, logVolumeSchema } from './schemas/logsSchemas';
 
+import type { LogRecord, LogVolume } from './schemas/logsSchemas';
 import type { QueryParams, RequestTime } from './service-types';
 
 const BASE = API_CONFIG.ENDPOINTS.V1_BASE;
 
-/**
- * Service wrapper for log endpoints.
- */
+const logsListSchema = z.object({
+  logs: z.array(logRecordSchema),
+  total: z.number(),
+  cursor: z.string().optional(),
+});
+
 export const logsService = {
   async getLogs(
     _teamId: number | null,
     startTime: RequestTime,
     endTime: RequestTime,
     params: QueryParams = {},
-  ): Promise<unknown> {
-    return api.get(`${BASE}/logs`, { params: { startTime, endTime, ...params } });
+  ): Promise<{ logs: LogRecord[]; total: number; cursor?: string }> {
+    const data = await api.get(`${BASE}/logs`, { params: { startTime, endTime, ...params } });
+    return validateResponse(logsListSchema, data);
   },
 
   async getLogHistogram(
@@ -56,8 +64,9 @@ export const logsService = {
     endTime: RequestTime,
     step?: string,
     params: QueryParams = {},
-  ): Promise<unknown> {
-    return api.get(`${BASE}/logs/volume`, { params: { startTime, endTime, step, ...params } });
+  ): Promise<LogVolume> {
+    const data = await api.get(`${BASE}/logs/volume`, { params: { startTime, endTime, step, ...params } });
+    return validateResponse(logVolumeSchema, data);
   },
 
   async getLogFields(
@@ -102,15 +111,13 @@ export const logsService = {
     startTime: RequestTime,
     endTime: RequestTime,
     params: QueryParams = {},
-    onLog: (log: any) => void,
-    onError: (err: any) => void
+    onLog: (log: LogRecord) => void,
+    onError: (err: unknown) => void
   ): () => void {
-    // Construct URL with query params
     const url = new URL(`${window.location.origin}${BASE}/logs/stream`);
     url.searchParams.append('startTime', String(startTime));
     url.searchParams.append('endTime', String(endTime));
-    
-    // Copy all OptiQL params (e.g. search, services, severities) into the URL
+
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (Array.isArray(value)) {

@@ -2,12 +2,23 @@
  * Traces Service — API calls for distributed tracing.
  */
 import { API_CONFIG } from '@config/apiConfig';
+import { z } from 'zod';
 
 import api from './api';
+import { validateResponse } from './utils/validate';
+import { traceRecordSchema, spanRecordSchema } from './schemas/tracesSchemas';
 
+import type { TraceRecord, SpanRecord } from './schemas/tracesSchemas';
 import type { QueryParams, RequestTime } from './service-types';
 
 const BASE = API_CONFIG.ENDPOINTS.V1_BASE;
+
+const tracesListSchema = z.object({
+  traces: z.array(traceRecordSchema),
+  total: z.number(),
+});
+
+const spanListSchema = z.array(spanRecordSchema);
 
 /**
  * Service wrapper for distributed tracing endpoints.
@@ -18,12 +29,14 @@ export const tracesService = {
     startTime: RequestTime,
     endTime: RequestTime,
     params: QueryParams = {},
-  ): Promise<unknown> {
-    return api.get(`${BASE}/traces`, { params: { startTime, endTime, ...params } });
+  ): Promise<{ traces: TraceRecord[]; total: number }> {
+    const data = await api.get(`${BASE}/traces`, { params: { startTime, endTime, ...params } });
+    return validateResponse(tracesListSchema, data);
   },
 
-  async getTraceSpans(_teamId: number | null, traceId: string): Promise<unknown> {
-    return api.get(`${BASE}/traces/${traceId}/spans`);
+  async getTraceSpans(_teamId: number | null, traceId: string): Promise<SpanRecord[]> {
+    const data = await api.get(`${BASE}/traces/${traceId}/spans`);
+    return validateResponse(spanListSchema, data);
   },
 
   async getSpanTree(_teamId: number | null, spanId: string): Promise<unknown> {
@@ -103,7 +116,7 @@ export const tracesService = {
   },
 
   getLiveTailUrl(filters: QueryParams = {}): string {
-    const query = new URLSearchParams(filters as any).toString();
+    const query = new URLSearchParams(filters as Record<string, string>).toString();
     return `${BASE}/spans/live-tail${query ? '?' + query : ''}`;
   },
 };

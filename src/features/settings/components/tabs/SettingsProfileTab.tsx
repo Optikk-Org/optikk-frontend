@@ -1,5 +1,6 @@
-import { Avatar, Button, Card, Divider, Form, Input, Spin } from 'antd';
-import { Bell, User } from 'lucide-react';
+import { Form, Input as AntInput } from 'antd';
+import { User } from 'lucide-react';
+import { Surface, Button, Skeleton } from '@shared/design-system';
 
 import type {
   SettingsProfileFormValues,
@@ -16,9 +17,6 @@ interface SettingsProfileTabProps {
   readonly onSubmit: (values: SettingsProfileFormValues) => void;
 }
 
-/**
- * Profile tab content for settings page.
- */
 export default function SettingsProfileTab({
   profileLoading,
   profile,
@@ -28,26 +26,34 @@ export default function SettingsProfileTab({
   onSubmit,
 }: SettingsProfileTabProps): JSX.Element {
   if (profileLoading) {
-    return (
-      <div className="settings-loading">
-        <Spin size="large" />
-      </div>
-    );
+    return <div className="p-xl"><Skeleton count={5} /></div>;
   }
 
+  const initials = getInitials(profile?.name || '');
+
   return (
-    <Card className="settings-card">
-      <div className="profile-header">
-        <Avatar size={80} src={profile?.avatarUrl} className="profile-avatar">
-          {getInitials(profile?.name || '')}
-        </Avatar>
-        <div className="profile-info">
-          <h3>{profile?.name}</h3>
-          <p className="profile-role">{profile?.role}</p>
+    <Surface elevation={1} padding="lg" className="settings-card">
+      <div className="flex items-center gap-md mb-md">
+        <div
+          className="flex items-center justify-center rounded font-bold text-lg"
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: '50%',
+            background: profile?.avatarUrl ? `url(${profile.avatarUrl}) center/cover` : 'var(--color-primary)',
+            color: '#fff',
+            flexShrink: 0,
+          }}
+        >
+          {!profile?.avatarUrl && initials}
+        </div>
+        <div>
+          <div className="text-lg font-semibold">{profile?.name}</div>
+          <div className="text-sm text-muted">{profile?.role}</div>
         </div>
       </div>
 
-      <Divider />
+      <div className="border-t mb-md" />
 
       <Form
         form={profileForm}
@@ -64,33 +70,32 @@ export default function SettingsProfileTab({
           name="name"
           rules={[{ required: true, message: 'Please enter your name' }]}
         >
-          <Input prefix={<User size={16} />} placeholder="Your name" />
+          <AntInput prefix={<User size={16} />} placeholder="Your name" />
         </Form.Item>
 
         <Form.Item label="Email" name="email">
-          <Input prefix={<Bell size={16} />} disabled />
+          <AntInput disabled />
         </Form.Item>
 
         <Form.Item label="Avatar URL" name="avatarUrl">
-          <Input placeholder="https://example.com/avatar.jpg" />
+          <AntInput placeholder="https://example.com/avatar.jpg" />
         </Form.Item>
 
         <Form.Item label="Role">
-          <Input value={profile?.role} disabled />
+          <AntInput value={profile?.role} disabled />
         </Form.Item>
 
         <Form.Item>
           <Button
-            data-testid="settings-save-profile"
-            type="primary"
-            htmlType="submit"
+            variant="primary"
+            fullWidth
             loading={isSaving}
-            block
+            type="submit"
           >
             Save Changes
           </Button>
         </Form.Item>
       </Form>
-    </Card>
+    </Surface>
   );
 }

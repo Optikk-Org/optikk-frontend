@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Form, Tabs } from 'antd';
+import { Form } from 'antd';
+import { Tabs } from '@shared/design-system';
 import { Palette, Settings, User, Users } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { z } from 'zod';
 
@@ -93,6 +95,7 @@ function toProfileCommand(values: SettingsProfileFormValues): SettingsProfileCom
 export default function SettingsPage(): JSX.Element {
   const queryClient = useQueryClient();
   const [profileForm] = Form.useForm<SettingsProfileFormValues>();
+  const [activeSettingsTab, setActiveSettingsTab] = useState('profile');
 
   const {
     theme,
@@ -201,59 +204,41 @@ export default function SettingsPage(): JSX.Element {
       <PageHeader title="Settings" icon={<Settings size={24} />} />
 
       <Tabs
-        defaultActiveKey="profile"
+        activeKey={activeSettingsTab}
+        onChange={setActiveSettingsTab}
         className="settings-tabs"
         items={[
-          {
-            key: 'profile',
-            label: (
-              <span className="tab-label">
-                <User size={16} />
-                Profile
-              </span>
-            ),
-            children: (
-              <SettingsProfileTab
-                profileLoading={profileLoading}
-                profile={profile}
-                profileForm={profileForm}
-                isSaving={updateProfileMutation.isPending}
-                getInitials={getInitials}
-                onSubmit={handleProfileSubmit}
-              />
-            ),
-          },
-          {
-            key: 'preferences',
-            label: (
-              <span className="tab-label">
-                <Palette size={16} />
-                Preferences
-              </span>
-            ),
-            children: (
-              <SettingsPreferencesTab
-                theme={theme}
-                notificationsEnabled={notificationsEnabled}
-                viewPreferences={normalizedPreferences}
-                onThemeChange={handleThemeChange}
-                onNotificationsChange={handleNotificationsChange}
-                onPreferenceChange={handlePreferenceChange}
-              />
-            ),
-          },
-          {
-            key: 'team',
-            label: (
-              <span className="tab-label">
-                <Users size={16} />
-                Team
-              </span>
-            ),
-            children: <SettingsTeamTab profileLoading={profileLoading} teams={teams} />,
-          },
+          { key: 'profile', label: 'Profile', icon: <User size={14} /> },
+          { key: 'preferences', label: 'Preferences', icon: <Palette size={14} /> },
+          { key: 'team', label: 'Team', icon: <Users size={14} /> },
         ]}
       />
+
+      {activeSettingsTab === 'profile' && (
+        <SettingsProfileTab
+          profileLoading={profileLoading}
+          profile={profile}
+          profileForm={profileForm}
+          isSaving={updateProfileMutation.isPending}
+          getInitials={getInitials}
+          onSubmit={handleProfileSubmit}
+        />
+      )}
+
+      {activeSettingsTab === 'preferences' && (
+        <SettingsPreferencesTab
+          theme={theme}
+          notificationsEnabled={notificationsEnabled}
+          viewPreferences={normalizedPreferences}
+          onThemeChange={handleThemeChange}
+          onNotificationsChange={handleNotificationsChange}
+          onPreferenceChange={handlePreferenceChange}
+        />
+      )}
+
+      {activeSettingsTab === 'team' && (
+        <SettingsTeamTab profileLoading={profileLoading} teams={teams} />
+      )}
     </div>
   );
 }

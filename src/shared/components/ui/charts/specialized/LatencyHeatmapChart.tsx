@@ -1,4 +1,4 @@
-import { Tooltip } from 'antd';
+import { Tooltip } from '@shared/design-system';
 import { useMemo } from 'react';
 
 import { APP_COLORS } from '@config/colorLiterals';
@@ -71,7 +71,7 @@ export default function LatencyHeatmapChart({
                 return (
                   <Tooltip
                     key={String(tb)}
-                    title={`${lb} @ ${new Date(tb).toLocaleTimeString()}: ${count.toLocaleString()} spans`}
+                    content={`${lb} @ ${new Date(tb).toLocaleTimeString()}: ${count.toLocaleString()} spans`}
                   >
                     <div
                       className="heatmap-cell"

@@ -1,4 +1,5 @@
-import { Badge, Card, Empty, Progress, Skeleton, Table, Tag, Tooltip } from 'antd';
+import { Table } from 'antd';
+import { Badge, Skeleton, Surface, Tooltip } from '@shared/design-system';
 import { useMemo } from 'react';
 
 import ConfigurableDashboard from '@shared/components/ui/dashboard/ConfigurableDashboard';
@@ -39,7 +40,7 @@ export default function AiSecurityTab({
   }, [secMetrics, selectedModel]);
 
   const tableColumns = [
-    { title: 'Model', dataIndex: 'model_name', key: 'model_name', render: (value: any) => <Tag className="ai-model-tag">{value || 'unknown'}</Tag> },
+    { title: 'Model', dataIndex: 'model_name', key: 'model_name', render: (value: any) => <Badge variant="default" className="ai-model-tag">{value || 'unknown'}</Badge> },
     { title: 'Requests', dataIndex: 'total_requests', key: 'total_requests', render: (value: any) => formatNumber(Number(value)), align: 'right' as const },
     {
       title: 'PII Detected',
@@ -48,7 +49,7 @@ export default function AiSecurityTab({
       render: (value: any) => {
         const normalized = n(value) ?? 0;
         return (
-          <Tooltip title={`${normalized} requests with PII`}>
+          <Tooltip content={`${normalized} requests with PII`}>
             <span style={{ color: normalized > 0 ? APP_COLORS.hex_f04438 : APP_COLORS.hex_73c991, fontWeight: 600 }}>{formatNumber(normalized)}</span>
           </Tooltip>
         );
@@ -65,7 +66,7 @@ export default function AiSecurityTab({
         const color = rateColor(normalized);
         return (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Progress percent={Math.min(normalized, 100)} size="small" showInfo={false} strokeColor={color} style={{ width: 60 }} />
+            <div style={{ width: 60, height: 6, borderRadius: 3, background: 'var(--bg-tertiary, #2d2d2d)', overflow: 'hidden' }}><div style={{ width: `${Math.min(normalized, 100)}%`, height: '100%', background: color, borderRadius: 3 }} /></div>
             <span style={{ color, fontWeight: 600, fontSize: 12 }}>{normalized.toFixed(2)}%</span>
           </div>
         );
@@ -81,8 +82,8 @@ export default function AiSecurityTab({
         const blockRate = n(row.guardrail_block_rate) ?? 0;
         const ok = piiRate < 1 && blockRate < 1;
         return (
-          <Tooltip title={`PII ${piiRate.toFixed(2)}%, Blocks ${blockRate.toFixed(2)}%`}>
-            <Badge status={ok ? 'success' : 'error'} text={ok ? 'Healthy' : 'Attention'} />
+          <Tooltip content={`PII ${piiRate.toFixed(2)}%, Blocks ${blockRate.toFixed(2)}%`}>
+            <Badge variant={ok ? 'success' : 'error'}>{ok ? 'Healthy' : 'Attention'}</Badge>
           </Tooltip>
         );
       },
@@ -92,11 +93,12 @@ export default function AiSecurityTab({
   return (
     <>
       <ConfigurableDashboard config={config} dataSources={dataSources} extraContext={{ selectedModel }} />
-      <Card title="Per-Model Security" className="ai-chart-card" style={{ marginTop: 16 }}>
-        {secLoading ? <Skeleton active paragraph={{ rows: 6 }} /> : data.length === 0 ? <Empty description="No data" /> : (
+      <Surface elevation={1} padding="md" className="ai-chart-card" style={{ marginTop: 16 }}>
+        <h4>Per-Model Security</h4>
+        {secLoading ? <Skeleton /> : data.length === 0 ? <div className="text-muted" style={{textAlign:'center',padding:32}}>No data</div> : (
           <Table dataSource={data.map((row: any, index: number) => ({ ...row, key: index }))} columns={tableColumns as any} size="small" pagination={{ pageSize: 20 }} scroll={{ x: 1000 }} />
         )}
-      </Card>
+      </Surface>
     </>
   );
 }

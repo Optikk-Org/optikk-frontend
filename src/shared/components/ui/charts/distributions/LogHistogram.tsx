@@ -1,4 +1,4 @@
-import { Empty } from 'antd';
+
 import { useMemo, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
 
@@ -100,7 +100,7 @@ export function LogHistogramPanel({ chartConfig, dataSources, extraContext = {} 
         <div className="lh-panel__body">
           {data.length > 0
             ? <LogHistogram data={data} height={height} startTime={startTime} endTime={endTime} interval={interval} />
-            : <Empty description="No log data" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: 12 }} />
+            : <div style={{ textAlign: 'center', padding: 12, color: 'var(--text-muted)' }}>No log data</div>
           }
         </div>
       )}

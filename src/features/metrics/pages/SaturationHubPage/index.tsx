@@ -1,4 +1,4 @@
-import { Tabs } from 'antd';
+import { Tabs } from '@shared/design-system';
 import { Database, Network } from 'lucide-react';
 
 import ConfiguredTabPanel from '@shared/components/ui/dashboard/ConfiguredTabPanel';
@@ -16,28 +16,19 @@ export default function SaturationHubPage() {
     defaultTab: 'database',
   });
 
-  const items = [
-    {
-      key: 'database',
-      label: (
-        <span>
-          <Database size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
-          Database
-        </span>
-      ),
-      children: <ConfiguredTabPanel pageId="saturation" tabId="database" />,
-    },
-    {
-      key: 'mq',
-      label: (
-        <span>
-          <Network size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
-          Messaging Queue
-        </span>
-      ),
-      children: <MessagingQueueMonitoringPage />,
-    },
-  ];
+  return (
+    <div>
+      <Tabs
+        activeKey={activeTab}
+        onChange={onTabChange}
+        items={[
+          { key: 'database', label: 'Database', icon: <Database size={14} /> },
+          { key: 'mq', label: 'Messaging Queue', icon: <Network size={14} /> },
+        ]}
+      />
 
-  return <Tabs activeKey={activeTab} onChange={onTabChange} items={items} />;
+      {activeTab === 'database' && <ConfiguredTabPanel pageId="saturation" tabId="database" />}
+      {activeTab === 'mq' && <MessagingQueueMonitoringPage />}
+    </div>
+  );
 }

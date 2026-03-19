@@ -1,4 +1,4 @@
-import { Card, Col, Empty, Row, Skeleton, Tag } from 'antd';
+import { Badge, Skeleton, Surface } from '@shared/design-system';
 import { ArrowRight, GitBranch, Network, ShieldAlert } from 'lucide-react';
 
 import ServiceGraph from '@shared/components/ui/charts/specialized/ServiceGraph';
@@ -112,53 +112,51 @@ export function ServiceTopologyTab({
         actions={
           <div className="services-health-tags">
             {healthOptions.map((option: ServiceHealthOption) => (
-              <Tag
+              <Badge
                 key={option.key}
-                style={{ cursor: 'pointer', borderColor: option.color }}
-                color={healthFilter === option.key ? (option.color || 'blue') : 'default'}
+                style={{ cursor: 'pointer', borderColor: option.color, background: healthFilter === option.key ? (option.color || 'blue') : 'transparent', color: healthFilter === option.key ? '#fff' : 'inherit' }}
                 onClick={() => setHealthFilter(option.key)}
               >
                 {option.label} ({option.count})
-              </Tag>
+              </Badge>
             ))}
           </div>
         }
       />
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24}>
-          <Card title="Service Dependency Graph" className="services-panel-card services-graph-card" bordered={false} styles={{ body: { padding: '8px' } }}>
-            {topologyLoading ? (
-              <div className="services-loading-container">
-                <Skeleton active paragraph={{ rows: 9 }} />
-              </div>
-            ) : topologyError ? (
-              <Empty description="Failed to load topology" className="services-empty" />
-            ) : topologyNodes.length === 0 ? (
-              <Empty description="No services found for this filter" className="services-empty" />
-            ) : (
-              <ServiceGraph
-                nodes={topologyNodes}
-                edges={topologyEdges}
-                onNodeClick={(node: { name?: string }) => {
-                  if (typeof node.name === 'string' && node.name) {
-                    onNodeClick(node.name);
-                  }
-                }}
-              />
-            )}
-          </Card>
-        </Col>
-      </Row>
+      <div>
+        <Surface elevation={1} padding="md" className="services-panel-card services-graph-card">
+          <div style={{ fontWeight: 600, marginBottom: 12 }}>Service Dependency Graph</div>
+          {topologyLoading ? (
+            <div className="services-loading-container">
+              <Skeleton />
+            </div>
+          ) : topologyError ? (
+            <div className="text-muted services-empty" style={{ textAlign: 'center', padding: 32 }}>Failed to load topology</div>
+          ) : topologyNodes.length === 0 ? (
+            <div className="text-muted services-empty" style={{ textAlign: 'center', padding: 32 }}>No services found for this filter</div>
+          ) : (
+            <ServiceGraph
+              nodes={topologyNodes}
+              edges={topologyEdges}
+              onNodeClick={(node: { name?: string }) => {
+                if (typeof node.name === 'string' && node.name) {
+                  onNodeClick(node.name);
+                }
+              }}
+            />
+          )}
+        </Surface>
+      </div>
 
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24}>
-          <Card title="Critical Service Risks" className="services-panel-card services-risk-card" bordered={false}>
-            {topologyLoading ? (
-              <Skeleton active paragraph={{ rows: 8 }} />
-            ) : criticalServices.length === 0 ? (
-              <Empty description="No service risks" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-            ) : (
+      <div style={{ marginTop: 16 }}>
+        <Surface elevation={1} padding="md" className="services-panel-card services-risk-card">
+          <div style={{ fontWeight: 600, marginBottom: 12 }}>Critical Service Risks</div>
+          {topologyLoading ? (
+            <Skeleton />
+          ) : criticalServices.length === 0 ? (
+            <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>No service risks</div>
+          ) : (
               <div className="services-risk-list">
                 {criticalServices.map((service: ServiceTopologyNode) => (
                   <button
@@ -182,17 +180,19 @@ export function ServiceTopologyTab({
                 ))}
               </div>
             )}
-          </Card>
-        </Col>
-      </Row>
+        </Surface>
+      </div>
 
-      <Card
-        title="Dependency Contracts"
+      <Surface
+        elevation={1}
+        padding="md"
         className="services-panel-card"
-        bordered={false}
         style={{ marginTop: 16 }}
-        extra={<span className="services-card-extra">Top edges ranked by risk score</span>}
       >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div style={{ fontWeight: 600 }}>Dependency Contracts</div>
+          <span className="services-card-extra">Top edges ranked by risk score</span>
+        </div>
         <div style={{ height: boardHeight(15) }}>
           <ObservabilityDataBoard<ServiceDependencyRow>
             data={{ rows: dependencyRows, isLoading: topologyLoading }}
@@ -240,7 +240,7 @@ export function ServiceTopologyTab({
             }}
           />
         </div>
-      </Card>
+      </Surface>
     </>
   );
 }

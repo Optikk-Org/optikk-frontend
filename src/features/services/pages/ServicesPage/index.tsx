@@ -1,4 +1,4 @@
-import { Tabs } from 'antd';
+import { Tabs } from '@shared/design-system';
 import { Layers, Network, Share2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -85,53 +85,49 @@ export default function ServicesPage() {
         onChange={onTabChange}
         className="services-tabs"
         items={[
-          {
-            key: 'overview',
-            label: <span><Layers size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Overview</span>,
-            children: (
-              <ServiceOverviewTab
-                totalServices={totalServices}
-                healthyServices={healthyServices}
-                degradedServices={degradedServices}
-                unhealthyServices={unhealthyServices}
-                isLoading={isLoading}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                viewMode={viewMode}
-                setViewMode={setViewMode}
-                tableData={tableData}
-                onNodeClick={onNodeClick}
-              />
-            ),
-          },
-          {
-            key: 'topology',
-            label: <span><Network size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Topology</span>,
-            children: (
-              <ServiceTopologyTab
-                topologyStats={topologyStats}
-                topologyLoading={topologyLoading}
-                topologyError={topologyError}
-                topologyNodes={topologyNodes}
-                topologyEdges={topologyEdges}
-                criticalServices={criticalServices}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                healthFilter={healthFilter}
-                setHealthFilter={setHealthFilter}
-                healthOptions={healthOptions}
-                dependencyRows={dependencyRows}
-                onNodeClick={onNodeClick}
-              />
-            ),
-          },
-          {
-            key: 'service-map',
-            label: <span><Share2 size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Service Map</span>,
-            children: <ConfiguredTabPanel pageId="services" tabId="service-map" />,
-          },
+          { key: 'overview', label: 'Overview', icon: <Layers size={14} /> },
+          { key: 'topology', label: 'Topology', icon: <Network size={14} /> },
+          { key: 'service-map', label: 'Service Map', icon: <Share2 size={14} /> },
         ]}
       />
+
+      {activeTab === 'overview' && (
+        <ServiceOverviewTab
+          totalServices={totalServices}
+          healthyServices={healthyServices}
+          degradedServices={degradedServices}
+          unhealthyServices={unhealthyServices}
+          isLoading={isLoading}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          tableData={tableData}
+          onNodeClick={onNodeClick}
+        />
+      )}
+
+      {activeTab === 'topology' && (
+        <ServiceTopologyTab
+          topologyStats={topologyStats}
+          topologyLoading={topologyLoading}
+          topologyError={topologyError}
+          topologyNodes={topologyNodes}
+          topologyEdges={topologyEdges}
+          criticalServices={criticalServices}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          healthFilter={healthFilter}
+          setHealthFilter={setHealthFilter}
+          healthOptions={healthOptions}
+          dependencyRows={dependencyRows}
+          onNodeClick={onNodeClick}
+        />
+      )}
+
+      {activeTab === 'service-map' && (
+        <ConfiguredTabPanel pageId="services" tabId="service-map" />
+      )}
       <ServiceFlyInPanel
         serviceName={flyInService}
         open={flyInService !== null}

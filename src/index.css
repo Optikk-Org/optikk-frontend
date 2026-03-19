@@ -1,4 +1,5 @@
 @import './config/themeColors.css';
+@import './shared/design-system/utilities.css';
 
 /* Global Styles */
 * {
@@ -7,7 +8,6 @@
   box-sizing: border-box;
 }
 
-/* CSS Custom Properties - Theme-agnostic tokens */
 :root {
   /* ── Typography scale tokens ───────────────────────────────── */
   --text-xs: 11px;
@@ -29,20 +29,7 @@
   --leading-normal: 1.5;
   --leading-relaxed: 1.75;
 
-  /* ── Shadows ────────────────────────────────────────────────── */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
-  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.20);
-  --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-
-  /* ── Spacing tokens ─────────────────────────────────────────── */
-  --space-xs: 8px;
-  --space-sm: 12px;
-  --space-md: 20px;
-  --space-lg: 24px;
-  --space-xl: 32px;
-
-  /* ── Grid gap – single source of truth for Row gutter ───────── */
+  /* ── Grid gap ─────────────────────────────────────────────── */
   --grid-gutter: 20px;
 
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -95,15 +82,13 @@ code {
   border-radius: 4px;
 }
 
-/* Ant Design overrides */
+/* ─── Ant Design overrides (legacy — remove as pages migrate to design-system) ─── */
+
 .ant-layout {
   min-height: 100vh;
   background: transparent !important;
-  /* Let the body gradient/bg show through if any */
 }
 
-/* Fix 15: backdrop-filter restricted to structural surfaces only.
-   Removed from .ant-card (GPU cost on every card). */
 .ant-layout-header {
   background: var(--glass-bg) !important;
   backdrop-filter: var(--glass-blur);
@@ -152,7 +137,7 @@ code {
 }
 
 .ant-table-thead>tr>th {
-  background: var(--literal-rgba-255-255-255-0p03) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
   border-bottom: 1px solid var(--glass-border) !important;
   font-weight: 600;
   color: var(--text-secondary) !important;
@@ -163,16 +148,15 @@ code {
 }
 
 .ant-table-tbody>tr:hover>td {
-  background: var(--literal-rgba-255-255-255-0p05) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
 }
 
-/* Card styles — calm surfaces, no hover lift, soft shadow */
 .ant-card {
   background: var(--glass-bg);
   border: var(--card-border, 1px solid rgba(48, 54, 61, 0.80));
   border-radius: var(--card-radius, 12px);
   box-shadow: var(--card-shadow, 0 2px 8px rgba(0, 0, 0, 0.08));
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: var(--transition-shadow);
 }
 
 .ant-card:hover {
@@ -185,7 +169,6 @@ code {
   min-height: 48px;
 }
 
-/* Compact header for chart cards — gives more room to the chart itself */
 .chart-card .ant-card-head {
   padding: 0 16px;
   min-height: 40px;
@@ -208,7 +191,6 @@ code {
   padding: 12px;
 }
 
-/* Modal — can retain backdrop-filter (structural surface) */
 .ant-modal-content {
   background: var(--bg-secondary);
   backdrop-filter: var(--glass-blur);
@@ -216,7 +198,6 @@ code {
   border: 1px solid var(--border-color);
 }
 
-/* Button styles */
 .ant-btn-primary {
   background: var(--color-primary);
   border-color: var(--color-primary);
@@ -227,7 +208,6 @@ code {
   border-color: var(--color-primary-hover);
 }
 
-/* Input styles */
 .ant-input,
 .ant-input-number,
 .ant-select-selector {
@@ -245,16 +225,14 @@ code {
 .ant-input-number:focus,
 .ant-select-focused .ant-select-selector {
   border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 2px var(--literal-rgba-94-96-206-0p1) !important;
+  box-shadow: 0 0 0 2px rgba(94, 96, 206, 0.1) !important;
 }
 
-/* Modal styles */
 .ant-modal-header {
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
 }
 
-/* Dropdown styles */
 .ant-dropdown-menu {
   background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
@@ -264,9 +242,7 @@ code {
   background: var(--border-color);
 }
 
-/* ─── Spacing utilities ──────────────────────────────────────────────────── */
-
-/* Standard gap between chart rows / sections on every page */
+/* ─── Spacing utilities (legacy — prefer design-system utility classes) ─── */
 .page-section {
   margin-top: var(--space-md);
 }
@@ -275,18 +251,30 @@ code {
   margin-top: var(--space-lg);
 }
 
-/* Chart cards: consistent bottom margin so stacked rows breathe evenly */
-.chart-card {
-  margin-bottom: 0;
-  /* gap is handled by Row gutter – never add extra margin here */
-}
-
-/* Stat-card row gap above chart sections */
 .stats-row {
-  margin-bottom: var(--space-md) !important;
+  margin-bottom: var(--space-md);
 }
 
-/* FilterBar / controls row */
 .controls-row {
-  margin-bottom: var(--space-md) !important;
+  margin-bottom: var(--space-md);
+}
+
+/* Chart card title for Surface-based chart cards */
+/* Stat cards grid — replaces antd Row/Col */
+.stat-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-md, 16px);
+  margin-bottom: var(--space-md, 16px);
+}
+
+.chart-card__title {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

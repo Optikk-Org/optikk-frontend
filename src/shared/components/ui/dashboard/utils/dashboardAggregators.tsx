@@ -1,5 +1,3 @@
-import { Col, Empty, Row } from 'antd';
-
 import type { DashboardComponentSpec, DashboardDataSources } from '@/types/dashboardConfig';
 
 import { formatBytes, formatDuration, formatNumber } from '@shared/utils/formatters';
@@ -59,7 +57,7 @@ export function resolveFieldValue(raw: any, field: string | undefined) {
 export function renderStatSummary(rawData: any) {
   const summary = Array.isArray(rawData) ? rawData[0] : rawData;
   if (!summary || typeof summary !== 'object') {
-    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No data" />;
+    return <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>No data</div>;
   }
 
   const cells = [
@@ -70,22 +68,20 @@ export function renderStatSummary(rawData: any) {
   ].filter((cell) => cell.value !== null && cell.value !== undefined);
 
   if (cells.length === 0) {
-    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No summary data" />;
+    return <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>No data</div>;
   }
 
   return (
-    <Row gutter={[12, 12]}>
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cells.length}, 1fr)`, gap: 12 }}>
       {cells.map((cell) => (
-        <Col span={Math.max(6, Math.floor(24 / cells.length))} key={cell.label}>
-          <div style={{ padding: '8px 0' }}>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{cell.label}</div>
-            <div style={{ fontSize: 20, fontWeight: 700 }}>
-              {formatDuration(Number(cell.value) || 0)}
-            </div>
+        <div key={cell.label} style={{ padding: '8px 0' }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{cell.label}</div>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>
+            {formatDuration(Number(cell.value) || 0)}
           </div>
-        </Col>
+        </div>
       ))}
-    </Row>
+    </div>
   );
 }
 

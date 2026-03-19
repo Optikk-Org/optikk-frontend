@@ -1,5 +1,5 @@
-import { Card, Skeleton } from 'antd';
 import React from 'react';
+import { Surface, Skeleton } from '@shared/design-system';
 import { TrendIndicator } from '@shared/components/ui';
 import { APP_COLORS } from '@config/colorLiterals';
 import SparklineChart from '../charts/micro/SparklineChart';
@@ -47,10 +47,10 @@ const StatCard = React.memo(function StatCard({
   const displayValue = formatter ? formatter(value) : value;
 
   return (
-    <Card className="stat-card">
+    <Surface elevation={1} padding="md" className="stat-card">
       {loading ? (
         <div className="stat-card-loading">
-          <Skeleton active title={{ width: '50%' }} paragraph={{ rows: 1, width: '70%' }} />
+          <Skeleton count={2} />
         </div>
       ) : (
         <>
@@ -84,7 +84,7 @@ const StatCard = React.memo(function StatCard({
           )}
         </>
       )}
-    </Card>
+    </Surface>
   );
 });
 

@@ -1,4 +1,3 @@
-import { Input } from 'antd';
 import { Search } from 'lucide-react';
 import { useState, useCallback, useRef } from 'react';
 
@@ -41,15 +40,30 @@ export default function SearchInput({
     [onSearch, debounceMs],
   );
 
+  const handleClear = () => {
+    setValue('');
+    onSearch?.('');
+  };
+
   return (
-    <Input
-      value={value}
-      onChange={handleChange}
-      placeholder={placeholder}
-      prefix={<Search size={16} />}
-      allowClear
-      style={style}
-      onClear={() => onSearch?.('')}
-    />
+    <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', ...style }}>
+      <Search size={16} style={{ position: 'absolute', left: 8, pointerEvents: 'none', color: 'var(--text-secondary, #999)' }} />
+      <input
+        type="text"
+        value={value}
+        onChange={handleChange}
+        placeholder={placeholder}
+        style={{ paddingLeft: 30, paddingRight: value ? 28 : 8, height: 32, border: '1px solid var(--border-color, #d9d9d9)', borderRadius: 6, fontSize: 14, width: '100%' }}
+      />
+      {value && (
+        <button
+          onClick={handleClear}
+          aria-label="Clear"
+          style={{ position: 'absolute', right: 6, background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-secondary, #999)' }}
+        >
+          &times;
+        </button>
+      )}
+    </div>
   );
 }

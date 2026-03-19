@@ -1,4 +1,5 @@
-import { Form, Input, Button, Card, Typography, Space } from 'antd';
+import { Form, Input } from 'antd';
+import { Surface, Button } from '@shared/design-system';
 import { Mail, Lock, Layers } from 'lucide-react';
 import { useEffect } from 'react';
 import { toast } from 'react-hot-toast';
@@ -12,7 +13,6 @@ import { APP_COLORS } from '@config/colorLiterals';
 
 import './LoginPage.css';
 
-const { Title, Text } = Typography;
 
 interface LoginFormValues {
   email: string;
@@ -74,18 +74,18 @@ export default function LoginPage() {
             <div className="branding-logo-icon">
               <Layers size={24} />
             </div>
-            <Title level={2} style={{ margin: 0, color: APP_COLORS.hex_fff }}>
+            <h2 style={{ margin: 0, color: APP_COLORS.hex_fff }}>
               Optikk
-            </Title>
+            </h2>
           </div>
 
-          <Title level={3} style={{ color: APP_COLORS.hex_fff, marginBottom: 16 }}>
+          <h3 style={{ color: APP_COLORS.hex_fff, marginBottom: 16 }}>
             Modern Observability Platform
-          </Title>
+          </h3>
 
-          <Text style={{ fontSize: 16, color: APP_COLORS.rgba_255_255_255_0p7 }}>
+          <p style={{ fontSize: 16, color: APP_COLORS.rgba_255_255_255_0p7 }}>
             Monitor, analyze, and optimize your distributed systems with real-time insights.
-          </Text>
+          </p>
 
           <div className="branding-features">
             <div className="feature-item">
@@ -114,13 +114,13 @@ export default function LoginPage() {
       </div>
 
       <div className="login-form-section">
-        <Card className="login-card">
-          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Surface className="login-card" padding="lg">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, width: '100%' }}>
             <div>
-              <Title level={3} style={{ marginBottom: 8 }}>
+              <h3 style={{ marginBottom: 8 }}>
                 Welcome back
-              </Title>
-              <Text type="secondary">Sign in to your account to continue</Text>
+              </h3>
+              <span style={{ color: 'var(--text-secondary)' }}>Sign in to your account to continue</span>
             </div>
 
             <Form
@@ -162,10 +162,9 @@ export default function LoginPage() {
               <Form.Item style={{ marginBottom: 0 }}>
                 <Button
                   data-testid="login-submit"
-                  type="primary"
-                  htmlType="submit"
-                  size="large"
-                  block
+                  variant="primary"
+                  type="submit"
+                  fullWidth
                   loading={isLoading}
                 >
                   Sign In
@@ -174,12 +173,12 @@ export default function LoginPage() {
             </Form>
 
             <div className="login-demo-info">
-              <Text type="secondary" style={{ fontSize: 12 }}>
+              <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
                 Demo credentials: <strong>frontend.demo@observability.local</strong> / Demo@12345
-              </Text>
+              </span>
             </div>
-          </Space>
-        </Card>
+          </div>
+        </Surface>
       </div>
     </div>
   );

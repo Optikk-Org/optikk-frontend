@@ -1,4 +1,4 @@
-import { Card, Col, Progress, Row, Skeleton, Tag } from 'antd';
+import { Badge, Skeleton, Surface } from '@shared/design-system';
 import { ShieldCheck } from 'lucide-react';
 
 import { APP_COLORS } from '@config/colorLiterals';
@@ -69,27 +69,25 @@ function SloGauge({
         flex: 1,
       }}
     >
-      <Progress
-        type="dashboard"
-        percent={Number(percent.toFixed(1))}
-        size={100}
-        strokeColor={strokeColor}
-        trailColor={APP_COLORS.hex_2d2d2d}
-        format={() => (
-          <div style={{ textAlign: 'center', lineHeight: 1.2 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: strokeColor }}>
-              {unit === 'ms' ? `${n(value).toFixed(0)}ms` : `${n(value).toFixed(2)}%`}
-            </div>
+      <div style={{ position: 'relative', width: 100, height: 100 }}>
+        <svg viewBox="0 0 100 100" width={100} height={100}>
+          <circle cx="50" cy="50" r="42" fill="none" stroke={APP_COLORS.hex_2d2d2d} strokeWidth="8" strokeDasharray="198" strokeDashoffset="49.5" strokeLinecap="round" transform="rotate(135 50 50)" />
+          <circle cx="50" cy="50" r="42" fill="none" stroke={strokeColor} strokeWidth="8" strokeDasharray="198" strokeDashoffset={198 - (Number(percent.toFixed(1)) / 100) * 148.5} strokeLinecap="round" transform="rotate(135 50 50)" />
+        </svg>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: strokeColor }}>
+            {unit === 'ms' ? `${n(value).toFixed(0)}ms` : `${n(value).toFixed(2)}%`}
           </div>
-        )}
-      />
+        </div>
+      </div>
       <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)', textAlign: 'center' }}>
         {title}
       </div>
       <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center' }}>
         Target: {unit === 'ms' ? `<${target}ms` : `≥${target}%`}
       </div>
-      <Tag
+      <Badge
+        variant={good ? 'success' : 'error'}
         style={{
           fontSize: 11,
           borderRadius: 12,
@@ -98,8 +96,8 @@ function SloGauge({
           border: `1px solid ${good ? APP_COLORS.rgba_18_183_106_0p3 : APP_COLORS.rgba_240_68_56_0p3_2}`,
         }}
       >
-        {good ? '✓ Meeting SLO' : '✗ Breaching SLO'}
-      </Tag>
+        {good ? 'Meeting SLO' : 'Breaching SLO'}
+      </Badge>
       {description && (
         <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center' }}>{description}</div>
       )}
@@ -138,11 +136,11 @@ export default function SloHealthGauges({
   p95TargetMs,
 }: SloHealthGaugesProps) {
   return (
-    <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-      <Col xs={24}>
-        <Card title={<span><ShieldCheck size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />SLO Health</span>}>
+    <div style={{ marginBottom: 16 }}>
+      <Surface elevation={1} padding="md">
+        <h4><ShieldCheck size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />SLO Health</h4>
           {isLoading ? (
-            <Skeleton active paragraph={{ rows: 3 }} />
+            <Skeleton />
           ) : (
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
               <SloGauge
@@ -192,8 +190,7 @@ export default function SloHealthGauges({
               </div>
             </div>
           )}
-        </Card>
-      </Col>
-    </Row>
+      </Surface>
+    </div>
   );
 }

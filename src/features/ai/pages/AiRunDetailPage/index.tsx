@@ -1,4 +1,3 @@
-import { Alert } from 'antd';
 import { Brain } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 
@@ -50,12 +49,10 @@ export default function AiRunDetailPage(): JSX.Element {
           </div>
         ) : detailError ? (
           <div style={{ padding: 24 }}>
-            <Alert
-              type="error"
-              showIcon
-              message="The LLM run detail could not be loaded."
-              description={getErrorMessage(detailError, 'The backend request failed for this run.')}
-            />
+            <div style={{ padding: '12px 16px', borderRadius: 8, background: 'var(--error-bg, rgba(240,68,56,0.08))', border: '1px solid var(--error-border, rgba(240,68,56,0.2))', color: 'var(--error-text, #f04438)' }}>
+              <strong>The LLM run detail could not be loaded.</strong>
+              <div style={{ marginTop: 4, fontSize: 13 }}>{getErrorMessage(detailError, 'The backend request failed for this run.')}</div>
+            </div>
           </div>
         ) : (
           <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -162,12 +159,10 @@ export default function AiRunDetailPage(): JSX.Element {
         <h3>Messages {isMessagesLoading && '(loading...)'}</h3>
         {messagesError && (
           <div style={{ padding: '16px 18px 0 18px' }}>
-            <Alert
-              type="error"
-              showIcon
-              message="Messages could not be loaded"
-              description={getErrorMessage(messagesError, 'The backend request for run messages failed.')}
-            />
+            <div style={{ padding: '12px 16px', borderRadius: 8, background: 'var(--error-bg, rgba(240,68,56,0.08))', border: '1px solid var(--error-border, rgba(240,68,56,0.2))', color: 'var(--error-text, #f04438)' }}>
+              <strong>Messages could not be loaded</strong>
+              <div style={{ marginTop: 4, fontSize: 13 }}>{getErrorMessage(messagesError, 'The backend request for run messages failed.')}</div>
+            </div>
           </div>
         )}
         {messages.length === 0 && !isMessagesLoading && (
@@ -202,12 +197,10 @@ export default function AiRunDetailPage(): JSX.Element {
         <div className="ai-run-context-panel">
           <h3>Execution Context</h3>
           <div style={{ padding: '16px 18px' }}>
-            <Alert
-              type="error"
-              showIcon
-              message="Execution context could not be loaded"
-              description={getErrorMessage(contextError, 'The backend request for execution context failed.')}
-            />
+            <div style={{ padding: '12px 16px', borderRadius: 8, background: 'var(--error-bg, rgba(240,68,56,0.08))', border: '1px solid var(--error-border, rgba(240,68,56,0.2))', color: 'var(--error-text, #f04438)' }}>
+              <strong>Execution context could not be loaded</strong>
+              <div style={{ marginTop: 4, fontSize: 13 }}>{getErrorMessage(contextError, 'The backend request for execution context failed.')}</div>
+            </div>
           </div>
         </div>
       )}

@@ -1,4 +1,5 @@
-import { Card, Table, Tag } from 'antd';
+import { Table } from 'antd';
+import { Badge, Surface } from '@shared/design-system';
 
 import { APP_COLORS } from '@config/colorLiterals';
 
@@ -95,7 +96,8 @@ export default function SloComplianceTable({
       render: (_value: any, record: any) => {
         const compliant = n(record.availability_percent) >= availabilityTarget;
         return (
-          <Tag
+          <Badge
+            variant={compliant ? 'success' : 'error'}
             style={{
               background: compliant ? APP_COLORS.rgba_18_183_106_0p12 : APP_COLORS.rgba_240_68_56_0p12_2,
               color: compliant ? APP_COLORS.hex_12b76a : APP_COLORS.hex_f04438,
@@ -105,25 +107,22 @@ export default function SloComplianceTable({
             }}
           >
             {compliant ? 'Compliant' : 'Breached'}
-          </Tag>
+          </Badge>
         );
       },
     },
   ];
 
   return (
-    <Card
-      title={(
-        <span>
-          Historical Compliance
-          {timeseries.length > 0 && (
-            <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)', marginLeft: 12 }}>
-              {timeseries.length} windows
-            </span>
-          )}
-        </span>
-      )}
-    >
+    <Surface elevation={1} padding="md">
+      <h4>
+        Historical Compliance
+        {timeseries.length > 0 && (
+          <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)', marginLeft: 12 }}>
+            {timeseries.length} windows
+          </span>
+        )}
+      </h4>
       <Table
         columns={complianceColumns}
         dataSource={timeseries.map((row, index) => ({ ...row, key: `slo-${index}` }))}
@@ -136,6 +135,6 @@ export default function SloComplianceTable({
         }
         locale={{ emptyText: 'No compliance data — check that services are sending OTLP traces' }}
       />
-    </Card>
+    </Surface>
   );
 }

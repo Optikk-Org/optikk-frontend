@@ -1,4 +1,4 @@
-import { Tag, Progress } from 'antd';
+import { Badge } from '@shared/design-system';
 import { APP_COLORS } from '@config/colorLiterals';
 import { LOG_LEVELS } from '@config/constants';
 import { formatNumber, formatDuration, formatTimestamp } from '@shared/utils/formatters';
@@ -27,7 +27,7 @@ export const getEndpointColumns = () => [
         PATCH: 'purple',
       };
       const normalizedMethod = String(method || '').toUpperCase();
-      return <Tag color={methodColors[normalizedMethod] || 'default'}>{normalizedMethod || '-'}</Tag>;
+      return <Badge color={methodColors[normalizedMethod] || 'default'}>{normalizedMethod || '-'}</Badge>;
     },
   },
   {
@@ -49,13 +49,9 @@ export const getEndpointColumns = () => [
       const color = rate > 5 ? APP_COLORS.hex_f04438 : rate > 1 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_12b76a;
       return (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Progress
-            percent={Math.min(rate, 100)}
-            size="small"
-            strokeColor={color}
-            showInfo={false}
-            style={{ flex: 1 }}
-          />
+          <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'var(--bg-tertiary, #1a1a2e)', overflow: 'hidden' }}>
+            <div style={{ width: `${Math.min(rate, 100)}%`, height: '100%', borderRadius: 3, background: color, transition: 'width 0.3s' }} />
+          </div>
           <span style={{ color, minWidth: 50, fontSize: 12 }}>{Number(rate).toFixed(2)}%</span>
         </div>
       );
@@ -119,7 +115,7 @@ export const getErrorColumns = (handlers: { navigate: (path: string) => void }) 
     render: (code: any) => {
       const statusCode = n(code);
       const color = statusCode >= 500 ? 'red' : statusCode >= 400 ? 'orange' : 'default';
-      return <Tag color={color}>{statusCode || 'N/A'}</Tag>;
+      return <Badge color={color}>{statusCode || 'N/A'}</Badge>;
     },
   },
   {
@@ -175,7 +171,7 @@ export const getLogColumns = (handlers: { navigate: (path: string) => void }) =>
     render: (level: any) => {
       const levelKey = String(level || 'INFO').toUpperCase() as keyof typeof LOG_LEVELS;
       const config = LOG_LEVELS[levelKey] || LOG_LEVELS.INFO;
-      return <Tag color={config.color}>{config.label}</Tag>;
+      return <Badge color={config.color}>{config.label}</Badge>;
     },
   },
   {

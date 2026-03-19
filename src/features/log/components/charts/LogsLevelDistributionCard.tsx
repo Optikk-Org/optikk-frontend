@@ -1,4 +1,3 @@
-import { Spin } from 'antd';
 import { Bug } from 'lucide-react';
 
 import LevelDistribution from '../log/LevelDistribution';
@@ -27,7 +26,7 @@ export default function LogsLevelDistributionCard({
       </div>
       <div className="logs-chart-card-body">
         {isLoading
-          ? <div className="logs-chart-empty"><Spin size="small" /></div>
+          ? <div className="logs-chart-empty"><div className="ok-spinner" /></div>
           : <LevelDistribution facets={levelFacets} />
         }
       </div>

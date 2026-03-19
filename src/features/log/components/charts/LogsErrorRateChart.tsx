@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { AlertCircle } from 'lucide-react';
-import { Spin } from 'antd';
 
 import { APP_COLORS } from '@config/colorLiterals';
 
@@ -42,7 +41,7 @@ export default function LogsErrorRateChart({ rows, isLoading }: LogsErrorRateCha
   }, [rows]);
 
   if (isLoading) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 120 }}><Spin size="small" /></div>;
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 120 }}><div className="ok-spinner" /></div>;
   }
 
   if (!rows.length) {

@@ -1,5 +1,7 @@
-import { Card, Descriptions, Divider, Spin } from 'antd';
-import { Key, Users } from 'lucide-react';
+import { Copy, Key, Users } from 'lucide-react';
+import { useState } from 'react';
+import toast from 'react-hot-toast';
+import { Surface, Skeleton, IconButton } from '@shared/design-system';
 
 import type { SettingsTeamViewModel } from '../../types';
 
@@ -8,52 +10,78 @@ interface SettingsTeamTabProps {
   readonly teams: SettingsTeamViewModel[];
 }
 
-/**
- * Team tab content for settings page.
- */
+function maskApiKey(key: string): string {
+  if (key.length <= 8) return '••••••••';
+  return `••••••••••••${key.slice(-4)}`;
+}
+
 export default function SettingsTeamTab({
   profileLoading,
   teams,
 }: SettingsTeamTabProps): JSX.Element {
+  const [revealedKeys, setRevealedKeys] = useState<Set<number>>(new Set());
+
   if (profileLoading) {
-    return (
-      <div className="settings-loading">
-        <Spin size="large" />
-      </div>
-    );
+    return <div className="p-xl"><Skeleton count={4} /></div>;
   }
 
+  const toggleReveal = (index: number) => {
+    setRevealedKeys((prev) => {
+      const next = new Set(prev);
+      next.has(index) ? next.delete(index) : next.add(index);
+      return next;
+    });
+  };
+
+  const copyKey = (key: string) => {
+    navigator.clipboard.writeText(key);
+    toast.success('API key copied');
+  };
+
   return (
-    <Card className="settings-card">
-      <div className="team-header">
-        <Users size={24} />
-        <h3>Team Information</h3>
+    <Surface elevation={1} padding="lg" className="settings-card">
+      <div className="flex items-center gap-sm mb-md">
+        <Users size={20} />
+        <h3 className="text-lg font-semibold m-0">Team Information</h3>
       </div>
 
-      <Divider />
+      <div className="border-t" />
 
-      <Descriptions column={1} bordered>
-        {teams.map((team, index) => (
-          <Descriptions.Item key={`${team.name ?? 'team'}-${index}`} label={`Team ${index + 1}`}>
-            <div className="team-info">
-              <div className="team-main">
-                <span className="team-name">{team.name}</span>
-                {team.apiKey && (
-                  <span className="team-api-key">
-                    <Key size={14} />
-                    {team.apiKey}
-                  </span>
-                )}
-              </div>
-              <span className="team-role">{team.role}</span>
+      {teams.map((team, index) => (
+        <div key={`${team.name ?? 'team'}-${index}`} className="py-sm border-b">
+          <div className="flex justify-between items-center mb-xs">
+            <span className="font-semibold text-md">{team.name}</span>
+            <span className="text-xs text-muted uppercase tracking-wide">{team.role}</span>
+          </div>
+          {team.apiKey && (
+            <div className="flex items-center gap-xs">
+              <Key size={13} className="text-muted" />
+              <code className="font-mono text-xs text-secondary" style={{ wordBreak: 'break-all' }}>
+                {revealedKeys.has(index) ? team.apiKey : maskApiKey(team.apiKey)}
+              </code>
+              <button
+                className="text-xs text-muted"
+                onClick={() => toggleReveal(index)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                {revealedKeys.has(index) ? 'Hide' : 'Reveal'}
+              </button>
+              <IconButton
+                icon={<Copy size={12} />}
+                size="sm"
+                label="Copy API key"
+                onClick={() => copyKey(team.apiKey!)}
+              />
             </div>
-          </Descriptions.Item>
-        ))}
-      </Descriptions>
+          )}
+        </div>
+      ))}
 
       {teams.length === 0 && (
-        <p className="no-teams">You are not a member of any teams yet.</p>
+        <p className="text-muted py-lg" style={{ textAlign: 'center' }}>
+          You are not a member of any teams yet.
+        </p>
       )}
-    </Card>
+    </Surface>
   );
 }

@@ -1,7 +1,11 @@
 import { API_CONFIG } from '@config/apiConfig';
+import { z } from 'zod';
 
 import api from './api';
+import { validateResponse } from './utils/validate';
+import { serviceSummarySchema } from './schemas/servicesSchemas';
 
+import type { ServiceSummary } from './schemas/servicesSchemas';
 import type { RequestTime } from './service-types';
 
 const BASE = API_CONFIG.ENDPOINTS.V1_BASE;
@@ -46,8 +50,9 @@ export const servicesPageService = {
     _teamId: number | null,
     startTime: RequestTime,
     endTime: RequestTime,
-  ): Promise<unknown> {
-    return api.get(`${BASE}/services/metrics`, { params: { startTime, endTime } });
+  ): Promise<ServiceSummary[]> {
+    const data = await api.get(`${BASE}/services/metrics`, { params: { startTime, endTime } });
+    return validateResponse(z.array(serviceSummarySchema), data);
   },
 
   async getServiceTimeSeries(

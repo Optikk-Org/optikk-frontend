@@ -1,4 +1,5 @@
-import { Tag, Table, Skeleton, Empty } from 'antd';
+import { Table } from 'antd';
+import { Badge, Skeleton } from '@shared/design-system';
 import React from 'react';
 import { APP_COLORS } from '@config/colorLiterals';
 import { formatNumber } from '@shared/utils/formatters';
@@ -22,13 +23,13 @@ export const KafkaSaturationTable: React.FC<KafkaSaturationTableProps> = ({ data
       dataIndex: 'queue',
       key: 'queue',
       render: (v: string) => (
-        <Tag style={{ 
-          background: APP_COLORS.rgba_247_144_9_0p15, 
-          color: APP_COLORS.hex_f79009, 
-          border: `1px solid ${APP_COLORS.rgba_247_144_9_0p3_2}` 
+        <Badge variant="warning" style={{
+          background: APP_COLORS.rgba_247_144_9_0p15,
+          color: APP_COLORS.hex_f79009,
+          border: `1px solid ${APP_COLORS.rgba_247_144_9_0p3_2}`
         }}>
           {v || 'unknown'}
-        </Tag>
+        </Badge>
       ),
     },
     {
@@ -49,8 +50,8 @@ export const KafkaSaturationTable: React.FC<KafkaSaturationTableProps> = ({ data
     },
   ];
 
-  if (loading) return <Skeleton active paragraph={{ rows: 8 }} />;
-  if (data.length === 0) return <Empty description="No messaging data in selected time range" />;
+  if (loading) return <Skeleton />;
+  if (data.length === 0) return <div className="text-muted" style={{textAlign:'center',padding:32}}>No messaging data in selected time range</div>;
 
   return (
     <Table

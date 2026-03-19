@@ -1,10 +1,9 @@
-import { Skeleton as AntdSkeleton } from 'antd';
+import { Skeleton as DSSkeleton } from '@shared/design-system';
 
 import type { FeedbackSkeletonProps } from './types';
 
 export default function Skeleton({
   rows = 3,
-  active = true,
 }: FeedbackSkeletonProps): JSX.Element {
-  return <AntdSkeleton active={active} paragraph={{ rows }} />;
+  return <DSSkeleton count={rows} />;
 }

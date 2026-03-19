@@ -1,4 +1,4 @@
-import { Skeleton } from 'antd';
+import { Skeleton } from '@shared/design-system';
 
 import { useTabComponents } from '@shared/hooks/useTabComponents';
 

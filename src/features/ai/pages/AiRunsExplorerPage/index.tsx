@@ -1,4 +1,4 @@
-import { Alert, Select } from 'antd';
+import { Select } from '@shared/design-system';
 import { Brain, Play } from 'lucide-react';
 import { useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -86,17 +86,15 @@ export default function AiRunsExplorerPage(): JSX.Element {
 
           {hasError && (
             <div style={{ padding: '12px 18px 0 18px' }}>
-              <Alert
-                type="error"
-                showIcon
-                message="One or more LLM Runs requests failed"
-                description={[
+              <div style={{ padding: '12px 16px', borderRadius: 8, background: 'var(--error-bg, rgba(240,68,56,0.08))', border: '1px solid var(--error-border, rgba(240,68,56,0.2))', color: 'var(--error-text, #f04438)' }}>
+                <strong>One or more LLM Runs requests failed</strong>
+                <div style={{ marginTop: 4, fontSize: 13 }}>{[
                   runsError ? `Runs: ${getErrorMessage(runsError, 'Unable to load runs.')}` : null,
                   summaryError ? `Summary: ${getErrorMessage(summaryError, 'Unable to load summary.')}` : null,
                   modelsError ? `Models: ${getErrorMessage(modelsError, 'Unable to load models.')}` : null,
                   operationsError ? `Operations: ${getErrorMessage(operationsError, 'Unable to load operations.')}` : null,
-                ].filter(Boolean).join(' ')}
-              />
+                ].filter(Boolean).join(' ')}</div>
+              </div>
             </div>
           )}
 
@@ -115,12 +113,10 @@ export default function AiRunsExplorerPage(): JSX.Element {
           <div style={{ height: boardHeight(pageSize), display: 'flex', flexDirection: 'column' }}>
             {runsError ? (
               <div style={{ padding: 24 }}>
-                <Alert
-                  type="error"
-                  showIcon
-                  message="The LLM Runs explorer could not load."
-                  description={getErrorMessage(primaryError, 'The backend request failed for this time range.')}
-                />
+                <div style={{ padding: '12px 16px', borderRadius: 8, background: 'var(--error-bg, rgba(240,68,56,0.08))', border: '1px solid var(--error-border, rgba(240,68,56,0.2))', color: 'var(--error-text, #f04438)' }}>
+                  <strong>The LLM Runs explorer could not load.</strong>
+                  <div style={{ marginTop: 4, fontSize: 13 }}>{getErrorMessage(primaryError, 'The backend request failed for this time range.')}</div>
+                </div>
               </div>
             ) : (
               <ObservabilityDataBoard
@@ -165,7 +161,7 @@ export default function AiRunsExplorerPage(): JSX.Element {
                 Showing {formatNumber(runs.length)} runs
               </span>
               <Select
-                size="small"
+                size="sm"
                 value={pageSize}
                 onChange={(value: number) => setPageSize(value)}
                 options={[25, 50, 100].map((v) => ({ label: `${v} / page`, value: v }))}

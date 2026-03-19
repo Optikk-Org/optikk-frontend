@@ -1,4 +1,3 @@
-import { Empty } from 'antd';
 import { ReactNode } from 'react';
 
 interface UnifiedMetricListColumn<ItemType> {
@@ -36,7 +35,7 @@ export default function UnifiedMetricList<ItemType>({
   className = '',
 }: UnifiedMetricListProps<ItemType>) {
   if (!items || items.length === 0) {
-    return <Empty description={emptyDescription} style={{ padding: '24px 0' }} />;
+    return <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>{emptyDescription}</div>;
   }
 
   return (

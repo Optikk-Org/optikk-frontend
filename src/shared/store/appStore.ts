@@ -5,12 +5,19 @@ import type { TimeRange } from '@/types';
 
 import { STORAGE_KEYS, TIME_RANGES } from '@config/constants';
 
+interface RecentPage {
+  path: string;
+  label: string;
+  timestamp: number;
+}
+
 interface ViewPreferences {
   theme?: 'light' | 'dark' | 'system';
   timezone?: string;
   refreshInterval?: number;
   sidebarCollapsed?: boolean;
   density?: 'compact' | 'comfortable';
+  favorites?: string[];
   [key: string]: unknown;
 }
 
@@ -23,6 +30,7 @@ interface PersistedAppState {
   readonly theme: string;
   readonly notificationsEnabled: boolean;
   readonly viewPreferences: ViewPreferences;
+  readonly recentPages: RecentPage[];
 }
 
 interface AppState extends PersistedAppState {
@@ -37,6 +45,8 @@ interface AppState extends PersistedAppState {
   readonly setTheme: (theme: string) => void;
   readonly setNotificationsEnabled: (enabled: boolean) => void;
   readonly setViewPreference: (key: string, value: unknown) => void;
+  readonly addRecentPage: (path: string, label: string) => void;
+  readonly toggleFavorite: (path: string) => void;
 }
 
 function readStorage(key: string): string | null {
@@ -127,6 +137,7 @@ function loadLegacyAppState(): PersistedAppState {
     theme: readStorage(STORAGE_KEYS.THEME) ?? 'dark',
     notificationsEnabled: readStorage(STORAGE_KEYS.NOTIFICATIONS) !== 'false',
     viewPreferences: readLegacyJSON<ViewPreferences>(STORAGE_KEYS.VIEW_PREFS, {}),
+    recentPages: [],
   };
 }
 
@@ -201,6 +212,24 @@ export const useAppStore = create<AppState>()(
           viewPreferences: { ...state.viewPreferences, [key]: value },
         }));
       },
+
+      addRecentPage: (path: string, label: string): void => {
+        set((state) => {
+          const filtered = state.recentPages.filter((p) => p.path !== path);
+          const next = [{ path, label, timestamp: Date.now() }, ...filtered].slice(0, 5);
+          return { recentPages: next };
+        });
+      },
+
+      toggleFavorite: (path: string): void => {
+        set((state) => {
+          const current = state.viewPreferences.favorites ?? [];
+          const next = current.includes(path)
+            ? current.filter((p) => p !== path)
+            : [...current, path];
+          return { viewPreferences: { ...state.viewPreferences, favorites: next } };
+        });
+      },
     }),
     {
       name: STORAGE_KEYS.APP_STATE,
@@ -214,6 +243,7 @@ export const useAppStore = create<AppState>()(
         theme: state.theme,
         notificationsEnabled: state.notificationsEnabled,
         viewPreferences: state.viewPreferences,
+        recentPages: state.recentPages,
       }),
       merge: (persisted, current) => {
         const snapshot = persisted as Partial<PersistedAppState> | undefined;
@@ -228,6 +258,7 @@ export const useAppStore = create<AppState>()(
           selectedTeamIds: snapshot.selectedTeamIds ?? current.selectedTeamIds,
           selectedTeamId: snapshot.selectedTeamId ?? current.selectedTeamId,
           viewPreferences: snapshot.viewPreferences ?? current.viewPreferences,
+          recentPages: snapshot.recentPages ?? current.recentPages,
         };
       },
     }

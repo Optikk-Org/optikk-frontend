@@ -1,4 +1,3 @@
-import { Col, Row } from 'antd';
 import { useState } from 'react';
 
 import type {
@@ -86,25 +85,24 @@ function RowGrid({
   extraContext: DashboardExtraContext;
 }) {
   return (
-    <Row gutter={[16, 0]} align="stretch" style={{ marginBottom: 0 }}>
+    <div style={{ display: 'flex', gap: 16, marginBottom: 0, flexWrap: 'wrap' }}>
       {rowComponents.map((componentConfig) => {
         const colSpan = componentConfig.layout?.col || 12;
+        const widthPercent = `calc(${(colSpan / 24) * 100}% - ${((24 / colSpan - 1) * 16) / (24 / colSpan)}px)`;
         return (
-          <Col
+          <div
             key={componentConfig.id}
-            xs={24}
-            lg={colSpan}
-            style={{ display: 'flex', flexDirection: 'column' }}
+            style={{ flex: `0 0 ${widthPercent}`, display: 'flex', flexDirection: 'column', minWidth: 0 }}
           >
             <ConfigurableChartCard
               componentConfig={componentConfig}
               dataSources={dataSources}
               extraContext={extraContext}
             />
-          </Col>
+          </div>
         );
       })}
-    </Row>
+    </div>
   );
 }
 

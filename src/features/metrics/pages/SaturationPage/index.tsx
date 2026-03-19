@@ -1,4 +1,4 @@
-import { Row, Col, Card } from 'antd';
+import { Surface } from '@shared/design-system';
 import {
   Gauge, Database, Radio, Cpu, GitPullRequest,
 } from 'lucide-react';
@@ -64,56 +64,48 @@ export default function SaturationPage() {
       />
 
       {/* Summary stat cards */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            metric={{
-              title: 'Max DB Pool Util',
-              value: `${Number(summary.maxDbPool).toFixed(1)}%`,
-            }}
-            visuals={{
-              icon: <Database size={20} />,
-              iconColor: summary.maxDbPool > 80 ? APP_COLORS.hex_f04438 : summary.maxDbPool > 60 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991,
-            }}
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            metric={{
-              title: 'Max Consumer Lag',
-              value: formatNumber(summary.maxLag),
-            }}
-            visuals={{
-              icon: <Radio size={20} />,
-              iconColor: summary.maxLag > 1000 ? APP_COLORS.hex_f04438 : summary.maxLag > 100 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991,
-            }}
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            metric={{
-              title: 'Max Thread Active',
-              value: formatNumber(summary.maxThread),
-            }}
-            visuals={{
-              icon: <Cpu size={20} />,
-              iconColor: summary.maxThread > 200 ? APP_COLORS.hex_f04438 : summary.maxThread > 100 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991,
-            }}
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            metric={{
-              title: 'Max Queue Depth',
-              value: formatNumber(summary.maxQueue),
-            }}
-            visuals={{
-              icon: <GitPullRequest size={20} />,
-              iconColor: summary.maxQueue > 1000 ? APP_COLORS.hex_f04438 : summary.maxQueue > 100 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991,
-            }}
-          />
-        </Col>
-      </Row>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16, marginBottom: 24 }}>
+        <StatCard
+          metric={{
+            title: 'Max DB Pool Util',
+            value: `${Number(summary.maxDbPool).toFixed(1)}%`,
+          }}
+          visuals={{
+            icon: <Database size={20} />,
+            iconColor: summary.maxDbPool > 80 ? APP_COLORS.hex_f04438 : summary.maxDbPool > 60 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991,
+          }}
+        />
+        <StatCard
+          metric={{
+            title: 'Max Consumer Lag',
+            value: formatNumber(summary.maxLag),
+          }}
+          visuals={{
+            icon: <Radio size={20} />,
+            iconColor: summary.maxLag > 1000 ? APP_COLORS.hex_f04438 : summary.maxLag > 100 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991,
+          }}
+        />
+        <StatCard
+          metric={{
+            title: 'Max Thread Active',
+            value: formatNumber(summary.maxThread),
+          }}
+          visuals={{
+            icon: <Cpu size={20} />,
+            iconColor: summary.maxThread > 200 ? APP_COLORS.hex_f04438 : summary.maxThread > 100 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991,
+          }}
+        />
+        <StatCard
+          metric={{
+            title: 'Max Queue Depth',
+            value: formatNumber(summary.maxQueue),
+          }}
+          visuals={{
+            icon: <GitPullRequest size={20} />,
+            iconColor: summary.maxQueue > 1000 ? APP_COLORS.hex_f04438 : summary.maxQueue > 100 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_73c991,
+          }}
+        />
+      </div>
 
       {/* Configurable timeseries charts */}
       <div style={{ marginBottom: 24 }}>
@@ -129,25 +121,17 @@ export default function SaturationPage() {
 
 
       {/* Kafka saturation table */}
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24}>
-          <Card
-            title={
-              <span>
-                Kafka Queue / Consumer Lag
-              </span>
-            }
-            className="sat-chart-card"
-          >
-            <KafkaSaturationTable data={kafkaLag} loading={lagLoading} />
-          </Card>
-        </Col>
-      </Row>
+      <div style={{ marginTop: 16 }}>
+        <Surface elevation={1} padding="md" className="sat-chart-card">
+          <h4>Kafka Queue / Consumer Lag</h4>
+          <KafkaSaturationTable data={kafkaLag} loading={lagLoading} />
+        </Surface>
+      </div>
 
       {/* Instrumentation guide */}
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24}>
-          <Card title="Instrumentation Guide" className="sat-chart-card">
+      <div style={{ marginTop: 16 }}>
+        <Surface elevation={1} padding="md" className="sat-chart-card">
+          <h4>Instrumentation Guide</h4>
             <div className="sat-guide">
               <div className="sat-guide-intro">
                 Saturation metrics are extracted from OpenTelemetry span <strong>attributes</strong>.
@@ -175,9 +159,8 @@ export default function SaturationPage() {
                 ))}
               </div>
             </div>
-          </Card>
-        </Col>
-      </Row>
+        </Surface>
+      </div>
     </div>
   );
 }
