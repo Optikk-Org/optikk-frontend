@@ -64,10 +64,10 @@ function KpiCard({
       flexDirection: 'column',
       gap: 4,
     }}>
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.8px' }}>{label}</div>
+      <div className="font-mono" style={{ fontSize: 10, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.8px' }}>{label}</div>
       <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: '#F1F5F9', lineHeight: 1.1 }}>{displayFn(val)}</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: trendPositive ? '#10B981' : '#EF4444' }}>{trend}</span>
+        <span className="font-mono" style={{ fontSize: 10, color: trendPositive ? '#10B981' : '#EF4444' }}>{trend}</span>
         <Sparkline data={spark} color={color} />
       </div>
     </div>
@@ -94,10 +94,10 @@ function DonutRing({ label, pct, color }: { label: string; pct: number; color: s
           style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)' }}
         />
         <text x={28} y={33} textAnchor="middle"
-          style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fill: '#F1F5F9', fontWeight: 600 }}
+          className="font-mono" style={{ fontSize: 9, fill: '#F1F5F9', fontWeight: 600 }}
         >{pct}%</text>
       </svg>
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#64748B', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
+      <div className="font-mono" style={{ fontSize: 9, color: '#64748B', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
     </div>
   );
 }
@@ -146,9 +146,10 @@ export default function DashboardMockup({ compact = false }: { compact?: boolean
         </div>
         <div style={{
           flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 6,
-          padding: '3px 12px', fontFamily: "'JetBrains Mono', monospace",
+          padding: '3px 12px',
           fontSize: 10, color: '#475569', display: 'flex', alignItems: 'center', gap: 6,
-        }}>
+        }}
+        className="font-mono">
           <span style={{ color: '#10B981' }}>●</span> app.optikk.io/overview
         </div>
       </div>
@@ -160,7 +161,7 @@ export default function DashboardMockup({ compact = false }: { compact?: boolean
           width: 140, background: '#0F1018', borderRight: '1px solid rgba(255,255,255,0.06)',
           padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 2, flexShrink: 0,
         }}>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#334155', textTransform: 'uppercase', letterSpacing: '1px', padding: '0 10px', marginBottom: 6 }}>Navigation</div>
+          <div className="font-mono" style={{ fontSize: 9, color: '#334155', textTransform: 'uppercase', letterSpacing: '1px', padding: '0 10px', marginBottom: 6 }}>Navigation</div>
           <SidebarItem icon="◉" label="Overview" active />
           <SidebarItem icon="▦" label="Metrics" />
           <SidebarItem icon="≡" label="Logs" />
@@ -176,8 +177,8 @@ export default function DashboardMockup({ compact = false }: { compact?: boolean
           {/* Header row */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 15, color: '#F1F5F9' }}>Overview</div>
-            <div style={{
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+            <div className="font-mono" style={{
+              fontSize: 9,
               color: '#6366F1', background: 'rgba(99,102,241,0.1)',
               border: '1px solid rgba(99,102,241,0.25)', borderRadius: 6, padding: '3px 8px',
             }}>Last 30m ▾</div>

@@ -1,4 +1,4 @@
-import { Skeleton } from '@shared/design-system';
+import { Skeleton } from '@/components/ui';
 import { Suspense } from 'react';
 
 import { APP_COLORS } from '@config/colorLiterals';

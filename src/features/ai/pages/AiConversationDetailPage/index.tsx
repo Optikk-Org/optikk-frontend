@@ -5,12 +5,12 @@ import { useQuery } from '@tanstack/react-query';
 
 import { PageHeader } from '@shared/components/ui';
 import { useAppStore } from '@shared/store/appStore';
+import { resolveTimeRangeBounds } from '@/types';
 import { formatDuration, formatNumber, formatTimestamp } from '@shared/utils/formatters';
+import { cn } from '@/lib/utils';
 
 import { aiConversationQueries } from '../../api/queryOptions';
 import type { ConversationTurn } from '../../types';
-
-import './AiConversationDetailPage.css';
 
 export default function AiConversationDetailPage(): JSX.Element {
   const { conversationId = '' } = useParams<{ conversationId: string }>();
@@ -18,13 +18,9 @@ export default function AiConversationDetailPage(): JSX.Element {
   const { selectedTeamId, timeRange, refreshKey } = useAppStore();
 
   const { startMs, endMs } = useMemo(() => {
-    const resolvedEndMs =
-      timeRange.value === 'custom' && timeRange.endTime != null ? Number(timeRange.endTime) : Date.now();
-    const resolvedStartMs =
-      timeRange.value === 'custom' && timeRange.startTime != null
-        ? Number(timeRange.startTime)
-        : resolvedEndMs - (timeRange.minutes ?? 60) * 60 * 1000;
-    return { startMs: resolvedStartMs, endMs: resolvedEndMs };
+    void refreshKey;
+    const { startTime, endTime } = resolveTimeRangeBounds(timeRange);
+    return { startMs: startTime, endMs: endTime };
   }, [refreshKey, timeRange]);
 
   const { data: turns = [], isLoading } = useQuery(
@@ -32,7 +28,7 @@ export default function AiConversationDetailPage(): JSX.Element {
   );
 
   return (
-    <div className="ai-conversation-detail-page">
+    <div className="max-w-[900px] mx-auto px-6 pb-6">
       <PageHeader
         title="Conversation"
         icon={<MessageSquare size={24} />}
@@ -42,8 +38,8 @@ export default function AiConversationDetailPage(): JSX.Element {
         ]}
       />
 
-      <div className="ai-conversation-timeline">
-        <h3>
+      <div className="bg-[var(--glass-bg)] border border-[var(--border-color)] rounded-[10px] overflow-hidden">
+        <h3 className="text-[13px] font-semibold text-[var(--text-primary)] px-[18px] py-[14px] m-0 border-b border-[var(--border-color)]">
           <MessageSquare size={14} style={{ marginRight: 6, verticalAlign: -2 }} />
           Turns
           <span className="traces-count-badge" style={{ marginLeft: 8 }}>
@@ -64,21 +60,30 @@ export default function AiConversationDetailPage(): JSX.Element {
         {turns.map((turn: ConversationTurn, i: number) => (
           <div
             key={turn.spanId}
-            className="ai-convo-turn"
+            className="flex gap-3 px-[18px] py-[14px] border-b border-[var(--border-color)] cursor-pointer transition-colors last:border-b-0 hover:bg-white/[0.02]"
             onClick={() => navigate(`/ai-runs/${turn.spanId}`)}
           >
-            <div className="ai-convo-turn-number">{i + 1}</div>
-            <div className="ai-convo-turn-content">
-              <div className="ai-convo-turn-header">
-                <span className="ai-convo-turn-model">{turn.model}</span>
+            <div className="w-7 h-7 rounded-full bg-[var(--glass-bg)] border border-[var(--border-color)] flex items-center justify-center text-[11px] font-semibold text-[var(--text-muted)] shrink-0">
+              {i + 1}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[12px] font-semibold text-[var(--text-primary)]">{turn.model}</span>
                 {turn.hasError && (
-                  <span className="ai-runs-status-badge error" style={{ fontSize: 10, padding: '1px 6px' }}>Error</span>
+                  <span
+                    className={cn(
+                      'inline-flex py-0.5 px-2 rounded text-[10px] font-semibold',
+                      'bg-[rgba(240,68,56,0.12)] text-[#f04438]',
+                    )}
+                  >
+                    Error
+                  </span>
                 )}
               </div>
-              <div className="ai-convo-turn-meta">
-                <span>{formatDuration(turn.durationMs)}</span>
-                <span>{formatNumber(turn.inputTokens + turn.outputTokens)} tokens</span>
-                <span>{formatTimestamp(turn.startTime)}</span>
+              <div className="flex gap-2 text-[11px] text-[var(--text-muted)]">
+                <span className="font-mono">{formatDuration(turn.durationMs)}</span>
+                <span className="font-mono">{formatNumber(turn.inputTokens + turn.outputTokens)} tokens</span>
+                <span className="font-mono">{formatTimestamp(turn.startTime)}</span>
               </div>
             </div>
           </div>

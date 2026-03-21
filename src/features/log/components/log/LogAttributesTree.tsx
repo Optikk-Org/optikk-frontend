@@ -182,7 +182,7 @@ export default function LogAttributesTree({ log }: LogAttributesTreeProps) {
   }
 
   return (
-    <div style={{ fontFamily: 'monospace' }}>
+    <div className="font-mono">
       {sections.map((section) => (
         <div key={section.label} style={{ marginBottom: 8 }}>
           <div

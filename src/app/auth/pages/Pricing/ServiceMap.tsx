@@ -35,7 +35,7 @@ export default function ServiceMap() {
             <div key={c} style={{ width: 11, height: 11, borderRadius: '50%', background: c }} />
           ))}
         </div>
-        <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 6, padding: '3px 12px', fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#475569' }}>
+        <div className="font-mono" style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 6, padding: '3px 12px', fontSize: 10, color: '#475569' }}>
           app.optikk.io/services
         </div>
       </div>
@@ -92,7 +92,7 @@ export default function ServiceMap() {
             <circle cx={n.cx} cy={n.cy} r={4} fill={n.color} opacity={0.9} />
             <text x={n.cx} y={n.cy + 46}
               textAnchor="middle"
-              style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fill: '#94A3B8' }}
+              className="font-mono" style={{ fontSize: 10, fill: '#94A3B8' }}
             >{n.label}</text>
             {/* health dot */}
             <circle cx={n.cx + 22} cy={n.cy - 22} r={5}

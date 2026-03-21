@@ -1,4 +1,5 @@
-import type { LogColumn, LogFilterField } from '../types';
+import type { LogColumn, LogFilterField, LogsBackendParams } from '../types';
+import type { StructuredFilter } from '@shared/hooks/useURLFilters';
 
 /**
  *
@@ -79,7 +80,95 @@ export const LOG_COLUMNS: LogColumn[] = [
 
 export const LOGS_URL_FILTER_CONFIG = {
   params: [
-    { key: 'q', type: 'string' as const, defaultValue: '' },
+    { key: 'search', type: 'string' as const, defaultValue: '' },
   ],
-  syncStructuredFilters: false,
+  syncStructuredFilters: true,
+  stripParams: ['view'],
 };
+
+export function compileLogsStructuredFilters(
+  filters: StructuredFilter[],
+): Partial<LogsBackendParams> {
+  const compiled: Partial<LogsBackendParams> = {};
+
+  const append = (
+    key:
+      | 'services'
+      | 'excludeServices'
+      | 'severities'
+      | 'excludeSeverities'
+      | 'hosts'
+      | 'excludeHosts'
+      | 'pods'
+      | 'containers'
+      | 'loggers',
+    value: string,
+  ): void => {
+    const current = compiled[key] ?? [];
+    compiled[key] = [...current, value];
+  };
+
+  for (const filter of filters) {
+    switch (filter.field) {
+      case 'service_name':
+        append(
+          filter.operator === 'not_equals' ? 'excludeServices' : 'services',
+          filter.value,
+        );
+        break;
+      case 'level':
+        append(
+          filter.operator === 'not_equals' ? 'excludeSeverities' : 'severities',
+          filter.value,
+        );
+        break;
+      case 'host':
+        append(
+          filter.operator === 'not_equals' ? 'excludeHosts' : 'hosts',
+          filter.value,
+        );
+        break;
+      case 'pod':
+        append('pods', filter.value);
+        break;
+      case 'container':
+        append('containers', filter.value);
+        break;
+      case 'logger':
+        append('loggers', filter.value);
+        break;
+      case 'trace_id':
+        compiled.traceId = filter.value;
+        break;
+      case 'span_id':
+        compiled.spanId = filter.value;
+        break;
+      default:
+        compiled[
+          `${filter.operator === 'not_equals' ? 'attr_neq.' : 'attr.'}${filter.field}`
+        ] = filter.value;
+    }
+  }
+
+  return compiled;
+}
+
+export function upsertLogFacetFilter(
+  filters: StructuredFilter[],
+  nextField: string,
+  nextValue: string | null,
+): StructuredFilter[] {
+  const withoutField = filters.filter((filter) => filter.field !== nextField);
+  if (!nextValue) {
+    return withoutField;
+  }
+
+  return [
+    ...withoutField,
+    {
+      field: nextField,
+      operator: 'equals',
+      value: nextValue,
+    },
+  ];
+}

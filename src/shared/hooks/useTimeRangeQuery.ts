@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-query';
 
 import type { TimeRange } from '@/types';
+import { resolveTimeRangeBounds } from '@/types';
 
 import { useAppStore } from '@store/appStore';
 
@@ -31,20 +32,18 @@ type TimeRangeQueryOptions<TData> = Omit<
 };
 
 function getBounds(timeRange: TimeRange): TimeRangeBounds {
-  if (timeRange.value === 'custom' && timeRange.startTime != null && timeRange.endTime != null) {
-    return { startTime: timeRange.startTime, endTime: timeRange.endTime };
-  }
-
-  const endTime = Date.now();
-  const startTime = endTime - (timeRange.minutes || 0) * 60 * 1000;
+  const { startTime, endTime } = resolveTimeRangeBounds(timeRange);
   return { startTime, endTime };
+}
+
+/** Stable key for cache invalidation */
+function rangeKey(timeRange: TimeRange): string {
+  if (timeRange.kind === 'relative') return timeRange.preset;
+  return `${timeRange.startMs}-${timeRange.endMs}`;
 }
 
 /**
  * Wraps React Query with team/time-range state from appStore.
- * @param key
- * @param queryFn
- * @param options
  */
 export function useTimeRangeQuery<TData = unknown>(
   key: string,
@@ -55,7 +54,7 @@ export function useTimeRangeQuery<TData = unknown>(
   const { extraKeys = [], enabled, ...queryOptions } = options;
 
   return useQuery<TData, Error>({
-    queryKey: [key, selectedTeamId, timeRange.value, refreshKey, ...extraKeys],
+    queryKey: [key, selectedTeamId, rangeKey(timeRange), refreshKey, ...extraKeys],
     queryFn: async (): Promise<TData> => {
       const { startTime, endTime } = getBounds(timeRange);
       return queryFn(selectedTeamId, startTime, endTime);

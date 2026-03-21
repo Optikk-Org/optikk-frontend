@@ -50,37 +50,49 @@ export default function BoardSkeleton({
   const tableMinWidth = fixedWidth + flexColumnWidth;
 
   return (
-    <div className="oboard__tbody">
-      <div className="oboard__body-scroll">
-        <div className="oboard__table-inner" style={{ minWidth: tableMinWidth }}>
-          <div className="oboard__thead">
+    <div className="flex-1 flex flex-col min-w-0 min-h-0">
+      {/* scroll wrapper */}
+      <div className="h-full min-w-0 overflow-auto">
+        <div className="min-w-full" style={{ width: 'max-content', minWidth: tableMinWidth }}>
+          {/* header */}
+          <div
+            className="flex p-0 border-b border-[color:var(--glass-border)] text-[11px] font-semibold uppercase tracking-[0.05em] text-muted-foreground sticky top-0 bg-[rgba(255,255,255,0.02)] z-20 select-none"
+            style={{ width: 'max-content', minWidth: '100%' }}
+          >
             {fixedColumns.map((column) => (
-              <div key={column.key} className="oboard__th" style={{ width: colWidths[column.key] }}>
+              <div
+                key={column.key}
+                className="relative flex items-center shrink-0 border-r border-[color:var(--glass-border)] px-3 py-[9px] whitespace-nowrap overflow-hidden text-ellipsis box-border"
+                style={{ width: colWidths[column.key] }}
+              >
                 {column.label}
               </div>
             ))}
             {flexColumn && (
               <div
-                className="oboard__th oboard__th--flex"
+                className="relative flex items-center border-[color:var(--glass-border)] px-3 py-[9px] whitespace-nowrap overflow-hidden text-ellipsis box-border flex-1 border-r-0"
                 style={{ flex: `1 0 ${flexColumnWidth}px`, minWidth: flexColumnWidth }}
               >
                 {flexColumn.label}
               </div>
             )}
           </div>
-          <div className="oboard__table-viewport">
+          {/* rows */}
+          <div className="flex-1 flex flex-col min-w-0 min-h-0">
             {Array.from({ length: rowCount }).map((_, index) => (
               <div
                 key={index}
-                className="oboard__row"
-                style={{ minWidth: tableMinWidth, padding: '10px 12px', gap: 16 }}
+                className="flex items-baseline cursor-pointer border-b border-[color:var(--glass-border)] font-mono text-xs"
+                style={{ minWidth: tableMinWidth, padding: '10px 12px', gap: 16, width: 'max-content' }}
               >
                 {fixedColumns.map((column) => (
                   <div key={column.key} style={{ width: colWidths[column.key], flexShrink: 0 }}>
                     <div
-                      className="oboard__skeleton"
+                      className="h-[13px] rounded animate-oboard-shimmer"
                       style={{
                         width: randomWidth(skeletonBaseWidth, skeletonWidthRange),
+                        background: 'linear-gradient(90deg, var(--bg-tertiary) 25%, var(--border-color) 50%, var(--bg-tertiary) 75%)',
+                        backgroundSize: '1200px 100%',
                       }}
                     />
                   </div>
@@ -88,9 +100,11 @@ export default function BoardSkeleton({
                 {flexColumn && (
                   <div style={{ flex: `1 0 ${flexColumnWidth}px`, minWidth: flexColumnWidth }}>
                     <div
-                      className="oboard__skeleton"
+                      className="h-[13px] rounded animate-oboard-shimmer"
                       style={{
                         width: randomWidth(skeletonFlexBaseWidth, skeletonFlexWidthRange),
+                        background: 'linear-gradient(90deg, var(--bg-tertiary) 25%, var(--border-color) 50%, var(--bg-tertiary) 75%)',
+                        backgroundSize: '1200px 100%',
                       }}
                     />
                   </div>

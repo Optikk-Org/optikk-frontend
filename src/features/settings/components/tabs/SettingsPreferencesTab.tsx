@@ -1,5 +1,5 @@
 import { Bell, Columns2, Palette, Settings } from 'lucide-react';
-import { Surface, Switch, Select } from '@shared/design-system';
+import { Surface, Switch, Select } from '@/components/ui';
 
 import type {
   SettingsPreferenceValue,

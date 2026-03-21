@@ -1,18 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
 import { Outlet } from 'react-router-dom';
 
 import CommandPalette from '@shared/components/ui/overlay/CommandPalette';
 import ShortcutHelpOverlay from '@shared/components/ui/overlay/ShortcutHelpOverlay';
-import AiContextBar from '@shared/components/ui/calm/AiContextBar';
-import { DensityProvider } from '@shared/design-system/providers/DensityProvider';
+import { DensityProvider } from '@/components/ui/providers/DensityProvider';
 import { useKeyboardShortcuts } from '@shared/hooks/useKeyboardShortcuts';
 
 import { useAppStore } from '@store/appStore';
+import { cn } from '@/lib/utils';
 
 import Header from './Header';
 import Sidebar from './Sidebar';
-
-import './MainLayout.css';
 
 export default function MainLayout() {
   const sidebarCollapsed = useAppStore((state) => state.sidebarCollapsed);
@@ -20,34 +19,38 @@ export default function MainLayout() {
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const { shortcuts } = useKeyboardShortcuts();
 
-  const handleKeyDown = useCallback((e: KeyboardEvent): void => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-      e.preventDefault();
-      setCommandPaletteOpen((prev) => !prev);
-      return;
-    }
-    // ? toggles shortcut help (when not in input)
-    const target = e.target as HTMLElement;
-    const tag = target.tagName;
-    if (e.key === '?' && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT' && !target.isContentEditable) {
-      e.preventDefault();
-      setShortcutHelpOpen((prev) => !prev);
-    }
-  }, []);
+  useHotkeys('mod+k', (e) => {
+    e.preventDefault();
+    setCommandPaletteOpen((prev) => !prev);
+  }, { enableOnFormTags: true });
 
-  useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
+  useHotkeys('shift+/', (e) => {
+    e.preventDefault();
+    setShortcutHelpOpen((prev) => !prev);
+  }, { enableOnFormTags: false });
 
   return (
     <DensityProvider>
-      <div className="main-layout">
+      <div className="min-h-screen bg-[var(--bg-primary,var(--literal-hex-0a0a0a-2))]">
         <Sidebar />
-        <div className={`main-content-layout ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+        <div
+          className={cn(
+            'transition-[margin-left] duration-200 ease-linear',
+            'max-md:ml-0',
+            sidebarCollapsed
+              ? 'ml-[var(--space-sidebar-collapsed,56px)]'
+              : 'ml-[var(--space-sidebar-w,220px)]',
+          )}
+        >
           <Header />
-          <AiContextBar />
-          <main className="main-content">
+          <main
+            className={cn(
+              'p-6 max-md:p-4',
+              'min-h-[calc(100vh-var(--space-header-h,56px))]',
+              'bg-[var(--bg-primary,var(--literal-hex-0a0a0a-2))]',
+              'relative z-[1]',
+            )}
+          >
             <Outlet />
           </main>
         </div>

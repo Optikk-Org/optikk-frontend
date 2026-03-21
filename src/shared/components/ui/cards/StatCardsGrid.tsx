@@ -4,6 +4,7 @@ interface StatCardsGridProps {
     stats?: any[];
     style?: React.CSSProperties;
     className?: string;
+    defaultColProps?: Record<string, unknown>;
 }
 
 export default function StatCardsGrid({

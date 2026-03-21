@@ -1,5 +1,12 @@
 import { ReactNode } from 'react';
-import './DetailDrawer.css';
+
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
 
 interface DetailDrawerField {
   label: string;
@@ -22,17 +29,6 @@ interface DetailDrawerProps {
   extra?: ReactNode;
 }
 
-/**
- * Generic slide-out drawer for viewing details of any record.
- * @param root0
- * @param root0.open
- * @param root0.onClose
- * @param root0.title
- * @param root0.width
- * @param root0.sections
- * @param root0.data
- * @param root0.extra
- */
 export default function DetailDrawer({
   open,
   onClose,
@@ -42,49 +38,55 @@ export default function DetailDrawer({
   data,
   extra,
 }: DetailDrawerProps) {
-  if (!data || !open) return null;
+  if (!data) return null;
 
   return (
-    <div
-      className="detail-drawer"
-      style={{ position: 'fixed', top: 0, right: 0, width, height: '100%', zIndex: 1100, background: 'var(--bg-card, #fff)', boxShadow: '-2px 0 8px rgba(0,0,0,0.12)', overflow: 'auto' }}
-    >
-      <div className="detail-drawer-header" style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-color, #e8e8e8)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ margin: 0 }}>{title}</h3>
-        <button onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>&times;</button>
-      </div>
-      <div style={{ padding: '16px 24px' }}>
-        {sections.map((section, idx) => (
-          <div key={idx} className="detail-drawer-section">
-            {section.title && (
-              <h4 className="detail-drawer-section-title">{section.title}</h4>
-            )}
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginBottom: 16 }}>
-              <tbody>
-                {section.fields.map((field) => (
-                  <tr key={field.key} style={{ borderBottom: '1px solid var(--border-color, #e8e8e8)' }}>
-                    <td style={{ padding: '8px 12px', fontWeight: 500, width: '30%', verticalAlign: 'top' }}>{field.label}</td>
-                    <td style={{ padding: '8px 12px' }}>
-                      {field.render
-                        ? field.render(data[field.key], data)
-                        : renderValue(data[field.key])}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ))}
+    <Drawer open={open} onOpenChange={(v) => { if (!v) onClose(); }} direction="right">
+      <DrawerContent className="top-0 right-0 left-auto overflow-auto" style={{ width }}>
+        <DrawerHeader>
+          <DrawerTitle>{title}</DrawerTitle>
+          <DrawerClose
+            aria-label="Close"
+            className="bg-transparent border-none cursor-pointer text-lg leading-none"
+          >
+            &times;
+          </DrawerClose>
+        </DrawerHeader>
+        <div className="px-6 py-4 flex-1 overflow-auto">
+          {sections.map((section, idx) => (
+            <div key={idx} className="mb-6">
+              {section.title && (
+                <h4 className="text-[color:var(--text-primary)] text-[14px] font-semibold mb-4 pb-2 border-b border-[color:var(--glass-border)] tracking-[0.02em]">
+                  {section.title}
+                </h4>
+              )}
+              <table className="w-full border-collapse text-[13px] mb-4">
+                <tbody>
+                  {section.fields.map((field) => (
+                    <tr key={field.key} className="border-b border-border">
+                      <td className="py-2 px-3 font-medium w-[30%] align-top">{field.label}</td>
+                      <td className="py-2 px-3">
+                        {field.render
+                          ? field.render(data[field.key], data)
+                          : renderValue(data[field.key])}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
 
-        {extra}
-      </div>
-    </div>
+          {extra}
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }
 
 function renderValue(value: unknown) {
-  if (value == null) return <span style={{ color: 'var(--text-secondary, #999)' }}>-</span>;
+  if (value == null) return <span className="text-[color:var(--text-secondary,#999)]">-</span>;
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-  if (typeof value === 'object') return <pre style={{ margin: 0, fontSize: 12 }}>{JSON.stringify(value, null, 2)}</pre>;
+  if (typeof value === 'object') return <pre className="m-0 text-xs">{JSON.stringify(value, null, 2)}</pre>;
   return String(value);
 }

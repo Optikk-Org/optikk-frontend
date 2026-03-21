@@ -3,7 +3,7 @@
  * Renders a colour-coded matrix of error rates bucketed by service × time.
  * Colours map to severity tokens from the design system (Fix 13).
  */
-import { Surface, Tooltip } from '@shared/design-system';
+import { Surface, Tooltip } from '@/components/ui';
 import React, { useMemo } from 'react';
 
 interface HeatCell {

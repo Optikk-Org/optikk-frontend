@@ -20,7 +20,7 @@ describe('appStore', () => {
     vi.resetModules();
   });
 
-  it('hydrates initial state from storage', async () => {
+  it('hydrates initial state from storage and migrates legacy format', async () => {
     const useAppStore = await loadStore({
       [STORAGE_KEYS.APP_STATE]: JSON.stringify({
         state: {
@@ -39,7 +39,7 @@ describe('appStore', () => {
 
     expect(useAppStore.getState()).toMatchObject({
       selectedTeamId: 42,
-      timeRange: expect.objectContaining({ value: '24h' }),
+      timeRange: expect.objectContaining({ kind: 'relative', preset: '24h', minutes: 1440 }),
       sidebarCollapsed: true,
       autoRefreshInterval: 30000,
       theme: 'light',
@@ -56,30 +56,26 @@ describe('appStore', () => {
     expect(localStorage.getItem(STORAGE_KEYS.APP_STATE)).toContain('"selectedTeamId":7');
 
     const refreshKey = useAppStore.getState().refreshKey;
-    useAppStore.getState().setTimeRange('7d');
+    useAppStore.getState().setTimeRange({ kind: 'relative', preset: '7d', label: 'Last 7 days', minutes: 10080 });
 
-    expect(useAppStore.getState().timeRange.value).toBe('7d');
+    expect(useAppStore.getState().timeRange).toMatchObject({ kind: 'relative', preset: '7d' });
     expect(useAppStore.getState().refreshKey).toBe(refreshKey + 1);
-    expect(localStorage.getItem(STORAGE_KEYS.APP_STATE)).toContain('"value":"7d"');
-
-    useAppStore.getState().setTimeRange('not-a-range');
-    expect(useAppStore.getState().timeRange.value).toBe('7d');
+    expect(localStorage.getItem(STORAGE_KEYS.APP_STATE)).toContain('"preset":"7d"');
   });
 
   it('supports custom ranges, sidebar toggles, and preferences', async () => {
     const useAppStore = await loadStore();
-    const customRange = {
-      label: 'Custom',
-      value: 'custom',
-      startTime: 1000,
-      endTime: 2000,
-    };
 
     const initialRefresh = useAppStore.getState().refreshKey;
-    useAppStore.getState().setCustomTimeRange(customRange);
-    expect(useAppStore.getState().timeRange).toEqual(customRange);
+    useAppStore.getState().setCustomTimeRange(1000, 2000, 'Custom');
+    expect(useAppStore.getState().timeRange).toEqual({
+      kind: 'absolute',
+      startMs: 1000,
+      endMs: 2000,
+      label: 'Custom',
+    });
     expect(useAppStore.getState().refreshKey).toBe(initialRefresh + 1);
-    expect(localStorage.getItem(STORAGE_KEYS.APP_STATE)).toContain('"value":"custom"');
+    expect(localStorage.getItem(STORAGE_KEYS.APP_STATE)).toContain('"kind":"absolute"');
 
     useAppStore.getState().toggleSidebar();
     expect(useAppStore.getState().sidebarCollapsed).toBe(true);
@@ -106,5 +102,29 @@ describe('appStore', () => {
       notificationsEnabled: false,
       viewPreferences: { chartDensity: 'compact' },
     });
+  });
+
+  it('tracks recent time ranges', async () => {
+    const useAppStore = await loadStore();
+
+    useAppStore.getState().setTimeRange({ kind: 'relative', preset: '5m', label: '5m', minutes: 5 });
+    useAppStore.getState().setTimeRange({ kind: 'relative', preset: '1h', label: '1h', minutes: 60 });
+    useAppStore.getState().setTimeRange({ kind: 'relative', preset: '7d', label: '7d', minutes: 10080 });
+
+    const recent = useAppStore.getState().recentTimeRanges;
+    expect(recent).toHaveLength(3);
+    expect(recent[0]).toMatchObject({ preset: '7d' });
+    expect(recent[1]).toMatchObject({ preset: '1h' });
+    expect(recent[2]).toMatchObject({ preset: '5m' });
+  });
+
+  it('sets timezone and comparison mode', async () => {
+    const useAppStore = await loadStore();
+
+    useAppStore.getState().setTimezone('UTC');
+    expect(useAppStore.getState().timezone).toBe('UTC');
+
+    useAppStore.getState().setComparisonMode('previous_period');
+    expect(useAppStore.getState().comparisonMode).toBe('previous_period');
   });
 });

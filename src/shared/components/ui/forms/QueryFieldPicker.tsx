@@ -38,10 +38,10 @@ export default function QueryFieldPicker({
   return (
     <>
       {fieldSearch === '' && (
-        <div className="oqb__dropdown-header">
+        <div className="flex items-center gap-1.5 px-3.5 pt-[10px] pb-2 text-[11px] text-muted-foreground border-b border-border tracking-[0.04em]">
           <SlidersHorizontal size={12} />
           <span>Filter by field</span>
-          <span className="oqb__dropdown-header-hint">
+          <span className="ml-auto text-[10px] bg-secondary px-[7px] py-[1px] rounded-[10px] border border-border text-muted-foreground">
             {filtersLength > 0 ? `${filtersLength} active` : `${fieldsLength} fields`}
           </span>
         </div>
@@ -53,17 +53,24 @@ export default function QueryFieldPicker({
 
         return (
           <div key={group}>
-            {groups.length > 1 && <div className="oqb__group-label">{group}</div>}
+            {groups.length > 1 && (
+              <div className="px-3.5 pt-2 pb-1 text-[10px] font-bold tracking-[0.08em] uppercase text-muted-foreground">
+                {group}
+              </div>
+            )}
             {groupFields.map((field) => (
               <div
                 key={field.key}
-                className="oqb__dropdown-item"
+                className="group flex items-center gap-2 px-3.5 py-[9px] cursor-pointer text-[12.5px] transition-colors duration-100 hover:bg-[rgba(94,96,206,0.1)] first:rounded-t-[10px] last:rounded-b-[10px]"
                 onClick={() => onPickField(field)}
               >
-                <span className="oqb__dropdown-icon">{field.icon}</span>
-                <span className="oqb__dropdown-name">{field.label}</span>
-                <span className="oqb__dropdown-key">{field.key}</span>
-                <ChevronRight size={12} className="oqb__dropdown-arrow" />
+                <span className="text-[14px] w-5 text-center shrink-0">{field.icon}</span>
+                <span className="text-foreground flex-1">{field.label}</span>
+                <span className="text-muted-foreground text-[10.5px] font-mono">{field.key}</span>
+                <ChevronRight
+                  size={12}
+                  className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-all duration-100 group-hover:translate-x-0.5"
+                />
               </div>
             ))}
           </div>
@@ -71,7 +78,9 @@ export default function QueryFieldPicker({
       })}
 
       {filteredFields.length === 0 && (
-        <div className="oqb__dropdown-empty">No fields match "{fieldSearch}"</div>
+        <div className="px-3.5 py-[18px] text-muted-foreground text-xs text-center">
+          No fields match "{fieldSearch}"
+        </div>
       )}
     </>
   );

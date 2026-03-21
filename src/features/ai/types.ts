@@ -3,7 +3,7 @@
  */
 export type DomainRecord = Record<string, unknown>;
 
-export interface LLMRun {
+export interface LLMRun extends DomainRecord {
   spanId: string;
   traceId: string;
   parentSpanId?: string;

@@ -1,4 +1,4 @@
-import './AlertGroupCard.css';
+import { cn } from '@/lib/utils';
 
 /**
  *
@@ -40,26 +40,43 @@ export default function AlertGroupCard({ service, alerts, onAlertClick }: AlertG
   const criticalCount = alerts.filter((a) => a.severity === 'critical').length;
 
   return (
-    <div className={`alert-group ${criticalCount > 0 ? 'alert-group--has-critical' : ''}`}>
-      <div className="alert-group__header">
-        <span className="alert-group__service">{service}</span>
-        <span className="alert-group__count">{alerts.length} alert{alerts.length !== 1 ? 's' : ''}</span>
+    <div
+      className={cn(
+        'bg-[var(--bg-card)] rounded-[var(--card-radius,12px)] border-[var(--card-border)] border shadow-[var(--card-shadow)] overflow-hidden',
+        criticalCount > 0 && 'border-l-[3px] border-l-[var(--color-critical)]',
+      )}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-light)]">
+        <span className="text-[var(--text-sm,13px)] font-semibold text-[color:var(--text-primary)]">
+          {service}
+        </span>
+        <span className="text-[var(--text-xs,11px)] text-[color:var(--text-secondary)] bg-[var(--bg-tertiary)] px-2 py-0.5 rounded-full">
+          {alerts.length} alert{alerts.length !== 1 ? 's' : ''}
+        </span>
       </div>
-      <ul className="alert-group__list">
+
+      {/* Alert list */}
+      <ul className="list-none m-0 py-1">
         {alerts.map((alert) => (
           <li
             key={alert.id}
-            className="alert-group__item"
+            className="flex items-center gap-2.5 px-4 py-2 cursor-default transition-[background] duration-[0.12s] hover:bg-[var(--bg-hover)]"
             onClick={() => onAlertClick?.(alert.id)}
             role={onAlertClick ? 'button' : undefined}
             tabIndex={onAlertClick ? 0 : undefined}
+            style={{ cursor: onAlertClick ? 'pointer' : 'default' }}
           >
             <span
-              className="alert-group__dot"
+              className="w-[7px] h-[7px] rounded-full flex-shrink-0"
               style={{ background: SEVERITY_COLOR[alert.severity] }}
             />
-            <span className="alert-group__name">{alert.name}</span>
-            <span className="alert-group__time">{formatRelative(alert.firedAt)}</span>
+            <span className="flex-1 text-[var(--text-sm,13px)] text-[color:var(--text-primary)] whitespace-nowrap overflow-hidden text-ellipsis">
+              {alert.name}
+            </span>
+            <span className="text-[var(--text-xs,11px)] text-[color:var(--text-muted)] flex-shrink-0">
+              {formatRelative(alert.firedAt)}
+            </span>
           </li>
         ))}
       </ul>

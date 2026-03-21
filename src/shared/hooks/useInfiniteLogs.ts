@@ -3,6 +3,8 @@ import { useMemo } from 'react';
 
 import { logsService } from '@shared/api/logsService';
 
+import { resolveTimeRangeBounds } from '@/types';
+
 import { useAppStore } from '@store/appStore';
 
 import {
@@ -44,20 +46,9 @@ export function useInfiniteLogs({ backendParams, liveTail = false, pageSize = 10
 
   // Pin the time window so all pages share the same boundaries
   const { stableStart, stableEnd } = useMemo(() => {
-    if (timeRange.value === 'custom' && timeRange.startTime && timeRange.endTime) {
-      return { stableStart: timeRange.startTime, stableEnd: timeRange.endTime };
-    }
-    const end = Date.now();
-    return { stableStart: end - (timeRange.minutes || 0) * 60 * 1000, stableEnd: end };
-  }, [
-    selectedTeamId,
-    timeRange.value,
-    timeRange.minutes,
-    timeRange.startTime,
-    timeRange.endTime,
-    backendParams,
-    refreshKey,
-  ]);
+    const { startTime, endTime } = resolveTimeRangeBounds(timeRange);
+    return { stableStart: startTime, stableEnd: endTime };
+  }, [selectedTeamId, timeRange, backendParams, refreshKey]);
 
   const query = useInfiniteQuery<
     unknown,
@@ -68,7 +59,7 @@ export function useInfiniteLogs({ backendParams, liveTail = false, pageSize = 10
   >({
     queryKey: [
       'logs-v2-infinite',
-      selectedTeamId, timeRange.value,
+      selectedTeamId, timeRange.kind === 'relative' ? timeRange.preset : `${timeRange.startMs}-${timeRange.endMs}`,
       pageSize, backendParams,
       refreshKey,
     ],

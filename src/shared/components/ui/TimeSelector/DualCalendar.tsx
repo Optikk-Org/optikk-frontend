@@ -1,6 +1,6 @@
 import React from 'react';
 import { addMonths, subMonths, format } from 'date-fns';
-import { TIME_PICKER_TOKENS } from './constants';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { CalendarMonth } from './CalendarMonth';
 
 interface DualCalendarProps {
@@ -24,59 +24,25 @@ export function DualCalendar({
   onSelectDate,
   onHoverDate,
 }: DualCalendarProps) {
-  const { colors, typography } = TIME_PICKER_TOKENS;
   const rightMonth = addMonths(leftMonth, 1);
-
   const prevMonth = () => setLeftMonth(subMonths(leftMonth, 1));
   const nextMonth = () => setLeftMonth(addMonths(leftMonth, 1));
 
   return (
-    <div
-      style={{
-        padding: '8px',
-        paddingBottom: '0px', // Empty row removal
-        display: 'flex',
-        fontFamily: typography.fontFamily,
-      }}
-    >
-      {/* Left Calendar */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '4px',
-          }}
-        >
+    <div className="flex gap-4 px-3 pt-3 pb-2">
+      {/* Left month */}
+      <div className="flex-1 flex flex-col">
+        <div className="flex items-center justify-between mb-2">
           <button
             onClick={prevMonth}
-            style={{
-              width: '24px',
-              height: '24px',
-              background: 'transparent',
-              border: 'none',
-              color: colors.muted,
-              fontSize: '16px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            className="w-6 h-6 flex items-center justify-center rounded hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors border-none bg-transparent cursor-pointer"
           >
-            ←
+            <ChevronLeft size={14} />
           </button>
-          <div
-            style={{
-              fontSize: '12px',
-              fontWeight: 600,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-            }}
-          >
-            {format(leftMonth, 'MMM yyyy')}
-          </div>
-          <div style={{ width: '24px' }} /> {/* Spacer */}
+          <span className="text-[13px] font-semibold text-[var(--text-primary)]">
+            {format(leftMonth, 'MMMM yyyy')}
+          </span>
+          <div className="w-6" />
         </div>
         <CalendarMonth
           currentMonth={leftMonth}
@@ -90,51 +56,20 @@ export function DualCalendar({
       </div>
 
       {/* Divider */}
-      <div
-        style={{
-          width: '1px',
-          background: colors.border,
-          margin: '0 12px',
-        }}
-      />
+      <div className="w-px bg-[var(--border-color)] self-stretch" />
 
-      {/* Right Calendar */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '4px',
-          }}
-        >
-          <div style={{ width: '24px' }} /> {/* Spacer */}
-          <div
-            style={{
-              fontSize: '12px',
-              fontWeight: 600,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-            }}
-          >
-            {format(rightMonth, 'MMM yyyy')}
-          </div>
+      {/* Right month */}
+      <div className="flex-1 flex flex-col">
+        <div className="flex items-center justify-between mb-2">
+          <div className="w-6" />
+          <span className="text-[13px] font-semibold text-[var(--text-primary)]">
+            {format(rightMonth, 'MMMM yyyy')}
+          </span>
           <button
             onClick={nextMonth}
-            style={{
-              width: '24px',
-              height: '24px',
-              background: 'transparent',
-              border: 'none',
-              color: colors.muted,
-              fontSize: '16px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            className="w-6 h-6 flex items-center justify-center rounded hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors border-none bg-transparent cursor-pointer"
           >
-            →
+            <ChevronRight size={14} />
           </button>
         </div>
         <CalendarMonth

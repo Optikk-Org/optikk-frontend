@@ -8,8 +8,7 @@ export { default as ServiceFlyInPanel } from './ServiceFlyInPanel';
 export { default as CalmMetricCard } from './CalmMetricCard';
 export { default as AiNarrationCard } from './AiNarrationCard';
 export type { AnomalyEvent } from './AiNarrationCard';
+export { default as AiContextBar } from './AiContextBar';
 
 export { default as AlertGroupCard } from './AlertGroupCard';
 export type { Alert } from './AlertGroupCard';
-
-export { default as UnifiedSignalPanel } from './UnifiedSignalPanel';

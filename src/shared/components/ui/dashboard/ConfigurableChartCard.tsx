@@ -1,6 +1,10 @@
-import { Surface } from '@shared/design-system';
+import { Surface } from '@/components/ui';
 
 import type { ComponentType } from 'react';
+
+import type { ApiErrorShape } from '@shared/api/api/interceptors/errorInterceptor';
+import ChartErrorOverlay from '@shared/components/ui/feedback/ChartErrorOverlay';
+import ChartNoDataOverlay from '@shared/components/ui/feedback/ChartNoDataOverlay';
 
 import { useMemo, useState } from 'react';
 
@@ -36,7 +40,10 @@ import {
   LogHistogramRenderer,
   PieRenderer,
   ScorecardRenderer,
+  ServiceHealthGridRenderer,
   ServiceMapRenderer,
+  SloIndicatorsRenderer,
+  StatCardsGridRenderer,
   TableRenderer,
   TraceWaterfallRenderer,
   getDashboardIcon,
@@ -72,6 +79,9 @@ const DASHBOARD_COMPONENT_MAP: Record<string, ComponentType<any>> = {
   'service-map': ServiceMapRenderer,
   'trace-waterfall': TraceWaterfallRenderer,
   'db-systems-overview': DbSystemsRenderer,
+  'stat-cards-grid': StatCardsGridRenderer,
+  'slo-indicators': SloIndicatorsRenderer,
+  'service-health-grid': ServiceHealthGridRenderer,
 };
 
 const SPECIALIZED_COMPONENT_KEYS = new Set([
@@ -89,11 +99,15 @@ const SPECIALIZED_COMPONENT_KEYS = new Set([
   'service-map',
   'trace-waterfall',
   'db-systems-overview',
+  'stat-cards-grid',
+  'slo-indicators',
+  'service-health-grid',
 ]);
 
 import {
   formatStatValue,
   resolveComponentData,
+  normalizeDashboardRows,
   resolveFieldValue,
   renderStatSummary,
   firstValue,
@@ -113,6 +127,8 @@ import {
 interface ConfigurableChartCardProps {
   componentConfig: DashboardComponentSpec;
   dataSources: DashboardDataSources;
+  error?: ApiErrorShape | null;
+  isLoading?: boolean;
   extraContext: DashboardExtraContext;
 }
 
@@ -126,10 +142,21 @@ interface ConfigurableChartCardProps {
 export default function ConfigurableChartCard({
   componentConfig,
   dataSources,
+  error,
+  isLoading = false,
   extraContext,
 }: ConfigurableChartCardProps) {
   const chartConfig = componentConfig;
   const componentKey = resolveComponentKey(chartConfig);
+
+  if (error) {
+    return (
+      <Surface elevation={1} padding="md" className="chart-card" style={{ height: '100%' }}>
+        <div className="chart-card__title">{chartConfig.title as string}</div>
+        <ChartErrorOverlay code={error.code} message={error.message} />
+      </Surface>
+    );
+  }
 
   const [selectedEndpoints, setSelectedEndpoints] = useState<string[]>([]);
 
@@ -150,11 +177,20 @@ export default function ConfigurableChartCard({
 
   const componentRenderer = componentKey ? DASHBOARD_COMPONENT_MAP[componentKey] : undefined;
   const rawData = resolveComponentData(chartConfig, dataSources);
-  const timeseriesData = (chartConfig.dataKey
-    ? (Array.isArray((rawData as any)?.[chartConfig.dataKey as string])
-      ? (rawData as any)[chartConfig.dataKey as string]
-      : [])
-    : (Array.isArray(rawData) ? rawData : [])) as any[];
+
+  const hasNoData = rawData === undefined || rawData === null
+    || (Array.isArray(rawData) && rawData.length === 0);
+
+  if (!isLoading && hasNoData) {
+    return (
+      <Surface elevation={1} padding="md" className="chart-card" style={{ height: '100%' }}>
+        <div className="chart-card__title">{chartConfig.title as string}</div>
+        <ChartNoDataOverlay />
+      </Surface>
+    );
+  }
+
+  const timeseriesData = normalizeDashboardRows(rawData, chartConfig.dataKey as string | undefined) as any[];
 
   const serviceTimeseriesMap = useMemo(() => {
     if (chartConfig.groupByKey) {
@@ -318,7 +354,7 @@ export default function ConfigurableChartCard({
 
   return (
     <Surface elevation={1} padding="xs" className="chart-card flex-col" style={{ height: '100%' }}>
-      <div style={{ height: 260, flexShrink: 0, width: '100%', position: 'relative' }}>
+      <div style={{ height: 220, flexShrink: 0, width: '100%', position: 'relative' }}>
         <ChartComponent {...chartProps} />
       </div>
       {showEndpointList && (

@@ -185,21 +185,21 @@ export default function DatabaseTopTablesList({
                     )}
                   </td>
                   <td
+                    className="font-mono"
                     style={{
                       padding: '5px 8px',
                       textAlign: 'right',
                       color: APP_COLORS.hex_e0e0e0,
-                      fontFamily: 'monospace',
                     }}
                   >
                     {formatNumber(table.query_count ?? 0)}
                   </td>
                   <td
+                    className="font-mono"
                     style={{
                       padding: '5px 8px',
                       textAlign: 'right',
                       color: latencyColor,
-                      fontFamily: 'monospace',
                     }}
                   >
                     {formatDuration(latency)}

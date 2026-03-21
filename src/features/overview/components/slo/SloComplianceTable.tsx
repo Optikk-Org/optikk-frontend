@@ -1,5 +1,5 @@
-import { Table } from 'antd';
-import { Badge, Surface } from '@shared/design-system';
+import { Badge, Surface, SimpleTable } from '@/components/ui';
+import { format as dateFnsFormat } from 'date-fns';
 
 import { APP_COLORS } from '@config/colorLiterals';
 
@@ -36,8 +36,8 @@ export default function SloComplianceTable({
       dataIndex: 'timestamp',
       key: 'timestamp',
       render: (value: any) => (
-        <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-          {new Date(value).toLocaleString()}
+        <span className="font-mono" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+          {dateFnsFormat(new Date(value), 'yyyy-MM-dd HH:mm')}
         </span>
       ),
     },
@@ -123,18 +123,18 @@ export default function SloComplianceTable({
           </span>
         )}
       </h4>
-      <Table
-        columns={complianceColumns}
-        dataSource={timeseries.map((row, index) => ({ ...row, key: `slo-${index}` }))}
-        rowKey="key"
-        loading={isLoading}
-        size="small"
-        pagination={{ pageSize: 20, showSizeChanger: true }}
-        rowClassName={(record: any) =>
-          n(record.availability_percent) < availabilityTarget ? 'high-error-row' : ''
-        }
-        locale={{ emptyText: 'No compliance data — check that services are sending OTLP traces' }}
-      />
+      {isLoading ? <div className="text-center py-8 text-[var(--text-muted)]">Loading...</div> : (
+        <SimpleTable
+          columns={complianceColumns}
+          dataSource={timeseries.map((row: any, index: number) => ({ ...row, key: `slo-${index}` }))}
+          rowKey="key"
+          size="small"
+          pagination={{ pageSize: 20, showSizeChanger: true }}
+          rowClassName={(record: any) =>
+            n(record.availability_percent) < availabilityTarget ? 'high-error-row' : ''
+          }
+        />
+      )}
     </Surface>
   );
 }

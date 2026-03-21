@@ -37,14 +37,6 @@ export interface ServiceMetric {
 }
 
 /**
- * Endpoint metric shape.
- */
-export interface EndpointMetric extends ServiceMetric {
-  readonly operationName: string;
-  readonly httpMethod: string;
-}
-
-/**
  * Timeseries point shape.
  */
 export interface TimeSeriesPoint {
@@ -114,15 +106,6 @@ function normalizeServiceMetric(input: unknown): ServiceMetric {
   };
 }
 
-function normalizeEndpointMetric(input: unknown): EndpointMetric {
-  const row = asMetricRow(input);
-  return {
-    ...normalizeServiceMetric(row),
-    operationName: getString(row, ['operation_name']),
-    httpMethod: getString(row, ['http_method']),
-  };
-}
-
 function normalizeTimeSeriesPoint(input: unknown): TimeSeriesPoint {
   const row = asMetricRow(input);
   return {
@@ -152,30 +135,6 @@ export const metricsService = {
   ): Promise<ServiceMetric[]> {
     const rows = await api.get(`${BASE}/services/metrics`, { params: { startTime, endTime } });
     return asRows(rows).map((row: unknown) => normalizeServiceMetric(row));
-  },
-
-  async getEndpointMetrics(
-    _teamId: number | null,
-    startTime: RequestTime,
-    endTime: RequestTime,
-    serviceName: string,
-  ): Promise<EndpointMetric[]> {
-    const rows = await api.get(`${BASE}/endpoints/metrics`, {
-      params: { startTime, endTime, serviceName },
-    });
-    return asRows(rows).map((row: unknown) => normalizeEndpointMetric(row));
-  },
-
-  async getEndpointTimeSeries(
-    _teamId: number | null,
-    startTime: RequestTime,
-    endTime: RequestTime,
-    serviceName: string,
-  ): Promise<TimeSeriesPoint[]> {
-    const rows = await api.get(`${BASE}/endpoints/timeseries`, {
-      params: { startTime, endTime, serviceName },
-    });
-    return asRows(rows).map((row: unknown) => normalizeTimeSeriesPoint(row));
   },
 
   async getMetricsTimeSeries(
@@ -262,15 +221,6 @@ export const metricsService = {
     return api.get(`${BASE}/errors/timeseries`, {
       params: { startTime, endTime, interval, serviceName },
     });
-  },
-
-  async getIncidents(
-    _teamId: number | null,
-    startTime: RequestTime,
-    endTime: RequestTime,
-    params: QueryParams = {},
-  ): Promise<unknown> {
-    return api.get(`${BASE}/incidents`, { params: { startTime, endTime, ...params } });
   },
 
   async getAvgCPU(
@@ -396,16 +346,6 @@ export const metricsService = {
     serviceName?: string,
   ): Promise<unknown> {
     return api.get(`${BASE}/overview/endpoints/timeseries`, { params: { startTime, endTime, serviceName } });
-  },
-
-  async getSloSli(
-    _teamId: number | null,
-    startTime: RequestTime,
-    endTime: RequestTime,
-    serviceName?: string,
-    interval = '5m',
-  ): Promise<unknown> {
-    return api.get(`${BASE}/overview/slo`, { params: { startTime, endTime, serviceName, interval } });
   },
 
   async getOverviewErrorGroups(

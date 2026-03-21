@@ -32,6 +32,9 @@ export default defineConfig(({ mode }) => {
         '@utils': path.resolve(__dirname, './src/shared/utils'),
         '@services': path.resolve(__dirname, './src/shared/api'),
         '@store': path.resolve(__dirname, './src/store'),
+        '@/lib': path.resolve(__dirname, './src/lib'),
+        '@/components': path.resolve(__dirname, './src/components'),
+        '@/hooks': path.resolve(__dirname, './src/shared/hooks'),
       },
     },
     server: {
@@ -51,8 +54,7 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-            'ui-vendor': ['antd'],
-            'chart-vendor': ['chart.js', 'react-chartjs-2'],
+            'echart-vendor': ['echarts', 'echarts-for-react'],
             'query-vendor': ['@tanstack/react-query', 'axios'],
           },
         },

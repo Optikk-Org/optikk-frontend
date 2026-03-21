@@ -57,31 +57,39 @@ export function BoardTable<RowType extends Record<string, unknown>>({
     ? (colWidths[flexColumn.key] ?? flexColumn.defaultWidth ?? 480)
     : 0;
   const tableMinWidth = fixedWidth + flexColumnWidth;
+
   const BoardScroller = useMemo(
     () => forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
       function BoardScrollerComponent(props, ref) {
         const { className, ...rest } = props;
-
         return (
           <div
             {...rest}
             ref={ref}
-            className={className ? `oboard__body-scroll ${className}` : 'oboard__body-scroll'}
+            className={`h-full min-w-0 overflow-auto${className ? ` ${className}` : ''}`}
           />
         );
       },
     ),
     [],
   );
+
   const BoardHeader = useMemo(
     () => function BoardHeaderComponent() {
       return (
-        <div className="oboard__thead" style={{ minWidth: tableMinWidth }}>
+        <div
+          className="flex border-b border-[color:var(--glass-border)] text-[11px] font-semibold uppercase tracking-[0.05em] text-muted-foreground sticky top-0 bg-[rgba(255,255,255,0.02)] z-20 select-none"
+          style={{ minWidth: tableMinWidth, width: 'max-content' }}
+        >
           {fixedColumns.map((column) => (
-            <div key={column.key} className="oboard__th" style={{ width: colWidths[column.key] }}>
+            <div
+              key={column.key}
+              className="relative flex items-center shrink-0 border-r border-[color:var(--glass-border)] px-3 py-[9px] whitespace-nowrap overflow-hidden text-ellipsis box-border"
+              style={{ width: colWidths[column.key] }}
+            >
               {column.label}
               <div
-                className="oboard__resizer"
+                className="absolute top-0 -right-1 w-2 h-full cursor-col-resize z-[12] hover:bg-[rgba(94,96,206,0.35)]"
                 onMouseDown={(event) => {
                   event.stopPropagation();
                   handleResizeMouseDown(event, column.key);
@@ -91,7 +99,7 @@ export function BoardTable<RowType extends Record<string, unknown>>({
           ))}
           {flexColumn && (
             <div
-              className="oboard__th oboard__th--flex"
+              className="relative flex items-center border-[color:var(--glass-border)] px-3 py-[9px] whitespace-nowrap overflow-hidden text-ellipsis box-border flex-1 border-r-0"
               style={{ flex: `1 0 ${flexColumnWidth}px`, minWidth: flexColumnWidth }}
             >
               {flexColumn.label}
@@ -104,8 +112,8 @@ export function BoardTable<RowType extends Record<string, unknown>>({
   );
 
   return (
-    <div className="oboard__tbody">
-      <div className="oboard__table-viewport">
+    <div className="flex-1 flex flex-col min-w-0 min-h-0">
+      <div className="flex-1 min-w-0 min-h-0">
         <Virtuoso
           style={{ height: '100%' }}
           data={rows}
@@ -129,8 +137,8 @@ export function BoardTable<RowType extends Record<string, unknown>>({
           itemContent={(index, row) => (
             <div
               key={rowKey(row, index)}
-              className="oboard__row"
-              style={{ minWidth: tableMinWidth }}
+              className="flex items-baseline cursor-pointer border-b border-[color:var(--glass-border)] transition-colors duration-[80ms] ease-in-out font-mono text-xs hover:bg-[rgba(255,255,255,0.05)]"
+              style={{ minWidth: tableMinWidth, width: 'max-content' }}
             >
               {renderRow(row, { colWidths, visibleCols, onAddFilter })}
             </div>

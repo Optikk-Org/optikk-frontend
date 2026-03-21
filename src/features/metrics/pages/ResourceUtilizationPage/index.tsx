@@ -1,4 +1,4 @@
-import { Surface } from '@shared/design-system';
+import { Surface } from '@/components/ui';
 import { Cpu, HardDrive, Network, Database } from 'lucide-react';
 import { useMemo } from 'react';
 
@@ -9,7 +9,6 @@ import { metricsService } from '@shared/api/metricsService';
 
 import { useDashboardConfig } from '@shared/hooks/useDashboardConfig';
 import { useTimeRangeQuery } from '@shared/hooks/useTimeRangeQuery';
-import './ResourceUtilizationStyle.css';
 
 const pct = (v: any) => (v == null || Number.isNaN(Number(v)) ? 0 : Number(v));
 

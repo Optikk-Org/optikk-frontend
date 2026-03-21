@@ -20,7 +20,6 @@ const OAuthSignupPage = lazy(() =>
 );
 const BackendDrivenPage = lazy(() => import('./BackendDrivenPage'));
 const TraceComparisonPage = lazy(() => import('@features/traces/pages/TraceComparisonPage'));
-const InvestigationPage = lazy(() => import('@features/investigations/pages/InvestigationPage'));
 
 function toNestedRoutePath(path: string): string {
   if (!path || path === ROUTES.home) {
@@ -117,8 +116,6 @@ export default function AppRoutes(): JSX.Element {
         <Route index element={<Navigate to={ROUTES.overview} replace />} />
         {protectedDomainRoutes.map((route) => renderProtectedRoute(route.path, route.page))}
         {renderProtectedRoute(ROUTES.traceCompare, TraceComparisonPage as React.ComponentType<object>)}
-        {renderProtectedRoute(ROUTES.investigations, InvestigationPage as React.ComponentType<object>)}
-        {renderProtectedRoute(ROUTES.investigationDetail, InvestigationPage as React.ComponentType<object>)}
         <Route
           path="errors"
           element={<Navigate to={`${ROUTES.overview}?tab=errors`} replace />}

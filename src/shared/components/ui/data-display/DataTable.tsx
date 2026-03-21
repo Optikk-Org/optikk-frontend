@@ -1,12 +1,12 @@
-import { Table, type TableProps } from 'antd';
+import { SimpleTable } from '@/components/ui';
 import { EmptyState } from '@shared/components/ui/feedback';
 import { UI_CONFIG } from '@config/constants';
 
 export interface DataTableData<RowType = any> {
-  columns: NonNullable<TableProps<RowType>['columns']>;
+  columns: any[];
   rows: RowType[];
   loading?: boolean;
-  rowKey?: TableProps<RowType>['rowKey'];
+  rowKey?: string | ((row: RowType) => string);
 }
 
 export interface DataTablePagination {
@@ -19,9 +19,9 @@ export interface DataTablePagination {
 
 export interface DataTableConfig<RowType = any> {
   emptyText?: string;
-  scroll?: TableProps<RowType>['scroll'];
-  onRow?: TableProps<RowType>['onRow'];
-  expandable?: TableProps<RowType>['expandable'];
+  scroll?: { x?: number; y?: number };
+  onRow?: (record: RowType, index?: number) => Record<string, any>;
+  expandable?: any;
 }
 
 export interface DataTableProps<RowType = any> {
@@ -40,34 +40,37 @@ export default function DataTable<RowType extends Record<string, any> = any>({
 }: DataTableProps<RowType>): JSX.Element {
   const { columns, rows, loading = false, rowKey = 'id' } = data;
   const { page, pageSize, total, onPageChange, showPagination = true } = pagination;
-  const { emptyText = 'No data found', scroll, onRow, expandable } = config;
+  const { emptyText = 'No data found', scroll, onRow } = config;
 
-  const paginationConfig: TableProps<RowType>['pagination'] =
+  const paginationConfig =
     showPagination && onPageChange
     ? {
       current: page,
       pageSize: pageSize || UI_CONFIG.DEFAULT_PAGE_SIZE,
       total: total || 0,
       onChange: (newPage: number, newPageSize: number) => onPageChange(newPage, newPageSize),
-      showSizeChanger: true,
-      showTotal: (totalCount: number) => `Total ${totalCount} records`,
-      pageSizeOptions: UI_CONFIG.PAGE_SIZES.map(String),
     }
     : showPagination
-      ? { pageSize: UI_CONFIG.DEFAULT_PAGE_SIZE, showSizeChanger: true }
+      ? { pageSize: UI_CONFIG.DEFAULT_PAGE_SIZE }
       : false;
 
+  if (loading) {
+    return <div className="text-center py-8" style={{ color: 'var(--text-muted)' }}>Loading...</div>;
+  }
+
+  if (rows.length === 0) {
+    return <EmptyState icon={null} title="No Data" description={emptyText} action={null} />;
+  }
+
   return (
-    <Table
+    <SimpleTable
       columns={columns as any}
       dataSource={rows}
-      loading={loading}
-      rowKey={rowKey}
-      pagination={paginationConfig}
+      rowKey={rowKey as any}
+      pagination={paginationConfig ? paginationConfig as any : undefined}
       scroll={scroll}
-      onRow={onRow}
-      expandable={expandable}
-      locale={{ emptyText: <EmptyState icon={null} title="No Data" description={emptyText} action={null} /> }}
+      onRow={onRow as any}
+      size="small"
     />
   );
 }

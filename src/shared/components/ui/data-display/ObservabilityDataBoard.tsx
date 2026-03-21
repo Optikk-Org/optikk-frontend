@@ -17,8 +17,6 @@ import { ObservabilityDetailPanel, type DetailPanelField } from './Observability
 import { BoardClickableCell, type BoardClickableCellProps } from './BoardClickableCell';
 import { BoardTable } from './BoardTable';
 
-import './ObservabilityDataBoard.css';
-
 const BOARD_ROW_HEIGHT = 32;
 const BOARD_CHROME_HEIGHT = 72;
 const DEFAULT_COLUMN_WIDTH = 160;
@@ -223,7 +221,7 @@ export default function ObservabilityDataBoard<
   const tips = emptyTips ?? defaultEmptyTips;
 
   return (
-    <div className="oboard">
+    <div className="flex-1 flex flex-col min-w-0 min-h-0 relative overflow-hidden bg-[color:var(--glass-bg)] border border-[color:var(--glass-border)] rounded-xl" style={{ backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)' }}>
       <BoardActionBar
         entityName={entityName}
         displayCount={displayCount}
@@ -242,7 +240,7 @@ export default function ObservabilityDataBoard<
         onExportJSON={handleExportJSON}
       />
 
-      <div className="oboard__table">
+      <div className="flex-1 overflow-hidden flex flex-col">
         {isLoading && rows.length === 0 ? (
           <BoardSkeleton
             fixedColumns={fixedColumns}

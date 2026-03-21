@@ -1,4 +1,4 @@
-import { Tooltip } from '@shared/design-system';
+import { Tooltip } from '@/components/ui';
 import type { SpanKindDuration } from '../../types';
 import { formatDuration } from '@shared/utils/formatters';
 

@@ -1,6 +1,5 @@
 import { Search } from 'lucide-react';
 import { ReactNode } from 'react';
-import './FilterBar.css';
 
 interface FilterSearchConfig {
   type: 'search';
@@ -38,13 +37,20 @@ interface FilterBarProps {
  */
 export default function FilterBar({ filters = [], actions }: FilterBarProps) {
   return (
-    <div className="filter-bar">
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+    <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2 items-center">
         {filters.map((filter) => {
           if (filter.type === 'search') {
             return (
-              <div key={filter.key} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', width: filter.width || 300 }}>
-                <Search size={16} style={{ position: 'absolute', left: 8, pointerEvents: 'none', color: 'var(--text-secondary, #999)' }} />
+              <div
+                key={filter.key}
+                className="relative inline-flex items-center"
+                style={{ width: filter.width || 300 }}
+              >
+                <Search
+                  size={16}
+                  className="absolute left-2 pointer-events-none text-[color:var(--text-secondary,#999)]"
+                />
                 <input
                   type="text"
                   placeholder={filter.placeholder || 'Search...'}
@@ -53,7 +59,7 @@ export default function FilterBar({ filters = [], actions }: FilterBarProps) {
                     filter.onChange?.(e);
                     filter.onSearch?.(e.target.value);
                   }}
-                  style={{ paddingLeft: 30, height: 32, border: '1px solid var(--border-color, #d9d9d9)', borderRadius: 6, fontSize: 14, width: '100%' }}
+                  className="pl-[30px] h-8 border border-border rounded-md text-sm w-full"
                 />
               </div>
             );
@@ -68,7 +74,8 @@ export default function FilterBar({ filters = [], actions }: FilterBarProps) {
                   const val = e.target.value;
                   filter.onChange?.(val === '' ? null : (isNaN(Number(val)) ? val : Number(val)));
                 }}
-                style={{ width: filter.width || 160, height: 32, border: '1px solid var(--border-color, #d9d9d9)', borderRadius: 6, fontSize: 14, padding: '0 8px' }}
+                className="h-8 border border-border rounded-md text-sm px-2"
+                style={{ width: filter.width || 160 }}
               >
                 {filter.placeholder && (
                   <option value="">{filter.placeholder}</option>
@@ -86,7 +93,7 @@ export default function FilterBar({ filters = [], actions }: FilterBarProps) {
         })}
       </div>
 
-      {actions && <div className="filter-bar-actions">{actions}</div>}
+      {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>
   );
 }

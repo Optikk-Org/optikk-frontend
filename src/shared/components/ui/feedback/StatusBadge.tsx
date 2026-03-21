@@ -1,5 +1,5 @@
-import { Badge } from '@shared/design-system';
-import type { BadgeVariant } from '@shared/design-system/components/Badge';
+import { Badge } from '@/components/ui';
+import type { BadgeVariant } from '@/components/ui/badge';
 
 import type { StatusBadgeProps } from './types';
 

@@ -1,6 +1,6 @@
 import { AlertCircle } from 'lucide-react';
 import React from 'react';
-import { Button } from '@shared/design-system';
+import { Button } from '@/components/ui';
 
 import type { ErrorBoundaryProps, ErrorBoundaryState } from './types';
 

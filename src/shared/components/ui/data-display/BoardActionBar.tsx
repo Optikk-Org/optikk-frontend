@@ -43,18 +43,18 @@ export default function BoardActionBar({
   onExportJSON,
 }: BoardActionBarProps) {
   return (
-    <div className="oboard__action-bar">
-      <div className="oboard__count">
-        <span className="oboard__count-dot" />
-        <span className="oboard__count-label">
+    <div className="flex items-center justify-between px-4 py-[7px] bg-transparent border-b border-[color:var(--glass-border)] shrink-0 gap-[10px]">
+      <div className="flex items-center gap-[7px] text-xs text-muted-foreground">
+        <span className="w-1.5 h-1.5 rounded-full bg-success inline-block shrink-0" />
+        <span className="text-[color:var(--text-secondary)] font-medium">
           {displayCount.toLocaleString()} {entityName}{displayCount !== 1 ? 's' : ''}
         </span>
         {total > 0 && total !== displayCount && (
-          <span className="oboard__count-total">of {total.toLocaleString()}</span>
+          <span className="text-muted-foreground">of {total.toLocaleString()}</span>
         )}
       </div>
 
-      <div className="oboard__actions">
+      <div className="flex items-center gap-1.5 ml-auto">
         {extraActions}
 
         <BoardExportMenu

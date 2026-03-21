@@ -108,10 +108,62 @@ export interface AnalyticsQuery {
 }
 
 export interface TraceComparisonResult {
-  traceA: string;
-  traceB: string;
-  structuralDifferences: any[];
-  timingDifferences: any[];
+  traceA: {
+    traceId: string;
+    spanCount: number;
+    durationMs: number;
+    errorCount: number;
+    services: number;
+  };
+  traceB: {
+    traceId: string;
+    spanCount: number;
+    durationMs: number;
+    errorCount: number;
+    services: number;
+  };
+  matchedSpans: Array<{
+    signature: {
+      service: string;
+      operation: string;
+      spanKind: string;
+      depth: number;
+    };
+    spanIdA: string;
+    spanIdB: string;
+    durationMsA: number;
+    durationMsB: number;
+    deltaMs: number;
+    deltaPct: number;
+    statusA: string;
+    statusB: string;
+    statusChanged: boolean;
+  }>;
+  onlyInA: Array<{
+    spanId: string;
+    service: string;
+    operation: string;
+    spanKind: string;
+    durationMs: number;
+    status: string;
+  }>;
+  onlyInB: Array<{
+    spanId: string;
+    service: string;
+    operation: string;
+    spanKind: string;
+    durationMs: number;
+    status: string;
+  }>;
+  serviceDeltas: Array<{
+    service: string;
+    totalMsA: number;
+    totalMsB: number;
+    deltaMs: number;
+    spanCountA: number;
+    spanCountB: number;
+  }>;
+  totalDeltaMs: number;
 }
 
 export interface FlamegraphNode {

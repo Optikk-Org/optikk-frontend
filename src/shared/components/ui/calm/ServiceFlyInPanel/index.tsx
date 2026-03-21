@@ -1,4 +1,4 @@
-import { Badge, Skeleton } from '@shared/design-system';
+import { Badge, Skeleton } from '@/components/ui';
 import { ArrowUpRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -7,7 +7,6 @@ import SparklineChart from '@shared/components/ui/charts/micro/SparklineChart';
 import { APP_COLORS } from '@config/colorLiterals';
 
 import type { HealthStatus } from '../HealthRing';
-import './ServiceFlyInPanel.css';
 
 interface ServiceSnapshot {
   status: HealthStatus;
@@ -51,33 +50,46 @@ export default function ServiceFlyInPanel({
 
   return (
     <div
-      className="service-fly-in-panel"
-      style={{ position: 'fixed', top: 0, right: 0, width: 400, height: '100%', zIndex: 1000, background: 'var(--bg-card, #fff)', boxShadow: '-2px 0 8px rgba(0,0,0,0.12)', overflow: 'auto' }}
+      className="fixed top-0 right-0 w-[400px] h-full z-[1000] overflow-auto bg-[var(--bg-card,#fff)] shadow-lg"
     >
       {serviceName && (
-        <div className="sfp__content">
-          <div className="sfp__header">
-            <div className="sfp__title-row">
-              <span className="sfp__name">{serviceName}</span>
+        <div className="flex flex-col h-full p-6 gap-6">
+          {/* Header */}
+          <div className="flex flex-col gap-2 pb-5 border-b border-[var(--border-light)]">
+            <div className="flex items-center gap-2.5">
+              <span className="text-[var(--text-lg,19px)] font-semibold text-[color:var(--text-primary)]">
+                {serviceName}
+              </span>
               {snapshot && (
                 <Badge variant={STATUS_COLOR[snapshot.status] as any} />
               )}
             </div>
-            <button className="sfp__view-full" onClick={handleViewFull}>
+            <button
+              className="inline-flex items-center gap-1 bg-transparent border-0 cursor-pointer text-[var(--text-xs,11px)] text-[color:var(--color-primary)] p-0 underline underline-offset-2"
+              onClick={handleViewFull}
+            >
               View full detail
               <ArrowUpRight size={12} />
             </button>
-            <button className="sfp__close" onClick={onClose} aria-label="Close" style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>&times;</button>
+            <button
+              className="absolute top-3 right-3 bg-transparent border-0 cursor-pointer text-[18px]"
+              onClick={onClose}
+              aria-label="Close"
+            >
+              &times;
+            </button>
           </div>
 
           {loading || !snapshot ? (
-            <div className="sfp__loading">
+            <div className="py-2">
               <Skeleton count={4} />
             </div>
           ) : (
-            <div className="sfp__charts">
-              <div className="sfp__chart-row">
-                <span className="sfp__chart-label">Requests / s</span>
+            <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[var(--label-size,11px)] font-[var(--label-weight,500)] text-[color:var(--text-label)] uppercase tracking-[0.4px]">
+                  Requests / s
+                </span>
                 <SparklineChart
                   data={snapshot.rps}
                   color={APP_COLORS.hex_7c7ff2}
@@ -86,8 +98,10 @@ export default function ServiceFlyInPanel({
                   height={40}
                 />
               </div>
-              <div className="sfp__chart-row">
-                <span className="sfp__chart-label">Error rate %</span>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[var(--label-size,11px)] font-[var(--label-weight,500)] text-[color:var(--text-label)] uppercase tracking-[0.4px]">
+                  Error rate %
+                </span>
                 <SparklineChart
                   data={snapshot.errorRate}
                   color={APP_COLORS.hex_dc2626}
@@ -96,8 +110,10 @@ export default function ServiceFlyInPanel({
                   height={40}
                 />
               </div>
-              <div className="sfp__chart-row">
-                <span className="sfp__chart-label">p95 latency ms</span>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[var(--label-size,11px)] font-[var(--label-weight,500)] text-[color:var(--text-label)] uppercase tracking-[0.4px]">
+                  p95 latency ms
+                </span>
                 <SparklineChart
                   data={snapshot.p95Latency}
                   color={APP_COLORS.hex_d97706}

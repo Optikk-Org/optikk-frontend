@@ -1,9 +1,8 @@
 import React from 'react';
-import { Surface, Skeleton } from '@shared/design-system';
+import { Surface, Skeleton } from '@/components/ui';
 import { TrendIndicator } from '@shared/components/ui';
 import { APP_COLORS } from '@config/colorLiterals';
 import SparklineChart from '../charts/micro/SparklineChart';
-import './StatCard.css';
 
 export interface StatCardMetric {
   title: string;
@@ -47,30 +46,40 @@ const StatCard = React.memo(function StatCard({
   const displayValue = formatter ? formatter(value) : value;
 
   return (
-    <Surface elevation={1} padding="md" className="stat-card">
+    <Surface
+      elevation={1}
+      padding="sm"
+      className="h-full"
+    >
       {loading ? (
-        <div className="stat-card-loading">
+        <div className="min-h-[80px] py-1">
           <Skeleton count={2} />
         </div>
       ) : (
         <>
-          <div className="stat-card-header">
-            <span className="stat-card-title">{title}</span>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[color:var(--text-secondary)] text-[11px] font-medium uppercase tracking-[0.5px]">
+              {title}
+            </span>
             {icon && (
-              <span className="stat-card-icon" style={{ color: iconColor }}>
+              <span className="flex items-center opacity-80" style={{ color: iconColor }}>
                 {React.isValidElement(icon) ? icon : React.createElement(icon as any, { size: 20 })}
               </span>
             )}
           </div>
-          <div className="stat-card-value">
+          <div className="text-foreground text-xl font-light tabular-nums leading-[1.2]">
             {displayValue}
-            {suffix && <span className="stat-card-suffix">{suffix}</span>}
+            {suffix && (
+              <span className="text-base font-normal ml-1 text-[color:var(--text-secondary)]">
+                {suffix}
+              </span>
+            )}
           </div>
           {description && (
-            <div className="stat-card-description">{description}</div>
+            <div className="text-muted-foreground text-xs mt-1">{description}</div>
           )}
           {sparklineData && sparklineData.length > 1 && (
-            <div className="stat-card-sparkline">
+            <div className="mt-2">
               <SparklineChart
                 data={sparklineData}
                 color={sparklineColor || iconColor || APP_COLORS.hex_5e60ce}

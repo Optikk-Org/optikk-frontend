@@ -3,12 +3,10 @@
  * Renders an SLO burn rate gauge + trend sparkline.
  * Shows the 1h and 6h burn rate windows with threshold indicators.
  */
-import { Surface } from '@shared/design-system';
-import React from 'react';
-import {
-    LineChart, Line, XAxis, YAxis, ReferenceLine,
-    Tooltip as ChartTooltip, ResponsiveContainer,
-} from 'recharts';
+import { Surface } from '@/components/ui';
+import React, { useMemo } from 'react';
+
+import UPlotChart, { defaultAxes, uLine } from '../UPlotChart';
 
 /**
  *
@@ -21,7 +19,7 @@ export interface BurnRatePoint {
 
 interface BurnRateChartProps {
     data: BurnRatePoint[];
-    fastBurnThreshold?: number;  // e.g. 14.4 (for 2% budget in 1h = 14.4× burn)
+    fastBurnThreshold?: number;  // e.g. 14.4 (for 2% budget in 1h = 14.4x burn)
     slowBurnThreshold?: number;  // e.g. 1.0
     sloTarget?: number;          // e.g. 99.9
     title?: string;
@@ -43,6 +41,41 @@ const BurnRateChart: React.FC<BurnRateChartProps> = ({
     const latest = data[data.length - 1];
     const current1h = latest?.burnRate1h ?? 0;
     const current6h = latest?.burnRate6h ?? 0;
+
+    const tsLabels = data.map(d => d.ts);
+
+    const uplotData = useMemo<uPlot.AlignedData>(
+        () => [
+            data.map((_, i) => i),
+            data.map(d => d.burnRate1h),
+            data.map(d => d.burnRate6h),
+        ],
+        [data],
+    );
+
+    const opts = useMemo<Omit<uPlot.Options, 'width' | 'height'>>(() => {
+        const axes = defaultAxes();
+        // Override x-axis to show ts labels
+        axes[0] = {
+            ...axes[0],
+            values: (_u: uPlot, splits: number[]) =>
+                splits.map(i => tsLabels[Math.round(i)] ?? ''),
+        };
+        // Override y-axis label size
+        axes[1] = { ...axes[1], size: 28 };
+
+        return {
+            axes,
+            cursor: { show: true },
+            legend: { show: false },
+            scales: { x: { range: (_u, min, max) => [min, max] as [number, number] } },
+            series: [
+                {},
+                uLine('1h', 'var(--chart-1)', { width: 2 }),
+                uLine('6h', 'var(--chart-2)', { dash: [4, 4], width: 2 }),
+            ],
+        };
+    }, [tsLabels]);
 
     return (
         <Surface className="chart-card" padding="sm">
@@ -68,22 +101,7 @@ const BurnRateChart: React.FC<BurnRateChartProps> = ({
                 </div>
             </div>
 
-            <ResponsiveContainer width="100%" height={120}>
-                <LineChart data={data}>
-                    <XAxis dataKey="ts" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} width={28} />
-                    <ChartTooltip
-                        contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: 6 }}
-                        labelStyle={{ color: 'var(--text-muted)', fontSize: 11 }}
-                    />
-                    {/* Fast burn threshold line */}
-                    <ReferenceLine y={fastBurnThreshold} stroke="var(--severity-critical)" strokeDasharray="4 2" label={{ value: 'Fast', fill: 'var(--severity-critical)', fontSize: 9 }} />
-                    {/* Slow burn threshold line */}
-                    <ReferenceLine y={slowBurnThreshold} stroke="var(--severity-medium)" strokeDasharray="4 2" label={{ value: 'Slow', fill: 'var(--severity-medium)', fontSize: 9 }} />
-                    <Line dataKey="burnRate1h" stroke="var(--chart-1)" strokeWidth={2} dot={false} name="1h" />
-                    <Line dataKey="burnRate6h" stroke="var(--chart-2)" strokeWidth={2} dot={false} name="6h" strokeDasharray="4 2" />
-                </LineChart>
-            </ResponsiveContainer>
+            <UPlotChart options={opts} data={uplotData} height={120} />
         </Surface>
     );
 };

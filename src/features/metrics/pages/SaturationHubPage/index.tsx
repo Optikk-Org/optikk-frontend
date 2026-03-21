@@ -1,6 +1,7 @@
-import { Tabs } from '@shared/design-system';
-import { Database, Network } from 'lucide-react';
+import { Tabs } from '@/components/ui';
+import { Database, Gauge, Network } from 'lucide-react';
 
+import { PageHeader, PageShell } from '@shared/components/ui';
 import ConfiguredTabPanel from '@shared/components/ui/dashboard/ConfiguredTabPanel';
 import { useUrlSyncedTab } from '@shared/hooks/useUrlSyncedTab';
 import MessagingQueueMonitoringPage from '../MessagingQueueMonitoringPage';
@@ -17,7 +18,12 @@ export default function SaturationHubPage() {
   });
 
   return (
-    <div>
+    <PageShell>
+      <PageHeader
+        title="Saturation"
+        subtitle="Track database and messaging bottlenecks with the same tab rhythm as the rest of the product."
+        icon={<Gauge size={24} />}
+      />
       <Tabs
         activeKey={activeTab}
         onChange={onTabChange}
@@ -25,10 +31,12 @@ export default function SaturationHubPage() {
           { key: 'database', label: 'Database', icon: <Database size={14} /> },
           { key: 'mq', label: 'Messaging Queue', icon: <Network size={14} /> },
         ]}
+        size="large"
+        className="mb-[var(--space-md)]"
       />
 
       {activeTab === 'database' && <ConfiguredTabPanel pageId="saturation" tabId="database" />}
       {activeTab === 'mq' && <MessagingQueueMonitoringPage />}
-    </div>
+    </PageShell>
   );
 }

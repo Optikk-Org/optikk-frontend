@@ -33,11 +33,11 @@ function SurroundingRow({ log, isAnchor }: { log: LogRecord; isAnchor?: boolean 
         opacity: isAnchor ? 1 : 0.6,
       }}
     >
-      <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--text-secondary)', whiteSpace: 'nowrap', minWidth: 130 }}>
+      <span className="font-mono" style={{ fontSize: 11, color: 'var(--text-secondary)', whiteSpace: 'nowrap', minWidth: 130 }}>
         {tsLabel(log.timestamp)}
       </span>
       <LevelBadge level={level} />
-      <span style={{ fontFamily: 'monospace', fontSize: 11, wordBreak: 'break-word', flex: 1, color: 'var(--text-primary)' }}>
+      <span className="font-mono" style={{ fontSize: 11, wordBreak: 'break-word', flex: 1, color: 'var(--text-primary)' }}>
         {message ?? '—'}
       </span>
     </div>

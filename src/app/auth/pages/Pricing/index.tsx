@@ -229,14 +229,14 @@ volumes:
                 {
                   id: 'go', label: 'Go', language: 'go', code: `import (
   "go.opentelemetry.io/otel"
-  "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+  "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
   sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
 func initTracer(ctx context.Context) {
-  exporter, _ := otlptracehttp.New(ctx,
-    otlptracehttp.WithEndpoint("ingest.optikk.io:4318"),
-    otlptracehttp.WithHeaders(map[string]string{
+  exporter, _ := otlptracegrpc.New(ctx,
+    otlptracegrpc.WithEndpoint("ingest.optikk.io:4317"),
+    otlptracegrpc.WithHeaders(map[string]string{
       "x-optikk-token": os.Getenv("OPTIKK_TOKEN"),
     }),
   )
@@ -252,14 +252,14 @@ func initTracer(ctx context.Context) {
                 },
                 {
                   id: 'python', label: 'Python', language: 'python', code: `from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 provider = TracerProvider()
 exporter = OTLPSpanExporter(
-    endpoint="https://ingest.optikk.io:4318/v1/traces",
-    headers={"x-optikk-token": os.environ["OPTIKK_TOKEN"]},
+    endpoint="ingest.optikk.io:4317",
+    headers=(("x-optikk-token", os.environ["OPTIKK_TOKEN"]),),
 )
 provider.add_span_processor(BatchSpanProcessor(exporter))
 trace.set_tracer_provider(provider)
@@ -271,8 +271,8 @@ tracer = trace.get_tracer("my-service")`
         SdkTracerProvider.builder()
             .addSpanProcessor(
                 BatchSpanProcessor.builder(
-                    OtlpHttpSpanExporter.builder()
-                        .setEndpoint("https://ingest.optikk.io:4318")
+                    OtlpGrpcSpanExporter.builder()
+                        .setEndpoint("https://ingest.optikk.io:4317")
                         .addHeader("x-optikk-token",
                             System.getenv("OPTIKK_TOKEN"))
                         .build())
@@ -282,7 +282,7 @@ tracer = trace.get_tracer("my-service")`
                 },
                 {
                   id: 'node', label: 'Node.js', language: 'typescript', code: `import { NodeSDK } from '@opentelemetry/sdk-node'
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc'
 import { resourceFromAttributes } from '@opentelemetry/resources'
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions'
 
@@ -291,7 +291,7 @@ import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions'
       [ATTR_SERVICE_NAME]: 'my-service',
     }),
     traceExporter: new OTLPTraceExporter({
-      url: 'https://ingest.optikk.io:4318/v1/traces',
+      url: 'https://ingest.optikk.io:4317',
       headers: { 'x-optikk-token': '${OPTIKK_TOKEN}' },
   }),
 })

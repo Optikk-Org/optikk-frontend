@@ -1,6 +1,8 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { MONTHS, DAYS } from './constants';
 import { dayInRange } from './utils';
+import './TimeSelector.css';
 
 interface MiniCalendarProps {
   fromDate: Date | null;
@@ -69,56 +71,61 @@ export function MiniCalendar({
   };
 
   return (
-    <div className="trp-cal" style={{ marginBottom: 4 }}>
-      <div className="trp-cal__nav" style={{ marginBottom: 2 }}>
+    <div className="mb-1">
+      {/* Nav row */}
+      <div className="flex items-center justify-between mb-0.5">
         <button
-          className="trp-cal__nav-btn"
+          className="bg-transparent border border-[#2a2a35] rounded text-[#666] cursor-pointer p-0.5 flex items-center transition-all duration-100 hover:text-white hover:border-[#3a3a48]"
           onClick={prevMonth}
           aria-label="Previous month"
-          style={{ padding: 2 }}
         >
           <ChevronLeft size={13} />
         </button>
-        <span className="trp-cal__month" style={{ fontSize: 11, fontWeight: 600 }}>
+        <span className="text-[11px] font-semibold text-[rgba(255,255,255,0.85)]">
           {MONTHS[calMonth]} {calYear}
         </span>
         <button
-          className="trp-cal__nav-btn"
+          className="bg-transparent border border-[#2a2a35] rounded text-[#666] cursor-pointer p-0.5 flex items-center transition-all duration-100 hover:text-white hover:border-[#3a3a48]"
           onClick={nextMonth}
           aria-label="Next month"
-          style={{ padding: 2 }}
         >
           <ChevronRight size={13} />
         </button>
       </div>
-      <div className="trp-cal__grid" style={{ gap: 0 }}>
+
+      {/* Grid */}
+      <div className="grid grid-cols-7">
         {DAYS.map((d) => (
-          <div key={d} className="trp-cal__dow" style={{ fontSize: 9, padding: '1px 0', opacity: 0.7 }}>
+          <div
+            key={d}
+            className="text-[9px] font-semibold text-primary text-center py-[1px] opacity-60"
+          >
             {d}
           </div>
         ))}
         {cells.map((c, i) => {
-          const isRangeStart = c.current && isFrom(c.day);
-          const isRangeEnd = c.current && isTo(c.day);
+          const isRangeStart = c.current && !!isFrom(c.day);
+          const isRangeEnd = c.current && !!isTo(c.day);
           const inRange = c.current && isInRange(c.day);
+          const isTodayCell = c.current && isToday(c.day) && !isRangeStart && !isRangeEnd;
+
           return (
             <button
               key={i}
-              className={[
-                'trp-cal__day',
-                !c.current && 'trp-cal__day--other',
-                c.current && isToday(c.day) && !isRangeStart && !isRangeEnd && 'trp-cal__day--today',
-                isRangeStart && 'trp-cal__day--range-start',
-                isRangeEnd && 'trp-cal__day--range-end',
-                inRange && 'trp-cal__day--in-range',
-              ]
-                .filter(Boolean)
-                .join(' ')}
+              className={cn(
+                'trp-cal__day bg-transparent border-none text-[10px] py-[2px] cursor-pointer text-center transition-all duration-[80ms] leading-[1.25] relative',
+                !c.current && 'trp-cal__day--other text-[rgba(255,255,255,0.12)] hover:bg-transparent hover:text-[rgba(255,255,255,0.12)] cursor-default',
+                isTodayCell && 'trp-cal__day--today text-primary font-bold',
+                !isRangeStart && !isRangeEnd && !inRange && !isTodayCell && c.current && 'text-[rgba(255,255,255,0.55)] hover:bg-[rgba(255,255,255,0.08)] hover:text-white rounded-sm',
+                (isRangeStart || isRangeEnd) && 'trp-cal__day--range-start-or-end',
+                isRangeStart && 'trp-cal__day--range-start bg-primary text-white font-bold shadow-[0_2px_8px_rgba(94,96,206,0.35)] z-[1]',
+                isRangeEnd && 'trp-cal__day--range-end bg-primary text-white font-bold shadow-[0_2px_8px_rgba(94,96,206,0.35)] z-[1]',
+                inRange && 'trp-cal__day--in-range bg-[rgba(94,96,206,0.18)] text-[rgba(255,255,255,0.9)]',
+              )}
               onClick={() => {
                 if (c.current) onSelectDate(new Date(calYear, calMonth, c.day));
               }}
               tabIndex={c.current ? 0 : -1}
-              style={{ fontSize: 10, padding: '2px 0', lineHeight: 1.25 }}
             >
               {c.day}
             </button>

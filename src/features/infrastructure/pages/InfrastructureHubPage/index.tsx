@@ -1,7 +1,8 @@
-import { Tabs, Skeleton } from '@shared/design-system';
+import { Tabs, Skeleton } from '@/components/ui';
 import { Activity, Cpu, Layers, Network } from 'lucide-react';
 import { useMemo } from 'react';
 
+import { PageHeader, PageShell } from '@shared/components/ui';
 import ConfiguredTabPanel from '@shared/components/ui/dashboard/ConfiguredTabPanel';
 
 import { usePageTabs } from '@shared/hooks/usePageTabs';
@@ -46,9 +47,20 @@ export default function InfrastructureHubPage() {
   }
 
   return (
-    <div>
-      <Tabs activeKey={activeTab || defaultTabId} onChange={onTabChange} items={items} />
+    <PageShell>
+      <PageHeader
+        title="Infrastructure"
+        subtitle="Hosts, JVMs, Kubernetes, and nodes in one consistent infrastructure workspace."
+        icon={<Layers size={24} />}
+      />
+      <Tabs
+        activeKey={activeTab || defaultTabId}
+        onChange={onTabChange}
+        items={items}
+        size="large"
+        className="mb-[var(--space-md)]"
+      />
       <ConfiguredTabPanel pageId="infrastructure" tabId={activeTab || defaultTabId} />
-    </div>
+    </PageShell>
   );
 }

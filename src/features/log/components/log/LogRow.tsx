@@ -115,7 +115,7 @@ export default function LogRow({
       {fixedCols.map((col) => (
         <div
           key={col.key}
-          className="oboard__td"
+          className="inline-flex items-center whitespace-nowrap overflow-hidden text-ellipsis shrink-0 border-r border-[color:var(--glass-border)] px-[10px] py-[6px] box-border min-h-[34px]"
           style={{ width: colWidths[col.key], borderBottom: 'none' }}
         >
           {renderCell(col.key)}
@@ -123,7 +123,7 @@ export default function LogRow({
       ))}
       {flexCol && (
         <div
-          className={`oboard__td oboard__td--flex ${flexCol.key === 'message' ? 'log-row__message-col' : ''}`}
+          className={`inline-flex items-center whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0 border-r-0 border-[color:var(--glass-border)] px-[10px] py-[6px] box-border min-h-[34px] ${flexCol.key === 'message' ? 'log-row__message-col' : ''}`}
           style={{
             ...(flexCol.key === 'message' ? {
               flex: `1 0 ${colWidths[flexCol.key] ?? 720}px`,

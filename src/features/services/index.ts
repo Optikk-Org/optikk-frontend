@@ -34,7 +34,6 @@ const servicesConfig: DomainConfig = {
 
 export { default as ServicesPageView } from './pages/ServicesPage';
 export { default as ServiceDetailPageView } from './pages/ServiceDetailPage';
-export { default as ServiceMapPageView } from './pages/ServiceMapPage';
 export * from './components/detail';
 export * from './components/services-page/ServiceOverviewTab';
 export * from './components/services-page/ServiceTopologyTab';

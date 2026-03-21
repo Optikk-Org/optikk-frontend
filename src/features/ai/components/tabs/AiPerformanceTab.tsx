@@ -1,5 +1,4 @@
-import { Table } from 'antd';
-import { Badge, Skeleton, Surface } from '@shared/design-system';
+import { Badge, Skeleton, Surface, SimpleTable } from '@/components/ui';
 import { useMemo } from 'react';
 
 import ConfigurableDashboard from '@shared/components/ui/dashboard/ConfigurableDashboard';
@@ -60,7 +59,7 @@ export default function AiPerformanceTab({
       <Surface elevation={1} padding="md" className="ai-chart-card" style={{ marginTop: 16 }}>
         <h4>Per-Model Performance</h4>
         {metricsLoading ? <Skeleton /> : data.length === 0 ? <div className="text-muted" style={{textAlign:'center',padding:32}}>No data</div> : (
-          <Table dataSource={data.map((row: any, index: number) => ({ ...row, key: index }))} columns={tableColumns as any} size="small" pagination={{ pageSize: 20 }} scroll={{ x: 1600 }} />
+          <SimpleTable dataSource={data.map((row: any, index: number) => ({ ...row, key: index }))} columns={tableColumns as any} size="small" pagination={{ pageSize: 20 }} scroll={{ x: 1600 }} />
         )}
       </Surface>
     </>

@@ -1,4 +1,4 @@
-import { Surface } from '@shared/design-system';
+import { Surface } from '@/components/ui';
 
 import { formatNumber, formatDuration } from '@shared/utils/formatters';
 

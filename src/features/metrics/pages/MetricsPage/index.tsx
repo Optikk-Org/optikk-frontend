@@ -1,5 +1,5 @@
 import { BarChart3 } from 'lucide-react';
-import { PageHeader, DashboardPage } from '@shared/components/ui';
+import { DashboardPage, PageHeader, PageShell } from '@shared/components/ui';
 
 /**
  * Metrics page — RED metrics tabs fully driven by backend YAML config.
@@ -7,13 +7,13 @@ import { PageHeader, DashboardPage } from '@shared/components/ui';
 export default function MetricsPage() {
 
   return (
-    <div className="metrics-page">
+    <PageShell>
       <PageHeader
         title="Metrics"
         icon={<BarChart3 size={24} />}
         subtitle="System-wide performance metrics"
       />
       <DashboardPage pageId="metrics" />
-    </div>
+    </PageShell>
   );
 }

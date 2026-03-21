@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import type { ApiErrorShape } from '@shared/api/api/interceptors/errorInterceptor';
 import { useURLFilters } from '@shared/hooks/useURLFilters';
+import { resolveTimeRangeBounds } from '@/types';
 import { useAppStore } from '@shared/store/appStore';
 import { aiRunsQueries } from '../api/queryOptions';
 import type { LLMRunFilters, LLMRun, LLMRunModel, LLMRunOperation, LLMRunSummary } from '../types';
@@ -43,13 +44,9 @@ export function useAiRunsExplorer() {
   const [pageSize, setPageSize] = useState(50);
 
   const { startMs, endMs } = useMemo(() => {
-    const resolvedEndMs =
-      timeRange.value === 'custom' && timeRange.endTime != null ? Number(timeRange.endTime) : Date.now();
-    const resolvedStartMs =
-      timeRange.value === 'custom' && timeRange.startTime != null
-        ? Number(timeRange.startTime)
-        : resolvedEndMs - (timeRange.minutes ?? 60) * 60 * 1000;
-    return { startMs: resolvedStartMs, endMs: resolvedEndMs };
+    void refreshKey;
+    const { startTime, endTime } = resolveTimeRangeBounds(timeRange);
+    return { startMs: startTime, endMs: endTime };
   }, [refreshKey, timeRange]);
 
   const backendFilters: LLMRunFilters = useMemo(() => {

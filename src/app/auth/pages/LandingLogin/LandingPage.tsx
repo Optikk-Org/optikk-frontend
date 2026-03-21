@@ -164,7 +164,7 @@ const LandingPage: React.FC = () => {
     if (email && password) {
       const result = await login(email, password);
       if (result.success) {
-        setTimeRange('30m');
+        setTimeRange({ kind: 'relative', preset: '30m', label: 'Last 30 minutes', minutes: 30 });
         toast.success('Login successful!');
         navigate('/overview');
       }
@@ -270,7 +270,7 @@ const LandingPage: React.FC = () => {
               </svg>
               <svg viewBox="0 0 100 30" xmlns="http://www.w3.org/2000/svg">
                 <path d="M5 25L15 5h5l10 20h-4l-8.5-17L8.5 25z" fill="#FFFFFF" />
-                <text x="35" y="20" fontFamily="'JetBrains Mono', monospace" fontWeight="700" fontSize="15" fill="#FFFFFF">
+                <text x="35" y="20" className="font-mono" fontWeight="700" fontSize="15" fill="#FFFFFF">
                   VERTEX
                 </text>
               </svg>

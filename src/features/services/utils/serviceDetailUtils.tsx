@@ -1,4 +1,4 @@
-import { Badge } from '@shared/design-system';
+import { Badge } from '@/components/ui';
 import { APP_COLORS } from '@config/colorLiterals';
 import { LOG_LEVELS } from '@config/constants';
 import { formatNumber, formatDuration, formatTimestamp } from '@shared/utils/formatters';
@@ -11,7 +11,7 @@ export const getEndpointColumns = () => [
     dataIndex: 'operation_name',
     key: 'operation_name',
     width: 250,
-    render: (text: any) => <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{text}</span>,
+    render: (text: any) => <span style={{ fontSize: 12 }} className="font-mono">{text}</span>,
   },
   {
     title: 'Method',
@@ -95,7 +95,7 @@ export const getErrorColumns = (handlers: { navigate: (path: string) => void }) 
     key: 'status_message',
     width: 300,
     render: (text: any) => (
-      <span style={{ fontFamily: 'monospace', color: APP_COLORS.hex_f04438, fontSize: 12 }}>
+      <span className="font-mono" style={{ color: APP_COLORS.hex_f04438, fontSize: 12 }}>
         {text || 'Unknown error'}
       </span>
     ),
@@ -105,7 +105,7 @@ export const getErrorColumns = (handlers: { navigate: (path: string) => void }) 
     dataIndex: 'operation_name',
     key: 'operation_name',
     width: 200,
-    render: (text: any) => <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{text}</span>,
+    render: (text: any) => <span style={{ fontSize: 12 }} className="font-mono">{text}</span>,
   },
   {
     title: 'Status Code',
@@ -180,7 +180,7 @@ export const getLogColumns = (handlers: { navigate: (path: string) => void }) =>
     key: 'message',
     ellipsis: true,
     render: (message: any) => (
-      <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{message || '-'}</span>
+      <span className="font-mono" style={{ fontSize: 12 }}>{message || '-'}</span>
     ),
   },
   {

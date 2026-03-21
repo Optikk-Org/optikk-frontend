@@ -4,7 +4,7 @@ import { lazy } from 'react';
 import type { DomainConfig } from '@/app/registry/domainRegistry';
 import { ROUTES } from '@/shared/constants/routes';
 
-const OverviewPage = lazy(() =>
+const OverviewHubPage = lazy(() =>
   import('./pages/OverviewHubPage').then((module) => ({ default: module.default })),
 );
 const ErrorDashboardPage = lazy(() =>
@@ -27,14 +27,12 @@ const overviewConfig: DomainConfig = {
     },
   ],
   routes: [
-    { path: ROUTES.overview, page: OverviewPage },
+    { path: ROUTES.overview, page: OverviewHubPage },
     { path: ROUTES.errors, page: ErrorDashboardPage },
   ],
 };
 
 export { default as OverviewHubPageView } from './pages/OverviewHubPage';
-export { default as OverviewPageView } from './pages/OverviewPage';
-export { default as SloSliDashboardPageView } from './pages/SloSliDashboardPage';
 export { default as ErrorDashboardPageView } from './pages/ErrorDashboardPage';
 export * from './components';
 export * from './types';

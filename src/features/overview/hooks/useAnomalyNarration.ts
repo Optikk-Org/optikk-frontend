@@ -16,7 +16,7 @@ export function useAnomalyNarration() {
   const { selectedTeamId, timeRange, refreshKey } = useAppStore();
 
   return useQuery<AnomalyEvent | null, Error>({
-    queryKey: ['anomaly-narration', selectedTeamId, timeRange.value, refreshKey],
+    queryKey: ['anomaly-narration', selectedTeamId, timeRange.kind === 'relative' ? timeRange.preset : `${timeRange.startMs}-${timeRange.endMs}`, refreshKey],
     queryFn: async (): Promise<AnomalyEvent | null> => {
       try {
         const data = await api.get<AnomalyEvent, AnomalyEvent>(`${BASE}/ai/anomaly-narration`);

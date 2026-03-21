@@ -22,6 +22,9 @@ export * from './renderers/HeatmapRenderer';
 export * from './renderers/ServiceMapRenderer';
 export * from './renderers/TraceWaterfallRenderer';
 export * from './renderers/DbSystemsRenderer';
+export * from './renderers/StatCardsGridRenderer';
+export * from './renderers/SloIndicatorsRenderer';
+export * from './renderers/ServiceHealthGridRenderer';
 
 /**
  *

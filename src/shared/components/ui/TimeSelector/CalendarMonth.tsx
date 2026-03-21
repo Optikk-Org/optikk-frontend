@@ -1,6 +1,16 @@
 import React from 'react';
-import { startOfMonth, endOfMonth, eachDayOfInterval, format, getDay, isSameMonth, isSameDay, isToday } from 'date-fns';
-import { TIME_PICKER_TOKENS, DAYS } from './constants';
+import {
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  format,
+  getDay,
+  isSameDay,
+  isToday,
+} from 'date-fns';
+import { cn } from '@/lib/utils';
+
+const DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
 interface CalendarMonthProps {
   currentMonth: Date;
@@ -21,20 +31,15 @@ export function CalendarMonth({
   hoverDate,
   selectingMode,
 }: CalendarMonthProps) {
-  const { colors, typography } = TIME_PICKER_TOKENS;
-
   const start = startOfMonth(currentMonth);
   const end = endOfMonth(currentMonth);
   const daysInMonth = eachDayOfInterval({ start, end });
 
-  // Get start day of week (0 = Sunday, 1 = Monday). Spec uses Monday start.
-  // getDay returns 0-6 where 0 is Sunday.
   let startDow = getDay(start);
-  startDow = startDow === 0 ? 6 : startDow - 1; // Convert so 0 is Monday
+  startDow = startDow === 0 ? 6 : startDow - 1;
 
-  // Pad the start with nulls to align first day
-  const padStartInfo = Array(startDow).fill(null);
-  const totalCells = padStartInfo.concat(daysInMonth);
+  const padStart = Array(startDow).fill(null);
+  const totalCells = padStart.concat(daysInMonth);
 
   const isInRange = (date: Date) => {
     if (rangeStart && rangeEnd) {
@@ -48,53 +53,30 @@ export function CalendarMonth({
     return false;
   };
 
-  const isSelectedStart = (date: Date) => {
-    return !!rangeStart && isSameDay(date, rangeStart);
-  };
-
-  const isSelectedEnd = (date: Date) => {
-    return !!rangeEnd && isSameDay(date, rangeEnd);
-  };
+  const isStart = (date: Date) => !!rangeStart && isSameDay(date, rangeStart);
+  const isEnd = (date: Date) => !!rangeEnd && isSameDay(date, rangeEnd);
 
   return (
-    <div style={{ flex: 1, fontFamily: typography.fontFamily }}>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)',
-          columnGap: '2px',
-          paddingBottom: '2px',
-        }}
-      >
+    <div>
+      {/* Day headers */}
+      <div className="grid grid-cols-7 mb-1">
         {DAYS.map((d) => (
           <div
             key={d}
-            style={{
-              fontSize: '10px',
-              fontWeight: 600,
-              letterSpacing: '0.06em',
-              color: colors.muted,
-              textAlign: 'center',
-            }}
+            className="text-center text-[11px] font-medium text-[var(--text-tertiary)]"
           >
             {d}
           </div>
         ))}
       </div>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)',
-          rowGap: '0px',
-          columnGap: '2px',
-        }}
-      >
+      {/* Day cells */}
+      <div className="grid grid-cols-7 gap-y-0.5">
         {totalCells.map((day, idx) => {
           if (!day) return <div key={idx} />;
 
-          const selectedStart = isSelectedStart(day);
-          const selectedEnd = isSelectedEnd(day);
+          const selectedStart = isStart(day);
+          const selectedEnd = isEnd(day);
           const selected = selectedStart || selectedEnd;
           const inRange = isInRange(day);
           const today = isToday(day);
@@ -105,48 +87,26 @@ export function CalendarMonth({
               onClick={() => onSelectDate(day)}
               onMouseEnter={() => onHoverDate(day)}
               onMouseLeave={() => onHoverDate(null)}
-              style={{
-                position: 'relative',
-                aspectRatio: '1 / 1', // Square cells
-                height: 'auto',
-                fontSize: '11px',
-                fontWeight: selected ? 700 : 400,
-                color: selected ? '#000' : inRange ? colors.cyan : colors.text,
-                background: selected
-                  ? colors.cyan
+              className={cn(
+                'relative h-7 w-full text-[12px] border-none cursor-pointer flex items-center justify-center transition-colors outline-none',
+                selected
+                  ? 'bg-[var(--color-primary)] text-white font-semibold'
                   : inRange
-                  ? colors.cyanDim
-                  : 'transparent',
-                border: 'none',
-                borderRadius: selectedStart
-                  ? '6px 0 0 6px'
-                  : selectedEnd
-                  ? '0 6px 6px 0'
-                  : inRange
-                  ? '0'
-                  : '6px',
-                cursor: 'pointer',
-                fontFamily: typography.fontFamily,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: 0,
-                outline: 'none',
-              }}
+                    ? 'bg-[var(--color-primary)]/15 text-[var(--text-primary)]'
+                    : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]',
+                selectedStart && 'rounded-l-md rounded-r-none',
+                selectedEnd && 'rounded-r-md rounded-l-none',
+                inRange && !selected && 'rounded-none',
+                !inRange && !selected && 'rounded-md',
+              )}
             >
-              <span style={{ zIndex: 1 }}>{format(day, 'd')}</span>
+              <span className="z-[1]">{format(day, 'd')}</span>
               {today && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: '3px',
-                    width: '3px',
-                    height: '3px',
-                    borderRadius: '50%',
-                    background: selected ? '#000' : colors.cyan,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                  }}
+                <span
+                  className={cn(
+                    'absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full',
+                    selected ? 'bg-white' : 'bg-[var(--color-primary)]',
+                  )}
                 />
               )}
             </button>

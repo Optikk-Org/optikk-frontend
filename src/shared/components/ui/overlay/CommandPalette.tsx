@@ -1,19 +1,26 @@
 import {
   BarChart3, FileText, GitBranch, Layers, Network,
-  Server, Settings, Activity, RefreshCw, Sun, Search, Columns2,
+  Server, Settings, Activity, RefreshCw, Sun, Columns2,
 } from 'lucide-react';
-import { useState, useEffect, useRef, useCallback, type KeyboardEvent } from 'react';
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Modal, Input } from '@shared/design-system';
+import { Modal } from '@/components/ui';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { useAppStore } from '@store/appStore';
 
 import type { LucideIcon } from 'lucide-react';
-import './CommandPalette.css';
 
 type CommandAction = 'refresh' | 'toggleTheme' | 'toggleDensity' | 'copyUrl';
 
-interface Command {
+interface CommandDef {
   id: string;
   label: string;
   icon: LucideIcon;
@@ -27,7 +34,7 @@ interface CommandPaletteProps {
   onClose: () => void;
 }
 
-const COMMANDS: Command[] = [
+const COMMANDS: CommandDef[] = [
   { id: 'overview', label: 'Go to Overview', icon: Activity, path: '/overview', group: 'Navigate' },
   { id: 'metrics', label: 'Go to Metrics', icon: BarChart3, path: '/metrics', group: 'Navigate' },
   { id: 'logs', label: 'Go to Logs', icon: FileText, path: '/logs', group: 'Navigate' },
@@ -44,17 +51,10 @@ const COMMANDS: Command[] = [
 ];
 
 export default function CommandPalette({ open, onClose }: CommandPaletteProps): JSX.Element {
-  const [search, setSearch] = useState('');
-  const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
-  const inputRef = useRef<HTMLInputElement | null>(null);
   const { triggerRefresh, theme, setTheme, viewPreferences, setViewPreference } = useAppStore();
 
-  const filtered = COMMANDS.filter((cmd) =>
-    cmd.label.toLowerCase().includes(search.toLowerCase()),
-  );
-
-  const executeCommand = useCallback((cmd: Command): void => {
+  const executeCommand = useCallback((cmd: CommandDef): void => {
     if (cmd.path) {
       navigate(cmd.path);
     } else if (cmd.action === 'refresh') {
@@ -66,89 +66,72 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps): 
       setViewPreference('density', current === 'comfortable' ? 'compact' : 'comfortable');
     }
     onClose();
-    setSearch('');
-    setSelectedIndex(0);
   }, [navigate, onClose, triggerRefresh, theme, setTheme, viewPreferences, setViewPreference]);
 
-  useEffect(() => {
-    if (open && inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  }, [open]);
-
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [search]);
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedIndex((prev) => Math.min(prev + 1, filtered.length - 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedIndex((prev) => Math.max(prev - 1, 0));
-    } else if (e.key === 'Enter' && filtered[selectedIndex]) {
-      executeCommand(filtered[selectedIndex]);
-    }
-  };
-
-  const groups = [...new Set(filtered.map((c) => c.group))];
+  const navCommands = COMMANDS.filter((c) => c.group === 'Navigate');
+  const actionCommands = COMMANDS.filter((c) => c.group === 'Actions');
 
   return (
     <Modal
       open={open}
-      onClose={() => { onClose(); setSearch(''); }}
+      onClose={onClose}
       closable={false}
-      className="command-palette-modal"
+      className="command-palette-modal overflow-hidden"
       width={560}
     >
-      <div className="command-palette">
-        <div className="command-palette-input-wrapper">
-          <Search size={16} className="command-palette-search-icon" />
-          <input
-            ref={inputRef}
-            data-testid="command-palette-input"
-            className="command-palette-input"
-            placeholder="Type a command or search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          <kbd className="command-palette-kbd">ESC</kbd>
-        </div>
+      <div className="-mx-5 -my-4 overflow-hidden">
+        <Command>
+          <CommandInput placeholder="Type a command or search..." autoFocus />
+          <CommandList>
+            <CommandEmpty>No commands found</CommandEmpty>
+            <CommandGroup heading="Navigate">
+              {navCommands.map((cmd) => {
+                const Icon = cmd.icon;
+                return (
+                  <CommandItem
+                    key={cmd.id}
+                    value={cmd.label}
+                    onSelect={() => executeCommand(cmd)}
+                  >
+                    <Icon size={16} />
+                    <span>{cmd.label}</span>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+            <CommandGroup heading="Actions">
+              {actionCommands.map((cmd) => {
+                const Icon = cmd.icon;
+                return (
+                  <CommandItem
+                    key={cmd.id}
+                    value={cmd.label}
+                    onSelect={() => executeCommand(cmd)}
+                  >
+                    <Icon size={16} />
+                    <span>{cmd.label}</span>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
 
-        <div className="command-palette-results">
-          {groups.map((group) => (
-            <div key={group} className="command-palette-group">
-              <div className="command-palette-group-label">{group}</div>
-              {filtered
-                .filter((cmd) => cmd.group === group)
-                .map((cmd) => {
-                  const globalIndex = filtered.indexOf(cmd);
-                  const Icon = cmd.icon;
-                  return (
-                    <div
-                      key={cmd.id}
-                      className={`command-palette-item ${globalIndex === selectedIndex ? 'selected' : ''}`}
-                      onClick={() => executeCommand(cmd)}
-                      onMouseEnter={() => setSelectedIndex(globalIndex)}
-                    >
-                      <Icon size={16} />
-                      <span>{cmd.label}</span>
-                    </div>
-                  );
-                })}
-            </div>
-          ))}
-          {filtered.length === 0 && (
-            <div className="command-palette-empty">No commands found</div>
-          )}
-        </div>
-
-        <div className="command-palette-footer">
-          <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> Navigate</span>
-          <span><kbd>&crarr;</kbd> Select</span>
-          <span><kbd>esc</kbd> Close</span>
+        {/* Footer */}
+        <div className="flex gap-4 px-4 py-2 border-t border-border text-[11px] text-muted-foreground">
+          <span>
+            <kbd className="text-[10px] px-1 py-px rounded border border-border bg-muted font-mono mr-[3px]">&uarr;</kbd>
+            <kbd className="text-[10px] px-1 py-px rounded border border-border bg-muted font-mono mr-[3px]">&darr;</kbd>
+            {' '}Navigate
+          </span>
+          <span>
+            <kbd className="text-[10px] px-1 py-px rounded border border-border bg-muted font-mono mr-[3px]">&crarr;</kbd>
+            {' '}Select
+          </span>
+          <span>
+            <kbd className="text-[10px] px-1 py-px rounded border border-border bg-muted font-mono mr-[3px]">esc</kbd>
+            {' '}Close
+          </span>
         </div>
       </div>
     </Modal>

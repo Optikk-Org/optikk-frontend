@@ -28,7 +28,7 @@ export default function MarketingFooter() {
         .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 64px; max-width: 1200px; margin: 0 auto; }
         @media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 48px; } }
         @media (max-width: 600px) { .footer-grid { grid-template-columns: 1fr; gap: 32px; } }
-        .footer-col-title { font-size: 13px; font-weight: 600; color: #F8FAFC; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 24px; font-family: "'JetBrains Mono', monospace"; }
+        .footer-col-title { font-size: 13px; font-weight: 600; color: #F8FAFC; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 24px; }
         .footer-link { display: block; color: #94A3B8; font-size: 14px; text-decoration: none; margin-bottom: 14px; transition: color 0.2s; }
         .footer-link:hover { color: #22D3EE; }
       `}</style>
@@ -52,7 +52,7 @@ export default function MarketingFooter() {
 
         {/* Col 2 */}
         <div>
-          <div className="footer-col-title">Product</div>
+          <div className="footer-col-title font-mono">Product</div>
           <Link to="/features" className="footer-link">Features</Link>
           <Link to="/product" className="footer-link">Pricing</Link>
           <Link to="/self-host" className="footer-link">Self-host</Link>
@@ -61,7 +61,7 @@ export default function MarketingFooter() {
 
         {/* Col 3 */}
         <div>
-          <div className="footer-col-title">Developers</div>
+          <div className="footer-col-title font-mono">Developers</div>
           <a href="#" className="footer-link">Go SDK</a>
           <a href="#" className="footer-link">Python SDK</a>
           <a href="#" className="footer-link">Java SDK</a>
@@ -71,7 +71,7 @@ export default function MarketingFooter() {
 
         {/* Col 4 */}
         <div>
-          <div className="footer-col-title">Platform</div>
+          <div className="footer-col-title font-mono">Platform</div>
           <a href="#" className="footer-link">Metrics</a>
           <a href="#" className="footer-link">Traces</a>
           <a href="#" className="footer-link">Logs</a>

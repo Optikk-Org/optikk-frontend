@@ -1,9 +1,11 @@
+import type { ErrorCode } from '@/shared/constants/errorCodes';
+
 /**
  *
  */
 export interface ApiError {
   readonly message: string;
-  readonly code?: string;
+  readonly code: ErrorCode;
   readonly status?: number;
   readonly [key: string]: unknown;
 }

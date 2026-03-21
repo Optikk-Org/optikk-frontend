@@ -53,6 +53,7 @@ export function formatDuration(ms: number | string | null | undefined): string {
  */
 export function formatTimestamp(timestamp: number | string | Date): string {
   const date = new Date(timestamp);
+  if (isNaN(date.getTime())) return '—';
   return date.toLocaleString();
 }
 
@@ -107,8 +108,10 @@ export function formatPercentage(
  * @param timestamp
  */
 export function formatRelativeTime(timestamp: number | string | Date): string {
+  const date = new Date(timestamp);
+  if (isNaN(date.getTime())) return '—';
   const now = Date.now();
-  const diff = now - new Date(timestamp).getTime();
+  const diff = now - date.getTime();
 
   const seconds = Math.floor(diff / ONE_THOUSAND);
   if (seconds < 60) return `${seconds}s ago`;

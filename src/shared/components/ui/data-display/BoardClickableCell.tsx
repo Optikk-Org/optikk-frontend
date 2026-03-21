@@ -39,7 +39,7 @@ export function BoardClickableCell({
 
   return (
     <span
-      className="oboard__clickable-cell"
+      className="group inline-flex items-center gap-1 cursor-pointer rounded-sm px-[2px] py-[1px] transition-colors duration-100 hover:bg-[rgba(94,96,206,0.12)]"
       style={style}
       onClick={(event) => {
         event.stopPropagation();
@@ -48,7 +48,10 @@ export function BoardClickableCell({
       title={`Filter: ${field} = "${String(value)}"`}
     >
       {children}
-      <Filter size={10} className="oboard__filter-icon" />
+      <Filter
+        size={10}
+        className="opacity-0 group-hover:opacity-100 text-primary shrink-0 transition-opacity duration-100"
+      />
     </span>
   );
 }

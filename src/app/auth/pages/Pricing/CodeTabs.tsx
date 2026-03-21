@@ -29,12 +29,11 @@ export default function CodeTabs({ tabs }: CodeTabsProps) {
   };
 
   return (
-    <div style={{
+    <div className="font-mono" style={{
       background: '#0D0E14',
       border: '1px solid rgba(255,255,255,0.08)',
       borderRadius: 12,
       overflow: 'hidden',
-      fontFamily: "'JetBrains Mono', monospace",
       width: '100%',
     }}>
       {/* Chrome header */}
@@ -111,7 +110,7 @@ export default function CodeTabs({ tabs }: CodeTabsProps) {
                 margin: 0, background: 'transparent', padding: 0,
                 fontSize: 13, lineHeight: 1.5,
               }}
-              codeTagProps={{ style: { fontFamily: "'JetBrains Mono', monospace" } }}
+              codeTagProps={{ className: 'font-mono' }}
             >
               {activeContent.code}
             </SyntaxHighlighter>

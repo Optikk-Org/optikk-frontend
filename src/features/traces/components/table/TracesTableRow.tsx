@@ -98,7 +98,7 @@ export const TracesTableRow = React.memo(function TracesTableRow({
               : APP_COLORS.hex_73c991;
 
         return (
-          <span style={{ fontFamily: 'monospace', fontWeight: 600, color }}>
+          <span className="font-mono" style={{ fontWeight: 600, color }}>
             {trace.http_status_code}
           </span>
         );
@@ -134,7 +134,7 @@ export const TracesTableRow = React.memo(function TracesTableRow({
       {fixedColumns.map((column) => (
         <div
           key={column.key}
-          className="oboard__td"
+          className="inline-flex items-center whitespace-nowrap overflow-hidden text-ellipsis shrink-0 border-r border-[color:var(--glass-border)] px-[10px] py-[6px] box-border min-h-[34px]"
           style={{ width: colWidths[column.key] }}
           onClick={() => onOpenDetail(trace)}
         >
@@ -142,7 +142,7 @@ export const TracesTableRow = React.memo(function TracesTableRow({
         </div>
       ))}
       {flexColumn && (
-        <div className="oboard__td oboard__td--flex" onClick={() => onOpenDetail(trace)}>
+        <div className="inline-flex items-center whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0 border-r-0 border-[color:var(--glass-border)] px-[10px] py-[6px] box-border min-h-[34px]" onClick={() => onOpenDetail(trace)}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
             {onSelect && (
               <input 

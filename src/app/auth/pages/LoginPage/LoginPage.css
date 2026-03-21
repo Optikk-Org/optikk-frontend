@@ -89,13 +89,6 @@
   padding: 24px;
 }
 
-.login-demo-info {
-  padding: 12px;
-  background: var(--literal-rgba-94-96-206-0p1);
-  border-radius: 8px;
-  text-align: center;
-}
-
 @media (max-width: 768px) {
   .login-container {
     flex-direction: column;

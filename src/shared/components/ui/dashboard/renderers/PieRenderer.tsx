@@ -1,30 +1,16 @@
 import { useMemo } from 'react';
-import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import ReactECharts from 'echarts-for-react';
 
 import type {
   DashboardComponentSpec,
   DashboardDataSources,
-  DashboardExtraContext,
 } from '@/types/dashboardConfig';
 
-import LatencyHistogram from '@shared/components/ui/charts/distributions/LatencyHistogram';
-import LogHistogram from '@shared/components/ui/charts/distributions/LogHistogram';
-import GaugeChart from '@shared/components/ui/charts/micro/GaugeChart';
-import LatencyHeatmapChart from '@shared/components/ui/charts/specialized/LatencyHeatmapChart';
-import ServiceGraph from '@shared/components/ui/charts/specialized/ServiceGraph';
-import WaterfallChart from '@shared/components/ui/charts/specialized/WaterfallChart';
-
-import {
-  createBarDataset,
-  createChartOptions,
-  createLineDataset,
-  getChartColor,
-} from '@shared/utils/chartHelpers';
+import { getChartColor } from '@shared/utils/echarts';
 
 import { APP_COLORS } from '@config/colorLiterals';
 
 import { useDashboardData } from '../hooks/useDashboardData';
-import { buildAiTimeseries, resolveDataSourceId } from '../utils/dashboardUtils';
 
 /**
  *
@@ -36,52 +22,63 @@ export function PieRenderer({
   chartConfig: DashboardComponentSpec;
   dataSources: DashboardDataSources;
 }) {
-  const { rawData, data: rows } = useDashboardData(chartConfig, dataSources);
+  const { data: rows } = useDashboardData(chartConfig, dataSources);
 
   const labelKey = chartConfig.labelKey || chartConfig.groupByKey || 'label';
   const valueKey = chartConfig.valueKey || 'value';
 
-  const chartData = useMemo(() => {
+  const option = useMemo(() => {
     const filtered = rows.filter((row) => row != null);
-    if (filtered.length === 0) {
-      return null;
-    }
+    if (filtered.length === 0) return null;
 
-    const labels = filtered.map((row, index) => String(row[labelKey] ?? `Item ${index + 1}`));
-    const values = filtered.map((row) => {
+    const seriesData = filtered.map((row, index) => {
       const value = Number(row[valueKey]);
-      return Number.isFinite(value) ? value : 0;
+      return {
+        name: String(row[labelKey] ?? `Item ${index + 1}`),
+        value: Number.isFinite(value) ? value : 0,
+        itemStyle: {
+          color: `${getChartColor(index)}CC`,
+          borderColor: getChartColor(index),
+          borderWidth: 1,
+        },
+      };
     });
 
-    if (!values.some((value) => value > 0)) {
-      return null;
-    }
+    if (!seriesData.some((d) => d.value > 0)) return null;
 
     return {
-      labels,
-      datasets: [{
-        data: values,
-        backgroundColor: labels.map((_, index) => `${getChartColor(index)}CC`),
-        borderColor: labels.map((_, index) => getChartColor(index)),
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: APP_COLORS.hex_1a1a1a_2,
+        borderColor: APP_COLORS.hex_2d2d2d,
         borderWidth: 1,
+        textStyle: { color: APP_COLORS.hex_fff, fontSize: 12 },
+        formatter: '{b}: {c} ({d}%)',
+      },
+      legend: {
+        show: true,
+        orient: 'vertical',
+        right: 8,
+        top: 'center',
+        textStyle: { color: APP_COLORS.hex_666, fontSize: 11 },
+      },
+      series: [{
+        type: 'pie',
+        radius: ['70%', '90%'],
+        center: ['40%', '50%'],
+        data: seriesData,
+        label: { show: false },
+        emphasis: {
+          itemStyle: { shadowBlur: 6, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.4)' },
+        },
       }],
     };
   }, [labelKey, rows, valueKey]);
-  if (!chartData) {
+
+  if (!option) {
     return <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>No data</div>;
   }
 
-  const options = createChartOptions({
-    plugins: {
-      legend: {
-        display: true,
-        labels: {
-          color: APP_COLORS.hex_666,
-          font: { size: 11 },
-        },
-      },
-    },
-  });
-
-  return <div style={{ height: '100%' }}><Doughnut data={chartData} options={options} /></div>;
+  return <ReactECharts option={option} style={{ height: '100%' }} />;
 }

@@ -1,4 +1,4 @@
-import { Tabs } from '@shared/design-system';
+import { Tabs } from '@/components/ui';
 import { Layers, Network, Share2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { HealthSnapshotStrip, ServiceFlyInPanel } from '@shared/components/ui/calm';
 import { useServiceHealthSummary } from '@features/overview/hooks/useServiceHealthSummary';
 
-import { PageHeader } from '@shared/components/ui';
+import { PageHeader, PageShell } from '@shared/components/ui';
 import ConfiguredTabPanel from '@shared/components/ui/dashboard/ConfiguredTabPanel';
 
 import { usePageTabs } from '@shared/hooks/usePageTabs';
@@ -17,8 +17,6 @@ import { ServiceTopologyTab } from '../../components/services-page/ServiceTopolo
 import { useServicesData } from '../../hooks/useServicesData';
 
 import type { ServiceSortField, ServiceSortOrder, ServiceViewMode } from '../../types';
-
-import './ServicesPage.css';
 
 /**
  *
@@ -67,7 +65,7 @@ export default function ServicesPage() {
   };
 
   return (
-    <div className="services-page">
+    <PageShell>
       <PageHeader
         title="Services"
         subtitle="Global service health and dependency topology"
@@ -83,7 +81,7 @@ export default function ServicesPage() {
       <Tabs
         activeKey={activeTab}
         onChange={onTabChange}
-        className="services-tabs"
+        className="mb-[var(--space-md)]"
         items={[
           { key: 'overview', label: 'Overview', icon: <Layers size={14} /> },
           { key: 'topology', label: 'Topology', icon: <Network size={14} /> },
@@ -133,6 +131,6 @@ export default function ServicesPage() {
         open={flyInService !== null}
         onClose={() => setFlyInService(null)}
       />
-    </div>
+    </PageShell>
   );
 }

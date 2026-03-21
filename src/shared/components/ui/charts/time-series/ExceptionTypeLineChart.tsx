@@ -1,32 +1,22 @@
 
 import { useMemo, memo } from 'react';
-import { Line } from 'react-chartjs-2';
+import uPlot from 'uplot';
 
 import { useChartTimeBuckets } from '@shared/hooks/useChartTimeBuckets';
-import { createChartOptions, createLineDataset, getChartColor } from '@shared/utils/chartHelpers';
-import { APP_COLORS } from '@config/colorLiterals';
+import { tsKey, tsMs } from '@shared/utils/chartDataUtils';
+import { CHART_COLORS } from '@config/constants';
 
-// Normalize timestamp to "YYYY-MM-DD HH:mm" for reliable cross-source matching.
-function tsKey(ts: any) {
-  if (!ts) return '';
-  return String(ts).replace('T', ' ').replace('Z', '').substring(0, 16);
-}
+import UPlotChart, { defaultAxes, uLine } from '../UPlotChart';
 
-// Parse a timestamp value robustly across API formats.
-function tsMs(ts: any) {
-  if (!ts) return NaN;
-  const raw = String(ts).trim();
-  const normalized = raw.includes('T') ? raw : raw.replace(' ', 'T');
-  const hasTimezone = /([zZ]|[+-]\d{2}:\d{2})$/.test(normalized);
-  const ms = new Date(hasTimezone ? normalized : `${normalized}Z`).getTime();
-  return Number.isNaN(ms) ? NaN : ms;
+function getChartColor(index: number): string {
+  return CHART_COLORS[index % CHART_COLORS.length];
 }
 
 /**
  * ExceptionTypeLineChart renders exception counts grouped by exception type
  * as a multi-series line chart. Layout and style mirrors ServiceErrorRate:
  *  - Same global time-bucket X-axis (via useChartTimeBuckets)
- *  - No in-canvas Chart.js legend (uses external TopEndpointsList instead)
+ *  - No in-canvas legend (uses external TopEndpointsList instead)
  *  - Y-axis shows raw integer counts
  *
  * @param root0
@@ -39,7 +29,7 @@ export default memo(function ExceptionTypeLineChart({
   endpoints = [],
   selectedEndpoints = [],
 }: any) {
-  const { timeBuckets, labels } = useChartTimeBuckets();
+  const { timeBuckets } = useChartTimeBuckets();
 
   const stepMs = timeBuckets.length >= 2
     ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime()
@@ -50,14 +40,14 @@ export default memo(function ExceptionTypeLineChart({
     const groups = Object.keys(groupMap);
 
     if (groups.length === 0) {
-      return { labels, datasets: [] };
+      return [];
     }
 
     const activeGroups = selectedEndpoints.length > 0
       ? groups.filter((g) => selectedEndpoints.includes(g))
       : groups;
 
-    const datasets = activeGroups.map((exceptionType, idx) => {
+    return activeGroups.map((exceptionType, idx) => {
       const rows = groupMap[exceptionType] || [];
 
       // Build a lookup: aligned-bucket-key → summed count
@@ -76,58 +66,60 @@ export default memo(function ExceptionTypeLineChart({
 
       const values = timeBuckets.map((d) => tsMap[tsKey(d)] ?? 0);
 
-      return createLineDataset(
-        exceptionType,
+      return {
+        label: exceptionType,
         values,
-        getChartColor(idx),
-        false,
-      );
+        color: getChartColor(idx),
+      };
     });
+  }, [serviceTimeseriesMap, selectedEndpoints, timeBuckets, stepMs]);
 
-    return { labels, datasets };
-  }, [serviceTimeseriesMap, selectedEndpoints, timeBuckets, labels, stepMs]);
+  const timestamps = useMemo(
+    () => timeBuckets.map((t) => tsMs(t) / 1000),
+    [timeBuckets],
+  );
+
+  const uplotData = useMemo<uPlot.AlignedData>(() => {
+    return [
+      timestamps,
+      ...chartData.map((s) => s.values),
+    ] as uPlot.AlignedData;
+  }, [timestamps, chartData]);
 
   const maxVal = useMemo(() => {
     let max = 0;
-    for (const ds of chartData.datasets) {
-      for (const v of ds.data as number[]) {
+    for (const s of chartData) {
+      for (const v of s.values) {
         if (v > max) max = v;
       }
     }
     return max;
-  }, [chartData.datasets]);
+  }, [chartData]);
 
-  const options = useMemo(() => createChartOptions({
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (ctx: any) => {
-            if (ctx.parsed.y == null) return null;
-            return `${ctx.dataset.label}: ${ctx.parsed.y}`;
-          },
-        },
+  const yMax = Math.max(Math.ceil(maxVal * 1.2), 1);
+
+  const opts = useMemo<Omit<uPlot.Options, 'width' | 'height'>>(() => ({
+    axes: [
+      ...defaultAxes().slice(0, 1),
+      {
+        ...defaultAxes()[1],
+        values: (_u: uPlot, vals: number[]) =>
+          vals.map((v) => (Number.isInteger(v) ? String(v) : v.toFixed(1))),
+        range: [0, yMax],
       },
-    },
+    ],
     scales: {
-      y: {
-        grid: { color: APP_COLORS.hex_2d2d2d },
-        beginAtZero: true,
-        min: 0,
-        max: Math.max(Math.ceil(maxVal * 1.2), 1),
-        ticks: {
-          color: APP_COLORS.hex_666,
-          count: 6,
-          callback: (v: any) => {
-            const num = Number(v);
-            return Number.isInteger(num) ? String(num) : num.toFixed(1);
-          },
-        },
-      },
+      y: { min: 0, max: yMax },
     },
-  }), [maxVal]);
+    series: [
+      {},
+      ...chartData.map((s) =>
+        uLine(s.label, s.color),
+      ),
+    ],
+  }), [chartData, yMax]);
 
-  const hasData = chartData.datasets.length > 0;
+  const hasData = chartData.length > 0;
 
   if (!hasData && timeBuckets.length === 0) {
     return (
@@ -139,7 +131,7 @@ export default memo(function ExceptionTypeLineChart({
 
   return (
     <div style={{ position: 'relative', height: '100%', minHeight: '200px' }}>
-      <Line data={chartData} options={options} />
+      <UPlotChart options={opts} data={uplotData} />
     </div>
   );
 });

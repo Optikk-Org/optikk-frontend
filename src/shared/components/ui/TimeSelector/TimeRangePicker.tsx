@@ -1,31 +1,43 @@
-import { Clock, ChevronDown } from 'lucide-react';
+import { Clock, ChevronDown, ArrowRight } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { subMonths } from 'date-fns';
+import { cn } from '@/lib/utils';
+
+import type { TimeRange } from '@/types';
 
 import { useAppStore } from '@store/appStore';
 
-import { APP_COLORS } from '@config/colorLiterals';
-
 import { RANGE_GROUPS, DISPLAY_MAP } from './constants';
 import { fmtDatetime, parseDatetime } from './utils';
-import { MiniCalendar } from './MiniCalendar';
+import { DualCalendar } from './DualCalendar';
 import './TimeSelector.css';
 
-/**
- * TimeRangePicker component for selecting global time range.
- */
+type Tab = 'relative' | 'absolute';
+
 export default function TimeRangePicker() {
-  const { timeRange, setTimeRange, setCustomTimeRange } = useAppStore();
+  const {
+    timeRange,
+    setTimeRange,
+    setCustomTimeRange,
+  } = useAppStore();
+
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<Tab>('relative');
 
+  // Calendar state
   const now = new Date();
+  const [leftMonth, setLeftMonth] = useState(() => subMonths(now, 1));
+  const [rangeStart, setRangeStart] = useState<Date | null>(null);
+  const [rangeEnd, setRangeEnd] = useState<Date | null>(null);
+  const [hoverDate, setHoverDate] = useState<Date | null>(null);
+  const [selectingMode, setSelectingMode] = useState(false);
+
+  // Time input fields
   const [fromStr, setFromStr] = useState(fmtDatetime(new Date(now.getTime() - 3600000)));
   const [toStr, setToStr] = useState(fmtDatetime(now));
-  const [editingField, setEditingField] = useState<'from' | 'to'>('from');
-  const [calMonth, setCalMonth] = useState(now.getMonth());
-  const [calYear, setCalYear] = useState(now.getFullYear());
 
-  /* Outside click */
+  // Outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) setOpen(false);
@@ -34,7 +46,7 @@ export default function TimeRangePicker() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  /* Escape key */
+  // Escape key
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -47,32 +59,41 @@ export default function TimeRangePicker() {
   const handleToggle = useCallback(() => {
     if (!open) {
       const n = new Date();
-      setFromStr(fmtDatetime(new Date(n.getTime() - (timeRange.minutes || 60) * 60000)));
+      const durationMs = timeRange.kind === 'relative'
+        ? timeRange.minutes * 60000
+        : timeRange.endMs - timeRange.startMs;
+      const startDate = new Date(n.getTime() - durationMs);
+      setFromStr(fmtDatetime(startDate));
       setToStr(fmtDatetime(n));
-      setCalMonth(n.getMonth());
-      setCalYear(n.getFullYear());
-      setEditingField('from');
+      setLeftMonth(subMonths(n, 1));
+      setRangeStart(startDate);
+      setRangeEnd(n);
+      setSelectingMode(false);
+      setHoverDate(null);
+      setActiveTab(timeRange.kind === 'absolute' ? 'absolute' : 'relative');
     }
     setOpen((v) => !v);
-  }, [open, timeRange.minutes]);
+  }, [open, timeRange]);
 
-  const selectRelative = (range: { label: string; value: string; minutes: number }) => {
+  const selectRange = (range: TimeRange) => {
     setTimeRange(range);
     setOpen(false);
   };
 
-  /* Calendar date pick — auto-advance from → to */
   const handleCalSelect = (date: Date) => {
-    if (editingField === 'from') {
-      const parsed = parseDatetime(fromStr);
-      date.setHours(parsed ? parsed.getHours() : 0, parsed ? parsed.getMinutes() : 0, 0);
+    if (!selectingMode || !rangeStart) {
+      setRangeStart(date);
+      setRangeEnd(null);
+      setSelectingMode(true);
       setFromStr(fmtDatetime(date));
-      // Auto-advance to "To" field
-      setEditingField('to');
     } else {
-      const parsed = parseDatetime(toStr);
-      date.setHours(parsed ? parsed.getHours() : 23, parsed ? parsed.getMinutes() : 59, 0);
-      setToStr(fmtDatetime(date));
+      const start = date < rangeStart ? date : rangeStart;
+      const end = date < rangeStart ? rangeStart : date;
+      setRangeStart(start);
+      setRangeEnd(end);
+      setSelectingMode(false);
+      setFromStr(fmtDatetime(start));
+      setToStr(fmtDatetime(end));
     }
   };
 
@@ -80,158 +101,187 @@ export default function TimeRangePicker() {
     const start = parseDatetime(fromStr);
     const end = parseDatetime(toStr);
     if (!start || !end || start >= end) return;
-    const diffMin = Math.round((end.getTime() - start.getTime()) / 60000);
-    const label = `${fmtDatetime(start)} → ${fmtDatetime(end)}`;
-    setCustomTimeRange({
-      label,
-      value: 'custom',
-      minutes: diffMin,
-      startTime: start.getTime(),
-      endTime: end.getTime(),
-    });
+    const label = `${fmtDatetime(start)} to ${fmtDatetime(end)}`;
+    setCustomTimeRange(start.getTime(), end.getTime(), label);
     setOpen(false);
   };
 
-  const displayLabel =
-    timeRange.value === 'custom'
-      ? timeRange.label
-      : DISPLAY_MAP[timeRange.value] || timeRange.label || 'Last 1 hour';
+  const displayLabel = timeRange.kind === 'absolute'
+    ? `${fmtDatetime(new Date(timeRange.startMs))} to ${fmtDatetime(new Date(timeRange.endMs))}`
+    : DISPLAY_MAP[timeRange.preset] || timeRange.label || 'Last 30 minutes';
+
+  const isActivePreset = (preset: string): boolean =>
+    timeRange.kind === 'relative' && timeRange.preset === preset;
+
+  // Current expression display
+  const fromExpr = timeRange.kind === 'relative' ? `now-${timeRange.preset}` : fmtDatetime(new Date(timeRange.startMs));
+  const toExpr = timeRange.kind === 'relative' ? 'now' : fmtDatetime(new Date(timeRange.endMs));
 
   return (
-    <div className="trp" ref={wrapperRef}>
+    <div className="relative inline-flex" ref={wrapperRef}>
+      {/* Trigger button */}
       <button
-        className={`trp__trigger ${open ? 'trp__trigger--open' : ''}`}
+        className={cn(
+          'inline-flex items-center gap-2 px-3 h-8 rounded-md text-[13px] font-medium cursor-pointer transition-all border',
+          'bg-[var(--bg-secondary)] border-[var(--border-color)] text-[var(--text-primary)]',
+          'hover:border-[var(--color-primary)] hover:bg-[var(--bg-tertiary)]',
+          open && 'border-[var(--color-primary)] bg-[var(--bg-tertiary)]',
+        )}
         onClick={handleToggle}
         data-testid="time-range-trigger"
       >
-        <Clock size={14} className="trp__trigger-icon" />
-        <span className="trp__trigger-label">{displayLabel}</span>
+        <Clock size={14} className="text-[var(--color-primary)] shrink-0" />
+        <span>{displayLabel}</span>
         <ChevronDown
           size={12}
-          className={`trp__trigger-chevron ${open ? 'trp__trigger-chevron--open' : ''}`}
+          className={cn(
+            'text-[var(--text-tertiary)] shrink-0 transition-transform duration-150',
+            open && 'rotate-180',
+          )}
         />
       </button>
 
       {open && (
-        <div className="trp__dropdown" data-testid="time-range-dropdown">
-          {/* Left — Quick Ranges */}
-          <div className="trp__panel trp__panel--quick" style={{ padding: '6px 8px' }}>
-            <span className="trp__panel-title" style={{ display: 'none' }}>
-              Quick Ranges
-            </span>
-            {RANGE_GROUPS.map((group) => (
-              <div key={group.title} className="trp__group" style={{ marginBottom: 2 }}>
-                <span
-                  className="trp__group-label"
-                  style={{
-                    display: 'block',
-                    fontSize: 9,
-                    fontWeight: 500,
-                    color: APP_COLORS.hex_666,
-                    marginBottom: 0,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                  }}
-                >
-                  {group.title}
-                </span>
-                <div className="trp__pills" style={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                  {group.items.map((item) => (
-                    <button
-                      key={item.value}
-                      className={`trp__pill ${timeRange.value === item.value ? 'trp__pill--active' : ''}`}
-                      onClick={() => selectRelative(item)}
-                      style={{ padding: '2px 8px', fontSize: 11 }}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="trp__divider" />
-
-          {/* Right — Custom Range */}
-          <div className="trp__panel trp__panel--custom" style={{ padding: '6px 8px' }}>
-            <span className="trp__panel-title" style={{ display: 'none' }}>
-              Custom Range
-            </span>
-
-            <MiniCalendar
-              fromDate={parseDatetime(fromStr)}
-              toDate={parseDatetime(toStr)}
-              onSelectDate={handleCalSelect}
-              calMonth={calMonth}
-              calYear={calYear}
-              setCalMonth={setCalMonth}
-              setCalYear={setCalYear}
-            />
-
-            <div className="trp__inputs" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <div className="trp__field" style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <label
-                  className="trp__field-label"
-                  style={{
-                    fontSize: 9,
-                    fontWeight: 600,
-                    color: APP_COLORS.hex_555,
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  From
-                </label>
-                <input
-                  className={`trp__input ${editingField === 'from' ? 'trp__input--active' : ''}`}
-                  value={fromStr}
-                  onChange={(e) => setFromStr(e.target.value)}
-                  onFocus={() => setEditingField('from')}
-                  style={{ padding: '2px 6px', fontSize: 11, width: '100%', boxSizing: 'border-box' }}
-                />
-              </div>
-              <div className="trp__field" style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <label
-                  className="trp__field-label"
-                  style={{
-                    fontSize: 9,
-                    fontWeight: 600,
-                    color: APP_COLORS.hex_555,
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  To
-                </label>
-                <input
-                  className={`trp__input ${editingField === 'to' ? 'trp__input--active' : ''}`}
-                  value={toStr}
-                  onChange={(e) => setToStr(e.target.value)}
-                  onFocus={() => setEditingField('to')}
-                  style={{ padding: '2px 6px', fontSize: 11, width: '100%', boxSizing: 'border-box' }}
-                />
-              </div>
-            </div>
-
+        <div
+          className="absolute top-[calc(100%+4px)] left-0 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg shadow-xl z-[1000] overflow-hidden animate-trp-slide-in max-h-[calc(100vh-70px)]"
+          style={{ width: activeTab === 'relative' ? 380 : 560 }}
+          role="dialog"
+          aria-label="Time range picker"
+          data-testid="time-range-dropdown"
+        >
+          {/* Tabs */}
+          <div className="flex border-b border-[var(--border-color)]">
             <button
-              className="trp__apply"
-              onClick={applyAbsolute}
-              style={{
-                display: 'block',
-                width: '100%',
-                padding: '4px 0',
-                marginTop: 8,
-                fontSize: 11,
-                fontWeight: 600,
-                borderRadius: 6,
-                border: 'none',
-                background: APP_COLORS.hex_5e60ce,
-                color: APP_COLORS.hex_fff,
-                cursor: 'pointer',
-              }}
+              className={cn(
+                'flex-1 py-2.5 text-[13px] font-medium border-b-2 transition-colors cursor-pointer bg-transparent border-x-0 border-t-0',
+                activeTab === 'relative'
+                  ? 'border-b-[var(--color-primary)] text-[var(--color-primary)]'
+                  : 'border-b-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
+              )}
+              onClick={() => setActiveTab('relative')}
             >
-              Apply Range
+              Relative
+            </button>
+            <button
+              className={cn(
+                'flex-1 py-2.5 text-[13px] font-medium border-b-2 transition-colors cursor-pointer bg-transparent border-x-0 border-t-0',
+                activeTab === 'absolute'
+                  ? 'border-b-[var(--color-primary)] text-[var(--color-primary)]'
+                  : 'border-b-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
+              )}
+              onClick={() => setActiveTab('absolute')}
+            >
+              Absolute
             </button>
           </div>
+
+          {activeTab === 'relative' ? (
+            <div className="flex flex-col">
+              {/* Current range expression bar */}
+              <div className="px-4 py-3 bg-[var(--bg-primary)] border-b border-[var(--border-color)]">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] mb-1">From</div>
+                    <div className="px-2.5 py-1 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-md text-[13px] font-mono text-[var(--color-primary)]">
+                      {fromExpr}
+                    </div>
+                  </div>
+                  <ArrowRight size={14} className="text-[var(--text-tertiary)] mt-4 shrink-0" />
+                  <div className="flex-1">
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] mb-1">To</div>
+                    <div className="px-2.5 py-1 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-md text-[13px] font-mono text-[var(--color-primary)]">
+                      {toExpr}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick ranges grid by group */}
+              <div className="p-3 overflow-y-auto" style={{ maxHeight: 340 }}>
+                {RANGE_GROUPS.map((group, groupIdx) => (
+                  <div key={group.title} className={cn(groupIdx > 0 && 'mt-3')}>
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] mb-1.5 px-1">
+                      {group.title}
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {group.items.map((item) => {
+                        const active = isActivePreset(item.preset);
+                        return (
+                          <button
+                            key={item.preset}
+                            className={cn(
+                              'group relative flex flex-col items-center justify-center py-2.5 px-2 rounded-lg border text-center cursor-pointer transition-all duration-150 bg-transparent',
+                              active
+                                ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 shadow-[0_0_12px_rgba(124,127,242,0.15)]'
+                                : 'border-[var(--border-color)] hover:border-[var(--color-primary)]/50 hover:bg-[var(--bg-tertiary)]',
+                            )}
+                            onClick={() => selectRange(item)}
+                          >
+                            <span className={cn(
+                              'text-[13px] font-semibold leading-tight',
+                              active ? 'text-[var(--color-primary)]' : 'text-[var(--text-primary)] group-hover:text-[var(--color-primary)]',
+                            )}>
+                              {item.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            /* Absolute tab — Calendar + time inputs */
+            <div className="flex flex-col">
+              <DualCalendar
+                leftMonth={leftMonth}
+                setLeftMonth={setLeftMonth}
+                rangeStart={rangeStart}
+                rangeEnd={rangeEnd}
+                hoverDate={hoverDate}
+                selectingMode={selectingMode}
+                onSelectDate={handleCalSelect}
+                onHoverDate={setHoverDate}
+              />
+
+              {/* From / To inputs + Apply */}
+              <div className="px-3 pb-3 pt-1 border-t border-[var(--border-color)]">
+                <div className="flex gap-3 mt-3">
+                  <div className="flex-1 flex flex-col gap-1">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+                      From
+                    </label>
+                    <input
+                      className="w-full px-2.5 py-1.5 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-md text-[var(--text-primary)] text-[13px] font-mono outline-none transition-colors hover:border-[var(--text-tertiary)] focus:border-[var(--color-primary)]"
+                      placeholder="YYYY-MM-DD HH:mm:ss"
+                      value={fromStr}
+                      onChange={(e) => setFromStr(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex items-end pb-1.5 text-[var(--text-tertiary)] text-[13px]">to</div>
+                  <div className="flex-1 flex flex-col gap-1">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+                      To
+                    </label>
+                    <input
+                      className="w-full px-2.5 py-1.5 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-md text-[var(--text-primary)] text-[13px] font-mono outline-none transition-colors hover:border-[var(--text-tertiary)] focus:border-[var(--color-primary)]"
+                      placeholder="YYYY-MM-DD HH:mm:ss"
+                      value={toStr}
+                      onChange={(e) => setToStr(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  className="w-full mt-3 py-2 bg-[var(--color-primary)] border-none rounded-md text-white text-[13px] font-semibold cursor-pointer transition-opacity hover:opacity-90"
+                  onClick={applyAbsolute}
+                >
+                  Apply time range
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

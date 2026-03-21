@@ -1,9 +1,7 @@
-import { Tooltip } from '@shared/design-system';
+import { Tooltip } from '@/components/ui';
 import { useMemo } from 'react';
 
 import { APP_COLORS } from '@config/colorLiterals';
-
-import './LatencyHeatmapChart.css';
 
 const LATENCY_BUCKETS = ['0-50ms', '50-100ms', '100-250ms', '250-500ms', '500ms-1s', '>1s'];
 
@@ -50,19 +48,24 @@ export default function LatencyHeatmapChart({
 
   if (!data.length) {
     return (
-      <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+      <div className="text-center py-10 text-[color:var(--text-muted)]">
         No latency data available
       </div>
     );
   }
 
   return (
-    <div className="latency-heatmap">
-      <div className="heatmap-grid">
+    <div className="flex flex-col gap-2 py-2">
+      {/* Grid */}
+      <div className="flex flex-col gap-0.5">
         {LATENCY_BUCKETS.map((lb) => (
-          <div key={lb} className="heatmap-row">
-            <div className="heatmap-y-label">{lb}</div>
-            <div className="heatmap-cells">
+          <div key={lb} className="flex items-center gap-1">
+            {/* Y label */}
+            <div className="w-20 min-w-[80px] text-[11px] text-[color:var(--text-muted)] text-right pr-2 whitespace-nowrap">
+              {lb}
+            </div>
+            {/* Cells */}
+            <div className="flex flex-1 gap-px">
               {timeBuckets.map((tb) => {
                 const cell = data.find(
                   (d) => d.latency_bucket === lb && String(d.time_bucket) === String(tb),
@@ -74,7 +77,7 @@ export default function LatencyHeatmapChart({
                     content={`${lb} @ ${new Date(tb).toLocaleTimeString()}: ${count.toLocaleString()} spans`}
                   >
                     <div
-                      className="heatmap-cell"
+                      className="flex-1 h-6 rounded-[2px] transition-[opacity,transform] duration-150 ease-out cursor-default hover:opacity-85 hover:scale-y-[1.15]"
                       style={{ background: getColor(count) }}
                     />
                   </Tooltip>
@@ -84,22 +87,31 @@ export default function LatencyHeatmapChart({
           </div>
         ))}
       </div>
-      <div className="heatmap-x-axis">
-        <div className="heatmap-y-label-spacer" />
-        <div className="heatmap-x-labels">
+
+      {/* X axis */}
+      <div className="flex items-start gap-1 mt-0.5">
+        <div className="w-20 min-w-[80px]" />
+        <div className="flex flex-1 justify-between">
           {timeBuckets
             .filter((_, i) => i % Math.max(1, Math.floor(timeBuckets.length / 8)) === 0)
             .map((tb) => (
-              <span key={String(tb)} className="heatmap-x-label">
+              <span key={String(tb)} className="text-[10px] text-[color:var(--text-muted)] whitespace-nowrap">
                 {new Date(tb).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
             ))}
         </div>
       </div>
-      <div className="heatmap-legend">
-        <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>Low</span>
-        <div className="heatmap-legend-bar" />
-        <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>High</span>
+
+      {/* Legend */}
+      <div className="flex items-center gap-2 mt-1 pl-[84px]">
+        <span className="text-[color:var(--text-muted)] text-xs">Low</span>
+        <div
+          className="flex-1 max-w-[160px] h-2 rounded"
+          style={{
+            background: 'linear-gradient(to right, var(--literal-rgb-30-100-180), var(--literal-rgb-130-50-90), var(--literal-rgb-217-0-0))',
+          }}
+        />
+        <span className="text-[color:var(--text-muted)] text-xs">High</span>
       </div>
     </div>
   );

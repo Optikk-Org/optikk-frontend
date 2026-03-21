@@ -37,6 +37,7 @@ export interface URLFilterParam {
 export interface URLFilterConfig {
   readonly params: URLFilterParam[];
   readonly syncStructuredFilters?: boolean;
+  readonly stripParams?: string[];
 }
 
 function getTypeDefault(type: URLFilterType): URLFilterValue {
@@ -169,7 +170,10 @@ export function useURLFilters(config: URLFilterConfig): {
         const nextSearchParams = new URLSearchParams();
 
         for (const [key, value] of searchParams.entries()) {
-          const isManagedKey = config.params.some((param) => param.key === key) || key === 'filters';
+          const isManagedKey =
+            config.params.some((param) => param.key === key) ||
+            key === 'filters' ||
+            config.stripParams?.includes(key);
           if (!isManagedKey) {
             nextSearchParams.set(key, value);
           }
@@ -194,8 +198,28 @@ export function useURLFilters(config: URLFilterConfig): {
     },
     // searchParams is intentionally read lazily within the debounced callback.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [config.params, config.syncStructuredFilters, setSearchParams],
+    [config.params, config.stripParams, config.syncStructuredFilters, setSearchParams],
   );
+
+  useEffect(() => {
+    if (!config.stripParams || config.stripParams.length === 0) {
+      return;
+    }
+
+    const nextSearchParams = new URLSearchParams(searchParams);
+    let hasChanges = false;
+
+    for (const key of config.stripParams) {
+      if (nextSearchParams.has(key)) {
+        nextSearchParams.delete(key);
+        hasChanges = true;
+      }
+    }
+
+    if (hasChanges) {
+      setSearchParams(nextSearchParams, { replace: true });
+    }
+  }, [config.stripParams, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (isFirstRenderRef.current) {

@@ -1,4 +1,4 @@
-import { Surface } from '@shared/design-system';
+import { Surface } from '@/components/ui';
 
 import type { DashboardRenderConfig } from '@/types/dashboardConfig';
 
@@ -58,7 +58,7 @@ export default function ServiceDetailOverviewTab({
                 const percentage = (endpoint.avg_latency / maxLatency) * 100;
                 return (
                   <div key={`${endpoint.operation_name}-${endpoint.http_method}`} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 200, fontSize: 12, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div className="font-mono" style={{ width: 200, fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {endpoint.operation_name}
                     </div>
                     <div style={{ flex: 1, height: 20, background: `var(--bg-tertiary, ${APP_COLORS.hex_1a1a1a_2})`, borderRadius: 4, overflow: 'hidden' }}>

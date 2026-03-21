@@ -1,4 +1,5 @@
-import { Tooltip } from '@shared/design-system';
+import { Tooltip } from '@/components/ui';
+import { format as dateFnsFormat } from 'date-fns';
 import { useMemo } from 'react';
 
 import { formatNumber } from '@shared/utils/formatters';
@@ -71,26 +72,14 @@ function formatBucketLabel(raw: string, step: string, variant: 'axis' | 'tooltip
   if (!parsed) return raw;
 
   if (step === '1d') {
-    return parsed.toLocaleDateString([], {
-      month: 'short',
-      day: 'numeric',
-      year: variant === 'tooltip' ? 'numeric' : undefined,
-    });
+    return dateFnsFormat(parsed, variant === 'tooltip' ? 'MMM d, yyyy' : 'MMM d');
   }
 
   if (step === '1h') {
-    return parsed.toLocaleString([], {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: variant === 'tooltip' ? '2-digit' : undefined,
-    });
+    return dateFnsFormat(parsed, variant === 'tooltip' ? 'MMM d, HH:mm' : 'MMM d, HH');
   }
 
-  return parsed.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return dateFnsFormat(parsed, 'HH:mm');
 }
 
 /* ─── VolumeBar ───────────────────────────────────────────────────────────── */

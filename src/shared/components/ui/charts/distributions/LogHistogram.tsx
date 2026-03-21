@@ -1,11 +1,11 @@
 
 import { useMemo, useState } from 'react';
-import { Bar } from 'react-chartjs-2';
-
-import { createChartOptions } from '@shared/utils/chartHelpers';
+import uPlot from 'uplot';
 
 import { APP_COLORS } from '@config/colorLiterals';
 import { LOG_LEVELS } from '@config/constants';
+
+import UPlotChart, { uBars } from '../UPlotChart';
 
 const LEVEL_ORDER = ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'];
 
@@ -118,23 +118,18 @@ export function LogHistogramPanel({ chartConfig, dataSources, extraContext = {} 
  * @param root0.interval
  */
 export default function LogHistogram({ data = [], height = 80, startTime, endTime, interval = '1m' }: any) {
-  const { labels, datasets, activeLevels, hasData } = useMemo(() => {
+  const { allBuckets, seriesData, activeLevels, hasData } = useMemo(() => {
     if (!data || data.length === 0) {
       if (startTime && endTime) {
         const allBuckets = generateAllBuckets(startTime, endTime, interval);
         return {
-          labels: allBuckets.map(fmtTime),
-          datasets: [{
-            label: 'logs', _level: 'INFO',
-            data: allBuckets.map(() => 0),
-            backgroundColor: LEVEL_COLORS.INFO,
-            borderColor: 'transparent', borderWidth: 0, borderRadius: 0,
-            stack: 'logs', barPercentage: 1.0, categoryPercentage: 1.0,
-          }],
-          activeLevels: [], hasData: true,
+          allBuckets,
+          seriesData: [{ level: 'INFO', data: allBuckets.map(() => 0) }],
+          activeLevels: [] as string[],
+          hasData: true,
         };
       }
-      return { labels: [], datasets: [], activeLevels: [], hasData: false };
+      return { allBuckets: [] as number[], seriesData: [], activeLevels: [] as string[], hasData: false };
     }
 
     const hasLevels = data.some((d: any) => d.level);
@@ -145,7 +140,7 @@ export default function LogHistogram({ data = [], height = 80, startTime, endTim
         .map((d) => parseBucketMs(getBucketTimeValue(d)))
         .filter((ts) => Number.isFinite(ts));
       if (allTs.length === 0) {
-        return { labels: [], datasets: [], activeLevels: [], hasData: false };
+        return { allBuckets: [] as number[], seriesData: [], activeLevels: [], hasData: false };
       }
       tStart = Math.min(...allTs);
       tEnd = Math.max(...allTs);
@@ -169,21 +164,14 @@ export default function LogHistogram({ data = [], height = 80, startTime, endTim
       const activeLevels = LEVEL_ORDER.filter(
         (lvl) => Object.values(countMap).some((cm) => (cm[lvl] || 0) > 0),
       );
-      const labels = allBuckets.map(fmtTime);
-      const datasets = (activeLevels.length > 0 ? activeLevels : ['INFO']).map((lvl) => ({
+      const levels = activeLevels.length > 0 ? activeLevels : ['INFO'];
+      const seriesData = levels.map((lvl) => ({
+        level: lvl,
         label: (LOG_LEVELS as any)[lvl]?.label || lvl,
-        _level: lvl,
         data: allBuckets.map((b) => countMap[b]?.[lvl] || 0),
-        backgroundColor: LEVEL_COLORS[lvl] || APP_COLORS.hex_98a2b3,
-        borderColor: 'transparent',
-        borderWidth: 0,
-        borderRadius: 0,
-        stack: 'logs',
-        barPercentage: 1.0,
-        categoryPercentage: 1.0,
       }));
 
-      return { labels, datasets, activeLevels, hasData: true };
+      return { allBuckets, seriesData, activeLevels, hasData: true };
     }
 
     const stepMs = INTERVAL_MS[interval] || 60_000;
@@ -196,13 +184,11 @@ export default function LogHistogram({ data = [], height = 80, startTime, endTim
     });
 
     return {
-      labels: allBuckets.map(fmtTime),
-      datasets: [{
-        label: 'logs', _level: 'INFO',
+      allBuckets,
+      seriesData: [{
+        level: 'INFO',
+        label: 'logs',
         data: allBuckets.map((b) => countByBucket[b] || 0),
-        backgroundColor: LEVEL_COLORS.INFO,
-        borderColor: 'transparent', borderWidth: 0, borderRadius: 0,
-        stack: 'logs', barPercentage: 1.0, categoryPercentage: 1.0,
       }],
       activeLevels: ['INFO'],
       hasData: true,
@@ -213,61 +199,70 @@ export default function LogHistogram({ data = [], height = 80, startTime, endTim
 
   const legendLevels = LEGEND_ORDER.filter((l) => activeLevels.includes(l));
 
-  const options = createChartOptions({
-    animation: false,
-    layout: { padding: { top: 0, right: 0, bottom: 0, left: 0 } },
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        mode: 'index',
-        intersect: false,
-        backgroundColor: APP_COLORS.hex_12131a,
-        borderColor: APP_COLORS.hex_2d2d2d,
-        borderWidth: 1,
-        titleColor: APP_COLORS.hex_d1d5db,
-        bodyColor: APP_COLORS.hex_9ca3af,
-        padding: 8,
-        callbacks: {
-          title: (items: any) => items[0]?.label || '',
-          label: (ctx: any) => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}`,
-          footer: (items: any) => {
-            const t = items.reduce((s: number, i: any) => s + i.parsed.y, 0);
-            return t > 0 ? ` Total: ${t.toLocaleString()}` : '';
-          },
-        },
+  // Build stacked data: each series value = sum of all series at/below it
+  // uPlot draws bars from 0, so we pre-stack by rendering from top level down
+  // with cumulative values, and each subsequent series paints over the previous.
+  const stackedSeriesValues: number[][] = [];
+  for (let si = 0; si < seriesData.length; si++) {
+    const cumulative = seriesData[si].data.map((val, bi) => {
+      let sum = val;
+      for (let below = 0; below < si; below++) {
+        sum += seriesData[below].data[bi];
+      }
+      return sum;
+    });
+    stackedSeriesValues.push(cumulative);
+  }
+
+  // Reverse order so the highest cumulative series is drawn first (background)
+  const reversedSeries = [...seriesData].reverse();
+  const reversedStacked = [...stackedSeriesValues].reverse();
+
+  const xValues = allBuckets.map((ms) => ms / 1000); // epoch seconds
+
+  const uplotData: uPlot.AlignedData = [
+    xValues,
+    ...reversedStacked,
+  ];
+
+  const timeLabels = allBuckets.map(fmtTime);
+
+  const opts: Omit<uPlot.Options, 'width' | 'height'> = {
+    axes: [
+      {
+        stroke: APP_COLORS.hex_6b7280_2,
+        grid: { show: false },
+        ticks: { show: false },
+        font: '10px inherit',
+        values: (_u: uPlot, splits: number[]) =>
+          splits.map((s) => {
+            const idx = xValues.indexOf(s);
+            return idx >= 0 ? timeLabels[idx] : '';
+          }),
       },
-    },
-    scales: {
-      x: {
-        stacked: true,
-        grid: { display: false },
-        border: { color: APP_COLORS.hex_2d2d2d },
-        ticks: {
-          color: APP_COLORS.hex_6b7280_2,
-          maxTicksLimit: 18,
-          maxRotation: 0,
-          font: { size: 10 },
-        },
+      {
+        stroke: APP_COLORS.hex_6b7280_2,
+        grid: { stroke: 'rgba(255,255,255,0.04)', width: 1 },
+        ticks: { show: false },
+        font: '10px inherit',
+        size: 40,
+        values: (_u: uPlot, splits: number[]) => splits.map(fmtCount),
       },
-      y: {
-        stacked: true,
-        grid: { color: APP_COLORS.rgba_255_255_255_0p04_2, lineWidth: 1 },
-        border: { display: false },
-        ticks: {
-          color: APP_COLORS.hex_6b7280_2,
-          maxTicksLimit: 4,
-          font: { size: 10 },
-          callback: fmtCount,
-        },
-        beginAtZero: true,
-      },
-    },
-  });
+    ],
+    cursor: { show: true },
+    legend: { show: false },
+    series: [
+      {},
+      ...reversedSeries.map((s) =>
+        uBars((s as any).label || s.level, LEVEL_COLORS[s.level] || APP_COLORS.hex_98a2b3),
+      ),
+    ],
+  };
 
   return (
     <div className="lh-chart-wrap">
       <div style={{ height }}>
-        <Bar data={{ labels, datasets }} options={options} />
+        <UPlotChart options={opts} data={uplotData} height={height} />
       </div>
       {legendLevels.length > 0 && (
         <div className="lh-legend">

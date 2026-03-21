@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { metricsService } from '@shared/api/metricsService';
 
+import { resolveTimeRangeBounds } from '@/types';
 import { useAppStore } from '@store/appStore';
 
 import {
@@ -38,15 +39,11 @@ export function useMetricsQueries({
 }: UseMetricsQueriesParams): UseMetricsQueriesResult {
   const { selectedTeamId, timeRange, refreshKey } = useAppStore();
 
-  const getTimeRange = (): { startTime: number; endTime: number } => {
-    const endTime = Date.now();
-    const minutes = timeRange.minutes ?? 0;
-    const startTime = endTime - minutes * 60 * 1000;
-    return { startTime, endTime };
-  };
+  const rangeKey = timeRange.kind === 'relative' ? timeRange.preset : `${timeRange.startMs}-${timeRange.endMs}`;
+  const getTimeRange = () => resolveTimeRangeBounds(timeRange);
 
   const { data: servicesData } = useQuery<unknown, Error, MetricsServiceOption[]>({
-    queryKey: ['services', selectedTeamId, timeRange.value, refreshKey],
+    queryKey: ['services', selectedTeamId, rangeKey, refreshKey],
     queryFn: () => {
       const { startTime, endTime } = getTimeRange();
       return metricsService.getOverviewServices(selectedTeamId, startTime, endTime);
@@ -56,7 +53,7 @@ export function useMetricsQueries({
   });
 
   const { data: summaryData, isLoading: summaryLoading } = useQuery<unknown, Error, MetricSummary>({
-    queryKey: ['metrics-summary', selectedTeamId, timeRange.value, refreshKey],
+    queryKey: ['metrics-summary', selectedTeamId, rangeKey, refreshKey],
     queryFn: () => {
       const { startTime, endTime } = getTimeRange();
       return metricsService.getMetricsSummary(selectedTeamId, startTime, endTime);
@@ -70,7 +67,7 @@ export function useMetricsQueries({
     Error,
     MetricTimeSeriesPoint[]
   >({
-    queryKey: ['metrics-timeseries', selectedTeamId, timeRange.value, selectedService, showErrorsOnly, refreshKey],
+    queryKey: ['metrics-timeseries', selectedTeamId, rangeKey, selectedService, showErrorsOnly, refreshKey],
     queryFn: () => {
       const { startTime, endTime } = getTimeRange();
       return metricsService.getMetricsTimeSeries(selectedTeamId, startTime, endTime, selectedService || undefined, '5m');
@@ -80,7 +77,7 @@ export function useMetricsQueries({
   });
 
   const { data: serviceMetricsData } = useQuery<unknown, Error, ServiceMetricPoint[]>({
-    queryKey: ['service-metrics', selectedTeamId, timeRange.value, refreshKey],
+    queryKey: ['service-metrics', selectedTeamId, rangeKey, refreshKey],
     queryFn: () => {
       const { startTime, endTime } = getTimeRange();
       return metricsService.getServiceMetrics(selectedTeamId, startTime, endTime);
@@ -90,7 +87,7 @@ export function useMetricsQueries({
   });
 
   const { data: endpointMetricsData } = useQuery<unknown, Error, EndpointMetricPoint[]>({
-    queryKey: ['endpoints-metrics', selectedTeamId, timeRange.value, selectedService, refreshKey],
+    queryKey: ['endpoints-metrics', selectedTeamId, rangeKey, selectedService, refreshKey],
     queryFn: () => {
       const { startTime, endTime } = getTimeRange();
       return metricsService.getOverviewEndpointMetrics(selectedTeamId, startTime, endTime, selectedService || undefined);
@@ -100,7 +97,7 @@ export function useMetricsQueries({
   });
 
   const { data: endpointTimeSeriesData } = useQuery<unknown, Error, MetricTimeSeriesPoint[]>({
-    queryKey: ['endpoints-timeseries', selectedTeamId, timeRange.value, selectedService, refreshKey],
+    queryKey: ['endpoints-timeseries', selectedTeamId, rangeKey, selectedService, refreshKey],
     queryFn: () => {
       const { startTime, endTime } = getTimeRange();
       return metricsService.getOverviewEndpointTimeSeries(selectedTeamId, startTime, endTime, selectedService || undefined);

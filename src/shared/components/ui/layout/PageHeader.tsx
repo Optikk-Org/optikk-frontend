@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Breadcrumbs from '@shared/design-system/components/Breadcrumbs';
+import Breadcrumbs from '@/components/ui/breadcrumb';
+import { cn } from '@/lib/utils';
 import { useBreadcrumbs } from '@shared/hooks/useBreadcrumbs';
-import './PageHeader.css';
 
 interface PageHeaderBreadcrumb {
   label: React.ReactNode;
@@ -17,6 +17,7 @@ interface PageHeaderProps {
   breadcrumbs?: PageHeaderBreadcrumb[];
   /** Auto-generate breadcrumbs from current route (overrides manual breadcrumbs) */
   autoBreadcrumbs?: boolean;
+  className?: string;
 }
 
 export default function PageHeader({
@@ -26,39 +27,55 @@ export default function PageHeader({
   actions,
   breadcrumbs = [],
   autoBreadcrumbs = true,
+  className,
 }: PageHeaderProps) {
   const routeCrumbs = useBreadcrumbs();
 
   const showAutoCrumbs = autoBreadcrumbs && breadcrumbs.length === 0 && routeCrumbs.length > 1;
 
   return (
-    <div className="page-header">
+    <div className={cn('flex flex-col gap-2', className)}>
       {showAutoCrumbs && (
-        <Breadcrumbs items={routeCrumbs} className="page-header__breadcrumbs" />
+        <Breadcrumbs items={routeCrumbs} className="text-[11px] text-[var(--text-muted)]" />
       )}
       {breadcrumbs.length > 0 && (
-        <div className="page-header__manual-crumbs">
+        <div className="flex items-center gap-1 text-[11px]">
           {breadcrumbs.map((breadcrumb, index) => (
             <React.Fragment key={`${String(breadcrumb.label)}-${index}`}>
-              {index > 0 ? <span className="page-header__crumb-sep">/</span> : null}
+              {index > 0 ? <span className="text-[var(--text-muted)] opacity-50">/</span> : null}
               {breadcrumb.path ? (
-                <Link to={breadcrumb.path} className="page-header__crumb-link">{breadcrumb.label}</Link>
+                <Link
+                  to={breadcrumb.path}
+                  className="font-medium text-[var(--text-muted)] no-underline transition-colors hover:text-[var(--color-primary)]"
+                >
+                  {breadcrumb.label}
+                </Link>
               ) : (
-                <span className="page-header__crumb-text">{breadcrumb.label}</span>
+                <span className="font-medium text-[var(--text-secondary)]">{breadcrumb.label}</span>
               )}
             </React.Fragment>
           ))}
         </div>
       )}
-      <div className="page-header__row">
-        <div className="page-header__content">
-          {icon && <div className="page-header__icon">{icon}</div>}
-          <div className="page-header__text">
-            <h1 className="page-header__title">{title}</h1>
-            {subtitle && <p className="page-header__subtitle">{subtitle}</p>}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex min-w-0 items-start gap-3">
+          {icon && (
+            <div className="mt-0.5 flex items-center text-[var(--text-secondary)]">
+              {icon}
+            </div>
+          )}
+          <div className="min-w-0">
+            <h1 className="m-0 text-[1.625rem] font-semibold leading-[1.15] tracking-[-0.02em] text-[var(--text-primary)]">
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="mt-1 max-w-3xl text-[13px] leading-6 text-[var(--text-secondary)]">
+                {subtitle}
+              </p>
+            )}
           </div>
         </div>
-        {actions && <div className="page-header__actions">{actions}</div>}
+        {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
       </div>
     </div>
   );

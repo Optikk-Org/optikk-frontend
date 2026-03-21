@@ -1,4 +1,4 @@
-import { Switch } from '@shared/design-system';
+import { Switch } from '@/components/ui';
 import { AlertTriangle } from 'lucide-react';
 
 import { FilterBar } from '@shared/components/ui';

@@ -34,27 +34,29 @@ export default function BoardExportMenu({
   }, []);
 
   return (
-    <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
-      <button className="oboard__btn" disabled={rowsLength === 0} onClick={() => setOpen((o) => !o)}>
+    <div ref={ref} className="relative inline-block">
+      <button
+        className="inline-flex items-center gap-1.5 px-3 py-[5px] rounded-[7px] border border-[color:var(--glass-border)] bg-transparent text-[color:var(--text-secondary)] text-xs font-medium cursor-pointer transition-all duration-150 h-[30px] whitespace-nowrap hover:border-primary hover:bg-[rgba(94,96,206,0.08)] hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+        disabled={rowsLength === 0}
+        onClick={() => setOpen((o) => !o)}
+      >
         <Download size={13} /> Export
       </button>
       {open && (
-        <div style={{ position: 'absolute', right: 0, top: '100%', zIndex: 50, background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 8, padding: 8, minWidth: 160, boxShadow: 'var(--shadow-lg)' }}>
-          <div style={{ padding: '4px 8px 8px', fontWeight: 600, fontSize: 13, color: 'var(--text-secondary)' }}>Export {entityName}s</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '4px 0' }}>
+        <div className="absolute right-0 top-full z-50 bg-secondary border border-border rounded-lg p-2 min-w-[160px] shadow-lg">
+          <div className="px-2 pb-2 font-semibold text-[13px] text-[color:var(--text-secondary)]">Export {entityName}s</div>
+          <div className="flex flex-col gap-1.5 py-1">
             <button
-              className="oboard__btn"
+              className="inline-flex items-center justify-start gap-1.5 px-3 py-[5px] rounded-[7px] border border-[color:var(--glass-border)] bg-transparent text-[color:var(--text-secondary)] text-xs font-medium cursor-pointer transition-all duration-150 h-[30px] whitespace-nowrap w-full hover:border-primary hover:bg-[rgba(94,96,206,0.08)] hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
               onClick={() => { onExportCSV(); setOpen(false); }}
               disabled={rowsLength === 0}
-              style={{ width: '100%', justifyContent: 'flex-start' }}
             >
               Export as CSV
             </button>
             <button
-              className="oboard__btn"
+              className="inline-flex items-center justify-start gap-1.5 px-3 py-[5px] rounded-[7px] border border-[color:var(--glass-border)] bg-transparent text-[color:var(--text-secondary)] text-xs font-medium cursor-pointer transition-all duration-150 h-[30px] whitespace-nowrap w-full hover:border-primary hover:bg-[rgba(94,96,206,0.08)] hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
               onClick={() => { onExportJSON(); setOpen(false); }}
               disabled={rowsLength === 0}
-              style={{ width: '100%', justifyContent: 'flex-start' }}
             >
               Export as JSON
             </button>

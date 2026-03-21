@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -9,11 +10,12 @@ vi.mock('@tanstack/react-query', () => ({
 
 vi.mock('@shared/hooks/useURLFilters', () => ({
   useURLFilters: vi.fn(() => ({
-    values: { search: '', service: '', errorsOnly: false },
+    values: { search: '', service: '', errorsOnly: false, mode: 'all' },
     setters: {
       search: vi.fn(),
       service: vi.fn(),
       errorsOnly: vi.fn(),
+      mode: vi.fn(),
     },
     structuredFilters: [],
     setStructuredFilters: vi.fn(),
@@ -29,24 +31,11 @@ vi.mock('@shared/store/appStore', () => ({
   })),
 }));
 
-vi.mock('../api/queryOptions', () => ({
-  traceQueries: {
-    list: vi.fn(() => ({
-      queryKey: ['traces'],
-      queryFn: vi.fn(),
-      enabled: true,
-      staleTime: 30000,
-    })),
-  },
-}));
-
-import { useQuery } from '@tanstack/react-query';
-
 describe('useTracesExplorer', () => {
   it('derives KPIs and service breakdown inputs from normalized traces data', () => {
     vi.mocked(useQuery).mockReturnValue({
       data: {
-        traces: [
+        results: [
           {
             span_id: 'span-1',
             trace_id: 'trace-1',
@@ -74,11 +63,25 @@ describe('useTracesExplorer', () => {
             http_status_code: 500,
           },
         ],
-        total: 2,
         summary: {
+          total_traces: 2,
           error_traces: 1,
+          p50_duration: 120,
           p95_duration: 180,
           p99_duration: 180,
+        },
+        facets: {
+          service_name: [
+            { value: 'checkout-service', count: 1 },
+            { value: 'inventory-service', count: 1 },
+          ],
+        },
+        trend: [],
+        pageInfo: {
+          total: 2,
+          hasMore: false,
+          offset: 0,
+          limit: 20,
         },
       },
       isLoading: false,
@@ -86,15 +89,13 @@ describe('useTracesExplorer', () => {
 
     const { result } = renderHook(() => useTracesExplorer());
 
+    expect(result.current.mode).toBe('all');
     expect(result.current.totalTraces).toBe(2);
     expect(result.current.errorRate).toBe(50);
+    expect(result.current.p50).toBe(120);
     expect(result.current.p95).toBe(180);
     expect(result.current.p99).toBe(180);
     expect(result.current.maxDuration).toBe(180);
-    expect(result.current.serviceBadges).toEqual([
-      ['checkout-service', 1],
-      ['inventory-service', 1],
-    ]);
     expect(result.current.traces).toHaveLength(2);
   });
 });

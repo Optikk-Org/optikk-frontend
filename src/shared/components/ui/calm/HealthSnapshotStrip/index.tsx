@@ -1,7 +1,7 @@
-import { Skeleton } from '@shared/design-system';
+import { Skeleton, Surface } from '@/components/ui';
+import { cn } from '@/lib/utils';
 
 import HealthRing, { type HealthStatus } from '../HealthRing';
-import './HealthSnapshotStrip.css';
 
 /**
  *
@@ -31,17 +31,18 @@ export default function HealthSnapshotStrip({
 
   if (loading) {
     return (
-      <div className="health-strip health-strip--loading">
+      <Surface elevation={1} padding="sm" className="flex items-center gap-4 mb-[var(--space-section-gap,20px)] min-h-[80px]">
         <Skeleton count={1} />
-      </div>
+      </Surface>
     );
   }
 
   if (services.length === 0) return null;
 
   return (
-    <div className="health-strip">
-      <div className="health-strip__rings">
+    <Surface elevation={1} padding="sm" className="flex items-center gap-4 mb-[var(--space-section-gap,20px)]">
+      {/* Rings — horizontally scrollable, hides scrollbar */}
+      <div className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {services.map((svc) => (
           <HealthRing
             key={svc.name}
@@ -54,23 +55,25 @@ export default function HealthSnapshotStrip({
           />
         ))}
       </div>
-      <div className="health-strip__legend">
+
+      {/* Legend */}
+      <div className="flex items-center gap-3 flex-shrink-0 pl-4 border-l border-[var(--border-light)]">
         {healthy > 0 && (
-          <span className="health-strip__legend-item health-strip__legend-item--healthy">
+          <span className="text-[11px] font-medium whitespace-nowrap text-[color:var(--color-healthy)]">
             {healthy} healthy
           </span>
         )}
         {degraded > 0 && (
-          <span className="health-strip__legend-item health-strip__legend-item--degraded">
+          <span className="text-[11px] font-medium whitespace-nowrap text-[color:var(--color-degraded)]">
             {degraded} degraded
           </span>
         )}
         {critical > 0 && (
-          <span className="health-strip__legend-item health-strip__legend-item--critical">
+          <span className="text-[11px] font-semibold whitespace-nowrap text-[color:var(--color-critical)]">
             {critical} critical
           </span>
         )}
       </div>
-    </div>
+    </Surface>
   );
 }

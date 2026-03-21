@@ -1,23 +1,23 @@
-import { Table } from 'antd';
-import { Badge } from '@shared/design-system';
-import { GitBranch, Layers, Clock, AlertCircle, ArrowLeft, FileText, ChevronDown, ChevronRight } from 'lucide-react';
+import { Badge, Button, SimpleTable, Tabs } from '@/components/ui';
+import { AlertCircle, ArrowLeft, Clock, FileText, GitBranch, Layers } from 'lucide-react';
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import WaterfallChart from '@shared/components/ui/charts/specialized/WaterfallChart';
 import Flamegraph from '@shared/components/ui/charts/specialized/Flamegraph';
+import WaterfallChart from '@shared/components/ui/charts/specialized/WaterfallChart';
 import StatCard from '@shared/components/ui/cards/StatCard';
 import PageHeader from '@shared/components/ui/layout/PageHeader';
+import { PageShell, PageSurface } from '@shared/components/ui';
 
-import { useAppStore } from '@store/appStore';
-import { formatDuration, formatTimestamp, formatNumber } from '@shared/utils/formatters';
 import { APP_COLORS } from '@config/colorLiterals';
+import { useAppStore } from '@store/appStore';
+import { formatDuration, formatNumber, formatTimestamp } from '@shared/utils/formatters';
 
-import { useTraceDetailData } from '../../hooks/useTraceDetailData';
-import { useTraceDetailEnhanced } from '../../hooks/useTraceDetailEnhanced';
+import ServicePills from '../../components/ServicePills';
 import SpanDetailDrawer from '../../components/SpanDetailDrawer';
 import SpanKindBreakdown from '../../components/SpanKindBreakdown';
-import ServicePills from '../../components/ServicePills';
+import { useTraceDetailData } from '../../hooks/useTraceDetailData';
+import { useTraceDetailEnhanced } from '../../hooks/useTraceDetailEnhanced';
 import './TraceDetailPage.css';
 
 export default function TraceDetailPage() {
@@ -25,7 +25,6 @@ export default function TraceDetailPage() {
   const traceIdParam = traceId ?? '';
   const navigate = useNavigate();
   const selectedTeamId = useAppStore((state) => state.selectedTeamId);
-  const [waterfallCollapsed, setWaterfallCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<'timeline' | 'flamegraph'>('timeline');
 
   const {
@@ -77,7 +76,15 @@ export default function TraceDetailPage() {
       key: 'level',
       width: 90,
       render: (level: unknown) => (
-        <Badge color={level === 'ERROR' ? 'red' : level === 'WARN' ? 'orange' : APP_COLORS.hex_73c991}>
+        <Badge
+          color={
+            level === 'ERROR'
+              ? 'red'
+              : level === 'WARN'
+                ? 'orange'
+                : APP_COLORS.hex_73c991
+          }
+        >
           {typeof level === 'string' && level.length > 0 ? level : 'INFO'}
         </Badge>
       ),
@@ -87,7 +94,8 @@ export default function TraceDetailPage() {
       dataIndex: 'service_name',
       key: 'service_name',
       width: 160,
-      render: (service: unknown) => (typeof service === 'string' && service.length > 0 ? service : '-'),
+      render: (service: unknown) =>
+        typeof service === 'string' && service.length > 0 ? service : '-',
     },
     {
       title: 'Trace ID',
@@ -95,7 +103,7 @@ export default function TraceDetailPage() {
       key: 'trace_id',
       width: 220,
       render: (traceIdValue: unknown) => (
-        <span style={{ fontFamily: 'monospace', fontSize: 12 }}>
+        <span className="font-mono text-[12px]">
           {typeof traceIdValue === 'string' && traceIdValue.length > 0 ? traceIdValue : '-'}
         </span>
       ),
@@ -106,7 +114,7 @@ export default function TraceDetailPage() {
       key: 'message',
       ellipsis: true,
       render: (msg: unknown) => (
-        <span style={{ fontFamily: 'monospace', fontSize: 12 }}>
+        <span className="font-mono text-[12px]">
           {typeof msg === 'string' && msg.length > 0 ? msg : '-'}
         </span>
       ),
@@ -114,7 +122,7 @@ export default function TraceDetailPage() {
   ];
 
   return (
-    <div className="trace-detail-page">
+    <PageShell className="trace-page-fade-in min-h-[calc(100vh-64px)]">
       <PageHeader
         title={`Trace: ${traceIdParam}`}
         icon={<GitBranch size={24} />}
@@ -123,116 +131,108 @@ export default function TraceDetailPage() {
           { label: traceIdParam },
         ]}
         actions={
-          <button className="trace-detail-back-btn" onClick={() => navigate('/traces')}>
-            <ArrowLeft size={16} />
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<ArrowLeft size={16} />}
+            onClick={() => navigate('/traces')}
+          >
             Back to Traces
-          </button>
+          </Button>
         }
       />
 
       {isLoading ? (
-        <div className="trace-detail-loading">
+        <PageSurface className="flex min-h-[320px] items-center justify-center">
           <div className="ok-spinner" />
-        </div>
+        </PageSurface>
       ) : spans.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)' }}>No spans found for this trace</div>
+        <PageSurface className="py-12 text-center text-[var(--text-muted)]">
+          No spans found for this trace
+        </PageSurface>
       ) : (
         <>
-          {/* Stats row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginBottom: 16 }}>
-              <StatCard
-                metric={{ title: 'Total Spans', value: stats.totalSpans, formatter: formatNumber }}
-                visuals={{ icon: <Layers size={20} />, iconColor: APP_COLORS.hex_5e60ce }}
-              />
-              <StatCard
-                metric={{ title: 'Duration', value: stats.duration, formatter: formatDuration }}
-                visuals={{ icon: <Clock size={20} />, iconColor: APP_COLORS.hex_73c991 }}
-              />
-              <StatCard
-                metric={{ title: 'Services', value: stats.services.size, formatter: formatNumber }}
-                visuals={{ icon: <GitBranch size={20} />, iconColor: APP_COLORS.hex_06aed5 }}
-              />
-              <StatCard
-                metric={{ title: 'Errors', value: stats.errors, formatter: formatNumber }}
-                visuals={{
-                  icon: <AlertCircle size={20} />,
-                  iconColor: stats.errors > 0 ? APP_COLORS.hex_f04438 : APP_COLORS.hex_73c991,
-                }}
-              />
-              <StatCard
-                metric={{ title: 'Apdex Score', value: 0.95, formatter: (v: any) => Number(v).toFixed(2) }}
-                visuals={{ icon: <Layers size={20} />, iconColor: APP_COLORS.hex_73c991 }}
-              />
-              <StatCard
-                metric={{ title: 'Self Time', value: spanSelfTimes.reduce((acc, s) => acc + s.selfTimeMs, 0), formatter: formatDuration }}
-                visuals={{ icon: <Clock size={20} />, iconColor: '#06aed5' }}
-              />
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+            <StatCard
+              metric={{ title: 'Total Spans', value: stats.totalSpans, formatter: formatNumber }}
+              visuals={{ icon: <Layers size={20} />, iconColor: APP_COLORS.hex_5e60ce }}
+            />
+            <StatCard
+              metric={{ title: 'Duration', value: stats.duration, formatter: formatDuration }}
+              visuals={{ icon: <Clock size={20} />, iconColor: APP_COLORS.hex_73c991 }}
+            />
+            <StatCard
+              metric={{ title: 'Services', value: stats.services.size, formatter: formatNumber }}
+              visuals={{ icon: <GitBranch size={20} />, iconColor: APP_COLORS.hex_06aed5 }}
+            />
+            <StatCard
+              metric={{ title: 'Errors', value: stats.errors, formatter: formatNumber }}
+              visuals={{
+                icon: <AlertCircle size={20} />,
+                iconColor:
+                  stats.errors > 0 ? APP_COLORS.hex_f04438 : APP_COLORS.hex_73c991,
+              }}
+            />
+            <StatCard
+              metric={{
+                title: 'Apdex Score',
+                value: 0.95,
+                formatter: (value: unknown) => Number(value).toFixed(2),
+              }}
+              visuals={{ icon: <Layers size={20} />, iconColor: APP_COLORS.hex_73c991 }}
+            />
+            <StatCard
+              metric={{
+                title: 'Self Time',
+                value: spanSelfTimes.reduce((acc, span) => acc + span.selfTimeMs, 0),
+                formatter: formatDuration,
+              }}
+              visuals={{ icon: <Clock size={20} />, iconColor: APP_COLORS.hex_06aed5 }}
+            />
           </div>
 
-          {/* Service pills + span kind breakdown */}
-          <div
-            className="glass-panel"
-            style={{
-              background: 'var(--glass-bg)',
-              backdropFilter: 'var(--glass-blur)',
-              WebkitBackdropFilter: 'var(--glass-blur)',
-              borderRadius: 12,
-              border: '1px solid var(--glass-border)',
-              padding: '14px 20px',
-              marginBottom: 16,
-              display: 'flex',
-              gap: 24,
-              alignItems: 'flex-start',
-              flexWrap: 'wrap',
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 240 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: 8 }}>
+          <PageSurface className="flex flex-wrap items-start gap-6">
+            <div className="min-w-[240px] flex-1">
+              <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
                 Services
               </div>
               <ServicePills spans={spans} activeService={null} onSelect={() => {}} />
             </div>
-            {spanKindBreakdown.length > 0 && (
-              <div style={{ flex: 1, minWidth: 200 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: 8 }}>
+            {spanKindBreakdown.length > 0 ? (
+              <div className="min-w-[220px] flex-1">
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
                   Span Kind Breakdown
                 </div>
                 <SpanKindBreakdown data={spanKindBreakdown} />
               </div>
-            )}
-          </div>
+            ) : null}
+          </PageSurface>
 
-          {/* Waterfall */}
-          <div
-            className="glass-panel"
-            style={{
-              background: 'var(--glass-bg)',
-              backdropFilter: 'var(--glass-blur)',
-              WebkitBackdropFilter: 'var(--glass-blur)',
-              borderRadius: 16,
-              border: '1px solid var(--glass-border)',
-              padding: waterfallCollapsed ? '12px 24px' : '24px',
-              boxShadow: 'var(--shadow-lg)',
-              marginBottom: 16,
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: waterfallCollapsed ? 0 : 16 }}>
-              <div style={{ display: 'flex', gap: 24, fontSize: 16, fontWeight: 600 }}>
-                <span
-                  style={{ cursor: 'pointer', color: activeTab === 'timeline' ? 'var(--text-primary)' : 'var(--text-muted)' }}
-                  onClick={() => setActiveTab('timeline')}
-                >
-                  Trace Timeline
-                </span>
-                <span
-                  style={{ cursor: 'pointer', color: activeTab === 'flamegraph' ? 'var(--text-primary)' : 'var(--text-muted)' }}
-                  onClick={() => setActiveTab('flamegraph')}
-                >
-                  Flamegraph
-                </span>
+          <PageSurface>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h2 className="text-base font-semibold text-[var(--text-primary)]">
+                  Trace Visualization
+                </h2>
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                  Switch between timeline and flamegraph views without leaving the trace
+                  context.
+                </p>
               </div>
             </div>
-            {!waterfallCollapsed && activeTab === 'timeline' && (
+
+            <Tabs
+              activeKey={activeTab}
+              onChange={(nextTab) => setActiveTab(nextTab as 'timeline' | 'flamegraph')}
+              items={[
+                { key: 'timeline', label: 'Trace Timeline' },
+                { key: 'flamegraph', label: 'Flamegraph' },
+              ]}
+              size="lg"
+              className="mb-4 mt-4"
+            />
+
+            {activeTab === 'timeline' ? (
               <WaterfallChart
                 spans={spans}
                 onSpanClick={handleSpanClick}
@@ -240,19 +240,17 @@ export default function TraceDetailPage() {
                 criticalPathSpanIds={criticalPathSpanIds}
                 errorPathSpanIds={errorPathSpanIds}
               />
-            )}
-            {!waterfallCollapsed && activeTab === 'flamegraph' && (
-              <Flamegraph 
+            ) : (
+              <Flamegraph
                 data={{
                   name: spans[0]?.operation_name || 'root',
                   value: stats.duration,
-                  children: [] // In a real app, we'd build the hierarchy from spans
-                }} 
+                  children: [],
+                }}
               />
             )}
-          </div>
+          </PageSurface>
 
-          {/* Span detail drawer */}
           <SpanDetailDrawer
             selectedSpanId={selectedSpanId}
             selectedSpan={selectedSpan ?? null}
@@ -263,54 +261,49 @@ export default function TraceDetailPage() {
             relatedTraces={relatedTraces}
           />
 
-          {/* Associated Logs */}
-          <div
-            className="glass-panel"
-            style={{
-              background: 'var(--glass-bg)',
-              backdropFilter: 'var(--glass-blur)',
-              WebkitBackdropFilter: 'var(--glass-blur)',
-              borderRadius: 12,
-              border: '1px solid var(--glass-border)',
-              padding: '20px 24px',
-              boxShadow: 'var(--shadow-md)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 16,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, fontSize: 15 }}>
+          <PageSurface className="space-y-4">
+            <div className="flex items-center gap-2 text-[15px] font-semibold text-[var(--text-primary)]">
               <FileText size={18} />
               <span>Associated Logs</span>
-              {traceLogs.length > 0 && (
+              {traceLogs.length > 0 ? (
                 <Badge
                   color="default"
-                  style={{ marginLeft: 8, background: APP_COLORS.rgba_255_255_255_0p06_2, border: 'none', color: 'var(--text-secondary)' }}
+                  style={{
+                    marginLeft: 8,
+                    background: APP_COLORS.rgba_255_255_255_0p06_2,
+                    border: 'none',
+                    color: 'var(--text-secondary)',
+                  }}
                 >
                   {traceLogs.length} events
                 </Badge>
-              )}
+              ) : null}
             </div>
+
             {logsLoading ? (
-              <div className="trace-detail-loading" style={{ padding: '40px 0', textAlign: 'center' }}>
+              <div className="flex min-h-[240px] items-center justify-center">
                 <div className="ok-spinner" />
               </div>
             ) : traceLogs.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)' }}>No logs associated with this trace</div>
+              <div className="py-8 text-center text-[var(--text-muted)]">
+                No logs associated with this trace
+              </div>
             ) : (
-              <Table
+              <SimpleTable
                 columns={logColumns}
                 dataSource={traceLogs}
-                rowKey={(row, index) => `${row.timestamp}-${row.service_name}-${index}`}
+                rowKey={(row: any, index?: number) =>
+                  `${row.timestamp}-${row.service_name}-${index}`
+                }
                 size="small"
                 pagination={false}
                 scroll={{ y: 300 }}
                 className="glass-table"
               />
             )}
-          </div>
+          </PageSurface>
         </>
       )}
-    </div>
+    </PageShell>
   );
 }

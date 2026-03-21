@@ -38,7 +38,11 @@
       "@utils/*": ["src/shared/utils/*"],
       "@hooks/*": ["src/shared/hooks/*"],
       "@services/*": ["src/shared/api/*"],
-      "@components/*": ["src/shared/components/*"]
+      "@components/*": ["src/shared/components/*"],
+      "@/lib/*": ["src/lib/*"],
+      "@/components/*": ["src/components/*"],
+      "@/components/ui/*": ["src/components/ui/*"],
+      "@/hooks/*": ["src/shared/hooks/*"]
     }
   },
   "include": ["src"],

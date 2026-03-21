@@ -1,4 +1,4 @@
-import { Badge } from '@shared/design-system';
+import { Badge } from '@/components/ui';
 import { Activity, AlertCircle, Layers, LayoutGrid, List, ShieldAlert } from 'lucide-react';
 
 import SparklineChart from '@shared/components/ui/charts/micro/SparklineChart';
@@ -182,17 +182,17 @@ export function ServiceOverviewTab({
                     </div>
                   )}
                   {visibleCols.avgLatency && (
-                    <div style={{ width: colWidths.avgLatency, flexShrink: 0, fontFamily: 'monospace', fontSize: 12 }}>
+                    <div className="font-mono" style={{ width: colWidths.avgLatency, flexShrink: 0, fontSize: 12 }}>
                       {formatDuration(row.avgLatency)}
                     </div>
                   )}
                   {visibleCols.p95Latency && (
-                    <div style={{ width: colWidths.p95Latency, flexShrink: 0, fontFamily: 'monospace', fontSize: 12 }}>
+                    <div className="font-mono" style={{ width: colWidths.p95Latency, flexShrink: 0, fontSize: 12 }}>
                       {formatDuration(row.p95Latency)}
                     </div>
                   )}
                   {visibleCols.p99Latency && (
-                    <div style={{ flex: 1, fontFamily: 'monospace', fontSize: 12 }}>
+                    <div className="font-mono" style={{ flex: 1, fontSize: 12 }}>
                       {formatDuration(row.p99Latency)}
                     </div>
                   )}

@@ -1,4 +1,4 @@
-import { Skeleton as DSSkeleton } from '@shared/design-system';
+import { Skeleton as DSSkeleton } from '@/components/ui';
 
 import type { FeedbackSkeletonProps } from './types';
 

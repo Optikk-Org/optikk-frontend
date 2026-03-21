@@ -2,7 +2,6 @@ export { default as DataTable } from './DataTable';
 export { default as DatabaseTopTablesList } from './DatabaseTopTablesList';
 export {
   default as ObservabilityDataBoard,
-  boardHeight,
 } from './ObservabilityDataBoard';
 export { default as QueueMetricsList } from './QueueMetricsList';
 export { default as Timeline } from './Timeline';

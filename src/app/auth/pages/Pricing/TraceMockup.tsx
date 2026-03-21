@@ -40,9 +40,9 @@ export default function TraceMockup() {
             <div key={c} style={{ width: 11, height: 11, borderRadius: '50%', background: c }} />
           ))}
         </div>
-        <div style={{
+        <div className="font-mono" style={{
           flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 6,
-          padding: '3px 12px', fontFamily: "'JetBrains Mono', monospace",
+          padding: '3px 12px',
           fontSize: 10, color: '#475569',
         }}>
           app.optikk.io/traces
@@ -53,9 +53,10 @@ export default function TraceMockup() {
       <div style={{
         display: 'grid', gridTemplateColumns: '140px 1fr 60px 52px',
         padding: '8px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)',
-        fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#475569',
+        fontSize: 10, color: '#475569',
         textTransform: 'uppercase', letterSpacing: '0.8px',
-      }}>
+      }}
+      className="font-mono">
         <span>Service</span><span>Duration Span</span><span style={{ textAlign: 'right' }}>ms</span><span style={{ textAlign: 'center' }}>Status</span>
       </div>
 
@@ -72,8 +73,8 @@ export default function TraceMockup() {
             borderBottom: '1px solid rgba(255,255,255,0.03)',
           }}
         >
-          <span style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#94A3B8',
+          <span className="font-mono" style={{
+            fontSize: 10, color: '#94A3B8',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
           }}>{row.service}</span>
           <div style={{ paddingRight: 12 }}>
@@ -88,10 +89,10 @@ export default function TraceMockup() {
               }}
             />
           </div>
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#64748B', textAlign: 'right' }}>{row.duration}ms</span>
+          <span className="font-mono" style={{ fontSize: 10, color: '#64748B', textAlign: 'right' }}>{row.duration}ms</span>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <span style={{
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 600,
+            <span className="font-mono" style={{
+              fontSize: 9, fontWeight: 600,
               padding: '2px 6px', borderRadius: 4,
               background: row.status === 200 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
               color: row.status === 200 ? '#10B981' : '#EF4444',

@@ -1,12 +1,17 @@
 
 import { useMemo, memo } from 'react';
-import { Line } from 'react-chartjs-2';
+import uPlot from 'uplot';
 
 import { useChartTimeBuckets } from '@shared/hooks/useChartTimeBuckets';
-
-import { createChartOptions, createLineDataset, getChartColor } from '@shared/utils/chartHelpers';
-
+import { tsKey, tsMs, firstValue } from '@shared/utils/chartDataUtils';
+import { CHART_COLORS } from '@config/constants';
 import { APP_COLORS } from '@config/colorLiterals';
+
+import UPlotChart, { defaultAxes, uLine } from '../UPlotChart';
+
+function getChartColor(index: number): string {
+  return CHART_COLORS[index % CHART_COLORS.length];
+}
 
 interface EndpointData {
   key?: string;
@@ -54,22 +59,6 @@ interface LatencyChartProps {
   valueKey?: string;
 }
 
-function tsKey(ts: string | number | null | undefined): string {
-  if (!ts) return '';
-  return String(ts).replace('T', ' ').replace('Z', '').substring(0, 16);
-}
-
-function firstValue<T>(row: unknown, keys: string[], fallback: T): T {
-  if (!row || typeof row !== 'object') return fallback;
-  for (const key of keys) {
-    const value = (row as Record<string, unknown>)[key];
-    if (value !== undefined && value !== null && value !== '') {
-      return value as T;
-    }
-  }
-  return fallback;
-}
-
 /**
  *
  * @param root0
@@ -93,7 +82,7 @@ export default memo(function LatencyChart({
   valueKey = 'avg_latency',
 }: LatencyChartProps) {
   const hasServiceData = Object.keys(serviceTimeseriesMap).length > 0;
-  const { timeBuckets, labels } = useChartTimeBuckets();
+  const { timeBuckets } = useChartTimeBuckets();
 
   const buildServiceDatasets = (endpointList: EndpointData[]) => {
     const targetMap: Record<string, { label: string }> = {};
@@ -119,12 +108,14 @@ export default memo(function LatencyChart({
         tsMap[bucketKey] = Math.max(tsMap[bucketKey] || 0, Number.isFinite(latency) ? latency : 0);
       }
       const values = timeBuckets.map((d) => tsMap[tsKey(d)] ?? 0);
-      return createLineDataset(info.label, values, getChartColor(idx), false);
+      return { label: info.label, values, color: getChartColor(idx), fill: false };
     });
   };
 
   const chartData = useMemo(() => {
-    let datasets: any[];
+    type SeriesEntry = { label: string; values: number[]; color: string; fill: boolean; dash?: number[] };
+    let seriesList: SeriesEntry[];
+
     if (endpoints.length > 0) {
       const list = selectedEndpoints.length > 0
         ? (endpoints as any[]).filter((ep) => {
@@ -140,22 +131,22 @@ export default memo(function LatencyChart({
         : endpoints;
 
       if (hasServiceData) {
-        datasets = buildServiceDatasets(list);
+        seriesList = buildServiceDatasets(list);
       } else {
-        datasets = (list).map((ep, idx) => {
+        seriesList = (list).map((ep, idx) => {
           const method = firstValue(ep, ['http_method', 'httpMethod'], 'N/A');
           const operation = firstValue(ep, ['operation_name', 'operationName', 'endpoint_name', 'endpointName'], 'Unknown');
-          return createLineDataset(
-            `${method} ${operation}`,
-            timeBuckets.map(() => 0),
-            getChartColor(idx),
-            false,
-          );
+          return {
+            label: `${method} ${operation}`,
+            values: timeBuckets.map(() => 0),
+            color: getChartColor(idx),
+            fill: false,
+          };
         });
       }
     } else if (hasServiceData) {
       const stepMs = timeBuckets.length >= 2 ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime() : 60000;
-      datasets = Object.entries(serviceTimeseriesMap).slice(0, 10).map(([svcName, rows]: [string, any], idx) => {
+      seriesList = Object.entries(serviceTimeseriesMap).slice(0, 10).map(([svcName, rows]: [string, any], idx) => {
         const tsMap: Record<string, number> = {};
         for (const row of rows as any[]) {
           const rowTimestamp = firstValue(row, ['timestamp', 'time_bucket', 'timeBucket'], '');
@@ -168,7 +159,7 @@ export default memo(function LatencyChart({
           tsMap[bucketKey] = Math.max(tsMap[bucketKey] || 0, Number.isFinite(latency) ? latency : 0);
         }
         const values = timeBuckets.map((d) => tsMap[tsKey(d)] ?? 0);
-        return createLineDataset(svcName, values, getChartColor(idx), false);
+        return { label: svcName, values, color: getChartColor(idx), fill: false };
       });
     } else {
       if (data.length > 0 && firstValue(data[0], ['value'], null) !== null) {
@@ -177,7 +168,7 @@ export default memo(function LatencyChart({
           const ts = firstValue(d, ['timestamp', 'time_bucket', 'timeBucket'], '');
           dataMap[tsKey(ts)] = Number(firstValue(d, ['value', valueKey, 'avg_latency', 'avgLatency', 'avg_latency_ms', 'avgLatencyMs'], 0));
         }
-        datasets = [createLineDataset(datasetLabel, timeBuckets.map((ts) => dataMap[tsKey(ts)] ?? 0), color, true)];
+        seriesList = [{ label: datasetLabel, values: timeBuckets.map((ts) => dataMap[tsKey(ts)] ?? 0), color, fill: true }];
       } else {
         const p50Map: Record<string, number> = {}; const p95Map: Record<string, number> = {}; const p99Map: Record<string, number> = {};
         for (const d of data as any[]) {
@@ -186,34 +177,43 @@ export default memo(function LatencyChart({
           p95Map[key] = Number(firstValue(d, ['p95', 'p95_latency', 'p95Latency'], 0));
           p99Map[key] = Number(firstValue(d, ['p99', 'p99_latency', 'p99Latency'], 0));
         }
-        datasets = [
-          createLineDataset('P50', timeBuckets.map((ts) => p50Map[tsKey(ts)] ?? 0), APP_COLORS.hex_73c991, false),
-          createLineDataset('P95', timeBuckets.map((ts) => p95Map[tsKey(ts)] ?? 0), APP_COLORS.hex_f79009, false),
-          createLineDataset('P99', timeBuckets.map((ts) => p99Map[tsKey(ts)] ?? 0), APP_COLORS.hex_f04438, false),
+        seriesList = [
+          { label: 'P50', values: timeBuckets.map((ts) => p50Map[tsKey(ts)] ?? 0), color: APP_COLORS.hex_73c991, fill: false },
+          { label: 'P95', values: timeBuckets.map((ts) => p95Map[tsKey(ts)] ?? 0), color: APP_COLORS.hex_f79009, fill: false },
+          { label: 'P99', values: timeBuckets.map((ts) => p99Map[tsKey(ts)] ?? 0), color: APP_COLORS.hex_f04438, fill: false },
         ];
       }
     }
 
     if (targetThreshold !== null) {
-      datasets.push({
+      seriesList.push({
         label: `Target (${targetThreshold}ms)`,
-        data: timeBuckets.map(() => targetThreshold),
-        borderColor: APP_COLORS.hex_f79009,
-        borderDash: [6, 3],
-        borderWidth: 1.5,
-        pointRadius: 0,
+        values: timeBuckets.map(() => targetThreshold),
+        color: APP_COLORS.hex_f79009,
         fill: false,
-        tension: 0,
+        dash: [5, 5],
       });
     }
 
-    return { labels, datasets };
-  }, [data, endpoints, selectedEndpoints, serviceTimeseriesMap, hasServiceData, targetThreshold, timeBuckets, labels]);
+    return seriesList;
+  }, [data, endpoints, selectedEndpoints, serviceTimeseriesMap, hasServiceData, targetThreshold, timeBuckets]);
+
+  const timestamps = useMemo(
+    () => timeBuckets.map((t) => tsMs(t) / 1000),
+    [timeBuckets],
+  );
+
+  const uplotData = useMemo<uPlot.AlignedData>(() => {
+    return [
+      timestamps,
+      ...chartData.map((s) => s.values),
+    ] as uPlot.AlignedData;
+  }, [timestamps, chartData]);
 
   const yAxisMax = useMemo(() => {
     let maxVal = 0;
-    chartData.datasets.forEach((ds: any) => {
-      const dsMax = Math.max(...(Array.isArray(ds.data) ? ds.data.map((v: any) => Number(v) || 0) : [0]), 0);
+    chartData.forEach((s) => {
+      const dsMax = Math.max(...s.values.map((v) => Number(v) || 0), 0);
       if (dsMax > maxVal) maxVal = dsMax;
     });
     if (maxVal <= 0) return 10;
@@ -222,27 +222,26 @@ export default memo(function LatencyChart({
     return Math.max(Math.ceil(maxVal * 1.25), 10);
   }, [chartData]);
 
-  const options = useMemo(() => createChartOptions({
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (ctx: any) => {
-            if (ctx.parsed.y == null) return null;
-            return `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(0)}ms`;
-          },
-        },
+  const opts = useMemo<Omit<uPlot.Options, 'width' | 'height'>>(() => ({
+    axes: [
+      ...defaultAxes().slice(0, 1),
+      {
+        ...defaultAxes()[1],
+        values: (_u: uPlot, vals: number[]) =>
+          vals.map((v) => `${v}ms`),
+        range: [0, yAxisMax],
       },
-    },
+    ],
     scales: {
-      y: {
-        ticks: { color: APP_COLORS.hex_666, callback: (v: any) => `${v}ms` },
-        grid: { color: APP_COLORS.hex_2d2d2d },
-        beginAtZero: true,
-        max: yAxisMax,
-      },
+      y: { min: 0, max: yAxisMax },
     },
-  }), [yAxisMax]);
+    series: [
+      {},
+      ...chartData.map((s) =>
+        uLine(s.label, s.color, { fill: s.fill, dash: s.dash }),
+      ),
+    ],
+  }), [chartData, yAxisMax]);
 
   if (data.length === 0 && timeBuckets.length === 0) {
     return (
@@ -254,8 +253,7 @@ export default memo(function LatencyChart({
 
   return (
     <div style={{ position: 'relative', height: '100%', minHeight: '200px' }}>
-      <Line data={chartData} options={options} />
+      <UPlotChart options={opts} data={uplotData} />
     </div>
   );
-}
-);
+});

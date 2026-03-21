@@ -1,10 +1,8 @@
-import { Bar } from 'react-chartjs-2';
-
-import { createChartOptions } from '@shared/utils/chartHelpers';
+import { useMemo } from 'react';
 
 import { APP_COLORS } from '@config/colorLiterals';
 
-import type { TooltipItem } from 'chart.js';
+import UPlotChart, { uBars } from '../UPlotChart';
 
 const BUCKETS = [
   { label: '0-50ms', max: 50, color: APP_COLORS.hex_73c991 },
@@ -53,45 +51,47 @@ export default function LatencyHistogram({
 
   if (counts.every((c) => c === 0)) return null;
 
-  const chartData = {
-    labels: BUCKETS.map((b) => b.label),
-    datasets: [
-      {
-        label: 'Traces',
-        data: counts,
-        backgroundColor: BUCKETS.map((b) => `${b.color}CC`),
-        borderColor: BUCKETS.map((b) => b.color),
-        borderWidth: 1,
-        borderRadius: 3,
-      },
+  const uplotData = useMemo<uPlot.AlignedData>(
+    () => [
+      BUCKETS.map((_, i) => i),
+      counts,
     ],
-  };
+    [counts],
+  );
 
-  const options = createChartOptions({
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (context: TooltipItem<'bar'>) => `${context.parsed.y} traces`,
+  const opts = useMemo<Omit<uPlot.Options, 'width' | 'height'>>(
+    () => ({
+      axes: [
+        {
+          stroke: APP_COLORS.hex_666,
+          grid: { show: false },
+          ticks: { show: false },
+          font: '10px inherit',
+          values: (_u: uPlot, splits: number[]) =>
+            splits.map((i) => BUCKETS[Math.round(i)]?.label ?? ''),
         },
-      },
-    },
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: { color: APP_COLORS.hex_666, maxRotation: 0, font: { size: 10 } },
-      },
-      y: {
-        grid: { color: APP_COLORS.hex_2d2d2d },
-        ticks: { color: APP_COLORS.hex_666, maxTicksLimit: 3 },
-        beginAtZero: true,
-      },
-    },
-  });
+        {
+          stroke: APP_COLORS.hex_666,
+          grid: { stroke: 'rgba(255,255,255,0.05)', width: 1 },
+          ticks: { show: false },
+          font: '10px inherit',
+          size: 40,
+        },
+      ],
+      cursor: { show: false },
+      legend: { show: false },
+      scales: { x: { range: (_u, min, max) => [min - 0.5, max + 0.5] as [number, number] } },
+      series: [
+        {},
+        uBars('Traces', APP_COLORS.hex_06aed5),
+      ],
+    }),
+    [],
+  );
 
   return (
     <div style={{ height }}>
-      <Bar data={chartData} options={options} />
+      <UPlotChart options={opts} data={uplotData} height={height} />
     </div>
   );
 }

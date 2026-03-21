@@ -3,6 +3,7 @@ import { ArrowUpRight } from 'lucide-react';
 
 import { formatDuration, formatTimestamp, formatNumber } from '@shared/utils/formatters';
 import { APP_COLORS } from '@config/colorLiterals';
+import { cn } from '@/lib/utils';
 
 import type { LLMRun } from '../../types';
 import type { AiRunColumn } from '../../utils/aiRunsUtils';
@@ -35,7 +36,7 @@ export const AiRunsTableRow = React.memo(function AiRunsTableRow({
       case 'model':
         return (
           <span
-            className="ai-runs-model-name"
+            className="inline-flex items-center gap-1 font-semibold text-[12px] text-[var(--text-link)] cursor-pointer hover:underline"
             onClick={(e) => {
               e.stopPropagation();
               onRowClick(run.spanId);
@@ -47,7 +48,7 @@ export const AiRunsTableRow = React.memo(function AiRunsTableRow({
         );
       case 'operationType':
         return (
-          <span className="ai-runs-operation-badge">
+          <span className="inline-block py-0.5 px-2 rounded-full bg-[var(--glass-bg)] border border-[var(--glass-border)] text-xs capitalize text-[var(--text-secondary)]">
             {run.operationType || '—'}
           </span>
         );
@@ -75,7 +76,7 @@ export const AiRunsTableRow = React.memo(function AiRunsTableRow({
       }
       case 'totalTokens':
         return (
-          <span style={{ fontFamily: 'monospace', fontSize: 12 }}>
+          <span className="font-mono" style={{ fontSize: 12 }}>
             {formatNumber(run.totalTokens)}
             <span style={{ color: 'var(--text-muted)', fontSize: 10, marginLeft: 4 }}>
               ({formatNumber(run.inputTokens)}+{formatNumber(run.outputTokens)})
@@ -83,10 +84,17 @@ export const AiRunsTableRow = React.memo(function AiRunsTableRow({
           </span>
         );
       case 'hasError':
-        return run.hasError ? (
-          <span className="ai-runs-status-badge error">Error</span>
-        ) : (
-          <span className="ai-runs-status-badge ok">OK</span>
+        return (
+          <span
+            className={cn(
+              'inline-flex py-0.5 px-2 rounded text-[11px] font-semibold',
+              run.hasError
+                ? 'bg-[rgba(240,68,56,0.12)] text-[#f04438]'
+                : 'bg-[rgba(16,185,129,0.12)] text-[#10b981]',
+            )}
+          >
+            {run.hasError ? 'Error' : 'OK'}
+          </span>
         );
       case 'startTime':
         return <span className="traces-timestamp">{formatTimestamp(run.startTime)}</span>;
@@ -113,7 +121,7 @@ export const AiRunsTableRow = React.memo(function AiRunsTableRow({
       {fixedColumns.map((col) => (
         <div
           key={col.key}
-          className="oboard__td"
+          className="inline-flex items-center whitespace-nowrap overflow-hidden text-ellipsis shrink-0 border-r border-[color:var(--glass-border)] px-[10px] py-[6px] box-border min-h-[34px]"
           style={{ width: colWidths[col.key] }}
           onClick={() => onOpenDetail(run)}
         >
@@ -121,7 +129,7 @@ export const AiRunsTableRow = React.memo(function AiRunsTableRow({
         </div>
       ))}
       {flexColumn && (
-        <div className="oboard__td oboard__td--flex" onClick={() => onOpenDetail(run)}>
+        <div className="inline-flex items-center whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0 border-r-0 border-[color:var(--glass-border)] px-[10px] py-[6px] box-border min-h-[34px]" onClick={() => onOpenDetail(run)}>
           {renderCell(flexColumn.key)}
         </div>
       )}

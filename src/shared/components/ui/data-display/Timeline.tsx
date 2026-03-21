@@ -1,7 +1,6 @@
 import { formatRelativeTime } from '@shared/utils/formatters';
 
 import { APP_COLORS } from '@config/colorLiterals';
-import './Timeline.css';
 
 interface TimelineTag {
   color: string;
@@ -29,41 +28,41 @@ export default function Timeline({ items = [] }: TimelineProps): JSX.Element | n
   if (items.length === 0) return null;
 
   return (
-    <div className="custom-timeline">
-      <div style={{ display: 'flex', flexDirection: 'column', position: 'relative', paddingLeft: 20 }}>
+    <div className="py-2">
+      <div className="flex flex-col relative pl-5">
         {items.map((item, index) => (
-          <div key={index} style={{ position: 'relative', paddingBottom: 24 }}>
+          <div key={index} className="relative pb-6">
             {/* Dot */}
-            <div style={{
-              position: 'absolute', left: -20, top: 4,
-              width: 10, height: 10, borderRadius: '50%',
-              background: item.color || `var(--color-primary, ${APP_COLORS.hex_5e60ce})`,
-              zIndex: 1,
-            }} />
+            <div
+              className="absolute -left-5 top-1 w-2.5 h-2.5 rounded-full z-[1]"
+              style={{ background: item.color || `var(--color-primary, ${APP_COLORS.hex_5e60ce})` }}
+            />
             {/* Line */}
             {index < items.length - 1 && (
-              <div style={{
-                position: 'absolute', left: -16, top: 14,
-                width: 2, height: 'calc(100% - 10px)',
-                background: 'var(--border-color, #2d2d2d)',
-              }} />
+              <div
+                className="absolute -left-4 top-3.5 w-0.5 bg-border"
+                style={{ height: 'calc(100% - 10px)' }}
+              />
             )}
-            <div className="timeline-item-content">
-              <div className="timeline-item-header">
-                <span className="timeline-item-title">{item.title}</span>
-                <span className="timeline-item-time">
+            {/* Content */}
+            <div className="pb-1">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-semibold text-[13px] text-foreground">{item.title}</span>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
                   {item.timestamp ? formatRelativeTime(item.timestamp) : ''}
                 </span>
               </div>
               {item.description && (
-                <div className="timeline-item-description">{item.description}</div>
+                <div className="text-xs text-[color:var(--text-secondary)] mt-1 leading-[1.5]">
+                  {item.description}
+                </div>
               )}
               {item.tags && (
-                <div className="timeline-item-tags">
+                <div className="flex gap-1.5 mt-1.5 flex-wrap">
                   {item.tags.map((tag, tagIndex) => (
                     <span
                       key={tagIndex}
-                      className="timeline-tag"
+                      className="text-[11px] px-2 py-px border rounded"
                       style={{ borderColor: tag.color, color: tag.color }}
                     >
                       {tag.label}

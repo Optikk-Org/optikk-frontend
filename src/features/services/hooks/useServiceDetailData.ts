@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { metricsService } from '@shared/api/metricsService';
 import { logsService } from '@shared/api/logsService';
 
+import { resolveTimeRangeBounds } from '@/types';
 import { useAppStore } from '@store/appStore';
 
 import type {
@@ -77,47 +78,41 @@ export interface UseServiceDetailDataProps {
 
 export function useServiceDetailData({ serviceName, activeTab }: UseServiceDetailDataProps) {
   const { selectedTeamId, timeRange, refreshKey } = useAppStore();
+  const rangeKey = timeRange.kind === 'relative' ? timeRange.preset : `${timeRange.startMs}-${timeRange.endMs}`;
+
+  const getBounds = () => resolveTimeRangeBounds(timeRange);
 
   const { data: endpointData, isLoading: endpointsLoading } = useQuery({
-    queryKey: ['endpoint-breakdown', selectedTeamId, timeRange.value, serviceName, refreshKey],
+    queryKey: ['endpoint-breakdown', selectedTeamId, rangeKey, serviceName, refreshKey],
     queryFn: () => {
-      const endTime = Date.now();
-      const timeRangeMinutes = timeRange.minutes ?? 0;
-      const startTime = endTime - timeRangeMinutes * 60 * 1000;
+      const { startTime, endTime } = getBounds();
       return metricsService.getEndpointBreakdown(selectedTeamId, startTime, endTime, serviceName);
     },
     enabled: !!selectedTeamId && serviceName.length > 0,
   });
 
   const { data: errorData, isLoading: errorsLoading } = useQuery({
-    queryKey: ['error-groups', selectedTeamId, timeRange.value, serviceName, refreshKey],
+    queryKey: ['error-groups', selectedTeamId, rangeKey, serviceName, refreshKey],
     queryFn: () => {
-      const endTime = Date.now();
-      const timeRangeMinutes = timeRange.minutes ?? 0;
-      const startTime = endTime - timeRangeMinutes * 60 * 1000;
+      const { startTime, endTime } = getBounds();
       return metricsService.getErrorGroups(selectedTeamId, startTime, endTime, serviceName);
     },
     enabled: !!selectedTeamId && serviceName.length > 0,
   });
 
   const { data: timeSeriesData, isLoading: timeSeriesLoading } = useQuery({
-    queryKey: ['metrics-timeseries', selectedTeamId, timeRange.value, serviceName, refreshKey],
+    queryKey: ['metrics-timeseries', selectedTeamId, rangeKey, serviceName, refreshKey],
     queryFn: () => {
-      const endTime = Date.now();
-      const timeRangeMinutes = timeRange.minutes ?? 0;
-      const startTime = endTime - timeRangeMinutes * 60 * 1000;
+      const { startTime, endTime } = getBounds();
       return metricsService.getMetricsTimeSeries(selectedTeamId, startTime, endTime, serviceName, '5m');
     },
     enabled: !!selectedTeamId && serviceName.length > 0,
   });
 
-  // Fetch service logs
   const { data: logsData, isLoading: logsLoading } = useQuery({
-    queryKey: ['service-logs', selectedTeamId, timeRange.value, serviceName, refreshKey],
+    queryKey: ['service-logs', selectedTeamId, rangeKey, serviceName, refreshKey],
     queryFn: () => {
-      const endTime = Date.now();
-      const timeRangeMinutes = timeRange.minutes ?? 0;
-      const startTime = endTime - timeRangeMinutes * 60 * 1000;
+      const { startTime, endTime } = getBounds();
       return logsService.getLogs(selectedTeamId, startTime, endTime, {
         services: [serviceName],
         limit: 50,
@@ -127,13 +122,10 @@ export function useServiceDetailData({ serviceName, activeTab }: UseServiceDetai
     enabled: !!selectedTeamId && serviceName.length > 0 && activeTab === 'logs',
   });
 
-  // Fetch service dependencies
   const { data: dependenciesData } = useQuery({
-    queryKey: ['service-dependencies', selectedTeamId, timeRange.value, serviceName, refreshKey],
+    queryKey: ['service-dependencies', selectedTeamId, rangeKey, serviceName, refreshKey],
     queryFn: () => {
-      const endTime = Date.now();
-      const timeRangeMinutes = timeRange.minutes ?? 0;
-      const startTime = endTime - timeRangeMinutes * 60 * 1000;
+      const { startTime, endTime } = getBounds();
       return metricsService.getServiceDependencies(selectedTeamId, startTime, endTime);
     },
     enabled: !!selectedTeamId && serviceName.length > 0 && activeTab === 'dependencies',

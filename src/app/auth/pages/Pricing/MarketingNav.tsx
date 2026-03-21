@@ -86,7 +86,7 @@ export default function MarketingNav() {
           ))}
           <a href="https://github.com/optikk-org" target="_blank" rel="noreferrer" className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             GitHub
-            <span style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: 12, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#F1F5F9' }}>★ 12.4k</span>
+            <span className="font-mono" style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: 12, fontSize: 10, color: '#F1F5F9' }}>★ 12.4k</span>
           </a>
         </div>
 
@@ -136,7 +136,7 @@ export default function MarketingNav() {
               style={{ color: '#F8FAFC', fontSize: 18, fontWeight: 500, fontFamily: "'Inter', sans-serif", display: 'flex', alignItems: 'center', gap: 8 }}
               onClick={() => window.open('https://github.com/optikk-org', '_blank')}
             >
-              GitHub <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#94A3B8' }}>★ 12.4k</span>
+              GitHub <span className="font-mono" style={{ fontSize: 12, color: '#94A3B8' }}>★ 12.4k</span>
             </div>
             <button className="nav-cta-btn" style={{ marginTop: 8, padding: 14 }} onClick={() => navigate('/login')}>
               Get Started

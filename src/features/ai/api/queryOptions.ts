@@ -27,6 +27,7 @@ export const aiRunsQueries = {
       queryFn: () => aiRunsApi.getRuns(teamId, startTime, endTime, filters),
       enabled: !!teamId,
       staleTime: 30000,
+      retry: false,
     }),
 
   summary: (teamId: number | null, startTime: RequestTime, endTime: RequestTime, filters: LLMRunFilters) =>
@@ -35,6 +36,7 @@ export const aiRunsQueries = {
       queryFn: () => aiRunsApi.getSummary(teamId, startTime, endTime, filters),
       enabled: !!teamId,
       staleTime: 30000,
+      retry: false,
     }),
 
   models: (teamId: number | null, startTime: RequestTime, endTime: RequestTime) =>
@@ -43,6 +45,7 @@ export const aiRunsQueries = {
       queryFn: () => aiRunsApi.getModels(teamId, startTime, endTime),
       enabled: !!teamId,
       staleTime: 60000,
+      retry: false,
     }),
 
   operations: (teamId: number | null, startTime: RequestTime, endTime: RequestTime) =>
@@ -51,6 +54,7 @@ export const aiRunsQueries = {
       queryFn: () => aiRunsApi.getOperations(teamId, startTime, endTime),
       enabled: !!teamId,
       staleTime: 60000,
+      retry: false,
     }),
 };
 
@@ -71,6 +75,7 @@ export const aiRunDetailQueries = {
       queryFn: () => aiRunDetailApi.getDetail(teamId, spanId),
       enabled: !!teamId && !!spanId,
       staleTime: 60000,
+      retry: false,
     }),
 
   messages: (teamId: number | null, spanId: string) =>
@@ -79,6 +84,7 @@ export const aiRunDetailQueries = {
       queryFn: () => aiRunDetailApi.getMessages(teamId, spanId),
       enabled: !!teamId && !!spanId,
       staleTime: 60000,
+      retry: false,
     }),
 
   context: (teamId: number | null, spanId: string, traceId: string) =>
@@ -87,6 +93,7 @@ export const aiRunDetailQueries = {
       queryFn: () => aiRunDetailApi.getContext(teamId, spanId, traceId),
       enabled: !!teamId && !!spanId && !!traceId,
       staleTime: 60000,
+      retry: false,
     }),
 };
 
@@ -105,6 +112,7 @@ export const aiTraceQueries = {
       queryFn: () => aiTracesApi.getTrace(teamId, traceId),
       enabled: !!teamId && !!traceId,
       staleTime: 60000,
+      retry: false,
     }),
 
   summary: (teamId: number | null, traceId: string) =>
@@ -113,6 +121,7 @@ export const aiTraceQueries = {
       queryFn: () => aiTracesApi.getSummary(teamId, traceId),
       enabled: !!teamId && !!traceId,
       staleTime: 60000,
+      retry: false,
     }),
 };
 
@@ -131,6 +140,7 @@ export const aiConversationQueries = {
       queryFn: () => aiConversationsApi.list(teamId, startTime, endTime),
       enabled: !!teamId,
       staleTime: 30000,
+      retry: false,
     }),
 
   detail: (teamId: number | null, conversationId: string, startTime: RequestTime, endTime: RequestTime) =>
@@ -139,5 +149,6 @@ export const aiConversationQueries = {
       queryFn: () => aiConversationsApi.get(teamId, conversationId, startTime, endTime),
       enabled: !!teamId && !!conversationId,
       staleTime: 30000,
+      retry: false,
     }),
 };

@@ -1,4 +1,4 @@
-import { Tabs, Skeleton } from '@shared/design-system';
+import { Tabs, Skeleton } from '@/components/ui';
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -58,7 +58,7 @@ export default function DashboardPage({ pageId, pathParams }: DashboardPageProps
           onChange={onTabChange}
           items={tabItems}
           size="large"
-          tabBarStyle={{ marginBottom: 16 }}
+          className="mb-[var(--space-md)]"
         />
         <DashboardTabContent components={components} groups={groups} pathParams={pathParams} />
       </>

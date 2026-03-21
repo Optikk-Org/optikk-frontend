@@ -1,5 +1,4 @@
-import { Table } from 'antd';
-import { Badge, Skeleton } from '@shared/design-system';
+import { Badge, Skeleton, SimpleTable } from '@/components/ui';
 import React from 'react';
 import { APP_COLORS } from '@config/colorLiterals';
 import { formatNumber } from '@shared/utils/formatters';
@@ -54,7 +53,7 @@ export const KafkaSaturationTable: React.FC<KafkaSaturationTableProps> = ({ data
   if (data.length === 0) return <div className="text-muted" style={{textAlign:'center',padding:32}}>No messaging data in selected time range</div>;
 
   return (
-    <Table
+    <SimpleTable
       dataSource={data.map((m, i) => ({ ...m, key: i }))}
       columns={columns}
       size="small"

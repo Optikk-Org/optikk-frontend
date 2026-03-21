@@ -1,17 +1,15 @@
-import { Form, Input as AntInput } from 'antd';
 import { User } from 'lucide-react';
-import { Surface, Button, Skeleton } from '@shared/design-system';
+import { useEffect, useState } from 'react';
+import { Surface, Button, Skeleton } from '@/components/ui';
 
 import type {
   SettingsProfileFormValues,
   SettingsProfileViewModel,
 } from '../../types';
-import type { FormInstance } from 'antd/es/form';
 
 interface SettingsProfileTabProps {
   readonly profileLoading: boolean;
   readonly profile: SettingsProfileViewModel | null;
-  readonly profileForm: FormInstance<SettingsProfileFormValues>;
   readonly isSaving: boolean;
   readonly getInitials: (name: string) => string;
   readonly onSubmit: (values: SettingsProfileFormValues) => void;
@@ -20,16 +18,30 @@ interface SettingsProfileTabProps {
 export default function SettingsProfileTab({
   profileLoading,
   profile,
-  profileForm,
   isSaving,
   getInitials,
   onSubmit,
 }: SettingsProfileTabProps): JSX.Element {
+  const [name, setName] = useState(profile?.name ?? '');
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl ?? '');
+
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name ?? '');
+      setAvatarUrl(profile.avatarUrl ?? '');
+    }
+  }, [profile]);
+
   if (profileLoading) {
     return <div className="p-xl"><Skeleton count={5} /></div>;
   }
 
   const initials = getInitials(profile?.name || '');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({ name, email: profile?.email, avatarUrl: avatarUrl || undefined });
+  };
 
   return (
     <Surface elevation={1} padding="lg" className="settings-card">
@@ -55,47 +67,58 @@ export default function SettingsProfileTab({
 
       <div className="border-t mb-md" />
 
-      <Form
-        form={profileForm}
-        layout="vertical"
-        onFinish={onSubmit}
-        initialValues={{
-          name: profile?.name,
-          email: profile?.email,
-          avatarUrl: profile?.avatarUrl,
-        }}
-      >
-        <Form.Item
-          label="Name"
-          name="name"
-          rules={[{ required: true, message: 'Please enter your name' }]}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[13px] font-medium text-[var(--text-primary)]">Name</label>
+          <div className="relative">
+            <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Your name"
+              required
+              className="h-9 w-full rounded-md border border-[var(--border-color)] bg-[var(--bg-tertiary)] pl-10 pr-3 text-[13px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(94,96,206,0.1)]"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[13px] font-medium text-[var(--text-primary)]">Email</label>
+          <input
+            value={profile?.email ?? ''}
+            disabled
+            className="h-9 w-full rounded-md border border-[var(--border-color)] bg-[var(--bg-tertiary)] px-3 text-[13px] text-[var(--text-muted)] opacity-60"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[13px] font-medium text-[var(--text-primary)]">Avatar URL</label>
+          <input
+            value={avatarUrl}
+            onChange={(e) => setAvatarUrl(e.target.value)}
+            placeholder="https://example.com/avatar.jpg"
+            className="h-9 w-full rounded-md border border-[var(--border-color)] bg-[var(--bg-tertiary)] px-3 text-[13px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(94,96,206,0.1)]"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[13px] font-medium text-[var(--text-primary)]">Role</label>
+          <input
+            value={profile?.role ?? ''}
+            disabled
+            className="h-9 w-full rounded-md border border-[var(--border-color)] bg-[var(--bg-tertiary)] px-3 text-[13px] text-[var(--text-muted)] opacity-60"
+          />
+        </div>
+
+        <Button
+          variant="primary"
+          fullWidth
+          loading={isSaving}
+          type="submit"
         >
-          <AntInput prefix={<User size={16} />} placeholder="Your name" />
-        </Form.Item>
-
-        <Form.Item label="Email" name="email">
-          <AntInput disabled />
-        </Form.Item>
-
-        <Form.Item label="Avatar URL" name="avatarUrl">
-          <AntInput placeholder="https://example.com/avatar.jpg" />
-        </Form.Item>
-
-        <Form.Item label="Role">
-          <AntInput value={profile?.role} disabled />
-        </Form.Item>
-
-        <Form.Item>
-          <Button
-            variant="primary"
-            fullWidth
-            loading={isSaving}
-            type="submit"
-          >
-            Save Changes
-          </Button>
-        </Form.Item>
-      </Form>
+          Save Changes
+        </Button>
+      </form>
     </Surface>
   );
 }

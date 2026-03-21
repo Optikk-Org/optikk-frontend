@@ -1,4 +1,4 @@
-import { Badge, Skeleton, Surface } from '@shared/design-system';
+import { Badge, Skeleton, Surface } from '@/components/ui';
 import { ShieldCheck } from 'lucide-react';
 
 import { APP_COLORS } from '@config/colorLiterals';

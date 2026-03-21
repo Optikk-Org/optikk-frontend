@@ -1,10 +1,9 @@
 import { useState, useMemo } from 'react';
-import { Input } from '@shared/design-system';
+import { Input } from '@/components/ui';
 
 import { formatDuration } from '@shared/utils/formatters';
 
 import { CHART_COLORS, STATUS_COLORS } from '@config/constants';
-import './WaterfallChart.css';
 
 const KIND_COLORS: Record<string, string> = {
   SERVER: '#648FFF',
@@ -135,7 +134,11 @@ export default function WaterfallChart({
   };
 
   if (!spans || spans.length === 0) {
-    return <div className="waterfall-empty">No spans available</div>;
+    return (
+      <div className="py-[60px] text-center text-[color:var(--text-muted)] text-sm">
+        No spans available
+      </div>
+    );
   }
 
   const timeLabels = getTimeAxisLabels();
@@ -143,18 +146,9 @@ export default function WaterfallChart({
   const hasErrorPath = errorPathSpanIds && errorPathSpanIds.size > 0;
 
   return (
-    <div className="waterfall-chart">
+    <div className="bg-[var(--glass-bg)] rounded-lg overflow-hidden">
       {/* Search + filter toolbar */}
-      <div
-        style={{
-          padding: '10px 12px',
-          display: 'flex',
-          gap: 8,
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          borderBottom: '1px solid var(--glass-border)',
-        }}
-      >
+      <div className="px-3 py-2.5 flex gap-2 items-center flex-wrap border-b border-[var(--glass-border)]">
         <Input
           placeholder="Search spans..."
           value={search}
@@ -163,18 +157,11 @@ export default function WaterfallChart({
           size="small"
           style={{ width: 200 }}
         />
-        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        <div className="flex gap-1 flex-wrap">
           <span
             onClick={() => setActiveService(null)}
-            style={{
-              padding: '2px 8px',
-              borderRadius: 12,
-              fontSize: 11,
-              cursor: 'pointer',
-              background: activeService === null ? 'var(--glass-border)' : 'transparent',
-              border: '1px solid var(--glass-border)',
-              color: 'var(--text-secondary)',
-            }}
+            className="px-2 py-0.5 rounded-xl text-[11px] cursor-pointer border border-[var(--glass-border)] text-[color:var(--text-secondary)]"
+            style={{ background: activeService === null ? 'var(--glass-border)' : 'transparent' }}
           >
             All
           </span>
@@ -185,11 +172,8 @@ export default function WaterfallChart({
               <span
                 key={svc}
                 onClick={() => setActiveService(isActive ? null : svc)}
+                className="px-2 py-0.5 rounded-xl text-[11px] cursor-pointer"
                 style={{
-                  padding: '2px 8px',
-                  borderRadius: 12,
-                  fontSize: 11,
-                  cursor: 'pointer',
                   background: isActive ? `${color}22` : 'transparent',
                   border: `1px solid ${isActive ? color : 'var(--glass-border)'}`,
                   color: isActive ? color : 'var(--text-secondary)',
@@ -201,16 +185,16 @@ export default function WaterfallChart({
           })}
         </div>
         {(hasCritical || hasErrorPath) && (
-          <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
+          <span className="text-[11px] text-[color:var(--text-muted)] ml-auto flex gap-2.5 items-center">
             {hasCritical && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ width: 12, height: 3, background: '#f59e0b', borderRadius: 2, display: 'inline-block' }} />
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-[3px] bg-[#f59e0b] rounded-sm inline-block" />
                 Critical path
               </span>
             )}
             {hasErrorPath && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ width: 12, height: 3, background: '#f04438', borderRadius: 2, display: 'inline-block' }} />
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-[3px] bg-[#f04438] rounded-sm inline-block" />
                 Error path
               </span>
             )}
@@ -219,33 +203,28 @@ export default function WaterfallChart({
       </div>
 
       {/* Column header */}
-      <div className="waterfall-header">
-        <div className="waterfall-labels-column" style={{ width: 300, minWidth: 300 }}>
-          <span className="waterfall-header-title">Span</span>
+      <div className="flex border-b-2 border-[var(--glass-border)] bg-[rgba(255,255,255,0.02)] sticky top-0 z-[1]">
+        <div className="w-[300px] min-w-[300px] border-r border-[var(--glass-border)] p-3">
+          <span className="text-[color:var(--text-primary)] font-semibold text-[12px] uppercase tracking-[0.5px] pl-2">
+            Span
+          </span>
         </div>
         <div
-          style={{
-            width: 60,
-            minWidth: 60,
-            borderRight: '1px solid var(--glass-border)',
-            padding: '12px 8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-          }}
+          className="w-[60px] min-w-[60px] border-r border-[var(--glass-border)] p-3 flex items-center justify-end"
         >
-          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>%</span>
+          <span className="text-[11px] font-semibold text-[color:var(--text-muted)] uppercase">%</span>
         </div>
-        <div className="waterfall-timeline-column">
-          <div className="waterfall-time-axis">
+        <div className="flex-1 relative p-3">
+          <div className="flex justify-between items-center h-full">
             {timeLabels.map((label, idx) => (
-              <span key={idx} className="waterfall-time-label">{label}</span>
+              <span key={idx} className="text-[color:var(--text-muted)] text-[11px] font-medium">{label}</span>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="waterfall-body">
+      {/* Body */}
+      <div className="max-h-[600px] overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-[var(--scrollbar-track)] [&::-webkit-scrollbar-thumb]:bg-[var(--scrollbar-thumb)] [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb:hover]:bg-[var(--scrollbar-thumb-hover)]">
         {filteredTree.map((span, index) => {
           const isCritical = criticalPathSpanIds?.has(span.span_id);
           const isError = errorPathSpanIds?.has(span.span_id);
@@ -269,66 +248,56 @@ export default function WaterfallChart({
           return (
             <div
               key={span.span_id}
-              className={`waterfall-row${isSelected ? ' selected' : ''}${hoveredSpanId === span.span_id ? ' hovered' : ''}`}
+              className="flex border-b border-[var(--glass-border)] cursor-pointer transition-[background-color] duration-150 hover:bg-[rgba(255,255,255,0.04)]"
               style={{ borderLeft, background: rowBg }}
               onClick={() => onSpanClick && onSpanClick(span)}
               onMouseEnter={() => setHoveredSpanId(span.span_id)}
               onMouseLeave={() => setHoveredSpanId(null)}
             >
               {/* Label */}
-              <div className="waterfall-labels-column" style={{ width: 300, minWidth: 300 }}>
-                <div className="waterfall-span-label" style={{ paddingLeft: `${span.depth * 16 + 8}px` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div className="w-[300px] min-w-[300px] border-r border-[var(--glass-border)]">
+                <div
+                  className="flex flex-col gap-0.5 py-2"
+                  style={{ paddingLeft: `${span.depth * 16 + 8}px` }}
+                >
+                  <div className="flex items-center gap-1">
                     {kind && (
                       <span
+                        className="text-[9px] font-bold tracking-[0.04em] px-1 py-px rounded-[3px] flex-shrink-0 leading-[14px]"
                         style={{
-                          fontSize: 9,
-                          fontWeight: 700,
-                          letterSpacing: '0.04em',
-                          padding: '1px 4px',
-                          borderRadius: 3,
                           background: `${kindColor(kind)}22`,
                           color: kindColor(kind),
-                          flexShrink: 0,
-                          lineHeight: '14px',
                         }}
                       >
                         {kind.slice(0, 3)}
                       </span>
                     )}
-                    <span className="waterfall-service-name">{span.service_name}</span>
+                    <span className="text-[color:var(--text-muted)] text-[11px] font-medium uppercase tracking-[0.3px]">
+                      {span.service_name}
+                    </span>
                   </div>
-                  <span className="waterfall-operation-name">{span.operation_name}</span>
+                  <span className="text-[color:var(--text-primary)] text-[13px] font-normal whitespace-nowrap overflow-hidden text-ellipsis">
+                    {span.operation_name}
+                  </span>
                 </div>
               </div>
 
               {/* Duration % */}
-              <div
-                style={{
-                  width: 60,
-                  minWidth: 60,
-                  borderRight: '1px solid var(--glass-border)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'flex-end',
-                  padding: '0 8px',
-                  fontSize: 11,
-                  color: 'var(--text-muted)',
-                  fontVariantNumeric: 'tabular-nums',
-                }}
-              >
+              <div className="w-[60px] min-w-[60px] border-r border-[var(--glass-border)] flex items-center justify-end px-2 text-[11px] text-[color:var(--text-muted)] tabular-nums">
                 {durationPct}%
               </div>
 
               {/* Timeline bar */}
-              <div className="waterfall-timeline-column">
-                <div className="waterfall-bar-container">
+              <div className="flex-1 relative py-3">
+                <div className="relative h-full">
                   <div
-                    className="waterfall-bar"
+                    className="absolute h-6 rounded flex items-center justify-start px-1.5 min-w-[3px] cursor-pointer shadow-[0_2px_8px_-2px_rgba(0,0,0,0.3)] opacity-0 animate-[waterfall-bar-enter_0.4s_ease-out_forwards] hover:opacity-100 hover:scale-y-[1.15] hover:z-[5] hover:shadow-[0_4px_12px_rgba(0,0,0,0.4)] transition-[opacity,transform,box-shadow] duration-200"
                     style={getBarStyle(span, index)}
                     title={`${span.operation_name} — ${formatDuration(span.duration_ms)}`}
                   >
-                    <span className="waterfall-bar-duration">{formatDuration(span.duration_ms)}</span>
+                    <span className="text-white text-[10px] font-semibold [text-shadow:0_1px_3px_rgba(0,0,0,0.8)] whitespace-nowrap overflow-hidden text-ellipsis">
+                      {formatDuration(span.duration_ms)}
+                    </span>
                   </div>
                 </div>
               </div>

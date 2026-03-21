@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import uPlot from 'uplot';
 
 import type {
   DashboardComponentSpec,
@@ -7,24 +7,12 @@ import type {
   DashboardExtraContext,
 } from '@/types/dashboardConfig';
 
-import LatencyHistogram from '@shared/components/ui/charts/distributions/LatencyHistogram';
-import LogHistogram from '@shared/components/ui/charts/distributions/LogHistogram';
-import GaugeChart from '@shared/components/ui/charts/micro/GaugeChart';
-import LatencyHeatmapChart from '@shared/components/ui/charts/specialized/LatencyHeatmapChart';
-import ServiceGraph from '@shared/components/ui/charts/specialized/ServiceGraph';
-import WaterfallChart from '@shared/components/ui/charts/specialized/WaterfallChart';
+import { getChartColor } from '@shared/utils/echarts';
+import { tsMs } from '@shared/utils/chartDataUtils';
 
-import {
-  createBarDataset,
-  createChartOptions,
-  createLineDataset,
-  getChartColor,
-} from '@shared/utils/chartHelpers';
-
-import { APP_COLORS } from '@config/colorLiterals';
+import UPlotChart, { defaultAxes, uLine } from '@shared/components/ui/charts/UPlotChart';
 
 import { useDashboardData } from '../hooks/useDashboardData';
-import { buildAiTimeseries, resolveDataSourceId } from '../utils/dashboardUtils';
 
 /**
  *
@@ -38,34 +26,89 @@ export function AiLineRenderer({
   dataSources: DashboardDataSources;
   extraContext: DashboardExtraContext;
 }) {
-  const { rawData, data: rows } = useDashboardData(chartConfig, dataSources);
+  const { data: rows } = useDashboardData(chartConfig, dataSources);
 
-  const chartData = useMemo(
-    () => buildAiTimeseries(
-      rows,
-      chartConfig.valueKey,
-      chartConfig.groupByKey || 'model_name',
-      extraContext?.selectedModel || null,
-    ),
-    [rows, chartConfig.valueKey, chartConfig.groupByKey, extraContext?.selectedModel],
-  );
-  const tickCallback = chartConfig.yPrefix
-    ? (value: any) => `${chartConfig.yPrefix}${Number(value).toFixed(chartConfig.yDecimals ?? 2)}`
-    : undefined;
+  const { alignedData, series, hasData } = useMemo(() => {
+    const arr = Array.isArray(rows) ? rows : [];
+    const metricKey = chartConfig.valueKey;
+    const groupKey = chartConfig.groupByKey || 'model_name';
+    const filterValue = extraContext?.selectedModel || null;
+    const filtered = filterValue ? arr.filter((row) => row[groupKey] === filterValue) : arr;
 
-  const options = createChartOptions({
-    plugins: { legend: { display: true, labels: { color: APP_COLORS.hex_666, font: { size: 11 } } } },
-    scales: {
-      y: {
-        ticks: { color: APP_COLORS.hex_666, ...(tickCallback ? { callback: tickCallback } : {}) },
-        grid: { color: APP_COLORS.hex_2d2d2d },
-        beginAtZero: true,
-      },
-    },
-  });
+    const tsSet = new Set<string>();
+    const groupSet = new Set<string>();
+    for (const row of filtered) {
+      if (row[metricKey] != null && row[metricKey] !== '' && row[metricKey] !== 0) {
+        tsSet.add(row.timestamp);
+        groupSet.add(row[groupKey] || 'unknown');
+      }
+    }
 
-  if (!chartData.hasData) {
+    const timestamps = Array.from(tsSet).sort(
+      (a, b) => new Date(a).getTime() - new Date(b).getTime(),
+    );
+    const groups = Array.from(groupSet);
+
+    if (groups.length === 0 || timestamps.length === 0) {
+      return { alignedData: [[], []] as uPlot.AlignedData, series: [] as uPlot.Series[], hasData: false };
+    }
+
+    // Build lookup: group -> timestamp -> value
+    const lookup: Record<string, Record<string, number | null>> = {};
+    for (const row of filtered) {
+      const group = row[groupKey] || 'unknown';
+      if (!lookup[group]) lookup[group] = {};
+      const value = Number(row[metricKey]);
+      lookup[group][row.timestamp] = Number.isNaN(value) ? null : Math.round(value * 100000) / 100000;
+    }
+
+    // Build AlignedData: [timestamps_seconds[], values1[], values2[], ...]
+    const tsSecs = new Float64Array(timestamps.length);
+    for (let i = 0; i < timestamps.length; i++) {
+      tsSecs[i] = tsMs(timestamps[i]) / 1000;
+    }
+
+    const valuesArrays: (number | null)[][] = groups.map((group) =>
+      timestamps.map((ts) => lookup[group]?.[ts] ?? null),
+    );
+
+    const alignedData: uPlot.AlignedData = [
+      tsSecs as unknown as number[],
+      ...valuesArrays,
+    ];
+
+    const seriesConfigs: uPlot.Series[] = groups.map((group, index) =>
+      uLine(group, getChartColor(index), { fill: false }),
+    );
+
+    return { alignedData, series: seriesConfigs, hasData: true };
+  }, [rows, chartConfig.valueKey, chartConfig.groupByKey, extraContext?.selectedModel]);
+
+  if (!hasData) {
     return <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>No data</div>;
   }
-  return <div style={{ height: '100%' }}><Line data={chartData} options={options} /></div>;
+
+  const yAxisFormatter = chartConfig.yPrefix
+    ? (self: uPlot, ticks: number[]) =>
+        ticks.map((v) => `${chartConfig.yPrefix}${Number(v).toFixed(chartConfig.yDecimals ?? 2)}`)
+    : undefined;
+
+  const axes = defaultAxes();
+  if (yAxisFormatter) {
+    axes[1] = {
+      ...axes[1],
+      values: yAxisFormatter,
+    };
+  }
+
+  const options: Omit<uPlot.Options, 'width' | 'height'> = {
+    axes,
+    series: [{}, ...series],
+    legend: { show: series.length > 0 },
+    scales: {
+      y: { min: 0 },
+    },
+  };
+
+  return <UPlotChart options={options} data={alignedData} className="w-full" />;
 }

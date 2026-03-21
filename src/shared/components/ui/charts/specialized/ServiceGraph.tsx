@@ -1,21 +1,23 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 
 import { APP_COLORS } from '@config/colorLiterals';
-import { 
-  NODE_WIDTH, 
-  NODE_HEIGHT, 
-  STAGE_GAP_X, 
-  PAD_LEFT, 
-  truncate, 
-  inferDomain, 
-  nodeSeverity, 
-  buildPath 
+import {
+  NODE_WIDTH,
+  NODE_HEIGHT,
+  STAGE_GAP_X,
+  PAD_LEFT,
+  truncate,
+  inferDomain,
+  nodeSeverity,
+  buildPath
 } from './utils/graphUtils';
 import { useServiceGraphLayout } from './hooks/useServiceGraphLayout';
 import './ServiceGraph.css';
 
 /**
  * Interactive service dependency graph with force-directed layout and health status.
+ * SVG-specific class names (service-flow-node, node-card, stage-pill, etc.) are kept
+ * in ServiceGraph.css because Tailwind cannot target SVG fill/stroke properties.
  */
 export default function ServiceGraph({ nodes = [], edges = [], onNodeClick }: any) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -30,14 +32,14 @@ export default function ServiceGraph({ nodes = [], edges = [], onNodeClick }: an
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [expanded, setExpanded] = useState(false);
 
-  const { 
-    stageColumns, 
-    positions, 
-    contentWidth, 
-    contentHeight, 
-    incidentCount, 
-    edges: graphEdges, 
-    maxCalls 
+  const {
+    stageColumns,
+    positions,
+    contentWidth,
+    contentHeight,
+    incidentCount,
+    edges: graphEdges,
+    maxCalls
   } = useServiceGraphLayout(nodes, edges);
 
   useEffect(() => {
@@ -104,20 +106,60 @@ export default function ServiceGraph({ nodes = [], edges = [], onNodeClick }: an
   const handleMouseUp = () => setDragging(false);
 
   if (!nodes.length) {
-    return <div className="service-graph-empty"><p>No services to display</p></div>;
+    return (
+      <div className="flex items-center justify-center min-h-[240px] text-[color:var(--literal-hex-7e8595)] text-base">
+        <p>No services to display</p>
+      </div>
+    );
   }
 
   return (
-    <div ref={containerRef} className={`service-graph-container ${expanded ? 'expanded' : ''}`}>
-      <div className="graph-toolbar graph-toolbar-left">
-        <button className="graph-toolbar-btn" onClick={zoomOut} title="Zoom Out">-</button>
-        <div className="graph-toolbar-zoom">{Math.round(scale * 100)}%</div>
-        <button className="graph-toolbar-btn" onClick={zoomIn} title="Zoom In">+</button>
+    <div
+      ref={containerRef}
+      className={`service-graph-container relative w-full overflow-hidden rounded-xl border border-[rgba(65,88,145,0.45)] min-h-[320px] ${expanded ? 'min-h-[70vh]' : ''}`}
+      style={{
+        background: `
+          radial-gradient(circle at 8px 8px, var(--literal-rgba-63-89-140-0p35) 1px, transparent 1px),
+          radial-gradient(circle at 8px 8px, var(--literal-rgba-14-25-48-0p95) 0, var(--literal-rgba-8-10-16-0p98) 80%)
+        `,
+        backgroundSize: '16px 16px, 100% 100%',
+      }}
+    >
+      {/* Left toolbar */}
+      <div className="absolute top-3.5 left-3.5 flex items-center gap-1.5 z-10">
+        <button
+          className="min-w-[34px] h-8 border border-[rgba(95,106,133,0.45)] bg-[rgba(20,23,31,0.88)] text-[color:var(--literal-hex-d8dce8)] rounded-lg cursor-pointer text-[13px] font-semibold px-2.5 flex items-center justify-center transition-all duration-200 hover:border-[rgba(127,145,194,0.72)] hover:bg-[rgba(36,41,53,0.95)]"
+          onClick={zoomOut}
+          title="Zoom Out"
+        >
+          -
+        </button>
+        <div className="min-w-[56px] h-8 rounded-lg border border-[rgba(95,106,133,0.45)] bg-[rgba(20,23,31,0.88)] text-[color:var(--literal-hex-aab1c7)] text-[12px] font-bold flex items-center justify-center">
+          {Math.round(scale * 100)}%
+        </div>
+        <button
+          className="min-w-[34px] h-8 border border-[rgba(95,106,133,0.45)] bg-[rgba(20,23,31,0.88)] text-[color:var(--literal-hex-d8dce8)] rounded-lg cursor-pointer text-[13px] font-semibold px-2.5 flex items-center justify-center transition-all duration-200 hover:border-[rgba(127,145,194,0.72)] hover:bg-[rgba(36,41,53,0.95)]"
+          onClick={zoomIn}
+          title="Zoom In"
+        >
+          +
+        </button>
       </div>
 
-      <div className="graph-toolbar graph-toolbar-right">
-        <button className="graph-toolbar-btn ghost" onClick={resetView}>Reset View</button>
-        <button className="graph-toolbar-btn" onClick={toggleExpand}>{expanded ? 'Exit Expand' : 'Expand'}</button>
+      {/* Right toolbar */}
+      <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5 z-10">
+        <button
+          className="min-w-[34px] h-8 border border-[rgba(95,106,133,0.45)] bg-[rgba(15,18,25,0.82)] text-[color:var(--literal-hex-d8dce8)] rounded-lg cursor-pointer text-[13px] font-semibold px-2.5 flex items-center justify-center transition-all duration-200 hover:border-[rgba(127,145,194,0.72)] hover:bg-[rgba(36,41,53,0.95)]"
+          onClick={resetView}
+        >
+          Reset View
+        </button>
+        <button
+          className="min-w-[34px] h-8 border border-[rgba(95,106,133,0.45)] bg-[rgba(20,23,31,0.88)] text-[color:var(--literal-hex-d8dce8)] rounded-lg cursor-pointer text-[13px] font-semibold px-2.5 flex items-center justify-center transition-all duration-200 hover:border-[rgba(127,145,194,0.72)] hover:bg-[rgba(36,41,53,0.95)]"
+          onClick={toggleExpand}
+        >
+          {expanded ? 'Exit Expand' : 'Expand'}
+        </button>
       </div>
 
       <svg
@@ -239,22 +281,55 @@ export default function ServiceGraph({ nodes = [], edges = [], onNodeClick }: an
         </g>
       </svg>
 
+      {/* Node tooltip */}
       {hoveredNode && (
-        <div className="service-graph-tooltip" style={{ left: tooltipPos.x + 12, top: tooltipPos.y + 12 }}>
-          <div className="tooltip-header">{hoveredNode.name}</div>
-          <div className="tooltip-row"><span className="tooltip-label">Status</span><span className="tooltip-value">{hoveredNode.status || 'unknown'}</span></div>
-          <div className="tooltip-row"><span className="tooltip-label">Requests</span><span className="tooltip-value">{Number(hoveredNode.requestCount || 0)}</span></div>
-          <div className="tooltip-row"><span className="tooltip-label">Error Rate</span><span className="tooltip-value">{Number(hoveredNode.errorRate || 0).toFixed(2)}%</span></div>
-          <div className="tooltip-row"><span className="tooltip-label">Latency</span><span className="tooltip-value">{Number(hoveredNode.avgLatency || 0).toFixed(0)}ms</span></div>
+        <div
+          className="absolute bg-[rgba(21,24,32,0.96)] border border-[rgba(83,93,117,0.72)] rounded-lg p-[10px_11px] pointer-events-none z-[1000] min-w-[210px] shadow-[0_12px_30px_rgba(0,0,0,0.35)]"
+          style={{ left: tooltipPos.x + 12, top: tooltipPos.y + 12 }}
+        >
+          <div className="text-[12px] font-bold text-[color:var(--literal-hex-eff2fa)] mb-2 pb-[7px] border-b border-[rgba(95,106,133,0.45)] font-mono">
+            {hoveredNode.name}
+          </div>
+          <div className="flex justify-between items-center mb-1.5 text-[12px]">
+            <span className="text-[color:var(--literal-hex-9ea8bf)] mr-3">Status</span>
+            <span className="text-[color:var(--literal-hex-e8ecf8)] font-semibold">{hoveredNode.status || 'unknown'}</span>
+          </div>
+          <div className="flex justify-between items-center mb-1.5 text-[12px]">
+            <span className="text-[color:var(--literal-hex-9ea8bf)] mr-3">Requests</span>
+            <span className="text-[color:var(--literal-hex-e8ecf8)] font-semibold">{Number(hoveredNode.requestCount || 0)}</span>
+          </div>
+          <div className="flex justify-between items-center mb-1.5 text-[12px]">
+            <span className="text-[color:var(--literal-hex-9ea8bf)] mr-3">Error Rate</span>
+            <span className="text-[color:var(--literal-hex-e8ecf8)] font-semibold">{Number(hoveredNode.errorRate || 0).toFixed(2)}%</span>
+          </div>
+          <div className="flex justify-between items-center text-[12px]">
+            <span className="text-[color:var(--literal-hex-9ea8bf)] mr-3">Latency</span>
+            <span className="text-[color:var(--literal-hex-e8ecf8)] font-semibold">{Number(hoveredNode.avgLatency || 0).toFixed(0)}ms</span>
+          </div>
         </div>
       )}
 
+      {/* Edge tooltip */}
       {hoveredEdge && !hoveredNode && (
-        <div className="service-graph-tooltip" style={{ left: tooltipPos.x + 12, top: tooltipPos.y + 12 }}>
-          <div className="tooltip-header">{`${hoveredEdge.source} -> ${hoveredEdge.target}`}</div>
-          <div className="tooltip-row"><span className="tooltip-label">Calls</span><span className="tooltip-value">{Number(hoveredEdge.callCount || 0)}</span></div>
-          <div className="tooltip-row"><span className="tooltip-label">Error Rate</span><span className="tooltip-value">{Number(hoveredEdge.errorRate || 0).toFixed(2)}%</span></div>
-          <div className="tooltip-row"><span className="tooltip-label">Latency</span><span className="tooltip-value">{Number(hoveredEdge.avgLatency || 0).toFixed(0)}ms</span></div>
+        <div
+          className="absolute bg-[rgba(21,24,32,0.96)] border border-[rgba(83,93,117,0.72)] rounded-lg p-[10px_11px] pointer-events-none z-[1000] min-w-[210px] shadow-[0_12px_30px_rgba(0,0,0,0.35)]"
+          style={{ left: tooltipPos.x + 12, top: tooltipPos.y + 12 }}
+        >
+          <div className="text-[12px] font-bold text-[color:var(--literal-hex-eff2fa)] mb-2 pb-[7px] border-b border-[rgba(95,106,133,0.45)] font-mono">
+            {`${hoveredEdge.source} -> ${hoveredEdge.target}`}
+          </div>
+          <div className="flex justify-between items-center mb-1.5 text-[12px]">
+            <span className="text-[color:var(--literal-hex-9ea8bf)] mr-3">Calls</span>
+            <span className="text-[color:var(--literal-hex-e8ecf8)] font-semibold">{Number(hoveredEdge.callCount || 0)}</span>
+          </div>
+          <div className="flex justify-between items-center mb-1.5 text-[12px]">
+            <span className="text-[color:var(--literal-hex-9ea8bf)] mr-3">Error Rate</span>
+            <span className="text-[color:var(--literal-hex-e8ecf8)] font-semibold">{Number(hoveredEdge.errorRate || 0).toFixed(2)}%</span>
+          </div>
+          <div className="flex justify-between items-center text-[12px]">
+            <span className="text-[color:var(--literal-hex-9ea8bf)] mr-3">Latency</span>
+            <span className="text-[color:var(--literal-hex-e8ecf8)] font-semibold">{Number(hoveredEdge.avgLatency || 0).toFixed(0)}ms</span>
+          </div>
         </div>
       )}
     </div>

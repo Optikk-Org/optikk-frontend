@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { useNavigate } from 'react-router-dom';
-import { Tabs, Badge, Input, Surface, Skeleton } from '@shared/design-system';
+import { Tabs, Badge, Input, Surface, Skeleton } from '@/components/ui';
 import { formatDuration, formatTimestamp } from '@shared/utils/formatters';
 import type { SpanAttributes, SpanEvent, SpanSelfTime, RelatedTrace } from '../../types';
 import './SpanDetailDrawer.css';
@@ -28,6 +29,65 @@ function KVRow({ label, value, mono }: { label: string; value?: string | null; m
     <div className="sdd-kv">
       <span className="sdd-kv__label">{label}</span>
       <span className={`sdd-kv__value ${mono ? 'font-mono' : ''}`}>{value}</span>
+    </div>
+  );
+}
+
+// ── Virtualized Attribute Table ───────────────────────────────────────────────
+
+function VirtualizedAttrTable({ attrs }: { attrs: [string, string][] }) {
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: attrs.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 32,
+    overscan: 10,
+  });
+
+  if (attrs.length === 0) {
+    return (
+      <div className="sdd-attr-table">
+        <div className="sdd-attr-table__header">
+          <span className="sdd-attr-table__col-key">Key</span>
+          <span className="sdd-attr-table__col-val">Value</span>
+        </div>
+        <div className="sdd-empty">No matching attributes</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="sdd-attr-table">
+      <div className="sdd-attr-table__header">
+        <span className="sdd-attr-table__col-key">Key</span>
+        <span className="sdd-attr-table__col-val">Value</span>
+      </div>
+      <div
+        ref={parentRef}
+        className="sdd-attr-table__body"
+        style={{ maxHeight: 400, overflow: 'auto' }}
+      >
+        <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
+          {virtualizer.getVirtualItems().map((virtualRow) => {
+            const [k, v] = attrs[virtualRow.index];
+            return (
+              <div
+                key={k}
+                className="sdd-attr-table__row"
+                style={{
+                  position: 'absolute',
+                  top: virtualRow.start,
+                  width: '100%',
+                  height: virtualRow.size,
+                }}
+              >
+                <span className="sdd-attr-table__col-key font-mono text-xs">{k}</span>
+                <span className="sdd-attr-table__col-val font-mono text-xs break-word">{v}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -124,23 +184,7 @@ function AttributesTab({ attrs, loading }: { attrs: SpanAttributes | null; loadi
           variant="search"
           className="mb-xs"
         />
-        <div className="sdd-attr-table">
-          <div className="sdd-attr-table__header">
-            <span className="sdd-attr-table__col-key">Key</span>
-            <span className="sdd-attr-table__col-val">Value</span>
-          </div>
-          <div className="sdd-attr-table__body">
-            {filteredAttrs.map(([k, v]) => (
-              <div key={k} className="sdd-attr-table__row">
-                <span className="sdd-attr-table__col-key font-mono text-xs">{k}</span>
-                <span className="sdd-attr-table__col-val font-mono text-xs break-word">{v}</span>
-              </div>
-            ))}
-            {filteredAttrs.length === 0 && (
-              <div className="sdd-empty">No matching attributes</div>
-            )}
-          </div>
-        </div>
+        <VirtualizedAttrTable attrs={filteredAttrs} />
       </Section>
     </div>
   );
@@ -176,7 +220,11 @@ function EventsTab({ events, selectedSpanId }: { events: SpanEvent[]; selectedSp
                 if (!isException) return;
                 setExpanded((prev) => {
                   const next = new Set(prev);
-                  next.has(key) ? next.delete(key) : next.add(key);
+                  if (next.has(key)) {
+                    next.delete(key);
+                  } else {
+                    next.add(key);
+                  }
                   return next;
                 });
               }}
@@ -345,6 +393,7 @@ export default function SpanDetailDrawer({
       <Tabs
         activeKey={activeTab}
         onChange={setActiveTab}
+        variant="compact"
         size="sm"
         items={[
           { key: 'attributes', label: 'Attributes' },

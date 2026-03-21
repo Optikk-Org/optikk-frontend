@@ -27,4 +27,3 @@ const logsConfig: DomainConfig = {
 };
 
 export { default as LogsHubPageView } from './pages/LogsHubPage';
-export * from './components';

@@ -8,7 +8,6 @@ import { queryClient } from '@shared/api/queryClient';
 import App from './App';
 import AppQueryClientProvider from './app/providers/QueryClientProvider';
 import ThemeProvider from './app/providers/ThemeProvider';
-import '@shared/utils/chartSetup';
 import './index.css';
 
 export { queryClient };

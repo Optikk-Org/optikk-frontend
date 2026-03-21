@@ -5,6 +5,10 @@ import type { DataSourceSpec } from '@/types/dashboardConfig';
 
 import { api } from '@shared/api/api/client';
 import type { ApiErrorShape } from '@shared/api/api/interceptors/errorInterceptor';
+import { UNKNOWN_ERROR } from '@/shared/constants/errorCodes';
+import type { ErrorCode } from '@/shared/constants/errorCodes';
+
+import { resolveTimeRangeBounds } from '@/types';
 
 import { useAppStore } from '@store/appStore';
 
@@ -28,6 +32,9 @@ function toApiErrorShape(error: unknown): ApiErrorShape {
     const record = error as Record<string, unknown>;
     return {
       status: typeof record.status === 'number' ? record.status : 0,
+      code: (typeof record.code === 'string' && record.code.length > 0
+        ? record.code
+        : UNKNOWN_ERROR) as ErrorCode,
       message: typeof record.message === 'string' && record.message.length > 0
         ? record.message
         : 'An unexpected error occurred',
@@ -38,12 +45,14 @@ function toApiErrorShape(error: unknown): ApiErrorShape {
   if (error instanceof Error) {
     return {
       status: 0,
+      code: UNKNOWN_ERROR,
       message: error.message || 'An unexpected error occurred',
     };
   }
 
   return {
     status: 0,
+    code: 'UNKNOWN_ERROR',
     message: 'An unexpected error occurred',
   };
 }
@@ -59,24 +68,10 @@ export function useDataSourceFetcher(
   const { selectedTeamId, timeRange, refreshKey } = useAppStore();
 
   const { startMs, endMs } = useMemo(() => {
-    // refreshKey forces a fresh "now" anchor for relative ranges on manual refresh.
     void refreshKey;
-
-    const resolvedEndMs = timeRange.value === 'custom' && timeRange.endTime != null
-      ? Number(timeRange.endTime)
-      : Date.now();
-    const resolvedStartMs = timeRange.value === 'custom' && timeRange.startTime != null
-      ? Number(timeRange.startTime)
-      : resolvedEndMs - (timeRange.minutes || 60) * 60 * 1000;
-
-    return { startMs: resolvedStartMs, endMs: resolvedEndMs };
-  }, [
-    timeRange.value,
-    timeRange.startTime,
-    timeRange.endTime,
-    timeRange.minutes,
-    refreshKey,
-  ]);
+    const { startTime, endTime } = resolveTimeRangeBounds(timeRange);
+    return { startMs: startTime, endMs: endTime };
+  }, [refreshKey, timeRange]);
 
   const results = useQueries({
     queries: dataSources.map((spec) => {
@@ -96,6 +91,7 @@ export function useDataSourceFetcher(
         enabled: !!selectedTeamId,
         staleTime: 0,
         gcTime: 30_000,
+        retry: false,
       };
     }),
   });

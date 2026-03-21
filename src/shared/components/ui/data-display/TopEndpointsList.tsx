@@ -204,11 +204,11 @@ export default function TopEndpointsList({
                     </div>
                   </td>
                   <td
+                    className="font-mono"
                     style={{
                       padding: '4px 8px',
                       textAlign: 'right',
                       color: valueColor,
-                      fontFamily: 'monospace',
                     }}
                   >
                     {displayValue}

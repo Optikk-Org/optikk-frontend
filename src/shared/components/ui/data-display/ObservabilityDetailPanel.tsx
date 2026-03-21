@@ -1,3 +1,4 @@
+import { Tabs } from '@/components/ui';
 import { Clock, Copy, Check, Filter, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 
@@ -24,7 +25,7 @@ function CopyableValue({ value }: CopyableValueProps): JSX.Element {
   const [copied, setCopied] = useState(false);
 
   if (value === null || value === undefined || value === '') {
-    return <span style={{ color: 'var(--text-muted)' }}>{EMPTY_VALUE_PLACEHOLDER}</span>;
+    return <span className="text-muted-foreground">{EMPTY_VALUE_PLACEHOLDER}</span>;
   }
 
   const handleCopy = (): void => {
@@ -42,12 +43,16 @@ function CopyableValue({ value }: CopyableValueProps): JSX.Element {
   };
 
   return (
-    <div className="oboard__detail-field-value" onClick={handleCopy} title="Click to copy">
+    <div
+      className="flex items-start gap-1 text-[12.5px] text-foreground font-mono break-all cursor-pointer transition-colors duration-100 leading-[1.5] hover:text-white"
+      onClick={handleCopy}
+      title="Click to copy"
+    >
       <span>{String(value)}</span>
       {copied ? (
-        <Check size={10} style={{ marginLeft: 6, color: 'var(--color-success)' }} />
+        <Check size={10} className="ml-1.5 text-success" />
       ) : (
-        <Copy size={10} style={{ marginLeft: 6, opacity: 0.35 }} />
+        <Copy size={10} className="ml-1.5 opacity-35" />
       )}
     </div>
   );
@@ -95,54 +100,77 @@ export function ObservabilityDetailPanel({
   const [tab, setTab] = useState<'fields' | 'json'>('fields');
 
   return (
-    <div className="oboard__detail-overlay" onClick={(event) => event.stopPropagation()}>
-      <div className="oboard__detail-header">
-        <div className="oboard__detail-title">
+    <div
+      className="fixed top-16 right-0 bottom-0 w-[500px] z-[1100] flex flex-col bg-[color:var(--glass-bg)] border-l border-[color:var(--glass-border)] shadow-[-12px_0_40px_rgba(0,0,0,0.55)] animate-oboard-slide-in"
+      style={{ backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)' }}
+      onClick={(event) => event.stopPropagation()}
+    >
+      {/* Header */}
+      <div className="flex justify-between items-center px-5 py-[14px] border-b border-[color:var(--glass-border)] shrink-0">
+        <div className="text-[14px] font-semibold text-foreground flex items-center gap-2">
           {title}
           {titleBadge}
         </div>
-        <button className="oboard__detail-close" onClick={onClose}>
+        <button
+          className="bg-transparent border-none text-muted-foreground cursor-pointer p-2 rounded-md flex items-center transition-all duration-100 hover:text-white hover:bg-[rgba(255,255,255,0.08)]"
+          onClick={onClose}
+        >
           <X size={18} />
         </button>
       </div>
 
+      {/* Meta bar */}
       {metaLine && (
-        <div className="oboard__detail-meta">
+        <div className="flex items-center gap-2 px-5 py-2 text-[11.5px] text-muted-foreground border-b border-[color:var(--glass-border)] shrink-0 font-mono">
           <Clock size={12} />
           <span>{metaLine}</span>
-          {metaRight && <span className="oboard__detail-meta-right">{metaRight}</span>}
+          {metaRight && (
+            <span className="ml-auto text-[11px] text-muted-foreground opacity-70">{metaRight}</span>
+          )}
         </div>
       )}
 
-      {(summary || summaryNode) && <div className="oboard__detail-summary">{summaryNode || summary}</div>}
+      {/* Summary */}
+      {(summary || summaryNode) && (
+        <div className="px-5 py-3 border-b border-[color:var(--glass-border)] font-mono text-xs leading-[1.65] break-all max-h-[110px] overflow-y-auto bg-[rgba(255,255,255,0.015)] shrink-0 text-[color:var(--text-secondary)]">
+          {summaryNode || summary}
+        </div>
+      )}
 
-      {actions && <div className="oboard__detail-actions">{actions}</div>}
+      {/* Actions */}
+      {actions && (
+        <div className="flex gap-2 px-5 py-[10px] border-b border-[color:var(--glass-border)] shrink-0 flex-wrap">
+          {actions}
+        </div>
+      )}
 
-      <div className="oboard__detail-tabs">
-        {(['fields', 'json'] as const).map((tabKey) => (
-          <button
-            key={tabKey}
-            className={`oboard__detail-tab ${tab === tabKey ? 'oboard__detail-tab--active' : ''}`}
-            onClick={() => setTab(tabKey)}
-          >
-            {tabKey === 'fields' ? 'Fields' : 'JSON'}
-          </button>
-        ))}
-      </div>
+      {/* Tabs */}
+      <Tabs
+        activeKey={tab}
+        onChange={(nextTab) => setTab(nextTab as 'fields' | 'json')}
+        variant="compact"
+        size="sm"
+        className="shrink-0 px-5"
+        items={[
+          { key: 'fields', label: 'Fields' },
+          { key: 'json', label: 'JSON' },
+        ]}
+      />
 
-      <div className="oboard__detail-body">
+      {/* Body */}
+      <div className="px-5 py-3 flex-1 overflow-y-auto">
         {tab === 'fields' && (
-          <div className="oboard__detail-fields">
+          <div className="flex flex-col">
             {fields.map(({ key, label, value, filterable }) => {
               const canFilter = Boolean(filterable && onAddFilter && isFilterValue(value));
 
               return (
-                <div key={key} className="oboard__detail-field">
-                  <div className="oboard__detail-field-label">
+                <div key={key} className="group py-[10px] border-b border-[color:var(--glass-border)] last:border-b-0">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground mb-[5px] flex items-center gap-[5px]">
                     {label}
                     {canFilter && (
                       <button
-                        className="oboard__detail-filter-btn"
+                        className="bg-transparent border-none text-muted-foreground px-[3px] cursor-pointer flex items-center rounded-sm opacity-0 group-hover:opacity-100 transition-opacity duration-100 hover:bg-[rgba(94,96,206,0.15)] hover:text-primary"
                         onClick={() => {
                           if (onAddFilter && isFilterValue(value)) {
                             onAddFilter({ field: key, value, operator: 'equals' });
@@ -161,7 +189,11 @@ export function ObservabilityDetailPanel({
           </div>
         )}
 
-        {tab === 'json' && <pre className="oboard__detail-json">{JSON.stringify(rawData, null, 2)}</pre>}
+        {tab === 'json' && (
+          <pre className="font-mono text-[11.5px] leading-[1.65] whitespace-pre-wrap break-all text-foreground bg-[rgba(255,255,255,0.02)] p-3.5 rounded-[7px] border border-border">
+            {JSON.stringify(rawData, null, 2)}
+          </pre>
+        )}
       </div>
     </div>
   );

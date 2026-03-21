@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import uPlot from 'uplot';
 
 import type {
   DashboardComponentSpec,
@@ -7,24 +7,11 @@ import type {
   DashboardExtraContext,
 } from '@/types/dashboardConfig';
 
-import LatencyHistogram from '@shared/components/ui/charts/distributions/LatencyHistogram';
-import LogHistogram from '@shared/components/ui/charts/distributions/LogHistogram';
-import GaugeChart from '@shared/components/ui/charts/micro/GaugeChart';
-import LatencyHeatmapChart from '@shared/components/ui/charts/specialized/LatencyHeatmapChart';
-import ServiceGraph from '@shared/components/ui/charts/specialized/ServiceGraph';
-import WaterfallChart from '@shared/components/ui/charts/specialized/WaterfallChart';
+import { getChartColor } from '@shared/utils/echarts';
 
-import {
-  createBarDataset,
-  createChartOptions,
-  createLineDataset,
-  getChartColor,
-} from '@shared/utils/chartHelpers';
-
-import { APP_COLORS } from '@config/colorLiterals';
+import UPlotChart, { defaultAxes, uBars } from '@shared/components/ui/charts/UPlotChart';
 
 import { useDashboardData } from '../hooks/useDashboardData';
-import { buildAiTimeseries, resolveDataSourceId } from '../utils/dashboardUtils';
 
 /**
  *
@@ -38,30 +25,35 @@ export function AiBarRenderer({
   dataSources: DashboardDataSources;
   extraContext: DashboardExtraContext;
 }) {
-  const { rawData, data: rows } = useDashboardData(chartConfig, dataSources);
+  const { data: rows } = useDashboardData(chartConfig, dataSources);
 
   const filterValue = extraContext?.selectedModel || null;
   const groupKey = chartConfig.groupByKey || 'model_name';
   const labelKey = chartConfig.labelKey || groupKey;
   const stacked = chartConfig.stacked || false;
 
-  const chartData = useMemo(() => {
+  const chartResult = useMemo(() => {
     const filtered = filterValue ? rows.filter((row) => row[groupKey] === filterValue) : rows;
     if (!filtered.length) return null;
 
+    // Multi-value-keys mode: each valueKey becomes a separate bar series
     if (chartConfig.valueKeys && chartConfig.valueKeys.length > 0) {
-      const labels = filtered.map((row) => row[labelKey] || 'unknown');
-      const datasets = chartConfig.valueKeys.map((valueKey: string, index: number) => ({
-        label: valueKey.replace(/_/g, ' '),
-        data: filtered.map((row) => { const value = Number(row[valueKey]); return Number.isNaN(value) ? 0 : value; }),
-        backgroundColor: `${getChartColor(index)}CC`,
-        borderColor: getChartColor(index),
-        borderWidth: 1,
-        borderRadius: stacked ? 0 : 2,
-      }));
-      return { labels, datasets, hasData: true };
+      const labels: string[] = filtered.map((row) => row[labelKey] || 'unknown');
+      // x-axis: category indices as seconds (uPlot needs numeric x)
+      const xVals = labels.map((_: string, i: number) => i);
+      const valArrays: (number | null)[][] = chartConfig.valueKeys.map((valueKey: string) =>
+        filtered.map((row) => {
+          const value = Number(row[valueKey]);
+          return Number.isNaN(value) ? 0 : value;
+        }),
+      );
+      const seriesConfigs: uPlot.Series[] = chartConfig.valueKeys.map((valueKey: string, index: number) =>
+        uBars(valueKey.replace(/_/g, ' '), getChartColor(index)),
+      );
+      return { xVals, valArrays, series: seriesConfigs, labels, hasData: true };
     }
 
+    // Bucket mode: group by groupKey, x-axis from bucketKey
     if (chartConfig.bucketKey) {
       const groups: Record<string, Record<string, number>> = {};
       for (const row of filtered) {
@@ -69,43 +61,76 @@ export function AiBarRenderer({
         if (!groups[group]) groups[group] = {};
         groups[group][row[chartConfig.bucketKey]] = Number(row[chartConfig.valueKey]) || 0;
       }
-      const allBuckets = Array.from(new Set(filtered.map((row) => row[chartConfig.bucketKey]))).sort((a: any, b: any) => a - b);
-      const labels = allBuckets.map((bucket) => `${bucket}ms`);
-      const datasets = Object.keys(groups).map((group, index) =>
-        createBarDataset(group, allBuckets.map((bucket) => groups[group][bucket] ?? 0), getChartColor(index)),
+      const allBuckets = Array.from(new Set(filtered.map((row) => row[chartConfig.bucketKey]))).sort(
+        (a: any, b: any) => a - b,
       );
-      return { labels, datasets, hasData: datasets.length > 0 };
+      const labels = allBuckets.map((bucket) => `${bucket}ms`);
+      const xVals = allBuckets.map((_: string, i: number) => i);
+      const groupNames = Object.keys(groups);
+      const valArrays: (number | null)[][] = groupNames.map((group) =>
+        allBuckets.map((bucket) => groups[group][bucket] ?? 0),
+      );
+      const seriesConfigs: uPlot.Series[] = groupNames.map((group, index) =>
+        uBars(group, getChartColor(index)),
+      );
+      return { xVals, valArrays, series: seriesConfigs, labels, hasData: seriesConfigs.length > 0 };
     }
 
-    const labels = filtered.map((row) => row[labelKey] || 'unknown');
+    // Simple single-series mode
+    const labels: string[] = filtered.map((row) => row[labelKey] || 'unknown');
+    const xVals = labels.map((_: string, i: number) => i);
     const color = chartConfig.color || getChartColor(0);
-    const datasets = [createBarDataset(
-      chartConfig.datasetLabel || chartConfig.valueKey || 'Value',
-      filtered.map((row) => { const value = Number(row[chartConfig.valueKey]); return Number.isNaN(value) ? 0 : value; }),
-      color,
-    )];
-    return { labels, datasets, hasData: true };
+    const valArrays: (number | null)[][] = [
+      filtered.map((row) => {
+        const value = Number(row[chartConfig.valueKey]);
+        return Number.isNaN(value) ? 0 : value;
+      }),
+    ];
+    const seriesConfigs: uPlot.Series[] = [
+      uBars(chartConfig.datasetLabel || chartConfig.valueKey || 'Value', color),
+    ];
+    return { xVals, valArrays, series: seriesConfigs, labels, hasData: true };
   }, [rows, filterValue, groupKey, labelKey, stacked, chartConfig]);
 
-  if (!chartData || !chartData.hasData) {
+  if (!chartResult || !chartResult.hasData) {
     return <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>No data</div>;
   }
-  const tickCallback = chartConfig.yPrefix
-    ? (value: any) => `${chartConfig.yPrefix}${Number(value).toFixed(chartConfig.yDecimals ?? 4)}`
+
+  const { xVals, valArrays, series, labels } = chartResult;
+
+  const alignedData: uPlot.AlignedData = [xVals, ...valArrays];
+
+  const showLegend = stacked || series.length > 1;
+
+  const yAxisFormatter = chartConfig.yPrefix
+    ? (self: uPlot, ticks: number[]) =>
+        ticks.map((v) => `${chartConfig.yPrefix}${Number(v).toFixed(chartConfig.yDecimals ?? 4)}`)
     : undefined;
 
-  const options = createChartOptions({
-    plugins: { legend: { display: stacked || (chartData.datasets.length > 1), labels: { color: APP_COLORS.hex_666, font: { size: 11 } } } },
-    scales: {
-      x: { stacked, ticks: { color: APP_COLORS.hex_666 }, grid: { color: APP_COLORS.hex_2d2d2d } },
-      y: {
-        stacked,
-        ticks: { color: APP_COLORS.hex_666, ...(tickCallback ? { callback: tickCallback } : {}) },
-        grid: { color: APP_COLORS.hex_2d2d2d },
-        beginAtZero: true,
-      },
-    },
-  });
+  const axes = defaultAxes();
 
-  return <div style={{ height: '100%' }}><Bar data={{ labels: chartData.labels, datasets: chartData.datasets }} options={options} /></div>;
+  // Override x-axis to show category labels instead of numeric indices
+  axes[0] = {
+    ...axes[0],
+    values: (_self: uPlot, splits: number[]) =>
+      splits.map((i) => labels[Math.round(i)] ?? ''),
+  };
+
+  if (yAxisFormatter) {
+    axes[1] = {
+      ...axes[1],
+      values: yAxisFormatter,
+    };
+  }
+
+  const options: Omit<uPlot.Options, 'width' | 'height'> = {
+    axes,
+    series: [{}, ...series],
+    legend: { show: showLegend },
+    scales: {
+      y: { min: 0 },
+    },
+  };
+
+  return <UPlotChart options={options} data={alignedData} className="w-full" />;
 }

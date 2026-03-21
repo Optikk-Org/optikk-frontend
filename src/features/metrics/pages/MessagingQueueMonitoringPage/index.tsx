@@ -1,25 +1,9 @@
-import { useMemo } from 'react';
-
 import { Radio } from 'lucide-react';
 
 import { PageHeader } from '@shared/components/ui';
-import ConfigurableDashboard from '@shared/components/ui/dashboard/ConfigurableDashboard';
-
-import { useTabComponents } from '@shared/hooks/useTabComponents';
-
-import type { DashboardRenderConfig } from '@/types/dashboardConfig';
+import ConfiguredTabPanel from '@shared/components/ui/dashboard/ConfiguredTabPanel';
 
 export default function MessagingQueueMonitoringPage() {
-  const { components, groups, isLoading } = useTabComponents('saturation', 'queue');
-
-  const config = useMemo<DashboardRenderConfig | null>(() => {
-    if (!components.length && !isLoading) return null;
-    return {
-      components: components.map((c) => ({ ...c, dataSource: c.dataSource || c.id })),
-      groups,
-    };
-  }, [components, groups, isLoading]);
-
   return (
     <div>
       <PageHeader
@@ -27,7 +11,7 @@ export default function MessagingQueueMonitoringPage() {
         icon={<Radio size={24} />}
         subtitle="Produce/consume rates, consumer lag, rebalancing, latency, and error rates across Kafka topics and consumer groups"
       />
-      <ConfigurableDashboard config={config} isLoading={isLoading} />
+      <ConfiguredTabPanel pageId="saturation" tabId="queue" />
     </div>
   );
 }

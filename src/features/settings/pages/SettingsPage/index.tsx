@@ -1,13 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Form } from 'antd';
-import { Tabs } from '@shared/design-system';
+import { Tabs } from '@/components/ui';
 import { Palette, Settings, User, Users } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { z } from 'zod';
 
 import { settingsService } from '@shared/api/settingsService';
-import { PageHeader } from '@shared/components/ui/layout';
+import { PageHeader, PageShell } from '@shared/components/ui';
 
 import { useAppStore } from '@/shared/store/appStore';
 
@@ -24,7 +23,6 @@ import type {
   SettingsProfileViewModel,
 } from '../../types';
 
-import './SettingsPage.css';
 
 const settingsProfileQueryKey = ['settings-profile'] as const;
 
@@ -94,7 +92,6 @@ function toProfileCommand(values: SettingsProfileFormValues): SettingsProfileCom
  */
 export default function SettingsPage(): JSX.Element {
   const queryClient = useQueryClient();
-  const [profileForm] = Form.useForm<SettingsProfileFormValues>();
   const [activeSettingsTab, setActiveSettingsTab] = useState('profile');
 
   const {
@@ -200,13 +197,13 @@ export default function SettingsPage(): JSX.Element {
   };
 
   return (
-    <div className="settings-page">
+    <PageShell className="min-h-screen">
       <PageHeader title="Settings" icon={<Settings size={24} />} />
 
       <Tabs
         activeKey={activeSettingsTab}
         onChange={setActiveSettingsTab}
-        className="settings-tabs"
+        className="mt-1"
         items={[
           { key: 'profile', label: 'Profile', icon: <User size={14} /> },
           { key: 'preferences', label: 'Preferences', icon: <Palette size={14} /> },
@@ -218,7 +215,6 @@ export default function SettingsPage(): JSX.Element {
         <SettingsProfileTab
           profileLoading={profileLoading}
           profile={profile}
-          profileForm={profileForm}
           isSaving={updateProfileMutation.isPending}
           getInitials={getInitials}
           onSubmit={handleProfileSubmit}
@@ -239,6 +235,6 @@ export default function SettingsPage(): JSX.Element {
       {activeSettingsTab === 'team' && (
         <SettingsTeamTab profileLoading={profileLoading} teams={teams} />
       )}
-    </div>
+    </PageShell>
   );
 }

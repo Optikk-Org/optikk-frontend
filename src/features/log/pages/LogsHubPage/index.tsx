@@ -1,353 +1,364 @@
-import {
-  FileText,
-  GitBranch,
-} from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { AlertCircle, FileText, Radio, Share2 } from 'lucide-react';
+
+import { ERROR_CODE_LABELS } from '@/shared/constants/errorCodes';
+import { useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
-import { PageHeader, ObservabilityDetailPanel } from '@shared/components/ui';
-import { useURLFilters } from '@shared/hooks/useURLFilters';
-import { relativeTime, tsLabel } from '@shared/utils/time';
+import { Badge, Button } from '@/components/ui';
+import type { SimpleTableColumn } from '@/components/ui';
+import { ExplorerResultsTable, FacetRail } from '@/features/explorer-core/components';
+import { cn } from '@/lib/utils';
+import {
+  ObservabilityDetailPanel,
+  ObservabilityQueryBar,
+  PageHeader,
+  PageShell,
+  PageSurface,
+} from '@shared/components/ui';
+import { formatNumber, formatRelativeTime } from '@shared/utils/formatters';
+import { tsLabel } from '@shared/utils/time';
+import type { StructuredFilter } from '@/shared/hooks/useURLFilters';
+import { useURLFilters } from '@/shared/hooks/useURLFilters';
 
-import { EntityExplorerLayout } from '@/shared/components/layout/EntityExplorerLayout';
-
-import LogsLevelDistributionCard from '../../components/charts/LogsLevelDistributionCard';
-import LogsVolumeSection from '../../components/charts/LogsVolumeSection';
-import LogsKpiRow from '../../components/kpi/LogsKpiRow';
-import LogRow, { LevelBadge } from '../../components/log/LogRow';
-import LogAttributesTree from '../../components/log/LogAttributesTree';
-import LogsTableSection from '../../components/table/LogsTableSection';
-import LogSurroundingPanel from '../../components/log/LogSurroundingPanel';
-import DynamicFieldExplorer from '../../components/log/DynamicFieldExplorer';
+import { LevelBadge } from '../../components/log/LogRow';
 import { useLogDetailFields } from '../../hooks/useLogDetailFields';
 import { useLogsHubData } from '../../hooks/useLogsHubData';
 import {
-  LOG_COLUMNS,
+  compileLogsStructuredFilters,
   LOG_FILTER_FIELDS,
   LOGS_URL_FILTER_CONFIG,
   toDisplayText,
+  upsertLogFacetFilter,
 } from '../../utils/logUtils';
+import type { LogRecord, LogsBackendParams } from '../../types';
 
-import type {
-  LogRecord,
-  LogsBoardRenderContext,
-  LogStructuredFilter,
-} from '../../types';
-
-import './LogsHubPage.css';
-
-export default function LogsHubPage() {
+export default function LogsHubPage(): JSX.Element {
   const navigate = useNavigate();
 
-  /* ── URL-synced filter state ── */
   const {
     values: urlValues,
     setters: urlSetters,
+    structuredFilters: filters,
+    setStructuredFilters: setFilters,
     clearAll: clearURLFilters,
   } = useURLFilters(LOGS_URL_FILTER_CONFIG);
 
-  const optiQLQuery = typeof urlValues['q'] === 'string' ? urlValues['q'] : '';
+  const searchText =
+    typeof urlValues['search'] === 'string' ? urlValues['search'] : '';
 
-  const setOptiQLQuery = (value: string): void => {
-    urlSetters['q']?.(value);
+  const setSearchText = (value: string): void => {
+    urlSetters['search']?.(value);
   };
 
-  /* ── Local-only state (not worth putting in URL) ── */
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [selectedLog, setSelectedLog] = useState<LogRecord | null>(null);
-  const [focusedLogIndex, setFocusedLogIndex] = useState(-1);
+
+  const backendParams = useMemo((): LogsBackendParams => {
+    const params: LogsBackendParams = {
+      ...compileLogsStructuredFilters(filters),
+    };
+
+    if (searchText.trim()) {
+      params.search = searchText.trim();
+    }
+
+    return params;
+  }, [filters, searchText]);
 
   const {
     logs,
     logsLoading,
+    logsError,
+    logsErrorDetail,
     total,
-    volumeBuckets,
-    volumeStep,
-    volumeLoading,
-    errorCount,
-    warnCount,
-    totalCount,
     serviceFacets,
     levelFacets,
-    statsLoading,
     liveTailEnabled,
     setLiveTailEnabled,
+    liveTailStatus,
+    liveTailLagMs,
   } = useLogsHubData({
-    optiQLQuery,
+    searchText,
+    filters,
+    backendParams,
     page,
     pageSize,
-  }) as ReturnType<typeof useLogsHubData>;
+  });
 
-  const clearAll = useCallback((): void => {
-    clearURLFilters();
-    setPage(1);
-  }, [clearURLFilters]);
-
-  /* ── Keyboard navigation ── */
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      const tagName = target.tagName.toUpperCase();
-      const isEditable =
-        tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT' || target.isContentEditable;
-
-      // Allow Escape even from inputs
-      if (e.key === 'Escape') {
-        setSelectedLog(null);
-        setFocusedLogIndex(-1);
-        return;
-      }
-
-      if (isEditable) return;
-
-      if (e.key === 'j') {
-        setFocusedLogIndex((i) => {
-          const next = Math.min(i + 1, logs.length - 1);
-          if (next >= 0 && logs[next]) {
-            setSelectedLog(logs[next] ?? null);
-          }
-          return next;
-        });
-        e.preventDefault();
-      } else if (e.key === 'k') {
-        setFocusedLogIndex((i) => {
-          const next = Math.max(i <= 0 ? 0 : i - 1, 0);
-          if (next >= 0 && logs[next]) {
-            setSelectedLog(logs[next] ?? null);
-          }
-          return next;
-        });
-        e.preventDefault();
-      } else if (e.key === '/') {
-        // Focus the search input by its placeholder text or data attribute
-        const searchInput = document.querySelector<HTMLInputElement>(
-          'input[placeholder*="Search log"], input[data-logs-search]',
-        );
-        searchInput?.focus();
-        e.preventDefault();
-      }
-    };
-
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [logs]);
-
-  /* ── Export handler ── */
-  const handleExport = useCallback(
-    (format: 'json' | 'csv') => {
-      const date = new Date().toISOString().slice(0, 10);
-      if (format === 'json') {
-        const blob = new Blob([JSON.stringify(logs, null, 2)], {
-          type: 'application/json',
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `logs-${date}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-      } else {
-        const headers = [
-          'timestamp',
-          'level',
-          'service_name',
-          'host',
-          'pod',
-          'trace_id',
-          'message',
-        ];
-        const rows = logs.map((l) =>
-          headers
-            .map((h) => JSON.stringify(String((l as Record<string, unknown>)[h] ?? '')))
-            .join(','),
-        );
-        const csv = [headers.join(','), ...rows].join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `logs-${date}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-      }
-    },
-    [logs],
-  );
-
-  /* ── Decomposed hooks ── */
   const detailFields = useLogDetailFields(selectedLog);
 
-  /* ── Board row renderer ── */
-  const renderRow = useCallback(
-    (log: LogRecord, { colWidths, visibleCols }: LogsBoardRenderContext) => (
-      <LogRow
-        log={log}
-        colWidths={colWidths}
-        visibleCols={visibleCols}
-        columns={LOG_COLUMNS}
-        onOpenDetail={setSelectedLog}
-      />
-    ),
+  const activeSelections = useMemo(
+    () => ({
+      service_name:
+        filters.find(
+          (filter) =>
+            filter.field === 'service_name' && filter.operator === 'equals',
+        )?.value ?? null,
+      level:
+        filters.find(
+          (filter) => filter.field === 'level' && filter.operator === 'equals',
+        )?.value ?? null,
+    }),
+    [filters],
+  );
+
+  const columns = useMemo<SimpleTableColumn<LogRecord>[]>(
+    () => [
+      {
+        title: 'Time',
+        key: 'timestamp',
+        dataIndex: 'timestamp',
+        width: 168,
+        render: (value) => (
+          <div className="space-y-1">
+            <div className="font-mono text-[12px] text-[var(--text-primary)]">
+              {tsLabel(value)}
+            </div>
+            <div className="text-[11px] text-[var(--text-muted)]">
+              {formatRelativeTime(value)}
+            </div>
+          </div>
+        ),
+      },
+      {
+        title: 'Level',
+        key: 'level',
+        dataIndex: 'level',
+        width: 90,
+        render: (value, row) => (
+          <LevelBadge level={String(value ?? row.severity_text ?? 'INFO')} />
+        ),
+      },
+      {
+        title: 'Service',
+        key: 'service_name',
+        dataIndex: 'service_name',
+        width: 160,
+        render: (value) => (
+          <span className="text-[12.5px] font-medium text-[var(--text-primary)]">
+            {toDisplayText(value)}
+          </span>
+        ),
+      },
+      {
+        title: 'Host',
+        key: 'host',
+        dataIndex: 'host',
+        width: 148,
+        render: (value, row) => (
+          <span className="text-[12px] text-[var(--text-secondary)]">
+            {toDisplayText(value || row.pod)}
+          </span>
+        ),
+      },
+      {
+        title: 'Message',
+        key: 'message',
+        dataIndex: 'message',
+        render: (value, row) => (
+          <button
+            type="button"
+            className="line-clamp-2 max-w-full text-left text-[12.5px] leading-6 text-[var(--text-primary)] hover:text-white"
+            onClick={() => setSelectedLog(row)}
+          >
+            {toDisplayText(value ?? row.body)}
+          </button>
+        ),
+      },
+      {
+        title: 'Trace',
+        key: 'trace_id',
+        dataIndex: 'trace_id',
+        width: 150,
+        render: (value) => (
+          <span className="font-mono text-[11px] text-[var(--text-muted)]">
+            {value ? String(value).slice(0, 12) : '—'}
+          </span>
+        ),
+      },
+    ],
     [],
   );
 
-  const traceId = selectedLog ? selectedLog.trace_id || selectedLog.traceId : '';
-  const selectedLogMessage = selectedLog ? toDisplayText(String(selectedLog.body)) : '—';
-
-  const hasAttributes =
-    selectedLog &&
-    (Object.keys((selectedLog as Record<string, unknown>).attributes_string ?? {}).length > 0 ||
-      Object.keys((selectedLog as Record<string, unknown>).attributes_number ?? {}).length > 0 ||
-      Object.keys((selectedLog as Record<string, unknown>).attributes_bool ?? {}).length > 0);
+  const facetGroups = useMemo(
+    () => [
+      {
+        key: 'service_name',
+        label: 'Top Services',
+        buckets: serviceFacets.slice(0, 10),
+      },
+      {
+        key: 'level',
+        label: 'Severity',
+        buckets: levelFacets.slice(0, 8),
+      },
+    ],
+    [levelFacets, serviceFacets],
+  );
 
   return (
-    <EntityExplorerLayout
-      className="logs-page"
-      header={<PageHeader title="Logs" icon={<FileText size={24} />} />}
-      kpiRow={
-        <LogsKpiRow
-          errorCount={errorCount}
-          warnCount={warnCount}
-          serviceCount={serviceFacets.length}
-          totalCount={totalCount}
-        />
-      }
-      chartsRow={
-        <div className="logs-charts-row">
-          <LogsVolumeSection
-            volumeBuckets={volumeBuckets}
-            volumeStep={volumeStep}
-            isLoading={volumeLoading}
-          />
-          <LogsLevelDistributionCard isLoading={statsLoading} levelFacets={levelFacets} />
-        </div>
-      }
-      tableSection={
-        <div style={{ display: 'flex', gap: 16, height: '100%' }}>
-          <DynamicFieldExplorer 
-            logs={logs}
-            isLoading={logsLoading}
-            onSelectField={(key, value) => {
-              const prefix = optiQLQuery.trim() === '' ? '' : ' ';
-              setOptiQLQuery(`${optiQLQuery}${prefix}attr.${key}="${value}"`);
-            }}
-          />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <LogsTableSection
-              config={{
-                columns: LOG_COLUMNS,
-                filterFields: LOG_FILTER_FIELDS,
-                renderRow,
-                onOpenDetail: setSelectedLog,
+    <PageShell>
+      <PageHeader
+        title="Logs"
+        icon={<FileText size={22} />}
+        subtitle="Search, filter, and pivot through dense log streams without leaving the investigative thread."
+        actions={
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<Share2 size={14} />}
+              onClick={async () => {
+                await navigator.clipboard.writeText(window.location.href);
+                toast.success('Share link copied');
               }}
-              data={{
-                logs,
-                isLoading: logsLoading,
-                serviceFacets,
-                liveTailEnabled,
-                setLiveTailEnabled,
-              }}
-              pagination={{
-                page,
-                pageSize,
-                total,
-                setPage,
-                setPageSize,
-              }}
-              filters={{
-                optiQLQuery,
-                setOptiQLQuery: (value: string) => {
-                  setOptiQLQuery(value);
-                  setPage(1);
-                },
-                clearAll,
-              }}
-              onExport={handleExport}
-              focusedLogIndex={focusedLogIndex}
-            />
-          </div>
-        </div>
-      }
-      detailSidebar={
-        selectedLog && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <ObservabilityDetailPanel
-              title="Log Detail"
-              titleBadge={
-                <LevelBadge
-                  level={
-                    selectedLog.level ?? selectedLog.severity_text ?? selectedLog.severityText
-                  }
-                />
-              }
-              metaLine={tsLabel(selectedLog.timestamp)}
-              metaRight={relativeTime(selectedLog.timestamp)}
-              summaryNode={
-                <span
-                  style={{
-                    fontFamily: 'monospace',
-                    fontSize: 12,
-                    color: 'var(--text-primary)',
-                    wordBreak: 'break-word',
-                    whiteSpace: 'pre-wrap',
-                  }}
-                >
-                  {selectedLogMessage}
-                </span>
-              }
-              actions={
-                traceId ? (
-                  <button
-                    className="logs-view-trace-btn"
-                    onClick={() => navigate(`/traces/${traceId}`)}
-                  >
-                    <GitBranch size={13} />
-                    View Trace
-                  </button>
-                ) : null
-              }
-              fields={detailFields}
-              rawData={selectedLog}
-              onClose={() => setSelectedLog(null)}
-            />
+            >
+              Share
+            </Button>
+          </>
+        }
+      />
 
-            {hasAttributes && (
-              <div className="glass-panel" style={{ padding: 12 }}>
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: 'var(--text-secondary)',
-                    marginBottom: 8,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                  }}
-                >
-                  Attributes
-                </div>
-                <LogAttributesTree log={selectedLog as Parameters<typeof LogAttributesTree>[0]['log']} />
+      <PageSurface padding="lg" className="relative z-[40] overflow-visible">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="relative z-[70] min-w-[320px] max-w-3xl flex-1">
+              <div className="mb-2 flex items-center gap-2">
+                <Badge variant={liveTailEnabled ? 'info' : 'default'}>
+                  {liveTailEnabled ? 'Live' : 'Snapshot'}
+                </Badge>
+                {liveTailEnabled ? (
+                  <Badge variant="warning">
+                    {liveTailStatus === 'live'
+                      ? `${Math.max(0, liveTailLagMs)}ms lag`
+                      : 'connecting'}
+                  </Badge>
+                ) : null}
               </div>
-            )}
-
-            <div className="glass-panel" style={{ padding: 12 }}>
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: 'var(--text-secondary)',
-                  marginBottom: 8,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
+              <ObservabilityQueryBar
+                fields={LOG_FILTER_FIELDS}
+                filters={filters}
+                setFilters={(nextFilters: StructuredFilter[]) => {
+                  setFilters(nextFilters);
+                  setPage(1);
+                }}
+                searchText={searchText}
+                setSearchText={(value: string) => {
+                  setSearchText(value);
+                  setPage(1);
+                }}
+                onClearAll={() => {
+                  clearURLFilters();
+                  setPage(1);
+                }}
+                placeholder="Search logs, services, hosts, trace IDs, or free text"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={liveTailEnabled ? 'primary' : 'secondary'}
+                size="sm"
+                icon={<Radio size={14} />}
+                onClick={() => setLiveTailEnabled(!liveTailEnabled)}
+              >
+                {liveTailEnabled ? 'Stop live tail' : 'Start live tail'}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  clearURLFilters();
+                  setPage(1);
                 }}
               >
-                Context
-              </div>
-              <LogSurroundingPanel log={selectedLog} />
+                Reset
+              </Button>
             </div>
           </div>
-        )
-      }
-    />
+        </div>
+      </PageSurface>
+
+      <div className="relative z-0 grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
+        <FacetRail
+          groups={facetGroups}
+          selected={activeSelections}
+          onSelect={(groupKey, value) => {
+            setFilters(upsertLogFacetFilter(filters, groupKey, value));
+            setPage(1);
+          }}
+        />
+
+        {logsError && logsErrorDetail && (
+          <div className="mb-3 flex items-center gap-2 rounded-[var(--card-radius)] border border-[rgba(240,68,56,0.3)] bg-[rgba(240,68,56,0.08)] px-4 py-3 text-[var(--color-error)]">
+            <AlertCircle size={16} className="shrink-0" />
+            <span className="text-sm font-medium">
+              {ERROR_CODE_LABELS[(logsErrorDetail as any).code] ?? 'Error'}
+            </span>
+            <span className="text-sm opacity-80">
+              {(logsErrorDetail as any).message ?? 'Failed to load logs'}
+            </span>
+          </div>
+        )}
+
+        <ExplorerResultsTable
+          title="Logs Explorer"
+          subtitle={`${formatNumber(logs.length)} rows in view, ${formatNumber(total)} total matches`}
+          rows={logs}
+          columns={columns}
+          rowKey={(row) => String(row.id)}
+          isLoading={logsLoading}
+          page={page}
+          pageSize={pageSize}
+          total={liveTailEnabled ? logs.length : total}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+          onRow={(row) => ({
+            onClick: () => setSelectedLog(row),
+          })}
+          rowClassName={(row) =>
+            cn(
+              'cursor-pointer transition-colors hover:bg-[rgba(255,255,255,0.04)]',
+              selectedLog?.id === row.id &&
+                'bg-[rgba(94,96,206,0.12)] ring-1 ring-inset ring-[rgba(94,96,206,0.3)]',
+            )
+          }
+        />
+      </div>
+
+      {selectedLog ? (
+        <ObservabilityDetailPanel
+          title="Log Detail"
+          titleBadge={<LevelBadge level={String(selectedLog.level ?? selectedLog.severity_text)} />}
+          metaLine={tsLabel(selectedLog.timestamp)}
+          metaRight={formatRelativeTime(selectedLog.timestamp)}
+          summaryNode={
+            <div className="text-[12px] leading-6 text-[var(--text-primary)]">
+              {toDisplayText(selectedLog.body ?? selectedLog.message)}
+            </div>
+          }
+          actions={
+            <>
+              {selectedLog.trace_id ? (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigate(`/traces/${selectedLog.trace_id}`)}
+                >
+                  Open Trace
+                </Button>
+              ) : null}
+            </>
+          }
+          fields={detailFields}
+          rawData={selectedLog}
+          onClose={() => setSelectedLog(null)}
+        />
+      ) : null}
+    </PageShell>
   );
 }

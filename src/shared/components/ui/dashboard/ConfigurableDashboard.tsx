@@ -1,4 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { GridLayout } from 'react-grid-layout';
+import 'react-grid-layout/css/styles.css';
+
+import type { LayoutItem } from 'react-grid-layout';
+
+import { cn } from '@/lib/utils';
 
 import type {
   ComponentGroup,
@@ -8,122 +14,143 @@ import type {
   DashboardRenderConfig,
 } from '@/types/dashboardConfig';
 
+import type { ApiErrorShape } from '@shared/api/api/interceptors/errorInterceptor';
+
 import ConfigurableChartCard from './ConfigurableChartCard';
 
 interface ConfigurableDashboardProps {
   config: DashboardRenderConfig | null;
   dataSources?: DashboardDataSources;
+  errors?: Record<string, ApiErrorShape | null>;
   isLoading?: boolean;
   extraContext?: DashboardExtraContext;
 }
 
-/** Groups flat components into visual rows based on cumulative col spans. */
-function computeRows(components: DashboardComponentSpec[]): DashboardComponentSpec[][] {
-  const rows: DashboardComponentSpec[][] = [];
-  let current: DashboardComponentSpec[] = [];
-  let used = 0;
+const COLS = 24;
+const ROW_HEIGHT = 280;
+const MARGIN: [number, number] = [12, 12];
+
+/** Convert flat components into react-grid-layout items with x/y positions. */
+function computeGridLayout(components: DashboardComponentSpec[]): LayoutItem[] {
+  const items: LayoutItem[] = [];
+  let x = 0;
+  let y = 0;
 
   for (const c of components) {
-    const span = c.layout?.col || 12;
-    if (used + span > 24 && current.length > 0) {
-      rows.push(current);
-      current = [];
-      used = 0;
+    const w = c.layout?.col || 12;
+    if (x + w > COLS && x > 0) {
+      x = 0;
+      y += 1;
     }
-    current.push(c);
-    used += span;
-    if (used >= 24) {
-      rows.push(current);
-      current = [];
-      used = 0;
+    items.push({
+      i: c.id,
+      x,
+      y,
+      w,
+      h: 1,
+      static: true,
+    });
+    x += w;
+    if (x >= COLS) {
+      x = 0;
+      y += 1;
     }
   }
-  if (current.length > 0) rows.push(current);
-  return rows;
+  return items;
 }
 
 interface GroupedSection {
-  group: ComponentGroup | null; // null = ungrouped fallback
-  rows: DashboardComponentSpec[][];
+  group: ComponentGroup | null;
+  components: DashboardComponentSpec[];
 }
 
-/**
- * Builds an ordered list of sections. If groups are provided, components are
- * bucketed by groupId. Components with no groupId are appended at the end as
- * an ungrouped section. If no groups are provided, all components are treated
- * as a single ungrouped section (backwards-compatible behaviour).
- */
-function computeGroupedLayout(
+function computeGroupedSections(
   components: DashboardComponentSpec[],
   groups: ComponentGroup[],
 ): GroupedSection[] {
   if (groups.length === 0) {
-    return [{ group: null, rows: computeRows(components) }];
+    return [{ group: null, components }];
   }
 
   const sorted = [...groups].sort((a, b) => a.order - b.order);
   const sections: GroupedSection[] = sorted.map((g) => ({
     group: g,
-    rows: computeRows(components.filter((c) => c.groupId === g.id).sort((a, b) => a.order - b.order)),
+    components: components.filter((c) => c.groupId === g.id).sort((a, b) => a.order - b.order),
   }));
 
   const ungrouped = components.filter((c) => !c.groupId || !sorted.find((g) => g.id === c.groupId));
   if (ungrouped.length > 0) {
-    sections.push({ group: null, rows: computeRows(ungrouped.sort((a, b) => a.order - b.order)) });
+    sections.push({ group: null, components: ungrouped.sort((a, b) => a.order - b.order) });
   }
 
-  return sections.filter((s) => s.rows.length > 0);
+  return sections.filter((s) => s.components.length > 0);
 }
 
-function RowGrid({
-  rowComponents,
+function SectionGrid({
+  components,
   dataSources,
+  errors,
+  isLoading,
   extraContext,
 }: {
-  rowComponents: DashboardComponentSpec[];
+  components: DashboardComponentSpec[];
   dataSources: DashboardDataSources;
+  errors: Record<string, ApiErrorShape | null>;
+  isLoading: boolean;
   extraContext: DashboardExtraContext;
 }) {
+  const layout = useMemo(() => computeGridLayout(components), [components]);
+  const maxY = layout.length > 0 ? Math.max(...layout.map((l) => l.y)) + 1 : 0;
+
+  // Build a lookup for components by id
+  const componentMap = useMemo(() => {
+    const map = new Map<string, DashboardComponentSpec>();
+    for (const c of components) map.set(c.id, c);
+    return map;
+  }, [components]);
+
   return (
-    <div style={{ display: 'flex', gap: 16, marginBottom: 0, flexWrap: 'wrap' }}>
-      {rowComponents.map((componentConfig) => {
-        const colSpan = componentConfig.layout?.col || 12;
-        const widthPercent = `calc(${(colSpan / 24) * 100}% - ${((24 / colSpan - 1) * 16) / (24 / colSpan)}px)`;
+    <GridLayout
+      layout={layout}
+      width={1200}
+      gridConfig={{
+        cols: COLS,
+        rowHeight: ROW_HEIGHT,
+        margin: MARGIN,
+        containerPadding: null,
+        maxRows: Infinity,
+      }}
+      dragConfig={{ enabled: false }}
+      resizeConfig={{ enabled: false }}
+    >
+      {layout.map((item) => {
+        const componentConfig = componentMap.get(item.i);
+        if (!componentConfig) return null;
         return (
-          <div
-            key={componentConfig.id}
-            style={{ flex: `0 0 ${widthPercent}`, display: 'flex', flexDirection: 'column', minWidth: 0 }}
-          >
+          <div key={item.i}>
             <ConfigurableChartCard
               componentConfig={componentConfig}
               dataSources={dataSources}
+              error={errors[item.i] ?? null}
+              isLoading={isLoading}
               extraContext={extraContext}
             />
           </div>
         );
       })}
-    </div>
+    </GridLayout>
   );
 }
 
-/**
- * ConfigurableDashboard renders a grid of charts.
- *
- * When groups are provided (via config.groups), components are organized into
- * named collapsible sections. Collapsing a group hides all its rows at once.
- *
- * When no groups are present, falls back to the original per-row collapse
- * behaviour so existing ungrouped pages are unaffected.
- */
 export default function ConfigurableDashboard({
   config,
   dataSources = {},
+  errors = {},
+  isLoading = false,
   extraContext = {},
 }: ConfigurableDashboardProps) {
   const groups = config?.groups ?? [];
-  const sections = config ? computeGroupedLayout(config.components, groups) : [];
-
-  // For named groups: keyed by group.id. For ungrouped rows: keyed by `__row_<idx>`.
+  const sections = config ? computeGroupedSections(config.components, groups) : [];
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
   if (!config || config.components.length === 0) return null;
@@ -138,109 +165,56 @@ export default function ConfigurableDashboard({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="flex flex-col gap-[var(--space-md)]">
       {sections.map((section, sectionIdx) => {
         const isNamedGroup = section.group !== null;
 
         if (isNamedGroup) {
           const groupKey = section.group!.id;
-          const isCollapsed = collapsed.has(groupKey);
+          const isGroupCollapsed = collapsed.has(groupKey);
 
           return (
             <div key={groupKey}>
-              {/* Group header — bolder, larger than row titles */}
               <div
                 onClick={() => toggle(groupKey)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  cursor: 'pointer',
-                  marginBottom: isCollapsed ? 0 : 12,
-                  padding: '4px 0',
-                  userSelect: 'none',
-                  borderBottom: isCollapsed ? 'none' : '1px solid var(--border-subtle, #f0f0f0)',
-                }}
+                className={cn(
+                  'flex items-center gap-[var(--space-xs)] cursor-pointer py-[2px] select-none',
+                  isGroupCollapsed ? 'mb-0' : 'mb-[var(--space-xs)] border-b border-[var(--border-light)]',
+                )}
               >
-                <span style={{
-                  fontSize: 13,
-                  color: 'var(--text-muted, #555)',
-                  transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
-                  transition: 'transform 0.15s',
-                  display: 'inline-block',
-                  lineHeight: 1,
-                }}>▾</span>
-                <span style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: 'var(--text-secondary, #555)',
-                  letterSpacing: '0.01em',
-                }}>
+                <span
+                  className={cn(
+                    'text-[var(--text-sm)] text-[color:var(--text-muted)] inline-block leading-none transition-transform duration-150',
+                    isGroupCollapsed && '-rotate-90',
+                  )}
+                >▾</span>
+                <span className="text-[var(--text-sm)] font-semibold text-[color:var(--text-secondary)] tracking-[0.01em]">
                   {section.group!.label}
                 </span>
               </div>
 
-              {!isCollapsed && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {section.rows.map((rowComponents, rowIdx) => (
-                    <RowGrid
-                      key={rowIdx}
-                      rowComponents={rowComponents}
-                      dataSources={dataSources}
-                      extraContext={extraContext}
-                    />
-                  ))}
-                </div>
+              {!isGroupCollapsed && (
+                <SectionGrid
+                  components={section.components}
+                  dataSources={dataSources}
+                  errors={errors}
+                  isLoading={isLoading}
+                  extraContext={extraContext}
+                />
               )}
             </div>
           );
         }
 
-        // Ungrouped fallback: per-row collapse (original behaviour)
         return (
-          <div key={`__ungrouped_${sectionIdx}`} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {section.rows.map((rowComponents, rowIdx) => {
-              const rowKey = `__row_${sectionIdx}_${rowIdx}`;
-              const isCollapsed = collapsed.has(rowKey);
-              const rowTitle = rowComponents.map((c) => c.title as string).filter(Boolean).join(' · ');
-
-              return (
-                <div key={rowIdx}>
-                  <div
-                    onClick={() => toggle(rowKey)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      cursor: 'pointer',
-                      marginBottom: isCollapsed ? 0 : 8,
-                      padding: '2px 0',
-                      userSelect: 'none',
-                    }}
-                  >
-                    <span style={{
-                      fontSize: 11,
-                      color: 'var(--text-muted, #666)',
-                      transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
-                      transition: 'transform 0.15s',
-                      display: 'inline-block',
-                      lineHeight: 1,
-                    }}>▾</span>
-                    <span style={{ fontSize: 11, color: 'var(--text-muted, #888)', letterSpacing: '0.02em' }}>
-                      {rowTitle}
-                    </span>
-                  </div>
-
-                  {!isCollapsed && (
-                    <RowGrid
-                      rowComponents={rowComponents}
-                      dataSources={dataSources}
-                      extraContext={extraContext}
-                    />
-                  )}
-                </div>
-              );
-            })}
+          <div key={`__ungrouped_${sectionIdx}`}>
+            <SectionGrid
+              components={section.components}
+              dataSources={dataSources}
+              errors={errors}
+              isLoading={isLoading}
+              extraContext={extraContext}
+            />
           </div>
         );
       })}

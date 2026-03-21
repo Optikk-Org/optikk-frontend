@@ -1,38 +1,16 @@
 
 import { useMemo, memo } from 'react';
-import { Line } from 'react-chartjs-2';
+import uPlot from 'uplot';
 
 import { useChartTimeBuckets } from '@shared/hooks/useChartTimeBuckets';
-
-import { createChartOptions, createLineDataset, getChartColor } from '@shared/utils/chartHelpers';
-
+import { tsKey, tsMs, firstValue } from '@shared/utils/chartDataUtils';
+import { CHART_COLORS } from '@config/constants';
 import { APP_COLORS } from '@config/colorLiterals';
 
-// Normalize any timestamp string to a canonical key for lookups.
-function tsKey(ts: any) {
-  if (!ts) return '';
-  return String(ts).replace('T', ' ').replace('Z', '').substring(0, 16);
-}
+import UPlotChart, { defaultAxes, uLine } from '../UPlotChart';
 
-// Parse timestamp values robustly across API formats.
-function tsMs(ts: any) {
-  if (!ts) return NaN;
-  const raw = String(ts).trim();
-  const normalized = raw.includes('T') ? raw : raw.replace(' ', 'T');
-  const hasTimezone = /([zZ]|[+-]\d{2}:\d{2})$/.test(normalized);
-  const ms = new Date(hasTimezone ? normalized : `${normalized}Z`).getTime();
-  return Number.isNaN(ms) ? NaN : ms;
-}
-
-function firstValue(row: any, keys: string[], fallback: any = 0) {
-  if (!row || typeof row !== 'object') return fallback;
-  for (const key of keys) {
-    const value = row[key];
-    if (value !== undefined && value !== null && value !== '') {
-      return value;
-    }
-  }
-  return fallback;
+function getChartColor(index: number): string {
+  return CHART_COLORS[index % CHART_COLORS.length];
 }
 
 function formatAxisValue(value: any) {
@@ -68,7 +46,7 @@ export default memo(function RequestChart({
   valueKey = 'request_count',
 }: any) {
   const hasServiceData = Object.keys(serviceTimeseriesMap).length > 0;
-  const { timeBuckets, labels } = useChartTimeBuckets();
+  const { timeBuckets } = useChartTimeBuckets();
 
   const getSeriesRows = (seriesKey: string) => {
     if ((serviceTimeseriesMap)[seriesKey]) {
@@ -117,12 +95,14 @@ export default memo(function RequestChart({
       }
 
       const values = timeBuckets.map((d) => tsMap[tsKey(d)] ?? 0);
-      return createLineDataset(info.label, values, getChartColor(idx), false);
+      return { label: info.label, values, color: getChartColor(idx), fill: false };
     });
   };
 
   const chartData = useMemo(() => {
-    let datasets: any[];
+    type SeriesEntry = { label: string; values: number[]; color: string; fill: boolean };
+    let seriesList: SeriesEntry[];
+
     if (endpoints.length > 0) {
       const list = selectedEndpoints.length > 0
         ? (endpoints as any[]).filter((ep) => {
@@ -138,22 +118,22 @@ export default memo(function RequestChart({
         : endpoints;
 
       if (hasServiceData) {
-        datasets = buildServiceDatasets(list);
+        seriesList = buildServiceDatasets(list);
       } else {
-        datasets = (list as any[]).map((ep, idx) => {
+        seriesList = (list as any[]).map((ep, idx) => {
           const method = firstValue(ep, ['http_method'], 'N/A');
           const operation = firstValue(ep, ['operation_name', 'endpoint_name'], 'Unknown');
-          return createLineDataset(
-            `${method} ${operation}`,
-            timeBuckets.map(() => 0),
-            getChartColor(idx),
-            false,
-          );
+          return {
+            label: `${method} ${operation}`,
+            values: timeBuckets.map(() => 0),
+            color: getChartColor(idx),
+            fill: false,
+          };
         });
       }
     } else if (hasServiceData) {
       const stepMs = timeBuckets.length >= 2 ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime() : 60000;
-      datasets = Object.entries(serviceTimeseriesMap).slice(0, 10).map(([svcName, rows]: [string, any], idx) => {
+      seriesList = Object.entries(serviceTimeseriesMap).slice(0, 10).map(([svcName, rows]: [string, any], idx) => {
         const tsMap: Record<string, number> = {};
         for (const row of rows) {
           const rowTimestamp = firstValue(row, ['timestamp', 'time_bucket'], '');
@@ -166,7 +146,7 @@ export default memo(function RequestChart({
           tsMap[bucketKey] = (tsMap[bucketKey] || 0) + (Number.isFinite(value) ? value : 0);
         }
         const values = timeBuckets.map((d) => tsMap[tsKey(d)] ?? 0);
-        return createLineDataset(svcName, values, getChartColor(idx), false);
+        return { label: svcName, values, color: getChartColor(idx), fill: false };
       });
     } else {
       const dataMap: Record<string, number> = {};
@@ -174,16 +154,28 @@ export default memo(function RequestChart({
         const ts = firstValue(d, ['timestamp', 'time_bucket'], '');
         dataMap[tsKey(ts)] = Number(firstValue(d, [valueKey, 'request_count', 'value'], 0));
       }
-      datasets = [createLineDataset(datasetLabel, timeBuckets.map((ts) => dataMap[tsKey(ts)] ?? 0), color, true)];
+      seriesList = [{ label: datasetLabel, values: timeBuckets.map((ts) => dataMap[tsKey(ts)] ?? 0), color, fill: true }];
     }
 
-    return { labels, datasets };
-  }, [data, endpoints, selectedEndpoints, serviceTimeseriesMap, hasServiceData, timeBuckets, labels]);
+    return seriesList;
+  }, [data, endpoints, selectedEndpoints, serviceTimeseriesMap, hasServiceData, timeBuckets]);
+
+  const timestamps = useMemo(
+    () => timeBuckets.map((t) => tsMs(t) / 1000),
+    [timeBuckets],
+  );
+
+  const uplotData = useMemo<uPlot.AlignedData>(() => {
+    return [
+      timestamps,
+      ...chartData.map((s) => s.values),
+    ] as uPlot.AlignedData;
+  }, [timestamps, chartData]);
 
   const yAxisMax = useMemo(() => {
     let maxVal = 0;
-    chartData.datasets.forEach((ds) => {
-      const dsMax = Math.max(...ds.data.map((v: any) => Number(v) || 0), 0);
+    chartData.forEach((s) => {
+      const dsMax = Math.max(...s.values.map((v) => Number(v) || 0), 0);
       if (dsMax > maxVal) maxVal = dsMax;
     });
     if (maxVal <= 0) return 1;
@@ -192,102 +184,26 @@ export default memo(function RequestChart({
     return Math.max(Math.ceil(maxVal * 1.5), 1);
   }, [chartData]);
 
-  const options = useMemo(() => createChartOptions({
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        enabled: false,
-        external: (context: any) => {
-          const { chart, tooltip } = context;
-          let tooltipEl = chart.canvas.parentNode.querySelector('div.custom-tooltip');
-
-          if (!tooltipEl) {
-            tooltipEl = document.createElement('div');
-            tooltipEl.className = 'custom-tooltip';
-            tooltipEl.style.background = 'rgba(26, 26, 26, 0.7)';
-            tooltipEl.style.backdropFilter = 'blur(8px)';
-            tooltipEl.style.border = `1px solid ${APP_COLORS.hex_2d2d2d}`;
-            tooltipEl.style.borderRadius = '8px';
-            tooltipEl.style.color = 'white';
-            tooltipEl.style.opacity = 1;
-            tooltipEl.style.pointerEvents = 'none';
-            tooltipEl.style.position = 'absolute';
-            tooltipEl.style.transform = 'translate(-50%, 0)';
-            tooltipEl.style.transition = 'all .1s ease';
-            tooltipEl.style.zIndex = 100;
-            tooltipEl.style.boxShadow = '0 4px 6px rgba(0,0,0,0.3)';
-            tooltipEl.style.padding = '12px';
-            tooltipEl.style.minWidth = '160px';
-            chart.canvas.parentNode.appendChild(tooltipEl);
-          }
-
-          if (tooltip.opacity === 0) {
-            tooltipEl.style.opacity = 0;
-            return;
-          }
-
-          if (tooltip.body) {
-            const titleLines = tooltip.title || [];
-            const bodyLines = tooltip.body.map((b: any) => b.lines);
-
-            let innerHtml = '<div style="margin-bottom: 8px; font-size: 13px; color: #aaa; font-weight: 500;">';
-            titleLines.forEach((title: string) => {
-              innerHtml += `<div>${title}</div>`;
-            });
-            innerHtml += '</div><div style="display: flex; flex-direction: column; gap: 6px;">';
-
-            bodyLines.forEach((body: string, i: number) => {
-              const colors = tooltip.labelColors[i];
-              const val = tooltip.dataPoints[i].raw;
-              const formattedVal = formatAxisValue(val);
-              const label = tooltip.dataPoints[i].dataset.label;
-              
-              // Sparkline representation based on value magnitude vs max
-              const maxVal = yAxisMax;
-              const pct = maxVal > 0 ? (val / maxVal) * 100 : 0;
-              const barWidth = Math.max(Math.min(pct, 100), 2);
-
-              innerHtml += `
-                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px;">
-                  <div style="display: flex; align-items: center; gap: 6px;">
-                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: ${colors.backgroundColor}; border: 1px solid ${colors.borderColor}"></span>
-                    <span style="color: #eee; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 100px;">${label}</span>
-                  </div>
-                  <span style="font-weight: 600; font-family: monospace;">${formattedVal}</span>
-                </div>
-                <div style="width: 100%; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 2px; margin-bottom: 4px; overflow: hidden;">
-                  <div style="width: ${barWidth}%; height: 100%; background: ${colors.backgroundColor}; border-radius: 2px;"></div>
-                </div>
-              `;
-            });
-            innerHtml += '</div>';
-
-            tooltipEl.innerHTML = innerHtml;
-          }
-
-          const { offsetLeft: positionX, offsetTop: positionY } = chart.canvas;
-          
-          tooltipEl.style.opacity = 1;
-          tooltipEl.style.left = positionX + tooltip.caretX + 'px';
-          tooltipEl.style.top = positionY + tooltip.caretY + 'px';
-        },
+  const opts = useMemo<Omit<uPlot.Options, 'width' | 'height'>>(() => ({
+    axes: [
+      ...defaultAxes().slice(0, 1),
+      {
+        ...defaultAxes()[1],
+        values: (_u: uPlot, vals: number[]) =>
+          vals.map((v) => formatAxisValue(v)),
+        range: [0, yAxisMax],
       },
-    },
+    ],
     scales: {
-      y: {
-        ticks: {
-          color: APP_COLORS.hex_666,
-          font: { size: 11 },
-          count: 6,
-          callback: (value: any) => formatAxisValue(value),
-        },
-        grid: { color: APP_COLORS.hex_2d2d2d },
-        beginAtZero: true,
-        max: yAxisMax,
-        min: 0,
-      },
+      y: { min: 0, max: yAxisMax },
     },
-  }), [yAxisMax]);
+    series: [
+      {},
+      ...chartData.map((s) =>
+        uLine(s.label, s.color, { fill: s.fill }),
+      ),
+    ],
+  }), [chartData, yAxisMax]);
 
   if (data.length === 0 && timeBuckets.length === 0) {
     return (
@@ -299,8 +215,7 @@ export default memo(function RequestChart({
 
   return (
     <div style={{ position: 'relative', height: '100%', minHeight: '200px' }}>
-      <Line data={chartData} options={options} />
+      <UPlotChart options={opts} data={uplotData} />
     </div>
   );
-}
-);
+});

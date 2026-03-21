@@ -1,7 +1,7 @@
 import { Copy, Key, Users } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { Surface, Skeleton, IconButton } from '@shared/design-system';
+import { Surface, Skeleton, IconButton } from '@/components/ui';
 
 import type { SettingsTeamViewModel } from '../../types';
 
@@ -28,14 +28,24 @@ export default function SettingsTeamTab({
   const toggleReveal = (index: number) => {
     setRevealedKeys((prev) => {
       const next = new Set(prev);
-      next.has(index) ? next.delete(index) : next.add(index);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
       return next;
     });
   };
 
   const copyKey = (key: string) => {
-    navigator.clipboard.writeText(key);
-    toast.success('API key copied');
+    void navigator.clipboard
+      .writeText(key)
+      .then(() => {
+        toast.success('API key copied');
+      })
+      .catch(() => {
+        toast.error('Unable to copy API key');
+      });
   };
 
   return (

@@ -1,13 +1,11 @@
-import { Tabs } from '@shared/design-system';
+import { Tabs } from '@/components/ui';
 import { Activity, Brain, DollarSign, Eye, Shield, TrendingUp } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import PageHeader from '@shared/components/ui/layout/PageHeader';
+import { PageHeader, PageShell } from '@shared/components/ui';
 import ConfiguredTabPanel from '@shared/components/ui/dashboard/ConfiguredTabPanel';
 
 import { usePageTabs } from '@shared/hooks/usePageTabs';
-
-import './AiObservabilityPage.css';
 
 const TAB_ICONS: Record<string, typeof Activity> = {
   overview: Activity,
@@ -30,7 +28,7 @@ export default function AiObservabilityPage() {
   }), [tabs]);
 
   return (
-    <div className="ai-observability-page">
+    <PageShell>
       <PageHeader
         title="AI Observability"
         subtitle="Performance, cost, and security visibility for LLM / AI model calls"
@@ -41,10 +39,10 @@ export default function AiObservabilityPage() {
         activeKey={activeTab}
         onChange={setActiveTab}
         items={tabItems}
-        className="ai-tabs"
+        className="mb-[var(--space-md)]"
       />
 
       <ConfiguredTabPanel pageId="ai-observability" tabId={activeTab} />
-    </div>
+    </PageShell>
   );
 }

@@ -1,4 +1,4 @@
-import { Surface } from '@shared/design-system';
+import { Surface } from '@/components/ui';
 import {
   Gauge, Database, Radio, Cpu, GitPullRequest,
 } from 'lucide-react';
@@ -17,7 +17,6 @@ import { formatNumber } from '@shared/utils/formatters';
 
 import { APP_COLORS } from '@config/colorLiterals';
 import { KafkaSaturationTable } from '../../components/KafkaSaturationTable';
-import './SaturationPage.css';
 
 function normalizeKafkaMetric(row: any = {}) {
   return {
@@ -56,7 +55,7 @@ export default function SaturationPage() {
   }, [kafkaLag]);
 
   return (
-    <div className="saturation-page">
+    <div className="p-0">
       <PageHeader
         title="Saturation Metrics"
         subtitle="Leading indicators: queue depths, consumer lag, thread pools, and connection pool utilization"
@@ -122,7 +121,7 @@ export default function SaturationPage() {
 
       {/* Kafka saturation table */}
       <div style={{ marginTop: 16 }}>
-        <Surface elevation={1} padding="md" className="sat-chart-card">
+        <Surface elevation={1} padding="md" className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg h-full">
           <h4>Kafka Queue / Consumer Lag</h4>
           <KafkaSaturationTable data={kafkaLag} loading={lagLoading} />
         </Surface>
@@ -130,35 +129,38 @@ export default function SaturationPage() {
 
       {/* Instrumentation guide */}
       <div style={{ marginTop: 16 }}>
-        <Surface elevation={1} padding="md" className="sat-chart-card">
+        <Surface elevation={1} padding="md" className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg h-full">
           <h4>Instrumentation Guide</h4>
-            <div className="sat-guide">
-              <div className="sat-guide-intro">
-                Saturation metrics are extracted from OpenTelemetry span <strong>attributes</strong>.
-                Add these attributes to your spans to populate the charts above:
-              </div>
-              <div className="sat-guide-items">
-                {[
-                  { icon: <Database size={16} />, attr: 'db.connection_pool.utilization', desc: 'DB connection pool utilization (0–100)', example: '72.5', color: APP_COLORS.hex_06aed5 },
-                  { icon: <Radio size={16} />, attr: 'messaging.kafka.consumer.lag', desc: 'Kafka consumer group lag (message count)', example: '3204', color: APP_COLORS.hex_f79009 },
-                  { icon: <Cpu size={16} />, attr: 'thread.pool.active', desc: 'Number of active threads in the pool', example: '42', color: APP_COLORS.hex_5e60ce },
-                  { icon: <Cpu size={16} />, attr: 'thread.pool.size', desc: 'Maximum thread pool capacity', example: '100', color: APP_COLORS.hex_5e60ce },
-                  { icon: <GitPullRequest size={16} />, attr: 'queue.depth', desc: 'Internal queue depth / pending item count', example: '847', color: APP_COLORS.hex_e478fa },
-                ].map((item, i) => (
-                  <div key={i} className="sat-guide-item">
-                    <div className="sat-guide-icon" style={{ color: item.color }}>{item.icon}</div>
-                    <div className="sat-guide-content">
-                      <code className="sat-guide-attr">{item.attr}</code>
-                      <div className="sat-guide-desc">{item.desc}</div>
-                    </div>
-                    <div className="sat-guide-example">
-                      <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>e.g. </span>
-                      <code style={{ fontSize: 11, color: item.color }}>{item.example}</code>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <div className="flex flex-col gap-4">
+            <div className="text-[13px] text-[var(--text-muted)] leading-relaxed">
+              Saturation metrics are extracted from OpenTelemetry span <strong className="text-[var(--text-primary)]">attributes</strong>.
+              Add these attributes to your spans to populate the charts above:
             </div>
+            <div className="flex flex-col border border-[var(--border-color)] rounded-md overflow-hidden">
+              {[
+                { icon: <Database size={16} />, attr: 'db.connection_pool.utilization', desc: 'DB connection pool utilization (0–100)', example: '72.5', color: APP_COLORS.hex_06aed5 },
+                { icon: <Radio size={16} />, attr: 'messaging.kafka.consumer.lag', desc: 'Kafka consumer group lag (message count)', example: '3204', color: APP_COLORS.hex_f79009 },
+                { icon: <Cpu size={16} />, attr: 'thread.pool.active', desc: 'Number of active threads in the pool', example: '42', color: APP_COLORS.hex_5e60ce },
+                { icon: <Cpu size={16} />, attr: 'thread.pool.size', desc: 'Maximum thread pool capacity', example: '100', color: APP_COLORS.hex_5e60ce },
+                { icon: <GitPullRequest size={16} />, attr: 'queue.depth', desc: 'Internal queue depth / pending item count', example: '847', color: APP_COLORS.hex_e478fa },
+              ].map((item, i, arr) => (
+                <div
+                  key={i}
+                  className={`flex items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-[var(--bg-tertiary)]${i < arr.length - 1 ? ' border-b border-[var(--border-color)]' : ''}`}
+                >
+                  <div className="shrink-0 w-6 flex items-center justify-center" style={{ color: item.color }}>{item.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <code className="font-mono text-[12px] text-[var(--text-primary)] bg-[var(--bg-tertiary)] px-1.5 py-0.5 rounded inline-block">{item.attr}</code>
+                    <div className="text-[11px] text-[var(--text-muted)] mt-1">{item.desc}</div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <span className="text-[var(--text-muted)] text-[11px]">e.g. </span>
+                    <code className="text-[11px]" style={{ color: item.color }}>{item.example}</code>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </Surface>
       </div>
     </div>

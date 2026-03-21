@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 import { API_CONFIG } from '@config/apiConfig';
 
@@ -8,6 +8,7 @@ import { attachErrorInterceptor } from './interceptors/errorInterceptor';
 interface ApiEnvelope {
   readonly success: boolean;
   readonly data: unknown;
+  readonly error?: unknown;
 }
 
 function isApiEnvelope(value: unknown): value is ApiEnvelope {
@@ -32,6 +33,16 @@ attachAuthInterceptor(api);
 api.interceptors.response.use((response) => {
   const data = response.data;
   if (isApiEnvelope(data)) {
+    if (!data.success) {
+      const err = new AxiosError(
+        'Request failed',
+        AxiosError.ERR_BAD_RESPONSE,
+        response.config,
+        response.request,
+        { ...response, data: data as unknown as Record<string, unknown> },
+      );
+      return Promise.reject(err);
+    }
     return data.data;
   }
   return data;

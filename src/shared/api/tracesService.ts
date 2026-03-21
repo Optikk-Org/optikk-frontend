@@ -16,6 +16,7 @@ const BASE = API_CONFIG.ENDPOINTS.V1_BASE;
 const tracesListSchema = z.object({
   traces: z.array(traceRecordSchema),
   total: z.number(),
+  summary: z.record(z.string(), z.unknown()).optional(),
 });
 
 const spanListSchema = z.array(spanRecordSchema);
@@ -24,12 +25,24 @@ const spanListSchema = z.array(spanRecordSchema);
  * Service wrapper for distributed tracing endpoints.
  */
 export const tracesService = {
+  async queryExplorer(body: {
+    startTime: RequestTime;
+    endTime: RequestTime;
+    limit?: number;
+    offset?: number;
+    cursor?: string;
+    step?: string;
+    params?: QueryParams;
+  }): Promise<unknown> {
+    return api.post(`${BASE}/traces/explorer/query`, body);
+  },
+
   async getTraces(
     _teamId: number | null,
     startTime: RequestTime,
     endTime: RequestTime,
     params: QueryParams = {},
-  ): Promise<{ traces: TraceRecord[]; total: number }> {
+  ): Promise<{ traces: TraceRecord[]; total: number; summary?: Record<string, unknown> }> {
     const data = await api.get(`${BASE}/traces`, { params: { startTime, endTime, ...params } });
     return validateResponse(tracesListSchema, data);
   },
@@ -118,5 +131,10 @@ export const tracesService = {
   getLiveTailUrl(filters: QueryParams = {}): string {
     const query = new URLSearchParams(filters as Record<string, string>).toString();
     return `${BASE}/spans/live-tail${query ? '?' + query : ''}`;
+  },
+
+  getExplorerStreamUrl(filters: QueryParams = {}): string {
+    const query = new URLSearchParams(filters as Record<string, string>).toString();
+    return `${BASE}/traces/explorer/stream${query ? '?' + query : ''}`;
   },
 };

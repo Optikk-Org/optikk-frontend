@@ -18,6 +18,5 @@ const settingsConfig: DomainConfig = {
   routes: [{ path: ROUTES.settings, page: SettingsPage }],
 };
 
-export { default as SettingsPageView } from './pages/SettingsPage';
 export * from './components/tabs';
 export * from './types';

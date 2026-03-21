@@ -1,4 +1,4 @@
-import { Doughnut } from 'react-chartjs-2';
+import ReactECharts from 'echarts-for-react';
 
 import { APP_COLORS } from '@config/colorLiterals';
 
@@ -27,26 +27,36 @@ export default function GaugeChart({
   const clamped = Math.min(Math.max(value, 0), 100);
   const color = getGaugeColor(clamped);
 
-  const chartData = {
-    datasets: [
+  const option = {
+    backgroundColor: 'transparent',
+    series: [
       {
-        data: [clamped, 100 - clamped],
-        backgroundColor: [color, `${APP_COLORS.hex_2d2d2d}99`],
-        borderWidth: 0,
-        circumference: 180,
-        rotation: -90,
+        type: 'gauge',
+        startAngle: 180,
+        endAngle: 0,
+        min: 0,
+        max: 100,
+        radius: '100%',
+        center: ['50%', '90%'],
+        splitNumber: 0,
+        axisLine: {
+          roundCap: false,
+          lineStyle: {
+            width: Math.round(size * 0.1),
+            color: [
+              [clamped / 100, color],
+              [1, `${APP_COLORS.hex_2d2d2d}99`],
+            ],
+          },
+        },
+        pointer: { show: false },
+        axisTick: { show: false },
+        splitLine: { show: false },
+        axisLabel: { show: false },
+        detail: { show: false },
+        data: [{ value: clamped }],
       },
     ],
-  };
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: '72%',
-    plugins: {
-      legend: { display: false },
-      tooltip: { enabled: false },
-    },
   };
 
   return (
@@ -59,7 +69,11 @@ export default function GaugeChart({
     }}>
       {/* The arc canvas — exactly half the height */}
       <div style={{ width: size, height: size / 2, flexShrink: 0 }}>
-        <Doughnut data={chartData} options={options} />
+        <ReactECharts
+          option={option}
+          style={{ width: '100%', height: '100%' }}
+          opts={{ renderer: 'canvas' }}
+        />
       </div>
 
       {/* Score + label sit clearly BELOW the arc */}

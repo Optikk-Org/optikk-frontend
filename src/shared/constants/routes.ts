@@ -28,8 +28,6 @@ const ROUTES = {
   aiConversations: '/ai-conversations',
   aiConversationDetail: '/ai-conversations/:conversationId',
   settings: '/settings',
-  investigations: '/investigations',
-  investigationDetail: '/investigations/:id',
   latencyAlias: '/latency',
 } as const;
 

@@ -1,4 +1,4 @@
-import { Surface } from '@shared/design-system';
+import { Surface } from '@/components/ui';
 
 import DataTable from '@shared/components/ui/data-display/DataTable';
 

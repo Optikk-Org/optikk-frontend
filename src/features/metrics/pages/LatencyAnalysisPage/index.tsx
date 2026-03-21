@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Badge, Surface } from '@shared/design-system';
+import { Badge, Surface, Tabs } from '@/components/ui';
 import { Timer } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -7,6 +7,7 @@ import StatCard from '@shared/components/ui/cards/StatCard';
 import DataTable from '@shared/components/ui/data-display/DataTable';
 import FilterBar from '@shared/components/ui/forms/FilterBar';
 import PageHeader from '@shared/components/ui/layout/PageHeader';
+import { PageShell } from '@shared/components/ui';
 import ConfigurableDashboard from '@shared/components/ui/dashboard/ConfigurableDashboard';
 
 import { latencyService } from '@shared/api/latencyService';
@@ -150,8 +151,8 @@ export default function LatencyAnalysisPage({ embedded = false }) {
     },
   ];
 
-  return (
-    <div className="latency-analysis-page">
+  const content = (
+    <>
       {!embedded && <PageHeader title="Latency Analysis" icon={<Timer size={24} />} />}
 
       <FilterBar
@@ -194,27 +195,19 @@ export default function LatencyAnalysisPage({ embedded = false }) {
         />
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, borderBottom: '1px solid var(--border-color)' }}>
-        {tabItems.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            style={{
-              padding: '8px 16px',
-              background: 'none',
-              border: 'none',
-              borderBottom: activeTab === tab.key ? '2px solid var(--primary-color, #6366f1)' : '2px solid transparent',
-              color: activeTab === tab.key ? 'var(--text-primary)' : 'var(--text-muted)',
-              cursor: 'pointer',
-              fontWeight: activeTab === tab.key ? 600 : 400,
-              fontSize: 14,
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={tabItems.map((tab) => ({ key: tab.key, label: tab.label }))}
+        className="mb-4"
+      />
       {tabItems.find((tab) => tab.key === activeTab)?.children}
-    </div>
+    </>
   );
+
+  if (embedded) {
+    return <div className="flex flex-col gap-4">{content}</div>;
+  }
+
+  return <PageShell>{content}</PageShell>;
 }

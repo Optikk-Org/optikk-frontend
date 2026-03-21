@@ -3,14 +3,45 @@ export * from './branded';
 export * from './common';
 export * from './dashboardConfig';
 
-export interface TimeRange {
+export interface RelativeTimeRange {
+  kind: 'relative';
+  preset: string;      // e.g. '5m', '1h', '7d'
   label: string;
-  value: string;
-  minutes?: number;
-  start?: number;
-  end?: number;
-  startTime?: string | number;
-  endTime?: string | number;
+  minutes: number;
+}
+
+export interface AbsoluteTimeRange {
+  kind: 'absolute';
+  startMs: number;     // Unix ms
+  endMs: number;       // Unix ms
+  label: string;
+}
+
+export type TimeRange = RelativeTimeRange | AbsoluteTimeRange;
+
+/** Helper to check if a range is relative */
+export function isRelativeRange(r: TimeRange): r is RelativeTimeRange {
+  return r.kind === 'relative';
+}
+
+/** Helper to check if a range is absolute */
+export function isAbsoluteRange(r: TimeRange): r is AbsoluteTimeRange {
+  return r.kind === 'absolute';
+}
+
+/** Resolve any TimeRange to absolute start/end ms bounds */
+export function resolveTimeRangeBounds(r: TimeRange): { startTime: number; endTime: number } {
+  if (r.kind === 'absolute') {
+    return { startTime: r.startMs, endTime: r.endMs };
+  }
+  const now = Math.floor(Date.now() / 60_000) * 60_000; // stabilize to minute
+  return { startTime: now - r.minutes * 60_000, endTime: now };
+}
+
+/** Compute duration in ms for any TimeRange */
+export function timeRangeDurationMs(r: TimeRange): number {
+  if (r.kind === 'absolute') return r.endMs - r.startMs;
+  return r.minutes * 60_000;
 }
 
 export interface Team {

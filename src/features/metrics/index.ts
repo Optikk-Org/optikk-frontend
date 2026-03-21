@@ -48,11 +48,8 @@ const metricsConfig: DomainConfig = {
 
 export { default as MetricsPageView } from './pages/MetricsPage';
 export { default as SaturationHubPageView } from './pages/SaturationHubPage';
-export { default as SaturationPageView } from './pages/SaturationPage';
 export { default as LatencyAnalysisPageView } from './pages/LatencyAnalysisPage';
 export { default as ResourceUtilizationPageView } from './pages/ResourceUtilizationPage';
-
-
 export { default as MessagingQueueMonitoringPageView } from './pages/MessagingQueueMonitoringPage';
 export { default as KafkaTopicDetailPageView } from './pages/KafkaTopicDetailPage';
 export { default as KafkaGroupDetailPageView } from './pages/KafkaGroupDetailPage';

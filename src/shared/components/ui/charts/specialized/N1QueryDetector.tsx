@@ -4,11 +4,8 @@
  * DB queries — the classic N+1 pattern.
  * Data comes from the /api/v1/spans/n1 endpoint (aggregated query counts).
  */
-import { Table } from 'antd';
-import { Surface, Badge, Tooltip } from '@shared/design-system';
+import { Surface, Badge, Tooltip, SimpleTable } from '@/components/ui';
 import React from 'react';
-
-import type { ColumnsType } from 'antd/es/table';
 
 /**
  *
@@ -34,27 +31,27 @@ interface N1QueryDetectorProps {
 const N1QueryDetector: React.FC<N1QueryDetectorProps> = ({
     data, loading = false, title = 'N+1 Query Detector', threshold = 20,
 }) => {
-    const columns: ColumnsType<N1QueryRow> = [
+    const columns = [
         {
             title: 'Service',
             dataIndex: 'service',
             key: 'service',
             width: 120,
-            render: (v) => <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-primary)' }}>{v}</span>,
+            render: (v: any) => <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-primary)' }}>{v}</span>,
         },
         {
             title: 'Operation',
             dataIndex: 'operation',
             key: 'operation',
             width: 140,
-            render: (v) => <code style={{ fontSize: 'var(--text-xs)', color: 'var(--color-info)' }}>{v}</code>,
+            render: (v: any) => <code style={{ fontSize: 'var(--text-xs)', color: 'var(--color-info)' }}>{v}</code>,
         },
         {
             title: 'Query Pattern',
             dataIndex: 'queryPattern',
             key: 'queryPattern',
             ellipsis: true,
-            render: (v) => (
+            render: (v: any) => (
                 <Tooltip content={v}>
                     <code style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>{v}</code>
                 </Tooltip>
@@ -65,9 +62,9 @@ const N1QueryDetector: React.FC<N1QueryDetectorProps> = ({
             dataIndex: 'callCount',
             key: 'callCount',
             width: 80,
-            sorter: (a, b) => b.callCount - a.callCount,
-            defaultSortOrder: 'ascend',
-            render: (v) => (
+            sorter: (a: any, b: any) => b.callCount - a.callCount,
+            defaultSortOrder: 'ascend' as const,
+            render: (v: any) => (
                 <Badge
                     color={v >= threshold ? 'var(--severity-critical)' : 'var(--severity-medium)'}
                     style={{
@@ -86,37 +83,39 @@ const N1QueryDetector: React.FC<N1QueryDetectorProps> = ({
             dataIndex: 'distinctCallers',
             key: 'distinctCallers',
             width: 80,
-            render: (v) => <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>{v}</span>,
+            render: (v: any) => <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>{v}</span>,
         },
         {
             title: 'Avg (ms)',
             dataIndex: 'avgLatencyMs',
             key: 'avgLatencyMs',
             width: 90,
-            render: (v) => <span style={{ color: v > 100 ? 'var(--severity-high)' : 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>{v.toFixed(1)}</span>,
+            render: (v: any) => <span style={{ color: v > 100 ? 'var(--severity-high)' : 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>{Number(v).toFixed(1)}</span>,
         },
         {
             title: 'p99 (ms)',
             dataIndex: 'p99LatencyMs',
             key: 'p99LatencyMs',
             width: 90,
-            render: (v) => <span style={{ color: v > 500 ? 'var(--severity-critical)' : 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>{v.toFixed(1)}</span>,
+            render: (v: any) => <span style={{ color: v > 500 ? 'var(--severity-critical)' : 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>{Number(v).toFixed(1)}</span>,
         },
     ];
 
     return (
         <Surface className="chart-card" padding="sm">
             <div style={{ fontWeight: 600, marginBottom: 8 }}>{title}</div>
-            <Table
-                dataSource={data}
-                columns={columns}
-                loading={loading}
-                rowKey={(r) => `${r.service}::${r.operation}::${r.queryPattern}`}
-                size="small"
-                pagination={{ pageSize: 10, size: 'small' }}
-                style={{ fontSize: 'var(--text-sm)' }}
-                scroll={{ x: true }}
-            />
+            {loading ? (
+                <div className="text-center py-8 text-[var(--text-muted)]">Loading...</div>
+            ) : (
+                <SimpleTable
+                    dataSource={data}
+                    columns={columns}
+                    rowKey={(r: any) => `${r.service}::${r.operation}::${r.queryPattern}`}
+                    size="small"
+                    pagination={{ pageSize: 10 }}
+                    scroll={{ x: 800 }}
+                />
+            )}
         </Surface>
     );
 };

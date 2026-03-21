@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { formatNumber, formatDuration } from '@shared/utils/formatters';
 
 import { APP_COLORS } from '@config/colorLiterals';
@@ -30,6 +32,117 @@ interface EndpointListProps {
 interface EndpointValue {
   value: number;
   formatted: string;
+}
+
+function VirtualizedEndpoints({
+  endpoints,
+  selectedEndpoints,
+  onToggle,
+  maxHeight,
+  getEndpointValue,
+  getValueColor,
+  getBackgroundColor,
+  getBorderColor,
+}: {
+  endpoints: EndpointListItem[];
+  selectedEndpoints: string[];
+  onToggle?: (key: string) => void;
+  maxHeight: string;
+  getEndpointValue: (ep: EndpointListItem) => EndpointValue;
+  getValueColor: (value: number) => string;
+  getBackgroundColor: (isSelected: boolean) => string;
+  getBorderColor: (isSelected: boolean) => string;
+}) {
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: endpoints.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 44, // ~36px item + 8px gap
+    overscan: 5,
+    gap: 8,
+  });
+
+  return (
+    <div
+      ref={parentRef}
+      style={{
+        maxHeight,
+        overflowY: 'auto',
+        paddingRight: 4,
+        scrollbarWidth: 'thin',
+        scrollbarColor: 'var(--border-color) var(--bg-secondary)',
+      }}
+    >
+      <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
+        {virtualizer.getVirtualItems().map((virtualRow) => {
+          const ep = endpoints[virtualRow.index];
+          const endpointKey = ep.key || `${ep.http_method || 'N/A'}_${ep.operation_name || ep.endpoint_name || 'Unknown'}_${ep.service_name || ''}`;
+          const isSelected = selectedEndpoints.includes(endpointKey);
+          const isFaded = selectedEndpoints.length > 0 && !isSelected;
+          const { value, formatted } = getEndpointValue(ep);
+
+          return (
+            <div
+              key={endpointKey}
+              onClick={() => onToggle?.(endpointKey)}
+              style={{
+                position: 'absolute',
+                top: virtualRow.start,
+                width: '100%',
+                height: virtualRow.size,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '8px 12px',
+                background: getBackgroundColor(isSelected),
+                borderRadius: 4,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                opacity: isFaded ? 0.3 : 1,
+                border: `1px solid ${getBorderColor(isSelected)}`,
+                boxSizing: 'border-box',
+              }}
+              onMouseEnter={(e) => {
+                if (!isFaded) {
+                  e.currentTarget.style.background = isSelected
+                    ? getBackgroundColor(true).replace('0.2', '0.3')
+                    : 'var(--bg-tertiary)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = getBackgroundColor(isSelected);
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="font-mono" style={{
+                  fontSize: 12,
+                  color: 'var(--text-primary)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {ep.http_method || 'N/A'} {ep.operation_name || ep.endpoint_name || 'Unknown'}
+                </div>
+                {ep.service && ep.service !== 'unknown' && (
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                    {ep.service}
+                  </div>
+                )}
+              </div>
+              <div style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: getValueColor(value),
+                marginLeft: 12,
+              }}>
+                {formatted}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -125,78 +238,16 @@ export default function EndpointList({
       }}>
         Top Endpoints by {type === 'errorRate' ? 'Error Rate' : type === 'latency' ? 'Latency' : 'Requests'}
       </div>
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        gap: 8, 
-        maxHeight, 
-        overflowY: 'auto', 
-        paddingRight: 4,
-        scrollbarWidth: 'thin',
-        scrollbarColor: 'var(--border-color) var(--bg-secondary)',
-      }}>
-        {endpoints.map((ep) => {
-          const endpointKey = ep.key || `${ep.http_method || 'N/A'}_${ep.operation_name || ep.endpoint_name || 'Unknown'}_${ep.service_name || ''}`;
-          const isSelected = selectedEndpoints.includes(endpointKey);
-          const isFaded = selectedEndpoints.length > 0 && !isSelected;
-          const { value, formatted } = getEndpointValue(ep);
-          
-          return (
-            <div
-              key={endpointKey}
-              onClick={() => onToggle?.(endpointKey)}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '8px 12px',
-                background: getBackgroundColor(isSelected),
-                borderRadius: 4,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                opacity: isFaded ? 0.3 : 1,
-                border: `1px solid ${getBorderColor(isSelected)}`,
-              }}
-              onMouseEnter={(e) => {
-                if (!isFaded) {
-                  e.currentTarget.style.background = isSelected 
-                    ? getBackgroundColor(true).replace('0.2', '0.3')
-                    : 'var(--bg-tertiary)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = getBackgroundColor(isSelected);
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ 
-                  fontSize: 12, 
-                  fontFamily: 'monospace', 
-                  color: 'var(--text-primary)', 
-                  overflow: 'hidden', 
-                  textOverflow: 'ellipsis', 
-                  whiteSpace: 'nowrap', 
-                }}>
-                  {ep.http_method || 'N/A'} {ep.operation_name || ep.endpoint_name || 'Unknown'}
-                </div>
-                {ep.service && ep.service !== 'unknown' && (
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                    {ep.service}
-                  </div>
-                )}
-              </div>
-              <div style={{ 
-                fontSize: 12, 
-                fontWeight: 600, 
-                color: getValueColor(value), 
-                marginLeft: 12, 
-              }}>
-                {formatted}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <VirtualizedEndpoints
+        endpoints={endpoints}
+        selectedEndpoints={selectedEndpoints}
+        onToggle={onToggle}
+        maxHeight={maxHeight}
+        getEndpointValue={getEndpointValue}
+        getValueColor={getValueColor}
+        getBackgroundColor={getBackgroundColor}
+        getBorderColor={getBorderColor}
+      />
     </div>
   );
 }

@@ -3,7 +3,7 @@
  * Renders a Gantt-style timeline of pod lifecycle events:
  * pending → running → terminated, with restart markers.
  */
-import { Surface, Tooltip } from '@shared/design-system';
+import { Surface, Tooltip } from '@/components/ui';
 import React, { useMemo } from 'react';
 
 /**

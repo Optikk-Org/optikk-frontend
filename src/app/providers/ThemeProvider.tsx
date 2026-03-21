@@ -1,4 +1,3 @@
-import { ConfigProvider, theme as antdTheme } from 'antd';
 import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 
@@ -17,38 +16,15 @@ export default function ThemeProvider({ children }: ThemeProviderProps): JSX.Ele
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', appTheme);
+    if (appTheme === 'light') {
+      document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.add('dark');
+    }
   }, [appTheme]);
 
-  const themeConfig = {
-    algorithm:
-      appTheme === 'light'
-        ? antdTheme.defaultAlgorithm
-        : antdTheme.darkAlgorithm,
-    token: {
-      colorPrimary: APP_COLORS.hex_7c7ff2,
-      colorSuccess: APP_COLORS.hex_52876b,
-      colorWarning: APP_COLORS.hex_d97706,
-      colorError: APP_COLORS.hex_dc2626,
-      colorInfo: APP_COLORS.hex_4da6c8,
-      borderRadius: 8,
-      fontFamily:
-        "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    },
-    components: {
-      Layout: {
-        headerBg: 'var(--bg-secondary)',
-        siderBg: 'var(--bg-secondary)',
-        bodyBg: 'var(--bg-primary)',
-      },
-      Menu: {
-        darkItemBg: 'var(--bg-secondary)',
-        darkItemSelectedBg: 'var(--bg-tertiary)',
-      },
-    },
-  };
-
   return (
-    <ConfigProvider theme={themeConfig}>
+    <>
       {children}
       <Toaster
         position="top-right"
@@ -73,6 +49,6 @@ export default function ThemeProvider({ children }: ThemeProviderProps): JSX.Ele
           },
         }}
       />
-    </ConfigProvider>
+    </>
   );
 }

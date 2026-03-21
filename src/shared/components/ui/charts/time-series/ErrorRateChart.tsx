@@ -1,38 +1,16 @@
 
 import { useMemo, memo } from 'react';
-import { Line } from 'react-chartjs-2';
+import uPlot from 'uplot';
 
 import { useChartTimeBuckets } from '@shared/hooks/useChartTimeBuckets';
-
-import { createChartOptions, createLineDataset, getChartColor } from '@shared/utils/chartHelpers';
-
+import { tsKey, tsMs, firstValue } from '@shared/utils/chartDataUtils';
+import { CHART_COLORS } from '@config/constants';
 import { APP_COLORS } from '@config/colorLiterals';
 
-// Normalize timestamps to "YYYY-MM-DD HH:mm" for reliable cross-source matching.
-function tsKey(ts: any) {
-  if (!ts) return '';
-  return String(ts).replace('T', ' ').replace('Z', '').substring(0, 16);
-}
+import UPlotChart, { defaultAxes, uLine } from '../UPlotChart';
 
-// Parse timestamp values robustly across API formats.
-function tsMs(ts: any) {
-  if (!ts) return NaN;
-  const raw = String(ts).trim();
-  const normalized = raw.includes('T') ? raw : raw.replace(' ', 'T');
-  const hasTimezone = /([zZ]|[+-]\d{2}:\d{2})$/.test(normalized);
-  const ms = new Date(hasTimezone ? normalized : `${normalized}Z`).getTime();
-  return Number.isNaN(ms) ? NaN : ms;
-}
-
-function firstValue(row: any, keys: string[], fallback: any = 0) {
-  if (!row || typeof row !== 'object') return fallback;
-  for (const key of keys) {
-    const value = row[key];
-    if (value !== undefined && value !== null && value !== '') {
-      return value;
-    }
-  }
-  return fallback;
+function getChartColor(index: number): string {
+  return CHART_COLORS[index % CHART_COLORS.length];
 }
 
 /**
@@ -56,7 +34,7 @@ export default memo(function ErrorRateChart({
   color = APP_COLORS.hex_f04438,
 }: any) {
   const hasServiceData = Object.keys(serviceTimeseriesMap).length > 0;
-  const { timeBuckets, labels } = useChartTimeBuckets();
+  const { timeBuckets } = useChartTimeBuckets();
 
   const buildServiceDatasets = (endpointList: any[]) => {
     const targetMap: Record<string, any> = {};
@@ -93,12 +71,14 @@ export default memo(function ErrorRateChart({
         if (!bucket || bucket.total === 0) return 0;
         return (bucket.errors / bucket.total) * 100;
       });
-      return createLineDataset(info.label, values, getChartColor(idx), false);
+      return { label: info.label, values, color: getChartColor(idx), fill: false };
     });
   };
 
   const chartData = useMemo(() => {
-    let datasets: any[];
+    type SeriesEntry = { label: string; values: number[]; color: string; fill: boolean; dash?: number[] };
+    let seriesList: SeriesEntry[];
+
     if (endpoints.length > 0) {
       const list = selectedEndpoints.length > 0
         ? (endpoints as any[]).filter((ep) => {
@@ -114,22 +94,22 @@ export default memo(function ErrorRateChart({
         : endpoints;
 
       if (hasServiceData) {
-        datasets = buildServiceDatasets(list);
+        seriesList = buildServiceDatasets(list);
       } else {
-        datasets = (list as any[]).map((ep, idx) => {
+        seriesList = (list as any[]).map((ep, idx) => {
           const method = firstValue(ep, ['http_method'], 'N/A');
           const operation = firstValue(ep, ['operation_name', 'endpoint_name'], 'Unknown');
-          return createLineDataset(
-            `${method} ${operation}`,
-            timeBuckets.map(() => 0),
-            getChartColor(idx),
-            false,
-          );
+          return {
+            label: `${method} ${operation}`,
+            values: timeBuckets.map(() => 0),
+            color: getChartColor(idx),
+            fill: false,
+          };
         });
       }
     } else if (hasServiceData) {
       const stepMs = timeBuckets.length >= 2 ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime() : 60000;
-      datasets = Object.entries(serviceTimeseriesMap).slice(0, 10).map(([svcName, rows]: [string, any], idx) => {
+      seriesList = Object.entries(serviceTimeseriesMap).slice(0, 10).map(([svcName, rows]: [string, any], idx) => {
         const tsMap: Record<string, { total: number, errors: number }> = {};
         for (const row of rows as any[]) {
           const rowTimestamp = firstValue(row, ['timestamp', 'time_bucket'], '');
@@ -154,7 +134,7 @@ export default memo(function ErrorRateChart({
           if (!bucket || bucket.total === 0) return 0;
           return (bucket.errors / bucket.total) * 100;
         });
-        return createLineDataset(svcName, values, getChartColor(idx), false);
+        return { label: svcName, values, color: getChartColor(idx), fill: false };
       });
     } else {
       const dataMap: Record<string, number> = {};
@@ -162,36 +142,42 @@ export default memo(function ErrorRateChart({
         const ts = firstValue(d, ['timestamp', 'time_bucket'], '');
         dataMap[tsKey(ts)] = Number(firstValue(d, ['value', 'error_rate'], 0));
       }
-      datasets = [createLineDataset(datasetLabel, timeBuckets.map((ts) => dataMap[tsKey(ts)] ?? 0), color, true)];
+      seriesList = [{ label: datasetLabel, values: timeBuckets.map((ts) => dataMap[tsKey(ts)] ?? 0), color, fill: true }];
     }
 
     if (targetThreshold !== null) {
       const formattedLimit = Number.isInteger(Number(targetThreshold)) ? targetThreshold : Number(targetThreshold).toFixed(2).replace(/\.?0+$/, '');
-      datasets.push({
+      seriesList.push({
         label: `Limit (${formattedLimit}%)`,
-        data: timeBuckets.map(() => targetThreshold),
-        borderColor: APP_COLORS.hex_f79009,
-        borderDash: [6, 3],
-        borderWidth: 1.5,
-        pointRadius: 0,
+        values: timeBuckets.map(() => targetThreshold),
+        color: APP_COLORS.hex_f79009,
         fill: false,
-        tension: 0,
+        dash: [5, 5],
       });
     }
 
-    datasets.push({
+    seriesList.push({
       label: '100% Error',
-      data: timeBuckets.map(() => 100),
-      borderColor: APP_COLORS.rgba_240_68_56_0p5,
-      borderDash: [4, 4],
-      borderWidth: 1,
-      pointRadius: 0,
+      values: timeBuckets.map(() => 100),
+      color: APP_COLORS.rgba_240_68_56_0p5,
       fill: false,
-      tension: 0,
+      dash: [5, 5],
     });
 
-    return { labels, datasets };
-  }, [data, endpoints, selectedEndpoints, serviceTimeseriesMap, hasServiceData, targetThreshold, timeBuckets, labels]);
+    return seriesList;
+  }, [data, endpoints, selectedEndpoints, serviceTimeseriesMap, hasServiceData, targetThreshold, timeBuckets]);
+
+  const timestamps = useMemo(
+    () => timeBuckets.map((t) => tsMs(t) / 1000),
+    [timeBuckets],
+  );
+
+  const uplotData = useMemo<uPlot.AlignedData>(() => {
+    return [
+      timestamps,
+      ...chartData.map((s) => s.values),
+    ] as uPlot.AlignedData;
+  }, [timestamps, chartData]);
 
   const allDataValues = useMemo(() => {
     const vals: number[] = (data as any[]).map((d) => Number(firstValue(d, ['value', 'error_rate'], 0)));
@@ -218,35 +204,30 @@ export default memo(function ErrorRateChart({
   const maxDataVal = Math.max(...allDataValues, targetThreshold || 0, 0);
   const yAxisMax = Math.min(Math.max(Math.ceil(maxDataVal * 1.2), 1), 100);
 
-  const options = useMemo(() => createChartOptions({
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (ctx: any) => {
-            if (ctx.parsed.y == null) return null;
-            return `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%`;
-          },
-        },
+  const effectiveYMax = targetThreshold && targetThreshold > yAxisMax
+    ? Math.min(targetThreshold * 1.2, 100)
+    : yAxisMax;
+
+  const opts = useMemo<Omit<uPlot.Options, 'width' | 'height'>>(() => ({
+    axes: [
+      ...defaultAxes().slice(0, 1),
+      {
+        ...defaultAxes()[1],
+        values: (_u: uPlot, vals: number[]) =>
+          vals.map((v) => (Number.isInteger(v) ? `${v}%` : `${v.toFixed(1)}%`)),
+        range: [0, effectiveYMax],
       },
-    },
+    ],
     scales: {
-      y: {
-        grid: { color: APP_COLORS.hex_2d2d2d },
-        beginAtZero: true,
-        max: targetThreshold && targetThreshold > yAxisMax ? Math.min(targetThreshold * 1.2, 100) : yAxisMax,
-        min: 0,
-        ticks: {
-          color: APP_COLORS.hex_666,
-          count: 6,
-          callback: (v: any) => {
-            const num = Number(v);
-            return Number.isInteger(num) ? `${num}%` : `${num.toFixed(1)}%`;
-          },
-        },
-      },
+      y: { min: 0, max: effectiveYMax },
     },
-  }), [yAxisMax, targetThreshold]);
+    series: [
+      {},
+      ...chartData.map((s) =>
+        uLine(s.label, s.color, { fill: s.fill, dash: s.dash }),
+      ),
+    ],
+  }), [chartData, effectiveYMax]);
 
   if (data.length === 0 && timeBuckets.length === 0) {
     return (
@@ -258,8 +239,7 @@ export default memo(function ErrorRateChart({
 
   return (
     <div style={{ position: 'relative', height: '100%', minHeight: '200px' }}>
-      <Line data={chartData} options={options} />
+      <UPlotChart options={opts} data={uplotData} />
     </div>
   );
-}
-);
+});

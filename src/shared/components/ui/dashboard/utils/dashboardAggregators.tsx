@@ -36,6 +36,31 @@ export function resolveComponentData(
 /**
  *
  */
+export function normalizeDashboardRows(
+  rawData: unknown,
+  dataKey?: string,
+) {
+  if (dataKey) {
+    if (rawData && typeof rawData === 'object' && Array.isArray((rawData as Record<string, unknown>)[dataKey])) {
+      return (rawData as Record<string, unknown>)[dataKey] as any[];
+    }
+    return [];
+  }
+
+  if (Array.isArray(rawData)) {
+    return rawData;
+  }
+
+  if (rawData && typeof rawData === 'object' && Array.isArray((rawData as Record<string, unknown>).data)) {
+    return (rawData as Record<string, unknown>).data as any[];
+  }
+
+  return [];
+}
+
+/**
+ *
+ */
 export function resolveFieldValue(raw: any, field: string | undefined) {
   if (!field) return 0;
   if (field === '_count') {

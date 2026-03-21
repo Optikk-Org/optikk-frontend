@@ -1,24 +1,67 @@
-import { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useCallback, useMemo, useState } from 'react';
 
 import { useURLFilters } from '@shared/hooks/useURLFilters';
 import { useAppStore } from '@shared/store/appStore';
-import { traceQueries } from '../api/queryOptions';
+
+import { resolveTimeBounds } from '@/features/explorer-core/utils/timeRange';
+
+import { tracesExplorerApi } from '../api/tracesExplorerApi';
+
 import type { TracesBackendParams } from '../api/tracesApi';
-import type { ServiceBadge } from '../types';
 
 const TRACES_URL_FILTER_CONFIG = {
   params: [
     { key: 'search', type: 'string' as const, defaultValue: '' },
     { key: 'service', type: 'string' as const, defaultValue: '' },
     { key: 'errorsOnly', type: 'boolean' as const, defaultValue: false },
+    { key: 'mode', type: 'string' as const, defaultValue: 'all' },
   ],
   syncStructuredFilters: true,
+  stripParams: ['view'],
 };
 
-/**
- * Traces hub page logic with React Query and queryOptions pattern.
- */
+function compileStructuredFilters(
+  filters: Array<{ field: string; operator: string; value: string }>,
+): Partial<TracesBackendParams & { mode?: string; search?: string }> {
+  const compiled: Partial<TracesBackendParams & { mode?: string; search?: string }> = {};
+
+  for (const filter of filters) {
+    switch (filter.field) {
+      case 'trace_id':
+        compiled.traceId = filter.value;
+        break;
+      case 'operation_name':
+        compiled.operationName = filter.value;
+        break;
+      case 'status':
+        compiled.status = filter.value;
+        break;
+      case 'service_name':
+        compiled.services = [filter.value];
+        break;
+      case 'http_method':
+        compiled.httpMethod = filter.value;
+        break;
+      case 'http_status':
+        compiled.httpStatusCode = filter.value;
+        break;
+      case 'duration_ms':
+        if (filter.operator === 'gt') {
+          compiled.minDuration = Number(filter.value);
+        }
+        if (filter.operator === 'lt') {
+          compiled.maxDuration = Number(filter.value);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  return compiled;
+}
+
 export function useTracesExplorer() {
   const { selectedTeamId, timeRange, refreshKey } = useAppStore();
 
@@ -34,6 +77,7 @@ export function useTracesExplorer() {
   const selectedService =
     typeof urlValues['service'] === 'string' && urlValues['service'].length > 0 ? urlValues['service'] : null;
   const errorsOnly = urlValues['errorsOnly'] === true;
+  const mode = typeof urlValues['mode'] === 'string' ? urlValues['mode'] : 'all';
 
   const setSearchText = (value: string): void => {
     urlSetters['search']?.(value);
@@ -47,65 +91,83 @@ export function useTracesExplorer() {
     urlSetters['errorsOnly']?.(value);
   };
 
+  const setMode = (value: string): void => {
+    urlSetters['mode']?.(value);
+  };
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
-  const backendParams: TracesBackendParams = useMemo(() => {
-    const params: TracesBackendParams = {
+  const { startTime, endTime } = useMemo(() => resolveTimeBounds(timeRange), [timeRange]);
+
+  const backendParams = useMemo((): TracesBackendParams & { search?: string; mode?: string } => {
+    const params: TracesBackendParams & { search?: string; mode?: string } = {
       limit: pageSize,
       offset: (page - 1) * pageSize,
+      mode,
     };
 
-    if (errorsOnly) params.status = 'ERROR';
-    if (selectedService) params.services = [selectedService];
+    if (errorsOnly) {
+      params.status = 'ERROR';
+    }
+    if (selectedService) {
+      params.services = [selectedService];
+    }
+    if (searchText.trim()) {
+      params.search = searchText.trim();
+    }
 
-    return params;
-  }, [selectedService, errorsOnly, pageSize, page]);
+    return {
+      ...params,
+      ...compileStructuredFilters(filters),
+    };
+  }, [errorsOnly, filters, mode, page, pageSize, searchText, selectedService]);
 
-  const { startMs, endMs } = useMemo(() => {
-    const resolvedEndMs =
-      timeRange.value === 'custom' && timeRange.endTime != null ? Number(timeRange.endTime) : Date.now();
-    const resolvedStartMs =
-      timeRange.value === 'custom' && timeRange.startTime != null
-        ? Number(timeRange.startTime)
-        : resolvedEndMs - (timeRange.minutes ?? 60) * 60 * 1000;
-
-    return { startMs: resolvedStartMs, endMs: resolvedEndMs };
-  }, [refreshKey, timeRange]);
-
-  const { data, isLoading } = useQuery({
-    ...traceQueries.list(
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: [
+      'traces',
+      'explorer',
       selectedTeamId,
-      startMs,
-      endMs,
-      { ...backendParams, refreshKey } as any
-    ),
-    placeholderData: (prev) => prev,
+      startTime,
+      endTime,
+      backendParams,
+      refreshKey,
+    ],
+    queryFn: () =>
+      tracesExplorerApi.query({
+        startTime,
+        endTime,
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
+        step: '5m',
+        params: backendParams,
+      }),
+    enabled: Boolean(selectedTeamId),
+    placeholderData: (previous) => previous,
+    retry: false,
   });
 
-  const traces = data?.traces ?? [];
-  const totalTraces = Number(data?.total ?? data?.summary?.['total_traces'] ?? 0);
-  const summary = data?.summary || {};
-  
-  const errorTraces = Number(summary['error_traces'] ?? 0);
+  const traces = useMemo(() => data?.results ?? [], [data?.results]);
+  const totalTraces = Number(data?.pageInfo?.total ?? data?.summary?.total_traces ?? 0);
+  const summary = data?.summary ?? {
+    total_traces: 0,
+    error_traces: 0,
+    p95_duration: 0,
+    p99_duration: 0,
+    p50_duration: 0,
+    avg_duration: 0,
+  };
+
+  const errorTraces = Number(summary.error_traces ?? 0);
   const errorRate = totalTraces > 0 ? (errorTraces * 100) / totalTraces : 0;
-  const p95 = Number(summary['p95_duration'] ?? 0);
-  const p99 = Number(summary['p99_duration'] ?? 0);
+  const p50 = Number(summary.p50_duration ?? 0);
+  const p95 = Number(summary.p95_duration ?? 0);
+  const p99 = Number(summary.p99_duration ?? 0);
 
   const maxDuration = useMemo(
     () => Math.max(...traces.map((trace) => trace.duration_ms), 1),
     [traces],
   );
-
-  const serviceBadges = useMemo<ServiceBadge[]>(() => {
-    const counts: Record<string, number> = {};
-    for (const trace of traces) {
-      if (trace.service_name) {
-        counts[trace.service_name] = (counts[trace.service_name] || 0) + 1;
-      }
-    }
-    return Object.entries(counts).sort((left, right) => right[1] - left[1]);
-  }, [traces]);
 
   const clearAll = useCallback((): void => {
     clearURLFilters();
@@ -114,24 +176,34 @@ export function useTracesExplorer() {
 
   return {
     isLoading,
+    isError,
+    error,
     traces,
     total: totalTraces,
     totalTraces,
+    summary,
     errorTraces,
     errorRate,
+    p50,
     p95,
     p99,
-    serviceBadges,
+    trendBuckets: data?.trend ?? [],
+    facets: data?.facets ?? {},
     maxDuration,
     searchText,
     selectedService,
     errorsOnly,
+    mode,
     page,
     pageSize,
     filters,
+    startTime,
+    endTime,
+    backendParams,
     setSearchText,
     setSelectedService,
     setErrorsOnly,
+    setMode,
     setPage,
     setPageSize,
     setFilters,

@@ -1,31 +1,8 @@
-import { Line } from 'react-chartjs-2';
+import { useMemo } from 'react';
 
 import { APP_COLORS } from '@config/colorLiterals';
 
-const sparklineOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: { display: false },
-    tooltip: { enabled: false },
-  },
-  scales: {
-    x: { display: false },
-    y: { display: false },
-  },
-  elements: {
-    point: { radius: 0 },
-    line: { borderWidth: 1.5 },
-  },
-};
-
-const calmSparklineOptions = {
-  ...sparklineOptions,
-  elements: {
-    point: { radius: 0 },
-    line: { borderWidth: 1, tension: 0.3 },
-  },
-};
+import UPlotChart, { uLine } from '../UPlotChart';
 
 interface SparklineChartProps {
   data?: number[];
@@ -58,24 +35,33 @@ export default function SparklineChart({
 
   const effectiveFill = calm ? false : fill;
   const effectiveHeight = calm ? Math.min(height, 36) : height;
-  const options = calm ? calmSparklineOptions : sparklineOptions;
+  const lineWidth = calm ? 1 : 1.5;
 
-  const chartData = {
-    labels: data.map((_, i) => i),
-    datasets: [
-      {
-        data,
-        borderColor: color,
-        backgroundColor: effectiveFill ? `${color}26` : 'transparent',
-        fill: effectiveFill,
-        tension: calm ? 0.3 : 0.4,
-      },
+  const uplotData = useMemo<uPlot.AlignedData>(
+    () => [
+      data.map((_, i) => i),
+      data,
     ],
-  };
+    [data],
+  );
+
+  const opts = useMemo<Omit<uPlot.Options, 'width' | 'height'>>(
+    () => ({
+      axes: [{ show: false }, { show: false }],
+      cursor: { show: false },
+      legend: { show: false },
+      padding: [0, 0, 0, 0],
+      series: [
+        {},
+        uLine('', color, { fill: effectiveFill, width: lineWidth }),
+      ],
+    }),
+    [color, effectiveFill, lineWidth],
+  );
 
   return (
     <div style={{ width, height: effectiveHeight }}>
-      <Line data={chartData} options={options} />
+      <UPlotChart options={opts} data={uplotData} height={effectiveHeight} />
     </div>
   );
 }

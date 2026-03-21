@@ -1,4 +1,4 @@
-import { Surface } from '@shared/design-system';
+import { Surface } from '@/components/ui';
 
 import DataTable from '@shared/components/ui/data-display/DataTable';
 
@@ -31,7 +31,7 @@ export default function ServiceDetailErrorsTab({
         config={{
           expandable: {
             expandedRowRender: (record: any) => (
-              <div style={{ padding: 12, fontFamily: 'monospace', fontSize: 12, whiteSpace: 'pre-wrap', color: APP_COLORS.hex_f04438, background: `var(--bg-tertiary, ${APP_COLORS.hex_1a1a1a_2})`, borderRadius: 6 }}>
+              <div className="font-mono" style={{ padding: 12, fontSize: 12, whiteSpace: 'pre-wrap', color: APP_COLORS.hex_f04438, background: `var(--bg-tertiary, ${APP_COLORS.hex_1a1a1a_2})`, borderRadius: 6 }}>
                 {record.status_message || 'No additional details'}
               </div>
             ),

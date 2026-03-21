@@ -1,4 +1,4 @@
-import { Skeleton } from '@shared/design-system';
+import { Skeleton } from '@/components/ui';
 
 import { useTabComponents } from '@shared/hooks/useTabComponents';
 

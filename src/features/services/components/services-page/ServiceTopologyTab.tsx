@@ -1,4 +1,4 @@
-import { Badge, Skeleton, Surface } from '@shared/design-system';
+import { Badge, Skeleton, Surface } from '@/components/ui';
 import { ArrowRight, GitBranch, Network, ShieldAlert } from 'lucide-react';
 
 import ServiceGraph from '@shared/components/ui/charts/specialized/ServiceGraph';

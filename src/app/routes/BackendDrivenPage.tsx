@@ -1,4 +1,4 @@
-import { Skeleton } from '@shared/design-system';
+import { Skeleton } from '@/components/ui';
 import { Navigate, useLocation } from 'react-router-dom';
 
 import { resolveRegisteredDomainRoute } from '@/app/registry/domainRegistry';

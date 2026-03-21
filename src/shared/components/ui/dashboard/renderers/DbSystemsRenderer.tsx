@@ -93,7 +93,7 @@ function DbSystemCard({ system }: { system: any }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
         <div>
           <div style={{ color: APP_COLORS.hex_8e8e8e, fontSize: '11px', marginBottom: '2px' }}>Spans</div>
-          <div style={{ color: APP_COLORS.hex_e0e0e0, fontWeight: 600, fontSize: '16px', fontFamily: 'monospace' }}>
+          <div className="font-mono" style={{ color: APP_COLORS.hex_e0e0e0, fontWeight: 600, fontSize: '16px' }}>
             {formatNumber(spanCount)}
           </div>
         </div>
@@ -104,15 +104,15 @@ function DbSystemCard({ system }: { system: any }) {
               color: avgLatency > 100 ? APP_COLORS.hex_f04438 : avgLatency > 50 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_12b76a,
               fontWeight: 600,
               fontSize: '16px',
-              fontFamily: 'monospace',
             }}
+            className="font-mono"
           >
             {formatDuration(avgLatency)}
           </div>
         </div>
         <div>
           <div style={{ color: APP_COLORS.hex_8e8e8e, fontSize: '11px', marginBottom: '2px' }}>p95 Latency</div>
-          <div style={{ color: APP_COLORS.hex_e0e0e0, fontWeight: 600, fontSize: '14px', fontFamily: 'monospace' }}>
+          <div className="font-mono" style={{ color: APP_COLORS.hex_e0e0e0, fontWeight: 600, fontSize: '14px' }}>
             {formatDuration(p95Latency)}
           </div>
         </div>
@@ -124,8 +124,8 @@ function DbSystemCard({ system }: { system: any }) {
                 color: errorRate > 5 ? APP_COLORS.hex_f04438 : errorRate > 1 ? APP_COLORS.hex_f79009 : APP_COLORS.hex_12b76a,
                 fontWeight: 600,
                 fontSize: '14px',
-                fontFamily: 'monospace',
               }}
+              className="font-mono"
             >
               {errorRate.toFixed(1)}%
             </div>

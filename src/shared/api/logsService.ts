@@ -2,6 +2,7 @@
  * Logs Service — API calls for log ingestion and retrieval.
  */
 import { API_CONFIG } from '@config/apiConfig';
+import { io } from 'socket.io-client';
 import { z } from 'zod';
 
 import api from './api';
@@ -20,6 +21,19 @@ const logsListSchema = z.object({
 });
 
 export const logsService = {
+  async queryExplorer(body: {
+    startTime: RequestTime;
+    endTime: RequestTime;
+    limit?: number;
+    offset?: number;
+    cursor?: string;
+    direction?: string;
+    step?: string;
+    params?: QueryParams;
+  }): Promise<unknown> {
+    return api.post(`${BASE}/logs/explorer/query`, body);
+  },
+
   async getLogs(
     _teamId: number | null,
     startTime: RequestTime,
@@ -104,7 +118,9 @@ export const logsService = {
   },
 
   /**
-   * SSE Stream for Live Tail
+   * Stream logs via socket.io.
+   * Uses the shared useSocketStream hook for live tail —
+   * this imperative helper is kept for non-hook consumers.
    */
   streamLogs(
     _teamId: number | null,
@@ -112,40 +128,31 @@ export const logsService = {
     endTime: RequestTime,
     params: QueryParams = {},
     onLog: (log: LogRecord) => void,
-    onError: (err: unknown) => void
+    onError: (err: unknown) => void,
   ): () => void {
-    const url = new URL(`${window.location.origin}${BASE}/logs/stream`);
-    url.searchParams.append('startTime', String(startTime));
-    url.searchParams.append('endTime', String(endTime));
+    const socket = io('/live', {
+      path: '/socket.io/',
+      withCredentials: true,
+      transports: ['websocket', 'polling'],
+    });
 
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          value.forEach((v) => url.searchParams.append(key, String(v)));
-        } else if (value !== undefined && value !== null) {
-          url.searchParams.append(key, String(value));
-        }
-      });
-    }
+    socket.on('connect', () => {
+      socket.emit('subscribe:logs', { startTime, endTime, ...params });
+    });
 
-    const source = new EventSource(url.toString(), { withCredentials: true });
-
-    source.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        onLog(data);
-      } catch (err) {
-        console.error('Failed to parse stream log', err);
+    socket.on('log', (payload: { item?: unknown }) => {
+      if (payload?.item) {
+        onLog(payload.item as LogRecord);
       }
-    };
+    });
 
-    source.onerror = (err) => {
+    socket.on('connect_error', (err) => {
       onError(err);
-      source.close();
-    };
+      socket.disconnect();
+    });
 
     return () => {
-      source.close();
+      socket.disconnect();
     };
   },
 };

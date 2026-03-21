@@ -1,4 +1,4 @@
-import './HealthRing.css';
+import { cn } from '@/lib/utils';
 
 /**
  *
@@ -55,7 +55,9 @@ export default function HealthRing({
 
   return (
     <button
-      className={`health-ring health-ring--${status}`}
+      className={cn(
+        'inline-flex flex-col items-center gap-1.5 bg-transparent border-0 cursor-pointer rounded-lg transition-[background] duration-150 ease-out flex-shrink-0 hover:bg-[var(--bg-hover)]',
+      )}
       title={tooltip ? `${serviceName}: ${tooltip}` : serviceName}
       onClick={() => onClick?.(serviceName)}
       style={{ width: size + 16, padding: '8px 0' }}
@@ -64,7 +66,7 @@ export default function HealthRing({
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
-        className="health-ring__svg"
+        className="block"
         style={{ filter: status !== 'unknown' ? `drop-shadow(0 0 4px ${glow})` : 'none' }}
       >
         {/* Track */}
@@ -88,7 +90,7 @@ export default function HealthRing({
           strokeDashoffset={0}
           strokeLinecap="round"
           transform={`rotate(-90 ${cx} ${cy})`}
-          className="health-ring__arc"
+          className="transition-[stroke-dashoffset] duration-350 ease-out"
         />
         {/* Center initial */}
         <text
@@ -104,7 +106,14 @@ export default function HealthRing({
           {initial}
         </text>
       </svg>
-      <span className="health-ring__label">{serviceName}</span>
+      <span
+        className={cn(
+          'text-[10px] font-medium text-[color:var(--text-secondary)] whitespace-nowrap max-w-[64px] overflow-hidden text-ellipsis text-center',
+          status === 'critical' && 'text-[color:var(--color-critical)]',
+        )}
+      >
+        {serviceName}
+      </span>
     </button>
   );
 }

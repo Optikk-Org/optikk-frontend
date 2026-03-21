@@ -1,5 +1,4 @@
-import { Table } from 'antd';
-import { Badge, Select, Skeleton, Surface, Tooltip } from '@shared/design-system';
+import { Badge, Select, Skeleton, Surface, Tooltip, SimpleTable } from '@/components/ui';
 import { AlertCircle, ExternalLink, Clock } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -15,7 +14,6 @@ import { useTimeRangeQuery } from '@shared/hooks/useTimeRangeQuery';
 import { formatNumber, formatRelativeTime } from '@shared/utils/formatters';
 
 import { APP_COLORS } from '@config/colorLiterals';
-import './ErrorDashboardPage.css';
 
 const n = (v: any) => (v == null || Number.isNaN(Number(v)) ? 0 : Number(v));
 
@@ -142,7 +140,7 @@ export default function ErrorDashboardPage() {
       dataIndex: 'operation_name',
       key: 'operation_name',
       render: (v: string) => (
-        <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-primary)' }}>{v}</span>
+        <span className="font-mono" style={{ fontSize: 12, color: 'var(--text-primary)' }}>{v}</span>
       ),
     },
     {
@@ -163,7 +161,7 @@ export default function ErrorDashboardPage() {
       ellipsis: true,
       render: (v: string) => (
         <Tooltip content={v}>
-          <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+          <span className="font-mono" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
             {v || '-'}
           </span>
         </Tooltip>
@@ -213,7 +211,7 @@ export default function ErrorDashboardPage() {
   ];
 
   return (
-    <div className="error-dashboard-page">
+    <div className="p-0">
       <PageHeader
         title="Error Dashboard"
         subtitle="Error trends, breakdowns, and grouped error logs across all services"
@@ -244,7 +242,7 @@ export default function ErrorDashboardPage() {
 
       {/* Error Groups Table */}
       <div style={{ marginTop: 16 }}>
-        <Surface elevation={1} padding="md" className="err-chart-card">
+        <Surface elevation={1} padding="md" className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg">
           <h4>
             Error Groups
             {!groupsLoading && (
@@ -258,13 +256,13 @@ export default function ErrorDashboardPage() {
             ) : errorGroups.length === 0 ? (
               <div className="text-muted" style={{textAlign:'center',padding:32}}>No errors in selected time range</div>
             ) : (
-              <Table
-                dataSource={errorGroups.map((g, i) => ({ ...g, key: i }))}
+              <SimpleTable
+                dataSource={errorGroups.map((g: any, i: number) => ({ ...g, key: i }))}
                 columns={columns}
                 size="small"
                 pagination={{ pageSize: 20, showSizeChanger: true }}
                 scroll={{ x: 900 }}
-                rowClassName={(record) =>
+                rowClassName={(record: any) =>
                   Number(record.error_count) > 100 ? 'high-error-row' : ''
                 }
               />
