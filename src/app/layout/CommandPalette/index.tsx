@@ -1,0 +1,117 @@
+import React, { useState } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
+
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+} from '@/components/ui/command';
+
+import { allActions } from './registry';
+import { PaletteAction } from './types';
+
+function ActionHotkey({ action }: { action: PaletteAction }) {
+  useHotkeys(action.hotkey!, (e) => {
+    e.preventDefault();
+    if (action.enabled && !action.enabled()) {
+      return;
+    }
+    action.perform();
+  });
+  return null;
+}
+
+export function CommandPalette() {
+  const [open, setOpen] = useState(false);
+
+  // Toggle palette with Cmd+K or Ctrl+K
+  useHotkeys('meta+k, ctrl+k', (e) => {
+    e.preventDefault();
+    setOpen((o) => !o);
+  });
+
+  const handleSelect = (action: PaletteAction) => {
+    action.perform();
+    setOpen(false);
+  };
+
+  const navActions = allActions.filter(
+    (a) => a.group === 'navigation' && (!a.enabled || a.enabled())
+  );
+
+  const featureActions = allActions.filter(
+    (a) => a.group === 'feature' && (!a.enabled || a.enabled())
+  );
+
+  return (
+    <>
+      {allActions
+        .filter((a) => a.hotkey)
+        .map((a) => (
+          <ActionHotkey key={a.id} action={a} />
+        ))}
+
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh] bg-black/50 backdrop-blur-sm"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg shadow-2xl relative animate-in fade-in zoom-in-95"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Command className="rounded-xl border border-border shadow-md">
+              <CommandInput placeholder="Type a command or search..." />
+              <CommandList>
+                <CommandEmpty>No results found.</CommandEmpty>
+
+                {navActions.length > 0 && (
+                  <CommandGroup heading="Navigation">
+                    {navActions.map((action) => (
+                      <CommandItem
+                        key={action.id}
+                        onSelect={() => handleSelect(action)}
+                        keywords={action.keywords}
+                      >
+                        {action.icon}
+                        <span style={{ marginLeft: action.icon ? 8 : 0 }}>{action.label}</span>
+                        {action.hotkey && (
+                          <span style={{ marginLeft: 'auto', fontSize: '0.75rem', opacity: 0.5 }}>
+                            {action.hotkey.toUpperCase()}
+                          </span>
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
+
+                {featureActions.length > 0 && (
+                  <CommandGroup heading="Feature Actions">
+                    {featureActions.map((action) => (
+                      <CommandItem
+                        key={action.id}
+                        onSelect={() => handleSelect(action)}
+                        keywords={action.keywords}
+                      >
+                        {action.icon}
+                        <span style={{ marginLeft: action.icon ? 8 : 0 }}>{action.label}</span>
+                        {action.hotkey && (
+                          <span style={{ marginLeft: 'auto', fontSize: '0.75rem', opacity: 0.5 }}>
+                            {action.hotkey.toUpperCase()}
+                          </span>
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
+              </CommandList>
+            </Command>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

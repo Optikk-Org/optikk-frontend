@@ -9,6 +9,7 @@ import { DashboardPanelRegistryProvider } from '@shared/components/ui/dashboard/
 import AuthExpiryListener from './providers/AuthExpiryListener';
 import { getDashboardPanelRegistrations } from './registry/domainRegistry';
 import AppRoutes from './routes/appRoutes';
+import { CommandPalette } from './layout/CommandPalette';
 import { ErrorBoundary } from '@shared/components/ui/feedback';
 
 function PageLoader(): JSX.Element {
@@ -58,22 +59,17 @@ function AppContent(): JSX.Element {
           pointerEvents: 'none',
         }}
       />
+      <CommandPalette />
       <AppRoutes />
     </>
   );
 }
 
 export default function App(): JSX.Element {
-  const dashboardPanels = [
-    ...BUILT_IN_DASHBOARD_PANELS,
-    ...getDashboardPanelRegistrations(),
-  ];
+  const dashboardPanels = [...BUILT_IN_DASHBOARD_PANELS, ...getDashboardPanelRegistrations()];
 
   return (
-    <ErrorBoundary
-      showDetails={import.meta.env.DEV}
-      boundaryName="app-shell"
-    >
+    <ErrorBoundary showDetails={import.meta.env.DEV} boundaryName="app-shell">
       <DashboardPanelRegistryProvider registrations={dashboardPanels}>
         <Suspense fallback={<PageLoader />}>
           <AppContent />

@@ -39,6 +39,10 @@ export default defineConfig(({ mode }) => {
         { find: '@utils', replacement: path.resolve(__dirname, './src/shared/utils') },
         { find: '@services', replacement: path.resolve(__dirname, './src/shared/api') },
         { find: '@store', replacement: path.resolve(__dirname, './src/app/store') },
+        {
+          find: '@optikk/design-system',
+          replacement: path.resolve(__dirname, './src/design-system'),
+        },
         { find: '@', replacement: path.resolve(__dirname, './src') },
       ],
     },
@@ -55,9 +59,18 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       sourcemap: true,
+      chunkSizeWarningLimit: 300,
       rollupOptions: {
         output: {
           manualChunks(id) {
+            if (id.includes('/src/features/')) {
+              const parts = id.split('/src/features/');
+              if (parts.length > 1) {
+                const featureName = parts[1].split('/')[0];
+                if (featureName) return `feature-${featureName}`;
+              }
+            }
+
             if (
               id.includes('/src/app/auth/pages/Pricing/') ||
               id.includes('/node_modules/framer-motion/') ||

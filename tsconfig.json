@@ -25,7 +25,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "types": ["vite/client"],
-      "baseUrl": ".",
+    "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
       "@/lib/*": ["src/shared/lib/*"],
@@ -45,7 +45,9 @@
       "@components/*": ["src/shared/components/*"],
       "@/components/*": ["src/shared/components/primitives/*"],
       "@/components/ui/*": ["src/shared/components/primitives/ui/*"],
-      "@/hooks/*": ["src/shared/hooks/*"]
+      "@/hooks/*": ["src/shared/hooks/*"],
+      "@optikk/design-system": ["src/design-system/index.ts"],
+      "@optikk/design-system/*": ["src/design-system/*"]
     }
   },
   "include": ["src"],

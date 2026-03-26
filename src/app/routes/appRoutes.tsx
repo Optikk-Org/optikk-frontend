@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import { getExplorerRoutes } from '@/app/registry/domainRegistry';
-import { ErrorBoundary, Loading } from '@/shared/components/ui/feedback';
+import { ErrorBoundary, Loading, FeatureErrorBoundary } from '@/shared/components/ui/feedback';
 import { ROUTES } from '@/shared/constants/routes';
 
 import ProtectedRoute from './ProtectedRoute';
@@ -18,7 +18,6 @@ const OAuthSignupPage = lazy(() =>
   import('@/app/auth/pages/OAuthCallback').then((m) => ({ default: m.OAuthSignupPage }))
 );
 const BackendDrivenPage = lazy(() => import('./BackendDrivenPage'));
-const TraceComparisonPage = lazy(() => import('@features/traces/pages/TraceComparisonPage'));
 
 function toNestedRoutePath(path: string): string {
   if (!path || path === ROUTES.home) {
@@ -36,16 +35,19 @@ function renderProtectedRoute(path: string, Page: React.ComponentType<object>): 
     <Route
       key={path}
       path={toNestedRoutePath(path)}
-      element={(
-        <ErrorBoundary
-          showDetails={import.meta.env.DEV}
-          boundaryName={`route:${path}`}
+      element={
+        <FeatureErrorBoundary
+          featureName={`route:${path}`}
+          onError={(err, feature) => {
+            // Telemetry integration point
+            console.log(`[Telemetry Push] ${feature} failed:`, err);
+          }}
         >
           <Suspense fallback={<Loading fullscreen />}>
             <Page />
           </Suspense>
-        </ErrorBoundary>
-      )}
+        </FeatureErrorBoundary>
+      }
     />
   );
 }
@@ -55,45 +57,53 @@ export default function AppRoutes(): JSX.Element {
   const protectedExplorerRoutes = getExplorerRoutes();
 
   return (
-      <Routes location={location} key={location.pathname}>
-        <Route
-          path={ROUTES.login}
-          element={(
-            <Suspense fallback={<Loading fullscreen />}>
-              <PageTransition><LoginPage /></PageTransition>
-            </Suspense>
-          )}
-        />
+    <Routes location={location} key={location.pathname}>
+      <Route
+        path={ROUTES.login}
+        element={
+          <Suspense fallback={<Loading fullscreen />}>
+            <PageTransition>
+              <LoginPage />
+            </PageTransition>
+          </Suspense>
+        }
+      />
 
-        {/* Marketing pages */}
-        {[ROUTES.home, ROUTES.product, ROUTES.pricing, ROUTES.opentelemetry, ROUTES.selfHost].map(path => (
+      {/* Marketing pages */}
+      {[ROUTES.home, ROUTES.product, ROUTES.pricing, ROUTES.opentelemetry, ROUTES.selfHost].map(
+        (path) => (
           <Route
             key={path}
             path={path}
-            element={(
+            element={
               <Suspense fallback={<Loading fullscreen />}>
-                <PageTransition><ProductPage /></PageTransition>
+                <PageTransition>
+                  <ProductPage />
+                </PageTransition>
               </Suspense>
-            )}
+            }
           />
-        ))}
+        )
+      )}
 
-        <Route
-          path="/oauth/success"
-          element={(
-            <Suspense fallback={<Loading fullscreen />}>
-              <PageTransition><OAuthCallbackSuccess /></PageTransition>
-            </Suspense>
-          )}
-        />
+      <Route
+        path="/oauth/success"
+        element={
+          <Suspense fallback={<Loading fullscreen />}>
+            <PageTransition>
+              <OAuthCallbackSuccess />
+            </PageTransition>
+          </Suspense>
+        }
+      />
 
       <Route
         path="/oauth/signup"
-        element={(
+        element={
           <Suspense fallback={<Loading fullscreen />}>
             <OAuthSignupPage />
           </Suspense>
-        )}
+        }
       />
 
       <Route
@@ -106,11 +116,7 @@ export default function AppRoutes(): JSX.Element {
       >
         <Route index element={<Navigate to={ROUTES.overview} replace />} />
         {protectedExplorerRoutes.map((route) => renderProtectedRoute(route.path, route.page))}
-        {renderProtectedRoute(ROUTES.traceCompare, TraceComparisonPage as React.ComponentType<object>)}
-        <Route
-          path="errors"
-          element={<Navigate to={`${ROUTES.overview}?tab=errors`} replace />}
-        />
+        <Route path="errors" element={<Navigate to={`${ROUTES.overview}?tab=errors`} replace />} />
         <Route
           path={toNestedRoutePath(ROUTES.latencyAlias)}
           element={<Navigate to={`${ROUTES.metrics}?tab=latency-analysis`} replace />}
@@ -121,16 +127,13 @@ export default function AppRoutes(): JSX.Element {
         />
         <Route
           path="*"
-          element={(
-            <ErrorBoundary
-              showDetails={import.meta.env.DEV}
-              boundaryName="route:backend-driven"
-            >
+          element={
+            <ErrorBoundary showDetails={import.meta.env.DEV} boundaryName="route:backend-driven">
               <Suspense fallback={<Loading fullscreen />}>
                 <BackendDrivenPage />
               </Suspense>
             </ErrorBoundary>
-          )}
+          }
         />
       </Route>
 

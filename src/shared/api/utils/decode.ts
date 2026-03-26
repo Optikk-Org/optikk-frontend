@@ -123,27 +123,21 @@ function createContractError(message: string, data?: unknown): ApiContractErrorS
 export function createInvalidApiResponseError(
   response: AxiosResponse,
   message: string,
-  payload: unknown,
+  payload: unknown
 ): AxiosError {
-  return new AxiosError(
-    message,
-    AxiosError.ERR_BAD_RESPONSE,
-    response.config,
-    response.request,
-    {
-      ...response,
-      data: createContractError(message, {
-        payloadType: typeof payload,
-        preview: buildPayloadPreview(payload),
-      }),
-    },
-  );
+  return new AxiosError(message, AxiosError.ERR_BAD_RESPONSE, response.config, response.request, {
+    ...response,
+    data: createContractError(message, {
+      payloadType: typeof payload,
+      preview: buildPayloadPreview(payload),
+    }),
+  });
 }
 
 export function decodeApiResponse<TSchema extends z.ZodTypeAny>(
   schema: TSchema,
   value: unknown,
-  options: DecodeApiResponseOptions,
+  options: DecodeApiResponseOptions
 ): z.infer<TSchema> {
   const normalized = unwrapApiPayload(value);
   const message = options.message ?? `Invalid ${options.context} response`;
@@ -199,22 +193,34 @@ export function decodeApiResponse<TSchema extends z.ZodTypeAny>(
     });
   }
 
-  try {
-    return schema.parse(normalized);
-  } catch (error) {
+  const result = schema.safeParse(normalized);
+
+  if (!result.success) {
     if (import.meta.env.DEV) {
       console.error(`[decodeApiResponse] ${message}`, {
         context: options.context,
         payloadType: Array.isArray(normalized) ? 'array' : typeof normalized,
         preview: buildPayloadPreview(normalized),
-        error,
+        error: result.error,
       });
     }
+
+    // Telemetry hook to capture prod drift silently
+    const telemetry = (window as any).telemetry || {
+      track: (e: string, d: any) => console.log(`[Telemetry Mock] ${e}`, d),
+    };
+    telemetry.track('api_contract_violation', {
+      errors: result.error.flatten(),
+      endpoint: options.context,
+      version: '1.0.0', // APP_VERSION mock
+    });
 
     throw createContractError(message, {
       context: options.context,
       preview: buildPayloadPreview(normalized),
-      issues: error instanceof z.ZodError ? error.issues : undefined,
+      issues: result.error.issues,
     });
   }
+
+  return result.data;
 }

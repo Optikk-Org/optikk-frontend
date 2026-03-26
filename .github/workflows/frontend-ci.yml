@@ -33,3 +33,12 @@ jobs:
 
       - name: Build
         run: npm run build
+        
+      - name: Bundle Size Diff
+        if: github.event_name == 'pull_request'
+        uses: preactjs/compressed-size-action@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          build-script: "build"
+          pattern: "./dist/assets/*.{js,css}"
+          minimum-change-threshold: 100

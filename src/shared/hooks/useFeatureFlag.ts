@@ -1,25 +1,14 @@
-import { useMemo } from 'react';
+import { useAuthStore } from '@/app/store/authStore';
 
-const FEATURE_PREFIX = 'VITE_FEATURE_';
+export function useFeatureFlag(flag: string): boolean {
+  const tenantFeatures = useAuthStore((s: any) => s.tenant?.features ?? []);
 
-function readFlag(flagName: string): boolean {
-  const envKey = `${FEATURE_PREFIX}${flagName}`;
-  const raw = (import.meta.env[envKey] as string | boolean | undefined);
-
-  if (typeof raw === 'boolean') {
-    return raw;
+  // Priority 1: localStorage override (dev local)
+  const localOverride = localStorage.getItem(`flag:${flag}`);
+  if (localOverride !== null) {
+    return localOverride === 'true';
   }
 
-  if (typeof raw === 'string') {
-    return ['1', 'true', 'on', 'enabled', 'yes'].includes(raw.toLowerCase());
-  }
-
-  return false;
-}
-
-/**
- *
- */
-export function useFeatureFlag(flagName: string): boolean {
-  return useMemo(() => readFlag(flagName), [flagName]);
+  // Priority 2: Tenant payload list (production)
+  return tenantFeatures.includes(flag);
 }

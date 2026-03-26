@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, useContext, useMemo, useEffect } from 'react';
 
 import type { ComponentType, PropsWithChildren } from 'react';
 
@@ -36,10 +36,17 @@ export type DashboardPanelRendererKind = 'base-chart' | 'specialized' | 'self-co
 
 type DashboardRendererComponent = SpecializedDashboardRenderer | BaseChartDashboardRenderer;
 
+import type { TimeRange } from '@/types';
+import { useTimeRange } from '@/app/store/appStore';
+
 export interface DashboardPanelRegistration {
   readonly panelType: DashboardPanelType;
   readonly kind: DashboardPanelRendererKind;
   readonly component: DashboardRendererComponent;
+  readonly onMount?: () => void;
+  readonly onUnmount?: () => void;
+  readonly onGlobalTimeChange?: (timeRange: TimeRange) => void;
+  readonly onDataUpdate?: (data: unknown) => void;
 }
 
 export type DashboardPanelRegistry = ReadonlyMap<DashboardPanelType, DashboardPanelRegistration>;
@@ -93,4 +100,34 @@ export function useDashboardPanelRegistration(
     return null;
   }
   return registry.get(panelType) ?? null;
+}
+
+export function useDashboardPanelLifecycle(
+  registration: DashboardPanelRegistration | null,
+  data?: unknown
+) {
+  const timeRange = useTimeRange();
+
+  useEffect(() => {
+    if (registration?.onMount) {
+      registration.onMount();
+    }
+    return () => {
+      if (registration?.onUnmount) {
+        registration.onUnmount();
+      }
+    };
+  }, [registration]);
+
+  useEffect(() => {
+    if (registration?.onGlobalTimeChange) {
+      registration.onGlobalTimeChange(timeRange);
+    }
+  }, [registration, timeRange]);
+
+  useEffect(() => {
+    if (registration?.onDataUpdate && data !== undefined) {
+      registration.onDataUpdate(data);
+    }
+  }, [registration, data]);
 }

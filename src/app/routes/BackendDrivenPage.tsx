@@ -12,7 +12,7 @@ import type { DefaultConfigPage } from '@/types/dashboardConfig';
 
 function matchConfiguredPage(
   pathname: string,
-  pages: readonly DefaultConfigPage[],
+  pages: readonly DefaultConfigPage[]
 ): { page: DefaultConfigPage; pathParams?: Record<string, string> } | null {
   for (const page of pages) {
     const matched = matchPath({ path: page.path, end: true }, pathname);
@@ -20,18 +20,51 @@ function matchConfiguredPage(
       continue;
     }
 
-    const pathParams = Object.keys(matched.params).length > 0
-      ? Object.fromEntries(
-        Object.entries(matched.params).flatMap(([key, value]) => (
-          typeof value === 'string' ? [[key, value]] : []
-        )),
-      )
-      : undefined;
+    const pathParams =
+      Object.keys(matched.params).length > 0
+        ? Object.fromEntries(
+            Object.entries(matched.params).flatMap(([key, value]) =>
+              typeof value === 'string' ? [[key, value]] : []
+            )
+          )
+        : undefined;
 
     return { page, pathParams };
   }
 
   return null;
+}
+
+export interface ServerDrivenComponent {
+  type: string;
+  props?: Record<string, unknown>;
+  children?: ServerDrivenComponent[] | string;
+}
+
+const ServerComponentRegistry: Record<string, React.ElementType> = {
+  PageShell: PageShell,
+  PageHeader: PageHeader,
+  DashboardPage: DashboardPage,
+};
+
+export function ServerDrivenRenderer({
+  node,
+}: {
+  node: ServerDrivenComponent | string;
+}): React.ReactNode {
+  if (typeof node === 'string') return node;
+  const Component = ServerComponentRegistry[node.type];
+  if (!Component) return null;
+
+  const children = Array.isArray(node.children) ? (
+    node.children.map((child, idx) => <ServerDrivenRenderer key={idx} node={child} />)
+  ) : node.children && typeof node.children === 'object' ? (
+    <ServerDrivenRenderer node={node.children as ServerDrivenComponent} />
+  ) : (
+    node.children
+  );
+
+  return <Component {...node.props}>{children}</Component>;
 }
 
 export default function BackendDrivenPage(): JSX.Element {
@@ -59,6 +92,13 @@ export default function BackendDrivenPage(): JSX.Element {
   }
 
   const { page: matchedPage, pathParams } = matched;
+
+  if (
+    (matchedPage.renderMode as string) === 'server-driven' &&
+    (matchedPage as any).rootComponent
+  ) {
+    return <ServerDrivenRenderer node={(matchedPage as any).rootComponent} />;
+  }
 
   if (matchedPage.renderMode !== 'dashboard') {
     return <Navigate to={matchedPage.path || pages[0]?.path || ROUTES.overview} replace />;

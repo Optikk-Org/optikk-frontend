@@ -26,10 +26,20 @@ function urlValueToPreset(val: string): RelativeTimeRange | null {
   let minutes: number;
   let presetStr: string;
   switch (unit) {
-    case 'm': minutes = num; presetStr = `${num}m`; break;
-    case 'h': minutes = num * 60; presetStr = `${num}h`; break;
-    case 'd': minutes = num * 1440; presetStr = `${num}d`; break;
-    default: return null;
+    case 'm':
+      minutes = num;
+      presetStr = `${num}m`;
+      break;
+    case 'h':
+      minutes = num * 60;
+      presetStr = `${num}h`;
+      break;
+    case 'd':
+      minutes = num * 1440;
+      presetStr = `${num}d`;
+      break;
+    default:
+      return null;
   }
   const found = TIME_RANGES.find((r) => r.preset === presetStr);
   if (found) return found;
@@ -67,6 +77,11 @@ function timeRangeToUrlParams(r: TimeRange): { from: string; to: string } {
 }
 
 /**
+ * Source of Truth Hierarchy:
+ * 1. URL params       -> source of truth for shareable state (timeRange, query, filters)
+ * 2. appStore         -> cache of URL state + non-shareable UI state (panel collapse, theme)
+ * 3. localStorage     -> persistence across sessions (last used timeRange default)
+ *
  * Bidirectional sync between the Zustand time range and URL search params.
  * Mount once in the app shell (e.g., Header or a wrapper component).
  *

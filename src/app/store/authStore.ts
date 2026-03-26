@@ -11,6 +11,7 @@ import { STORAGE_KEYS } from '@config/constants';
 
 interface AuthState {
   readonly user: User | null;
+  readonly tenant?: { features: string[] };
   readonly isAuthenticated: boolean;
   readonly isLoading: boolean;
   readonly error: string | null;
@@ -104,6 +105,7 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
+      tenant: { features: ['newTraceView'] },
       isAuthenticated: false,
       isLoading: false,
       error: null,
