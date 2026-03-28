@@ -39,37 +39,35 @@ export function StatCardsGridRenderer({
   }, [services]);
 
   return (
-    <StatCardsGrid
-      stats={[
-        {
-          metric: {
-            title: 'Total Requests',
-            value: summary.totalRequests,
-            formatter: formatNumber,
+    <div className="p-2">
+      <StatCardsGrid
+        stats={[
+          {
+            metric: {
+              title: 'Total Requests',
+              value: summary.totalRequests,
+              formatter: formatNumber,
+            },
+            visuals: { icon: <Activity size={20} />, iconColor: APP_COLORS.hex_5e60ce },
           },
-          trend: { value: 0 },
-          visuals: { icon: <Activity size={20} />, iconColor: APP_COLORS.hex_5e60ce },
-        },
-        {
-          metric: {
-            title: 'Error Rate',
-            value: Number(Math.max(0, summary.errorRate).toFixed(2)),
-            suffix: '%',
+          {
+            metric: {
+              title: 'Error Rate',
+              value: Number(Math.max(0, summary.errorRate).toFixed(2)),
+              suffix: '%',
+            },
+            visuals: { icon: <AlertCircle size={20} />, iconColor: APP_COLORS.hex_f04438 },
           },
-          trend: { value: 0, inverted: true },
-          visuals: { icon: <AlertCircle size={20} />, iconColor: APP_COLORS.hex_f04438 },
-        },
-        {
-          metric: { title: 'Avg Latency', value: summary.avgLatency, formatter: formatDuration },
-          trend: { value: 0, inverted: true },
-          visuals: { icon: <Clock size={20} />, iconColor: APP_COLORS.hex_f79009 },
-        },
-        {
-          metric: { title: 'P95 Latency', value: summary.p95Latency, formatter: formatDuration },
-          trend: { value: 0, inverted: true },
-          visuals: { icon: <Zap size={20} />, iconColor: APP_COLORS.hex_06aed5 },
-        },
-      ]}
-    />
+          {
+            metric: { title: 'Avg Latency', value: summary.avgLatency, formatter: formatDuration },
+            visuals: { icon: <Clock size={20} />, iconColor: APP_COLORS.hex_f79009 },
+          },
+          {
+            metric: { title: 'P95 Latency', value: summary.p95Latency, formatter: formatDuration },
+            visuals: { icon: <Zap size={20} />, iconColor: APP_COLORS.hex_06aed5 },
+          },
+        ]}
+      />
+    </div>
   );
 }

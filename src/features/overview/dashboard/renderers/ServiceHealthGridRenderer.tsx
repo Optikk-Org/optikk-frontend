@@ -1,8 +1,5 @@
-import { Server } from 'lucide-react';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-import { Surface } from '@/components/ui';
 
 import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboardConfig';
 
@@ -37,17 +34,13 @@ export function ServiceHealthGridRenderer({
   }, [services]);
 
   return (
-    <Surface elevation={1} padding="md" className="services-overview-card">
-      <h4>
-        <Server style={{ marginRight: 8, verticalAlign: 'middle' }} />
-        Services Overview
-      </h4>
+    <div className="p-2">
       {serviceHealth.length > 0 ? (
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-            gap: 16,
+            gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+            gap: 8,
           }}
         >
           {serviceHealth.map((service) => (
@@ -80,6 +73,6 @@ export function ServiceHealthGridRenderer({
           No services data available
         </div>
       )}
-    </Surface>
+    </div>
   );
 }

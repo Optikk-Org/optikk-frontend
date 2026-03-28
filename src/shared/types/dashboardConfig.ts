@@ -27,6 +27,7 @@ export const DASHBOARD_PANEL_TYPES = [
   'ai-line',
   'bar',
   'db-systems-overview',
+  'error-hotspot-ranking',
   'error-rate',
   'exception-type-line',
   'gauge',
@@ -37,7 +38,6 @@ export const DASHBOARD_PANEL_TYPES = [
   'log-histogram',
   'pie',
   'request',
-  'scorecard',
   'service-health-grid',
   'service-map',
   'slo-indicators',
@@ -55,6 +55,7 @@ export interface DashboardLayout {
   x?: number;
   y?: number;
   w?: number;
+  colSpan?: number;
 }
 
 export interface DashboardQuerySpec {
@@ -86,6 +87,7 @@ export interface DashboardPanelSpec {
   query?: DashboardQuerySpec;
   layout?: DashboardLayout;
   title?: string;
+  description?: string;
   titleIcon?: string;
   icon?: string;
   dataSource?: string;

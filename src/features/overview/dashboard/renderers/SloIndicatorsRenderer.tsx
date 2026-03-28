@@ -1,7 +1,5 @@
 import { useMemo } from 'react';
 
-import { Surface } from '@/components/ui';
-
 import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboardConfig';
 
 import { APP_COLORS } from '@config/colorLiterals';
@@ -102,32 +100,25 @@ export function SloIndicatorsRenderer({
   }, [services]);
 
   return (
-    <Surface
-      elevation={1}
-      padding="md"
-      className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg h-full"
-    >
-      <h4>SLO Indicators</h4>
-      <div className="flex justify-around items-center py-2">
-        <SloGauge
-          value={sloMetrics.availability}
-          label="Availability"
-          subtitle="Target: 99.9%"
-          thresholds={{ good: 99.9, warn: 99 }}
-        />
-        <SloGauge
-          value={sloMetrics.p95Score}
-          label="P95 Latency"
-          subtitle="Target: <500ms"
-          thresholds={{ good: 90, warn: 70 }}
-        />
-        <SloGauge
-          value={sloMetrics.errorBudget}
-          label="Error Budget"
-          subtitle="Remaining"
-          thresholds={{ good: 50, warn: 20 }}
-        />
-      </div>
-    </Surface>
+    <div className="flex justify-around items-center py-2 h-full">
+      <SloGauge
+        value={sloMetrics.availability}
+        label="Availability"
+        subtitle="Target: 99.9%"
+        thresholds={{ good: 99.9, warn: 99 }}
+      />
+      <SloGauge
+        value={sloMetrics.p95Score}
+        label="P95 Latency"
+        subtitle="Target: <500ms"
+        thresholds={{ good: 90, warn: 70 }}
+      />
+      <SloGauge
+        value={sloMetrics.errorBudget}
+        label="Error Budget"
+        subtitle="Remaining"
+        thresholds={{ good: 50, warn: 20 }}
+      />
+    </div>
   );
 }

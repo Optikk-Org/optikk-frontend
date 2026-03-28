@@ -107,7 +107,7 @@ export default function BackendDrivenPage(): JSX.Element {
   const registeredAdapter = resolveDashboardPageAdapter(matchedPage.id);
   if (registeredAdapter) {
     const Page = registeredAdapter.page;
-    return <Page />;
+    return <Page pathParams={pathParams} />;
   }
 
   return (

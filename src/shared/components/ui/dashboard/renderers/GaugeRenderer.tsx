@@ -3,6 +3,7 @@ import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboard
 import GaugeChart from '@shared/components/ui/charts/micro/GaugeChart';
 
 import { useDashboardData } from '../hooks/useDashboardData';
+import ChartNoDataOverlay from '@shared/components/ui/feedback/ChartNoDataOverlay';
 
 /**
  *
@@ -19,43 +20,44 @@ export function GaugeRenderer({
   const groupKey = chartConfig.groupByKey;
 
   if (rows.length === 0) {
-    return (
-      <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>
-        No data
-      </div>
-    );
+    return <ChartNoDataOverlay />;
   }
 
   if (groupKey) {
-    // Render multiple small gauges
     return (
       <div
         style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '16px 8px',
-          padding: 8,
+          height: '100%',
+          overflowX: 'hidden',
           overflowY: 'auto',
-          maxHeight: '100%',
+          padding: '8px 8px 12px',
         }}
       >
-        {rows.slice(0, 8).map((row: any, i: number) => {
-          const val = Number(row[valueKey] ?? 0);
-          const label = row[groupKey] || `Item ${i + 1}`;
-          return (
-            <div
-              key={label}
-              style={{
-                textAlign: 'center',
-                minWidth: 80,
-                flex: '1 1 calc(25% - 8px)',
-                overflow: 'hidden',
-              }}
-            >
-              <GaugeChart value={Math.round(val * 100)} label={label} size={80} />
-            </div>
-          );
-        })}
+        <div
+          style={{
+            display: 'grid',
+            gap: 16,
+            gridTemplateColumns: 'repeat(auto-fill, minmax(132px, 1fr))',
+            alignContent: 'start',
+          }}
+        >
+          {rows.map((row: any, i: number) => {
+            const val = Number(row[valueKey] ?? 0);
+            const label = row[groupKey] || `Item ${i + 1}`;
+            return (
+              <div
+                key={label}
+                style={{
+                  minWidth: 0,
+                  overflow: 'hidden',
+                }}
+                title={String(label)}
+              >
+                <GaugeChart value={Math.round(val * 100)} label={label} size={80} />
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   }

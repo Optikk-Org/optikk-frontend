@@ -1,4 +1,5 @@
-import { Surface } from '@/components/ui';
+import { Surface, Tooltip } from '@/components/ui';
+import { Info } from 'lucide-react';
 
 import type { ComponentType, ReactNode } from 'react';
 
@@ -26,6 +27,7 @@ import {
   useDashboardPanelRegistration,
 } from './dashboardPanelRegistry';
 import { getDashboardIcon } from './utils/dashboardUtils';
+import { cn } from '@/lib/utils';
 
 import {
   resolveComponentData,
@@ -98,11 +100,33 @@ function ConfigurableChartCardContent({
   };
 
   const panelRegistration = useDashboardPanelRegistration(panelType);
+  const titleClassName = cn('chart-card__title');
   const componentRenderer = panelRegistration?.component;
   const rawData = resolveComponentData(chartConfig, dataSources);
   const hasRenderer = Boolean(panelRegistration && componentRenderer);
-  const hasNoData =
-    rawData === undefined || rawData === null || (Array.isArray(rawData) && rawData.length === 0);
+  const hasNoData = useMemo(() => {
+    if (rawData === undefined || rawData === null) return true;
+    if (Array.isArray(rawData)) {
+      if (rawData.length === 0) return true;
+
+      // Check for zero-data: Only consider keys the panel is trying to display
+      const primaryKey = chartConfig.valueKey || chartConfig.valueField || 'value';
+      const fallbacks = ['span_count', 'request_count', 'error_count'];
+      const metricsToCheck = [primaryKey, ...fallbacks].filter(Boolean) as string[];
+
+      if (metricsToCheck.length > 0) {
+        const hasPositiveMetric = rawData.some((row) =>
+          metricsToCheck.some((key) => {
+            const val = Number(row[key]);
+            // Non-NaN and greater than 0 is actual data we want to plot
+            return !Number.isNaN(val) && val > 0;
+          })
+        );
+        if (!hasPositiveMetric) return true;
+      }
+    }
+    return false;
+  }, [rawData, chartConfig.valueKey, chartConfig.valueField]);
   const timeseriesData = normalizeDashboardRows(rawData, chartConfigDataKey(chartConfig));
 
   const serviceTimeseriesMap = useMemo(() => {
@@ -150,7 +174,7 @@ function ConfigurableChartCardContent({
   if (error) {
     return (
       <Surface elevation={1} padding="md" className="chart-card" style={{ height: '100%' }}>
-        <div className="chart-card__title">{chartConfig.title as string}</div>
+        <div className={titleClassName}>{chartConfig.title as string}</div>
         <ChartErrorOverlay code={error.code} message={error.message} />
       </Surface>
     );
@@ -160,7 +184,7 @@ function ConfigurableChartCardContent({
     console.warn(`Unknown dashboard panel type received from backend: ${panelType || '<empty>'}`);
     return (
       <Surface elevation={1} padding="md" className="chart-card" style={{ height: '100%' }}>
-        <div className="chart-card__title">{chartConfig.title as string}</div>
+        <div className={titleClassName}>{chartConfig.title as string}</div>
         <div className="p-md text-muted">
           Unknown dashboard panel type: {panelType || '<empty>'}
         </div>
@@ -171,7 +195,7 @@ function ConfigurableChartCardContent({
   if (!isLoading && hasNoData) {
     return (
       <Surface elevation={1} padding="md" className="chart-card" style={{ height: '100%' }}>
-        <div className="chart-card__title">{chartConfig.title as string}</div>
+        <div className={titleClassName}>{chartConfig.title as string}</div>
         <ChartNoDataOverlay />
       </Surface>
     );
@@ -198,12 +222,14 @@ function ConfigurableChartCardContent({
         className="chart-card flex flex-col"
         style={{ height: '100%', overflow: 'hidden' }}
       >
-        <div className="chart-card__title">{titleContent}</div>
-        <SpecializedRenderer
-          chartConfig={chartConfig}
-          dataSources={dataSources}
-          extraContext={extraContext}
-        />
+        <div className={titleClassName}>{titleContent}</div>
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          <SpecializedRenderer
+            chartConfig={chartConfig}
+            dataSources={dataSources}
+            extraContext={extraContext}
+          />
+        </div>
       </Surface>
     );
   }
@@ -291,7 +317,7 @@ function ConfigurableChartCardContent({
       className="chart-card flex flex-col"
       style={{ height: '100%', overflow: 'hidden' }}
     >
-      <div className="chart-card__title">{titleContent}</div>
+      <div className={titleClassName}>{titleContent}</div>
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, minHeight: 240, width: '100%', position: 'relative' }}>
           <ChartComponent {...chartProps} />
@@ -304,7 +330,6 @@ function ConfigurableChartCardContent({
             selectedEndpoints={selectedEndpoints}
             onToggle={toggleEndpoint}
             drilldownRouteTemplate={chartConfig.drilldownRoute}
-            maxVisibleRows={4}
           />
         )}
         {showQueueList && (
@@ -315,7 +340,6 @@ function ConfigurableChartCardContent({
             selectedQueues={selectedEndpoints}
             onToggle={toggleEndpoint}
             drilldownRouteTemplate={chartConfig.drilldownRoute}
-            maxVisibleRows={4}
           />
         )}
       </div>
@@ -324,15 +348,33 @@ function ConfigurableChartCardContent({
 }
 
 export default function ConfigurableChartCard(props: ConfigurableChartCardProps) {
+  const { description } = props.componentConfig;
+
+  const infoIcon = description ? (
+    <Tooltip content={description}>
+      <span className="chart-card__info-icon">
+        <Info size={14} />
+      </span>
+    </Tooltip>
+  ) : null;
+
   const titleContent = props.componentConfig.titleIcon ? (
-    <span>
-      {getDashboardIcon(props.componentConfig.titleIcon, 16)}
-      <span style={{ marginLeft: 8 }}>
+    <span className="chart-card__title-content">
+      <span className="chart-card__title-icon">
+        {getDashboardIcon(props.componentConfig.titleIcon, 16)}
+      </span>
+      <span className="chart-card__title-text">
         {props.componentConfig.title ?? props.componentConfig.id}
       </span>
+      {infoIcon}
     </span>
   ) : (
-    (props.componentConfig.title ?? props.componentConfig.id)
+    <span className="chart-card__title-content">
+      <span className="chart-card__title-text">
+        {props.componentConfig.title ?? props.componentConfig.id}
+      </span>
+      {infoIcon}
+    </span>
   );
 
   return (

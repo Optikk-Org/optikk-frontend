@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useState } from 'react';
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 import './uplot.css';
@@ -13,6 +13,10 @@ export interface UPlotChartProps {
   height?: number;
   fillHeight?: boolean;
   className?: string;
+  tooltipContent?: (params: { u: uPlot; idx: number; data: uPlot.AlignedData }) => {
+    title?: string;
+    rows: Array<{ label: string; value: string; color?: string }>;
+  } | null;
 }
 
 /**
@@ -24,28 +28,77 @@ export default function UPlotChart({
   height = 260,
   fillHeight = false,
   className,
+  tooltipContent,
 }: UPlotChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<uPlot | null>(null);
+  const [hoverState, setHoverState] = useState<{
+    left: number;
+    top: number;
+    title?: string;
+    rows: Array<{ label: string; value: string; color?: string }>;
+  } | null>(null);
 
   // Memoize the merged options to avoid unnecessary re-renders
-  const mergedOptions = useMemo(() => ({
-    ...options,
-    width: 100, // will be resized immediately
-    height: fillHeight ? Math.max(height, 180) : height,
-    cursor: {
-      drag: { x: true, y: false, setScale: true },
-      ...options.cursor,
-    },
-  }), [options, height, fillHeight]);
+  const mergedOptions = useMemo(() => {
+    const existingHooks = options.hooks ?? {};
+    const setCursorHooks = existingHooks.setCursor ?? [];
+
+    return {
+      ...options,
+      width: 100, // will be resized immediately
+      height: fillHeight ? Math.max(height, 180) : height,
+      cursor: {
+        drag: { x: true, y: false, setScale: true },
+        ...options.cursor,
+      },
+      hooks: {
+        ...existingHooks,
+        setCursor: [
+          ...setCursorHooks,
+          (u: uPlot) => {
+            if (!tooltipContent || !containerRef.current) {
+              return;
+            }
+
+            const idx = u.cursor.idx;
+            if (idx == null || idx < 0) {
+              setHoverState(null);
+              return;
+            }
+
+            const content = tooltipContent({ u, idx, data });
+            if (!content || content.rows.length === 0) {
+              setHoverState(null);
+              return;
+            }
+
+            const containerWidth = containerRef.current.clientWidth;
+            const tooltipWidth = 220;
+            const rawLeft = (u.cursor.left ?? 0) + 14;
+            const left = Math.min(
+              Math.max(rawLeft, 12),
+              Math.max(containerWidth - tooltipWidth, 12)
+            );
+            const top = Math.max((u.cursor.top ?? 0) + 12, 12);
+
+            setHoverState({
+              left,
+              top,
+              title: content.title,
+              rows: content.rows,
+            });
+          },
+        ],
+      },
+    };
+  }, [options, height, fillHeight, tooltipContent, data]);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
     const el = containerRef.current;
-    const measuredHeight = fillHeight
-      ? Math.max(el.clientHeight || height, 180)
-      : height;
+    const measuredHeight = fillHeight ? Math.max(el.clientHeight || height, 180) : height;
     const opts = { ...mergedOptions, width: el.clientWidth, height: measuredHeight };
 
     chartRef.current = new uPlot(opts, data, el);
@@ -63,7 +116,11 @@ export default function UPlotChart({
     });
     ro.observe(el);
 
+    const handleMouseLeave = () => setHoverState(null);
+    el.addEventListener('mouseleave', handleMouseLeave);
+
     return () => {
+      el.removeEventListener('mouseleave', handleMouseLeave);
       ro.disconnect();
       chartRef.current?.destroy();
       chartRef.current = null;
@@ -73,8 +130,35 @@ export default function UPlotChart({
   return (
     <div
       ref={containerRef}
-      className={cn('uplot-shell w-full', fillHeight && 'h-full', className)}
-    />
+      className={cn('uplot-shell relative w-full', fillHeight && 'h-full', className)}
+    >
+      {hoverState ? (
+        <div
+          className="pointer-events-none absolute z-20 min-w-[220px] rounded-[var(--card-radius)] border border-[var(--border-color)] bg-[rgba(20,23,31,0.96)] px-3 py-2 shadow-[var(--shadow-md)] backdrop-blur-[10px]"
+          style={{ left: hoverState.left, top: hoverState.top }}
+        >
+          {hoverState.title ? (
+            <div className="mb-2 text-[11px] font-semibold text-[var(--text-secondary)]">
+              {hoverState.title}
+            </div>
+          ) : null}
+          <div className="flex flex-col gap-1.5">
+            {hoverState.rows.map((row) => (
+              <div key={row.label} className="flex items-center justify-between gap-3 text-[11px]">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: row.color ?? 'var(--text-muted)' }}
+                  />
+                  <span className="truncate text-[var(--text-secondary)]">{row.label}</span>
+                </div>
+                <span className="shrink-0 font-mono text-[var(--text-primary)]">{row.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -110,7 +194,7 @@ export function defaultAxes(config?: { yAxisSize?: number }): uPlot.Axis[] {
 export function uLine(
   label: string,
   color: string,
-  opts?: { fill?: boolean; dash?: number[]; width?: number },
+  opts?: { fill?: boolean; dash?: number[]; width?: number }
 ): uPlot.Series {
   return {
     label,

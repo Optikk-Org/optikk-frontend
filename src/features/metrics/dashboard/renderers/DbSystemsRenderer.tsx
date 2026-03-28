@@ -1,10 +1,12 @@
 import { Database } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboardConfig';
 
 import { APP_COLORS } from '@config/colorLiterals';
 import { formatDuration, formatNumber, normalizePercentage } from '@shared/utils/formatters';
 import { useDashboardData } from '@shared/components/ui/dashboard/hooks/useDashboardData';
+import { buildInterpolatedPath } from '@shared/utils/placeholderInterpolation';
 
 const DB_SYSTEM_META: Record<string, { label: string; color: string; gradient: string }> = {
   postgresql: {
@@ -230,11 +232,25 @@ export function DbSystemsRenderer({
         gap: 14,
       }}
     >
-      {systems.map((system: any) => (
-        <div key={system.db_system}>
-          <DbSystemCard system={system} />
-        </div>
-      ))}
+      {systems.map((system: any) => {
+        const href = buildInterpolatedPath(chartConfig.drilldownRoute, system);
+        const card = <DbSystemCard system={system} />;
+
+        if (!href) {
+          return <div key={system.db_system}>{card}</div>;
+        }
+
+        return (
+          <Link
+            key={system.db_system}
+            to={href}
+            style={{ display: 'block', textDecoration: 'none' }}
+            aria-label={`Open ${system.db_system} database detail`}
+          >
+            {card}
+          </Link>
+        );
+      })}
     </div>
   );
 }

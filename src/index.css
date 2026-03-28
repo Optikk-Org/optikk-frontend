@@ -38,7 +38,12 @@
   /* ── Grid gap ─────────────────────────────────────────────── */
   --grid-gutter: 12px;
 
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   font-size: 13px;
   line-height: var(--leading-normal);
   font-weight: var(--font-normal);
@@ -112,18 +117,61 @@ code {
 /* Stat cards grid — replaces antd Row/Col */
 .stat-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-md, 16px);
-  margin-bottom: var(--space-md, 16px);
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--space-sm, 12px);
+  margin-bottom: var(--space-sm, 12px);
 }
 
 .chart-card__title {
-  padding: var(--space-sm) var(--space-lg);
-  font-size: var(--text-xl);
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--text-primary);
   border-bottom: 1px solid var(--border-color);
+}
+
+.chart-card {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+}
+
+.chart-card__title-content {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs, 8px);
+  min-width: 0;
+  width: 100%;
+}
+
+.chart-card__title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 18px;
+  color: var(--text-secondary);
+}
+
+.chart-card__title-text {
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.chart-card__info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 16px;
+  color: var(--text-tertiary, var(--text-secondary));
+  cursor: help;
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+  margin-left: auto;
+}
+
+.chart-card__info-icon:hover {
+  opacity: 1;
 }

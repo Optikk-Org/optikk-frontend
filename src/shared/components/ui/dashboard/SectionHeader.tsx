@@ -17,8 +17,8 @@ export default function SectionHeader({
 }: SectionHeaderProps) {
   if (!collapsible) {
     return (
-      <div className="mb-[var(--space-sm)] flex items-center border-b border-[var(--border-light)] pb-[var(--space-2xs)]">
-        <span className="text-[12px] font-semibold tracking-[0.01em] text-[var(--text-secondary)]">
+      <div className="mb-[var(--space-xs)] flex items-center border-b border-[var(--border-light)] pb-[var(--space-xs)]">
+        <span className="text-[13px] font-semibold tracking-[0.01em] text-[var(--text-secondary)]">
           {title}
         </span>
       </div>
@@ -29,16 +29,16 @@ export default function SectionHeader({
     <button
       type="button"
       onClick={onToggle}
-      className="mb-[var(--space-sm)] flex w-full items-center gap-[var(--space-xs)] border-none border-b border-[var(--border-light)] bg-transparent pb-[var(--space-2xs)] text-left"
+      className="mb-[var(--space-xs)] flex w-full items-center gap-[var(--space-xs)] border-none border-b border-[var(--border-light)] bg-transparent pb-[var(--space-xs)] text-left"
     >
       <ChevronDown
         size={14}
         className={cn(
           'shrink-0 text-[var(--text-muted)] transition-transform duration-150',
-          collapsed && '-rotate-90',
+          collapsed && '-rotate-90'
         )}
       />
-      <span className="text-[12px] font-semibold tracking-[0.01em] text-[var(--text-secondary)]">
+      <span className="text-[13px] font-semibold tracking-[0.01em] text-[var(--text-secondary)]">
         {title}
       </span>
     </button>

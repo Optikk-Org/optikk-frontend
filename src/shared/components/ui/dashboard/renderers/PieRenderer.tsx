@@ -7,6 +7,7 @@ import { getChartColor } from '@shared/utils/charting';
 import { CHART_THEME_DEFAULTS } from '@shared/utils/chartTheme';
 
 import { useDashboardData } from '../hooks/useDashboardData';
+import ChartNoDataOverlay from '@shared/components/ui/feedback/ChartNoDataOverlay';
 
 /**
  *
@@ -46,11 +47,7 @@ export function PieRenderer({
   }, [labelKey, rows, valueKey]);
 
   if (!chartData) {
-    return (
-      <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>
-        No data
-      </div>
-    );
+    return <ChartNoDataOverlay />;
   }
 
   const textPrimary = CHART_THEME_DEFAULTS.textPrimary();

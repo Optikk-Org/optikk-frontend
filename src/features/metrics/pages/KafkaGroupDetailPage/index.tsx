@@ -2,19 +2,20 @@ import { Users } from 'lucide-react';
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
+import type { DashboardAdapterPageProps } from '@/app/registry/domainRegistry';
+
 import { PageHeader } from '@shared/components/ui';
 import DashboardPage from '@shared/components/ui/dashboard/DashboardPage';
 
 import { ROUTES } from '@/shared/constants/routes';
 
-export default function KafkaGroupDetailPage() {
+export default function KafkaGroupDetailPage({
+  pathParams: adapterPathParams,
+}: DashboardAdapterPageProps) {
   const params = useParams();
-  const groupId = params.groupId ?? '';
+  const groupId = adapterPathParams?.groupId ?? params.groupId ?? '';
 
-  const pathParams = useMemo(
-    () => (groupId ? { groupId } : undefined),
-    [groupId],
-  );
+  const dashboardPathParams = useMemo(() => (groupId ? { groupId } : undefined), [groupId]);
 
   return (
     <div>
@@ -28,7 +29,7 @@ export default function KafkaGroupDetailPage() {
           { label: groupId || 'Consumer Group Detail' },
         ]}
       />
-      <DashboardPage pageId="kafka-group-detail" pathParams={pathParams} />
+      <DashboardPage pageId="kafka-group-detail" pathParams={dashboardPathParams} />
     </div>
   );
 }

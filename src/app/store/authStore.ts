@@ -4,6 +4,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import type { Team, User } from '@/types';
 
 import { authService } from '@shared/api/authService';
+import type { AuthPayload, AuthTeam } from '@shared/api/auth/authService';
 
 import { useAppStore } from '@store/appStore';
 
@@ -25,18 +26,12 @@ interface AuthState {
   readonly clearError: () => void;
 }
 
-interface LoginPayload {
-  readonly user?: User;
-  readonly teams?: Team[];
-  readonly currentTeam?: Team;
-}
-
-function asLoginPayload(value: unknown): LoginPayload | null {
+function asLoginPayload(value: unknown): AuthPayload | null {
   if (typeof value !== 'object' || value === null) {
     return null;
   }
 
-  return value as LoginPayload;
+  return value as AuthPayload;
 }
 
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -52,11 +47,20 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
-function extractTeamIds(payload: LoginPayload): number[] {
-  const teams = payload.teams ?? payload.user?.teams ?? [];
+function extractTeamIds(payload: AuthPayload): number[] {
+  const teams = payload.teams ?? (payload.currentTeam ? [payload.currentTeam] : []);
   return teams
     .map((team) => Number(team.id))
     .filter((teamId) => Number.isFinite(teamId) && teamId > 0);
+}
+
+function toStoredTeams(payload: AuthPayload): Team[] {
+  const teams = payload.teams ?? (payload.currentTeam ? [payload.currentTeam] : []);
+  return teams.map((team: AuthTeam) => ({
+    id: Number(team.id),
+    name: team.name,
+    orgName: team.orgName,
+  }));
 }
 
 function applyAuthPayloadToState(
@@ -70,7 +74,7 @@ function applyAuthPayloadToState(
 
   const userData: User = {
     ...parsed.user,
-    teams: parsed.teams ?? parsed.user.teams ?? [],
+    teams: toStoredTeams(parsed),
   };
   const teamIds = extractTeamIds(parsed);
 

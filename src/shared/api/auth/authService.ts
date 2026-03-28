@@ -1,22 +1,12 @@
-import { z } from 'zod';
-
 import api from '@shared/api/api/client';
 
 import { API_CONFIG } from '@config/apiConfig';
-import { teamSchema, userSchema } from '@shared/entities/user/model';
-
-const authPayloadSchema = z.object({
-  user: userSchema.optional(),
-  teams: z.array(teamSchema).optional(),
-  currentTeam: teamSchema.optional(),
-}).strict();
-
-type AuthPayload = z.infer<typeof authPayloadSchema>;
+import { authPayloadSchema, type AuthPayload, type AuthTeam, type AuthUser } from './schemas';
 
 interface AuthEnvelope {
-  readonly user?: z.infer<typeof userSchema>;
-  readonly teams?: Array<z.infer<typeof teamSchema>>;
-  readonly currentTeam?: z.infer<typeof teamSchema>;
+  readonly user?: AuthUser;
+  readonly teams?: AuthTeam[];
+  readonly currentTeam?: AuthTeam | null;
   readonly success?: boolean;
   readonly data?: unknown;
 }
@@ -34,10 +24,12 @@ export const authService = {
     if (!payload) {
       return null;
     }
+
     if (payload.success === true) {
       const nestedPayload = asAuthEnvelope(payload.data);
-      return nestedPayload ? authPayloadSchema.safeParse(nestedPayload).data ?? null : null;
+      return nestedPayload ? (authPayloadSchema.safeParse(nestedPayload).data ?? null) : null;
     }
+
     return authPayloadSchema.safeParse(payload).data ?? null;
   },
 
@@ -75,3 +67,5 @@ export const authService = {
     return this.refreshSession();
   },
 };
+
+export type { AuthPayload, AuthTeam, AuthUser };

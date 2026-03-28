@@ -11,6 +11,7 @@ import UPlotChart, { defaultAxes, uBars } from '@shared/components/ui/charts/UPl
 import { getChartColor } from '@shared/utils/charting';
 
 import { useDashboardData } from '../hooks/useDashboardData';
+import ChartNoDataOverlay from '@shared/components/ui/feedback/ChartNoDataOverlay';
 
 /**
  *
@@ -50,7 +51,8 @@ export function BarRenderer({
         (seriesValueKey: string, index: number) =>
           uBars(seriesValueKey.replace(/_/g, ' '), getChartColor(index))
       );
-      return { xVals, valArrays, series: seriesConfigs, labels, hasData: true };
+      const hasData = valArrays.some((arr) => arr.some((v) => v !== 0 && v !== null));
+      return { xVals, valArrays, series: seriesConfigs, labels, hasData };
     }
 
     const bucketKey = chartConfig.bucketKey;
@@ -73,7 +75,8 @@ export function BarRenderer({
       const seriesConfigs: uPlot.Series[] = groupNames.map((group, index) =>
         uBars(group, getChartColor(index))
       );
-      return { xVals, valArrays, series: seriesConfigs, labels, hasData: seriesConfigs.length > 0 };
+      const hasData = valArrays.some((arr) => arr.some((v) => v !== 0 && v !== null));
+      return { xVals, valArrays, series: seriesConfigs, labels, hasData };
     }
 
     const labels: string[] = filtered.map((row) => String(row[labelKey] ?? 'unknown'));
@@ -88,15 +91,12 @@ export function BarRenderer({
     const seriesConfigs: uPlot.Series[] = [
       uBars(chartConfig.datasetLabel || valueKey || 'Value', color),
     ];
-    return { xVals, valArrays, series: seriesConfigs, labels, hasData: true };
+    const hasData = valArrays.some((arr) => arr.some((v) => Number(v) > 0));
+    return { xVals, valArrays, series: seriesConfigs, labels, hasData };
   }, [rows, filterValue, groupKey, labelKey, stacked, chartConfig, valueKey]);
 
   if (!chartResult || !chartResult.hasData) {
-    return (
-      <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>
-        No data
-      </div>
-    );
+    return <ChartNoDataOverlay />;
   }
 
   const { xVals, valArrays, series, labels } = chartResult;
@@ -126,6 +126,7 @@ export function BarRenderer({
     series: [{}, ...series],
     legend: { show: showLegend },
     scales: {
+      x: { time: false, distr: 2 },
       y: { min: 0 },
     },
   };

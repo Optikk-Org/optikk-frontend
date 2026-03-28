@@ -1,4 +1,3 @@
-
 import { useMemo, memo } from 'react';
 
 import { useChartTimeBuckets } from '@shared/hooks/useChartTimeBuckets';
@@ -91,10 +90,14 @@ export default memo(function LatencyChart({
     const targetMap: Record<string, { label: string }> = {};
     for (const ep of endpointList) {
       const key = ep.key || firstValue(ep, ['service_name', 'serviceName', 'service'], '');
-      const label = ep.endpoint || firstValue(ep, ['service_name', 'serviceName', 'service'], '') || key;
+      const label =
+        ep.endpoint || firstValue(ep, ['service_name', 'serviceName', 'service'], '') || key;
       if (!targetMap[key]) targetMap[key] = { label };
     }
-    const stepMs = timeBuckets.length >= 2 ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime() : 60000;
+    const stepMs =
+      timeBuckets.length >= 2
+        ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime()
+        : 60000;
 
     return Object.entries(targetMap).map(([key, info], idx) => {
       const tsData = serviceTimeseriesMap[key] || [];
@@ -107,7 +110,13 @@ export default memo(function LatencyChart({
         const alignedTimeMs = Math.floor(rowTime / stepMs) * stepMs;
         const bucketKey = tsKey(new Date(alignedTimeMs).toISOString());
 
-        const latency = Number(firstValue(row, [valueKey, 'avg_latency', 'avgLatency', 'avg_latency_ms', 'avgLatencyMs', 'value'], 0));
+        const latency = Number(
+          firstValue(
+            row,
+            [valueKey, 'avg_latency', 'avgLatency', 'avg_latency_ms', 'avgLatencyMs', 'value'],
+            0
+          )
+        );
         tsMap[bucketKey] = Math.max(tsMap[bucketKey] || 0, Number.isFinite(latency) ? latency : 0);
       }
       const values = timeBuckets.map((d) => tsMap[tsKey(d)] ?? 0);
@@ -116,29 +125,53 @@ export default memo(function LatencyChart({
   };
 
   const chartData = useMemo(() => {
-    type SeriesEntry = { label: string; values: number[]; color: string; fill: boolean; dash?: number[] };
+    interface SeriesEntry {
+      label: string;
+      values: number[];
+      color: string;
+      fill: boolean;
+      dash?: number[];
+      showInTooltip?: boolean;
+    }
     let seriesList: SeriesEntry[];
 
     if (endpoints.length > 0) {
-      const list = selectedEndpoints.length > 0
-        ? (endpoints as any[]).filter((ep) => {
-          const key = ep.key || (() => {
-            const method = String(firstValue(ep, ['http_method', 'httpMethod'], '')).toUpperCase();
-            const op = String(firstValue(ep, ['operation_name', 'operationName', 'endpoint_name', 'endpointName'], 'Unknown'));
-            const cleanOp = op.startsWith(method + ' ') ? op.substring(method.length + 1) : op;
-            const serviceName = firstValue(ep, ['service_name', 'serviceName'], '');
-            return `${method} ${cleanOp}_${serviceName}`;
-          })();
-          return selectedEndpoints.includes(key);
-        })
-        : endpoints;
+      const list =
+        selectedEndpoints.length > 0
+          ? (endpoints as any[]).filter((ep) => {
+              const key =
+                ep.key ||
+                (() => {
+                  const method = String(
+                    firstValue(ep, ['http_method', 'httpMethod'], '')
+                  ).toUpperCase();
+                  const op = String(
+                    firstValue(
+                      ep,
+                      ['operation_name', 'operationName', 'endpoint_name', 'endpointName'],
+                      'Unknown'
+                    )
+                  );
+                  const cleanOp = op.startsWith(method + ' ')
+                    ? op.substring(method.length + 1)
+                    : op;
+                  const serviceName = firstValue(ep, ['service_name', 'serviceName'], '');
+                  return `${method} ${cleanOp}_${serviceName}`;
+                })();
+              return selectedEndpoints.includes(key);
+            })
+          : endpoints;
 
       if (hasServiceData) {
         seriesList = buildServiceDatasets(list);
       } else {
-        seriesList = (list).map((ep, idx) => {
+        seriesList = list.map((ep, idx) => {
           const method = firstValue(ep, ['http_method', 'httpMethod'], 'N/A');
-          const operation = firstValue(ep, ['operation_name', 'operationName', 'endpoint_name', 'endpointName'], 'Unknown');
+          const operation = firstValue(
+            ep,
+            ['operation_name', 'operationName', 'endpoint_name', 'endpointName'],
+            'Unknown'
+          );
           return {
             label: `${method} ${operation}`,
             values: timeBuckets.map(() => 0),
@@ -148,32 +181,61 @@ export default memo(function LatencyChart({
         });
       }
     } else if (hasServiceData) {
-      const stepMs = timeBuckets.length >= 2 ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime() : 60000;
-      seriesList = Object.entries(serviceTimeseriesMap).slice(0, 10).map(([svcName, rows]: [string, any], idx) => {
-        const tsMap: Record<string, number> = {};
-        for (const row of rows as any[]) {
-          const rowTimestamp = firstValue(row, ['timestamp', 'time_bucket', 'timeBucket'], '');
-          if (!rowTimestamp) continue;
-          const rowTime = new Date(rowTimestamp).getTime();
-          if (!Number.isFinite(rowTime)) continue;
-          const alignedTimeMs = Math.floor(rowTime / stepMs) * stepMs;
-          const bucketKey = tsKey(new Date(alignedTimeMs).toISOString());
-          const latency = Number(firstValue(row, [valueKey, 'avg_latency', 'avgLatency', 'avg_latency_ms', 'avgLatencyMs', 'value'], 0));
-          tsMap[bucketKey] = Math.max(tsMap[bucketKey] || 0, Number.isFinite(latency) ? latency : 0);
-        }
-        const values = timeBuckets.map((d) => tsMap[tsKey(d)] ?? 0);
-        return { label: svcName, values, color: getChartColor(idx), fill: false };
-      });
+      const stepMs =
+        timeBuckets.length >= 2
+          ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime()
+          : 60000;
+      seriesList = Object.entries(serviceTimeseriesMap)
+        .slice(0, 10)
+        .map(([svcName, rows]: [string, any], idx) => {
+          const tsMap: Record<string, number> = {};
+          for (const row of rows as any[]) {
+            const rowTimestamp = firstValue(row, ['timestamp', 'time_bucket', 'timeBucket'], '');
+            if (!rowTimestamp) continue;
+            const rowTime = new Date(rowTimestamp).getTime();
+            if (!Number.isFinite(rowTime)) continue;
+            const alignedTimeMs = Math.floor(rowTime / stepMs) * stepMs;
+            const bucketKey = tsKey(new Date(alignedTimeMs).toISOString());
+            const latency = Number(
+              firstValue(
+                row,
+                [valueKey, 'avg_latency', 'avgLatency', 'avg_latency_ms', 'avgLatencyMs', 'value'],
+                0
+              )
+            );
+            tsMap[bucketKey] = Math.max(
+              tsMap[bucketKey] || 0,
+              Number.isFinite(latency) ? latency : 0
+            );
+          }
+          const values = timeBuckets.map((d) => tsMap[tsKey(d)] ?? 0);
+          return { label: svcName, values, color: getChartColor(idx), fill: false };
+        });
     } else {
       if (data.length > 0 && firstValue(data[0], ['value'], null) !== null) {
         const dataMap: Record<string, number> = {};
         for (const d of data as any[]) {
           const ts = firstValue(d, ['timestamp', 'time_bucket', 'timeBucket'], '');
-          dataMap[tsKey(ts)] = Number(firstValue(d, ['value', valueKey, 'avg_latency', 'avgLatency', 'avg_latency_ms', 'avgLatencyMs'], 0));
+          dataMap[tsKey(ts)] = Number(
+            firstValue(
+              d,
+              ['value', valueKey, 'avg_latency', 'avgLatency', 'avg_latency_ms', 'avgLatencyMs'],
+              0
+            )
+          );
         }
-        seriesList = [{ label: datasetLabel, values: timeBuckets.map((ts) => dataMap[tsKey(ts)] ?? 0), color, fill: true }];
+        seriesList = [
+          {
+            label: datasetLabel,
+            values: timeBuckets.map((ts) => dataMap[tsKey(ts)] ?? 0),
+            color,
+            fill: true,
+          },
+        ];
       } else {
-        const p50Map: Record<string, number> = {}; const p95Map: Record<string, number> = {}; const p99Map: Record<string, number> = {};
+        const p50Map: Record<string, number> = {};
+        const p95Map: Record<string, number> = {};
+        const p99Map: Record<string, number> = {};
         for (const d of data as any[]) {
           const key = tsKey(firstValue(d, ['timestamp', 'time_bucket', 'timeBucket'], ''));
           p50Map[key] = Number(firstValue(d, ['p50', 'p50_latency', 'p50Latency'], 0));
@@ -181,9 +243,24 @@ export default memo(function LatencyChart({
           p99Map[key] = Number(firstValue(d, ['p99', 'p99_latency', 'p99Latency'], 0));
         }
         seriesList = [
-          { label: 'P50', values: timeBuckets.map((ts) => p50Map[tsKey(ts)] ?? 0), color: APP_COLORS.hex_73c991, fill: false },
-          { label: 'P95', values: timeBuckets.map((ts) => p95Map[tsKey(ts)] ?? 0), color: APP_COLORS.hex_f79009, fill: false },
-          { label: 'P99', values: timeBuckets.map((ts) => p99Map[tsKey(ts)] ?? 0), color: APP_COLORS.hex_f04438, fill: false },
+          {
+            label: 'P50',
+            values: timeBuckets.map((ts) => p50Map[tsKey(ts)] ?? 0),
+            color: APP_COLORS.hex_73c991,
+            fill: false,
+          },
+          {
+            label: 'P95',
+            values: timeBuckets.map((ts) => p95Map[tsKey(ts)] ?? 0),
+            color: APP_COLORS.hex_f79009,
+            fill: false,
+          },
+          {
+            label: 'P99',
+            values: timeBuckets.map((ts) => p99Map[tsKey(ts)] ?? 0),
+            color: APP_COLORS.hex_f04438,
+            fill: false,
+          },
         ];
       }
     }
@@ -195,16 +272,22 @@ export default memo(function LatencyChart({
         color: APP_COLORS.hex_f79009,
         fill: false,
         dash: [5, 5],
+        showInTooltip: false,
       });
     }
 
     return seriesList;
-  }, [data, endpoints, selectedEndpoints, serviceTimeseriesMap, hasServiceData, targetThreshold, timeBuckets]);
+  }, [
+    data,
+    endpoints,
+    selectedEndpoints,
+    serviceTimeseriesMap,
+    hasServiceData,
+    targetThreshold,
+    timeBuckets,
+  ]);
 
-  const timestamps = useMemo(
-    () => timeBuckets.map((t) => tsMs(t) / 1000),
-    [timeBuckets],
-  );
+  const timestamps = useMemo(() => timeBuckets.map((t) => tsMs(t) / 1000), [timeBuckets]);
 
   const yAxisMax = useMemo(() => {
     let maxVal = 0;
@@ -220,7 +303,15 @@ export default memo(function LatencyChart({
 
   if (data.length === 0 && timeBuckets.length === 0) {
     return (
-      <div style={{ height: '100%', minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        style={{
+          height: '100%',
+          minHeight: '200px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         <div style={{ color: 'var(--text-muted)' }}>No latency data in selected time range</div>
       </div>
     );

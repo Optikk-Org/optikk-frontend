@@ -12,6 +12,7 @@ export interface ObservabilityChartSeries {
   fill?: boolean;
   dash?: number[];
   width?: number;
+  showInTooltip?: boolean;
 }
 
 export interface ObservabilityChartProps {
@@ -23,6 +24,7 @@ export interface ObservabilityChartProps {
   yMax?: number;
   yAxisSize?: number;
   yFormatter?: (value: number) => string;
+  xFormatter?: (timestampSeconds: number) => string;
   legend?: boolean;
   className?: string;
 }
@@ -36,12 +38,13 @@ export default function ObservabilityChart({
   yMax,
   yAxisSize = 60,
   yFormatter,
+  xFormatter,
   legend = false,
   className,
 }: ObservabilityChartProps) {
   const alignedData = useMemo<uPlot.AlignedData>(
     () => [timestamps, ...series.map((item) => item.values)] as uPlot.AlignedData,
-    [timestamps, series],
+    [timestamps, series]
   );
 
   const options = useMemo<Omit<uPlot.Options, 'width' | 'height'>>(() => {
@@ -65,16 +68,57 @@ export default function ObservabilityChart({
       },
       series: [
         {},
-        ...series.map((item) => (
+        ...series.map((item) =>
           uLine(item.label, item.color, {
             fill: item.fill,
             dash: item.dash,
             width: item.width ?? 1.85,
           })
-        )),
+        ),
       ],
     };
   }, [legend, series, yAxisSize, yFormatter, yMin, yMax]);
+
+  const tooltipContent = useMemo(() => {
+    const defaultXFormatter = (timestampSeconds: number) =>
+      new Intl.DateTimeFormat(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      }).format(new Date(timestampSeconds * 1000));
+
+    const valueFormatter = (value: number | null) => {
+      if (value == null || Number.isNaN(value)) return '—';
+      return yFormatter ? yFormatter(value) : value.toLocaleString();
+    };
+
+    return ({ idx }: { u: uPlot; idx: number; data: uPlot.AlignedData }) => {
+      const timestampSeconds = timestamps[idx];
+      if (timestampSeconds == null) {
+        return null;
+      }
+
+      const rows = series
+        .filter((item) => item.showInTooltip !== false)
+        .map((item, seriesIndex) => ({
+          label: item.label,
+          value: valueFormatter(item.values[idx] ?? null),
+          color: item.color,
+          order: seriesIndex,
+        }))
+        .filter((item) => item.value !== '—');
+
+      if (rows.length === 0) {
+        return null;
+      }
+
+      return {
+        title: (xFormatter ?? defaultXFormatter)(timestampSeconds),
+        rows: rows.map(({ order: _order, ...row }) => row),
+      };
+    };
+  }, [timestamps, series, yFormatter, xFormatter]);
 
   return (
     <div className={cn('h-full min-h-0', className)}>
@@ -83,6 +127,7 @@ export default function ObservabilityChart({
         data={alignedData}
         height={height}
         fillHeight={fillHeight}
+        tooltipContent={tooltipContent}
       />
     </div>
   );

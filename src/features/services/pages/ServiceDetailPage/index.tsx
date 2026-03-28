@@ -3,23 +3,24 @@ import { ArrowLeft } from 'lucide-react';
 import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
+import type { DashboardAdapterPageProps } from '@/app/registry/domainRegistry';
+
 import PageHeader from '@shared/components/ui/layout/PageHeader';
 import DashboardPage from '@shared/components/ui/dashboard/DashboardPage';
 
-export default function ServiceDetailPage() {
+export default function ServiceDetailPage({
+  pathParams: adapterPathParams,
+}: DashboardAdapterPageProps) {
   const { serviceName: serviceNameParam } = useParams();
-  const serviceName = serviceNameParam ?? '';
+  const serviceName = adapterPathParams?.serviceName ?? serviceNameParam ?? '';
   const navigate = useNavigate();
 
-  const pathParams = useMemo(
+  const dashboardPathParams = useMemo(
     () => (serviceName ? { serviceName } : undefined),
-    [serviceName],
+    [serviceName]
   );
 
-  const breadcrumbs = [
-    { label: 'Services', path: '/services' },
-    { label: serviceName },
-  ];
+  const breadcrumbs = [{ label: 'Services', path: '/services' }, { label: serviceName }];
 
   const headerActions = (
     <Button variant="secondary" size="sm" onClick={() => navigate('/services')}>
@@ -30,7 +31,7 @@ export default function ServiceDetailPage() {
   return (
     <div>
       <PageHeader title={serviceName} breadcrumbs={breadcrumbs} actions={headerActions} />
-      <DashboardPage pageId="service-detail" pathParams={pathParams} />
+      <DashboardPage pageId="service-detail" pathParams={dashboardPathParams} />
     </div>
   );
 }

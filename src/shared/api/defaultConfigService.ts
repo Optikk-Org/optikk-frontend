@@ -19,7 +19,9 @@ import { decodeApiResponse } from './utils/validate';
 
 const BASE = API_CONFIG.ENDPOINTS.V1_BASE;
 
-const dashboardSchemaVersionSchema = z.literal(DASHBOARD_SCHEMA_VERSION) satisfies z.ZodType<DashboardSchemaVersion>;
+const dashboardSchemaVersionSchema = z.literal(
+  DASHBOARD_SCHEMA_VERSION
+) satisfies z.ZodType<DashboardSchemaVersion>;
 
 const pageSchema: z.ZodType<DefaultConfigPage> = z.object({
   schemaVersion: dashboardSchemaVersionSchema,
@@ -70,62 +72,72 @@ const queryParamValueSchema = z.union([
   z.array(z.boolean()),
 ]);
 
-const panelQuerySchema: z.ZodType<DashboardQuerySpec> = z.object({
-  method: z.string(),
-  endpoint: z.string(),
-  params: z.record(z.string(), queryParamValueSchema).optional(),
-}).strict();
+const panelQuerySchema: z.ZodType<DashboardQuerySpec> = z
+  .object({
+    method: z.string(),
+    endpoint: z.string(),
+    params: z.record(z.string(), queryParamValueSchema).optional(),
+  })
+  .strict();
 
-const panelLayoutSchema: z.ZodType<DashboardLayout> = z.object({
-  preset: z.enum(['kpi', 'trend', 'hero', 'breakdown', 'detail']),
-  x: z.number().optional(),
-  y: z.number().optional(),
-  w: z.number().optional(),
-  h: z.number().optional(),
-}).strict();
+const panelLayoutSchema: z.ZodType<DashboardLayout> = z
+  .object({
+    preset: z.enum(['kpi', 'trend', 'hero', 'breakdown', 'detail']),
+    x: z.number().optional(),
+    y: z.number().optional(),
+    w: z.number().optional(),
+    h: z.number().optional(),
+    colSpan: z.number().optional(),
+  })
+  .strict();
 
-const statSummaryFieldSchema: z.ZodType<DashboardStatSummaryField> = z.object({
-  label: z.string(),
-  field: z.string().optional(),
-  keys: z.array(z.string()).optional(),
-}).strict();
+const statSummaryFieldSchema: z.ZodType<DashboardStatSummaryField> = z
+  .object({
+    label: z.string(),
+    field: z.string().optional(),
+    keys: z.array(z.string()).optional(),
+  })
+  .strict();
 
-const panelSchema: z.ZodType<DashboardPanelSpec> = z.object({
-  id: z.string(),
-  panelType: z.enum(DASHBOARD_PANEL_TYPES),
-  sectionId: z.string(),
-  order: z.number(),
-  query: panelQuerySchema,
-  layout: panelLayoutSchema,
-  title: z.string().optional(),
-  titleIcon: z.string().optional(),
-  icon: z.string().optional(),
-  dataSource: z.string().optional(),
-  dataKey: z.string().optional(),
-  groupByKey: z.string().optional(),
-  labelKey: z.string().optional(),
-  xKey: z.string().optional(),
-  yKey: z.string().optional(),
-  endpointDataSource: z.string().optional(),
-  endpointMetricsSource: z.string().optional(),
-  endpointListType: z.string().optional(),
-  valueField: z.string().optional(),
-  valueKey: z.string().optional(),
-  valueKeys: z.array(z.string()).optional(),
-  bucketKey: z.string().optional(),
-  datasetLabel: z.string().optional(),
-  color: z.string().optional(),
-  formatter: z.string().optional(),
-  stacked: z.boolean().optional(),
-  listSortField: z.string().optional(),
-  listType: z.string().optional(),
-  listTitle: z.string().optional(),
-  drilldownRoute: z.string().optional(),
-  targetThreshold: z.number().optional(),
-  summaryFields: z.array(statSummaryFieldSchema).optional(),
-  yPrefix: z.string().optional(),
-  yDecimals: z.number().int().optional(),
-}).strict();
+const panelSchema: z.ZodType<DashboardPanelSpec> = z
+  .object({
+    id: z.string(),
+    panelType: z.enum(DASHBOARD_PANEL_TYPES),
+    sectionId: z.string(),
+    order: z.number(),
+    query: panelQuerySchema,
+    layout: panelLayoutSchema,
+    title: z.string().optional(),
+    description: z.string().optional(),
+    titleIcon: z.string().optional(),
+    icon: z.string().optional(),
+    dataSource: z.string().optional(),
+    dataKey: z.string().optional(),
+    groupByKey: z.string().optional(),
+    labelKey: z.string().optional(),
+    xKey: z.string().optional(),
+    yKey: z.string().optional(),
+    endpointDataSource: z.string().optional(),
+    endpointMetricsSource: z.string().optional(),
+    endpointListType: z.string().optional(),
+    valueField: z.string().optional(),
+    valueKey: z.string().optional(),
+    valueKeys: z.array(z.string()).optional(),
+    bucketKey: z.string().optional(),
+    datasetLabel: z.string().optional(),
+    color: z.string().optional(),
+    formatter: z.string().optional(),
+    stacked: z.boolean().optional(),
+    listSortField: z.string().optional(),
+    listType: z.string().optional(),
+    listTitle: z.string().optional(),
+    drilldownRoute: z.string().optional(),
+    targetThreshold: z.number().optional(),
+    summaryFields: z.array(statSummaryFieldSchema).optional(),
+    yPrefix: z.string().optional(),
+    yDecimals: z.number().int().optional(),
+  })
+  .strict();
 
 const dashboardTabDocumentSchema: z.ZodType<DashboardTabDocument> = z.object({
   id: z.string(),
@@ -159,7 +171,7 @@ const defaultConfigService = {
   async getDashboardTabDocument(
     _teamId: number | null,
     pageId: string,
-    tabId: string,
+    tabId: string
   ): Promise<DashboardTabDocument | null> {
     const response = await api.get(`${BASE}/default-config/pages/${pageId}/tabs/${tabId}`);
     return decodeApiResponse(dashboardTabDocumentSchema, response, {
@@ -171,7 +183,7 @@ const defaultConfigService = {
   async savePageOverride(
     _teamId: number | null,
     pageId: string,
-    payload: Record<string, unknown>,
+    payload: Record<string, unknown>
   ): Promise<unknown> {
     return api.put(`${BASE}/default-config/pages/${pageId}`, payload);
   },

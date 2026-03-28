@@ -2,19 +2,20 @@ import { Radio } from 'lucide-react';
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
+import type { DashboardAdapterPageProps } from '@/app/registry/domainRegistry';
+
 import { PageHeader } from '@shared/components/ui';
 import DashboardPage from '@shared/components/ui/dashboard/DashboardPage';
 
 import { ROUTES } from '@/shared/constants/routes';
 
-export default function KafkaTopicDetailPage() {
+export default function KafkaTopicDetailPage({
+  pathParams: adapterPathParams,
+}: DashboardAdapterPageProps) {
   const params = useParams();
-  const topic = params.topic ?? '';
+  const topic = adapterPathParams?.topic ?? params.topic ?? '';
 
-  const pathParams = useMemo(
-    () => (topic ? { topic } : undefined),
-    [topic],
-  );
+  const dashboardPathParams = useMemo(() => (topic ? { topic } : undefined), [topic]);
 
   return (
     <div>
@@ -28,7 +29,7 @@ export default function KafkaTopicDetailPage() {
           { label: topic || 'Topic Detail' },
         ]}
       />
-      <DashboardPage pageId="kafka-topic-detail" pathParams={pathParams} />
+      <DashboardPage pageId="kafka-topic-detail" pathParams={dashboardPathParams} />
     </div>
   );
 }

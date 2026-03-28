@@ -93,7 +93,7 @@ export default function ConfigurableDashboard({
   }
 
   return (
-    <div className="flex flex-col gap-[var(--space-md)]">
+    <div className="flex flex-col gap-[var(--space-xs)]">
       {sortedSections.map((section) => {
         const sectionPanels = panelsBySection.get(section.id) ?? [];
         if (sectionPanels.length === 0) {

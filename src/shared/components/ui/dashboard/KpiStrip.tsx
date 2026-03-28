@@ -25,9 +25,9 @@ export default function KpiStrip(props: KpiStripProps) {
   });
 
   return (
-    <div className="grid grid-cols-1 gap-[var(--space-md)] md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-[var(--space-xs)] md:grid-cols-2 xl:grid-cols-4">
       {orderedPanels.map((panelConfig) => (
-        <div key={panelConfig.id} className="min-h-[152px] min-w-0">
+        <div key={panelConfig.id} className="min-h-[120px] min-w-0">
           <ConfigurableChartCard
             componentConfig={panelConfig}
             dataSources={props.dataSources}

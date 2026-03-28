@@ -13,12 +13,16 @@ import type { ComponentType, LazyExoticComponent } from 'react';
 import type { AppRoutePath } from '@/shared/constants/routes';
 import type { DashboardPanelRegistration } from '@shared/components/ui/dashboard/dashboardPanelRegistry';
 
+export interface DashboardAdapterPageProps {
+  readonly pathParams?: Record<string, string>;
+}
+
 /**
  *
  */
 type DomainPage =
-  | ComponentType<object>
-  | LazyExoticComponent<ComponentType<object>>;
+  | ComponentType<DashboardAdapterPageProps>
+  | LazyExoticComponent<ComponentType<DashboardAdapterPageProps>>;
 
 /**
  *
@@ -93,17 +97,14 @@ export function getExplorerRoutes(): readonly RegisteredDomainRoute[] {
       domainKey: domain.key,
       label: domain.label,
       permissions: domain.permissions,
-    })),
+    }))
   );
 }
 
-export function resolveRegisteredExplorerRoute(
-  pathname: string,
-): RegisteredDomainRoute | null {
+export function resolveRegisteredExplorerRoute(pathname: string): RegisteredDomainRoute | null {
   return (
-    getExplorerRoutes().find((route) =>
-      matchPath({ path: route.path, end: true }, pathname),
-    ) ?? null
+    getExplorerRoutes().find((route) => matchPath({ path: route.path, end: true }, pathname)) ??
+    null
   );
 }
 
@@ -114,13 +115,11 @@ export function getDashboardPageAdapters(): readonly RegisteredDashboardPageAdap
       domainKey: domain.key,
       label: domain.label,
       permissions: domain.permissions,
-    })),
+    }))
   );
 }
 
-export function resolveDashboardPageAdapter(
-  pageId: string,
-): RegisteredDashboardPageAdapter | null {
+export function resolveDashboardPageAdapter(pageId: string): RegisteredDashboardPageAdapter | null {
   return getDashboardPageAdapters().find((entry) => entry.pageId === pageId) ?? null;
 }
 

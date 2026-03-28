@@ -7,10 +7,7 @@ import PageHeader from '@shared/components/ui/layout/PageHeader';
 import ConfigurableDashboard from '@shared/components/ui/dashboard/ConfigurableDashboard';
 
 import { metricsService } from '@shared/api/metricsService';
-import type {
-  ErrorGroupDto,
-  MetricsTimeSeriesPointDto,
-} from '@shared/api/schemas/metricsSchemas';
+import type { ErrorGroupDto, MetricsTimeSeriesPointDto } from '@shared/api/schemas/metricsSchemas';
 import type { ServiceSummary } from '@shared/api/schemas/servicesSchemas';
 
 import { useDashboardConfig } from '@shared/hooks/useDashboardConfig';
@@ -23,6 +20,7 @@ import { APP_COLORS } from '@config/colorLiterals';
 const n = (value: unknown) => (value == null || Number.isNaN(Number(value)) ? 0 : Number(value));
 
 const normalizeErrorGroup = (row: ErrorGroupDto) => ({
+  group_id: row.group_id,
   service_name: row.service_name,
   operation_name: row.operation_name,
   status_message: row.status_message,
@@ -61,34 +59,43 @@ export default function ErrorDashboardPage() {
     'overview-service-error-rate',
     (teamId, start, end) =>
       metricsService.getServiceErrorRate(teamId, start, end, selectedService || undefined, '5m'),
-    { extraKeys: [selectedService] },
+    { extraKeys: [selectedService] }
   );
 
   const { data: errorVolumeRaw, isLoading: errorVolumeLoading } = useTimeRangeQuery(
     'overview-error-volume',
     (teamId, start, end) =>
       metricsService.getErrorVolume(teamId, start, end, selectedService || undefined, '5m'),
-    { extraKeys: [selectedService] },
+    { extraKeys: [selectedService] }
   );
 
   const { data: latencyWindowsRaw, isLoading: latencyLoading } = useTimeRangeQuery(
     'overview-error-latency-windows',
     (teamId, start, end) =>
-      metricsService.getLatencyDuringErrorWindows(teamId, start, end, selectedService || undefined, '5m'),
-    { extraKeys: [selectedService] },
+      metricsService.getLatencyDuringErrorWindows(
+        teamId,
+        start,
+        end,
+        selectedService || undefined,
+        '5m'
+      ),
+    { extraKeys: [selectedService] }
   );
 
   const { data: errorGroupsRaw, isLoading: groupsLoading } = useTimeRangeQuery(
     'error-groups-global',
     (teamId, start, end) =>
-      metricsService.getOverviewErrorGroups(teamId, start, end, { serviceName: selectedService as string, limit: 100 }),
-    { extraKeys: [selectedService] },
+      metricsService.getOverviewErrorGroups(teamId, start, end, {
+        serviceName: selectedService as string,
+        limit: 100,
+      }),
+    { extraKeys: [selectedService] }
   );
 
   // Service metrics for the filter dropdown and breakdown list
   const { data: serviceMetricsRaw } = useTimeRangeQuery(
     'overview-services-errors',
-    (teamId, start, end) => metricsService.getOverviewServices(teamId, start, end),
+    (teamId, start, end) => metricsService.getOverviewServices(teamId, start, end)
   );
 
   const errorGroups = useMemo(() => {
@@ -98,19 +105,20 @@ export default function ErrorDashboardPage() {
 
   const normalizedServiceMetrics = useMemo(
     () => (Array.isArray(serviceMetricsRaw) ? serviceMetricsRaw.map(normalizeServiceMetric) : []),
-    [serviceMetricsRaw],
+    [serviceMetricsRaw]
   );
   const normalizedServiceErrorRate = useMemo(
-    () => (Array.isArray(serviceErrorRateRaw) ? serviceErrorRateRaw.map(normalizeTimeSeriesPoint) : []),
-    [serviceErrorRateRaw],
+    () =>
+      Array.isArray(serviceErrorRateRaw) ? serviceErrorRateRaw.map(normalizeTimeSeriesPoint) : [],
+    [serviceErrorRateRaw]
   );
   const normalizedErrorVolume = useMemo(
     () => (Array.isArray(errorVolumeRaw) ? errorVolumeRaw.map(normalizeTimeSeriesPoint) : []),
-    [errorVolumeRaw],
+    [errorVolumeRaw]
   );
   const normalizedLatencyWindows = useMemo(
     () => (Array.isArray(latencyWindowsRaw) ? latencyWindowsRaw.map(normalizeTimeSeriesPoint) : []),
-    [latencyWindowsRaw],
+    [latencyWindowsRaw]
   );
 
   const services = useMemo(() => {
@@ -130,7 +138,14 @@ export default function ErrorDashboardPage() {
       dataIndex: 'service_name',
       key: 'service_name',
       render: (v: string) => (
-        <Badge variant="default" style={{ background: APP_COLORS.rgba_94_96_206_0p15_2, color: APP_COLORS.hex_5e60ce, border: `1px solid ${APP_COLORS.rgba_94_96_206_0p3_2}` }}>
+        <Badge
+          variant="default"
+          style={{
+            background: APP_COLORS.rgba_94_96_206_0p15_2,
+            color: APP_COLORS.hex_5e60ce,
+            border: `1px solid ${APP_COLORS.rgba_94_96_206_0p3_2}`,
+          }}
+        >
           {v}
         </Badge>
       ),
@@ -142,7 +157,9 @@ export default function ErrorDashboardPage() {
       dataIndex: 'operation_name',
       key: 'operation_name',
       render: (v: string) => (
-        <span className="font-mono" style={{ fontSize: 12, color: 'var(--text-primary)' }}>{v}</span>
+        <span className="font-mono" style={{ fontSize: 12, color: 'var(--text-primary)' }}>
+          {v}
+        </span>
       ),
     },
     {
@@ -150,11 +167,21 @@ export default function ErrorDashboardPage() {
       dataIndex: 'http_status_code',
       key: 'http_status_code',
       width: 70,
-      render: (v: any) => v ? (
-        <Badge variant="default" style={{ color: statusColor(v), borderColor: statusColor(v), background: 'transparent' }}>
-          {v}
-        </Badge>
-      ) : '-',
+      render: (v: any) =>
+        v ? (
+          <Badge
+            variant="default"
+            style={{
+              color: statusColor(v),
+              borderColor: statusColor(v),
+              background: 'transparent',
+            }}
+          >
+            {v}
+          </Badge>
+        ) : (
+          '-'
+        ),
     },
     {
       title: 'Error Message',
@@ -196,19 +223,40 @@ export default function ErrorDashboardPage() {
       ),
     },
     {
+      title: 'Details',
+      dataIndex: 'group_id',
+      key: 'group_id',
+      width: 110,
+      render: (v: string) =>
+        v ? (
+          <span
+            style={{ color: APP_COLORS.hex_5e60ce, cursor: 'pointer', fontSize: 12 }}
+            onClick={() => navigate(`/errors/${v}`)}
+          >
+            <ExternalLink size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+            View Group
+          </span>
+        ) : (
+          '-'
+        ),
+    },
+    {
       title: 'Sample Trace',
       dataIndex: 'sample_trace_id',
       key: 'sample_trace_id',
       width: 120,
-      render: (v: string) => v ? (
-        <span
-          style={{ color: APP_COLORS.hex_5e60ce, cursor: 'pointer', fontSize: 12 }}
-          onClick={() => navigate(`/traces/${v}`)}
-        >
-          <ExternalLink size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />
-          View Trace
-        </span>
-      ) : '-',
+      render: (v: string) =>
+        v ? (
+          <span
+            style={{ color: APP_COLORS.hex_5e60ce, cursor: 'pointer', fontSize: 12 }}
+            onClick={() => navigate(`/traces/${v}`)}
+          >
+            <ExternalLink size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+            View Trace
+          </span>
+        ) : (
+          '-'
+        ),
     },
   ];
 
@@ -244,31 +292,44 @@ export default function ErrorDashboardPage() {
 
       {/* Error Groups Table */}
       <div style={{ marginTop: 16 }}>
-        <Surface elevation={1} padding="md" className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg">
+        <Surface
+          elevation={1}
+          padding="md"
+          className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg"
+        >
           <h4>
             Error Groups
             {!groupsLoading && (
-              <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)', marginLeft: 12 }}>
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 400,
+                  color: 'var(--text-muted)',
+                  marginLeft: 12,
+                }}
+              >
                 {errorGroups.length} groups
               </span>
             )}
           </h4>
-            {groupsLoading ? (
-              <Skeleton />
-            ) : errorGroups.length === 0 ? (
-              <div className="text-muted" style={{textAlign:'center',padding:32}}>No errors in selected time range</div>
-            ) : (
-              <SimpleTable
-                dataSource={errorGroups.map((g: any, i: number) => ({ ...g, key: i }))}
-                columns={columns}
-                size="small"
-                pagination={{ pageSize: 20, showSizeChanger: true }}
-                scroll={{ x: 900 }}
-                rowClassName={(record: any) =>
-                  Number(record.error_count) > 100 ? 'high-error-row' : ''
-                }
-              />
-            )}
+          {groupsLoading ? (
+            <Skeleton />
+          ) : errorGroups.length === 0 ? (
+            <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>
+              No errors in selected time range
+            </div>
+          ) : (
+            <SimpleTable
+              dataSource={errorGroups.map((g: any, i: number) => ({ ...g, key: g.group_id || i }))}
+              columns={columns}
+              size="small"
+              pagination={{ pageSize: 20, showSizeChanger: true }}
+              scroll={{ x: 900 }}
+              rowClassName={(record: any) =>
+                Number(record.error_count) > 100 ? 'high-error-row' : ''
+              }
+            />
+          )}
         </Surface>
       </div>
     </div>

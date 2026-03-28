@@ -34,11 +34,7 @@ export interface StatCardProps {
 /**
  * Reusable metric card for displaying a single statistic with trend.
  */
-const StatCard = React.memo(function StatCard({
-  metric,
-  trend = {},
-  visuals = {},
-}: StatCardProps) {
+const StatCard = React.memo(function StatCard({ metric, trend = {}, visuals = {} }: StatCardProps) {
   const { title, value, formatter, suffix, description } = metric;
   const { value: trendValue, inverted: trendInverted = false } = trend;
   const { icon, iconColor, sparklineData, sparklineColor, loading = false } = visuals;
@@ -46,23 +42,25 @@ const StatCard = React.memo(function StatCard({
   const displayValue = formatter ? formatter(value) : value;
 
   return (
-    <Surface
-      elevation={1}
-      padding="sm"
-      className="h-full"
-    >
+    <Surface elevation={1} padding="sm" className="h-full">
       {loading ? (
         <div className="min-h-[80px] py-1">
           <Skeleton count={2} />
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[color:var(--text-secondary)] text-[11px] font-medium uppercase tracking-[0.5px]">
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <span className="min-w-0 flex-1 text-[11px] font-medium uppercase tracking-[0.5px] text-[color:var(--text-secondary)]">
               {title}
             </span>
             {icon && (
-              <span className="flex items-center opacity-80" style={{ color: iconColor }}>
+              <span
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full opacity-90"
+                style={{
+                  color: iconColor,
+                  backgroundColor: 'color-mix(in srgb, var(--bg-tertiary) 88%, transparent)',
+                }}
+              >
                 {React.isValidElement(icon) ? icon : React.createElement(icon as any, { size: 20 })}
               </span>
             )}
@@ -75,9 +73,7 @@ const StatCard = React.memo(function StatCard({
               </span>
             )}
           </div>
-          {description && (
-            <div className="text-muted-foreground text-xs mt-1">{description}</div>
-          )}
+          {description && <div className="text-muted-foreground text-xs mt-1">{description}</div>}
           {sparklineData && sparklineData.length > 1 && (
             <div className="mt-2">
               <SparklineChart
@@ -88,9 +84,7 @@ const StatCard = React.memo(function StatCard({
               />
             </div>
           )}
-          {trendValue != null && (
-            <TrendIndicator value={trendValue} inverted={trendInverted} />
-          )}
+          {trendValue != null && <TrendIndicator value={trendValue} inverted={trendInverted} />}
         </>
       )}
     </Surface>

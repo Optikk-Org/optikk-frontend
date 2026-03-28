@@ -7,6 +7,7 @@ import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboard
 import { buildInterpolatedPath } from '@shared/utils/placeholderInterpolation';
 
 import { useDashboardData } from '../hooks/useDashboardData';
+import ChartNoDataOverlay from '@shared/components/ui/feedback/ChartNoDataOverlay';
 
 /**
  *
@@ -56,11 +57,7 @@ export function TableRenderer({
     ];
   }, [chartConfig.drilldownRoute, rows]);
   if (rows.length === 0) {
-    return (
-      <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>
-        No data
-      </div>
-    );
+    return <ChartNoDataOverlay />;
   }
   return (
     <div style={{ height: '100%', overflow: 'auto' }}>
