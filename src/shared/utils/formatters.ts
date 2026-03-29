@@ -35,6 +35,7 @@ export function formatDuration(ms: number | string | null | undefined): string {
   let value = Number(ms);
   value = value === 0 ? 0 : value;
   if (!Number.isFinite(value)) return '0ms';
+  if (value === 0) return '0ms';
   if (value < 1) {
     return `${(value * MICROSECONDS_MULTIPLIER).toFixed(0)}μs`;
   }
@@ -62,11 +63,14 @@ export function formatTimestamp(timestamp: number | string | Date): string {
  * @param bytes
  */
 export function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return '0B';
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i] ?? 'B'}`;
+  const val = bytes / Math.pow(k, i);
+  // Avoid trailing zero decimals for cleaner Datadog-level UI. Bytes (i=0) are rounded.
+  const formattedVal = i === 0 ? Math.round(val).toString() : parseFloat(val.toFixed(2)).toString();
+  return `${formattedVal}${sizes[i] ?? 'B'}`;
 }
 
 /**
@@ -76,7 +80,7 @@ export function formatBytes(bytes: number): string {
  */
 export function normalizePercentage(
   value: number | string | null | undefined,
-  clamp = true,
+  clamp = true
 ): number {
   let raw = Number(value);
   raw = raw === 0 ? 0 : raw;
@@ -97,7 +101,7 @@ export function normalizePercentage(
 export function formatPercentage(
   value: number | string | null | undefined,
   decimals = 2,
-  clamp = true,
+  clamp = true
 ): string {
   const percent = normalizePercentage(value, clamp);
   return `${percent.toFixed(decimals)}%`;

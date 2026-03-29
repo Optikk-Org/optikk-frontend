@@ -238,9 +238,9 @@ export default memo(function LatencyChart({
         const p99Map: Record<string, number> = {};
         for (const d of data as any[]) {
           const key = tsKey(firstValue(d, ['timestamp', 'time_bucket', 'timeBucket'], ''));
-          p50Map[key] = Number(firstValue(d, ['p50', 'p50_latency', 'p50Latency'], 0));
-          p95Map[key] = Number(firstValue(d, ['p95', 'p95_latency', 'p95Latency'], 0));
-          p99Map[key] = Number(firstValue(d, ['p99', 'p99_latency', 'p99Latency'], 0));
+          p50Map[key] = Number(firstValue(d, ['p50_ms', 'p50', 'p50_latency', 'p50Latency'], 0));
+          p95Map[key] = Number(firstValue(d, ['p95_ms', 'p95', 'p95_latency', 'p95Latency'], 0));
+          p99Map[key] = Number(firstValue(d, ['p99_ms', 'p99', 'p99_latency', 'p99Latency'], 0));
         }
         seriesList = [
           {

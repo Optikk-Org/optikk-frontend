@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboardConfig';
 
 import { useDashboardData } from '../hooks/useDashboardData';
 
 /**
- *
+ * Renders a latency heatmap table with intelligent date formatting on the X-axis.
+ * All hooks must be called before any conditional returns (Rules of Hooks).
  */
 export function HeatmapRenderer({
   chartConfig,
@@ -14,6 +16,70 @@ export function HeatmapRenderer({
 }) {
   const { data: rows } = useDashboardData(chartConfig, dataSources);
 
+  const xKey = chartConfig.xKey || 'operation_name';
+  const yKey = chartConfig.yKey || 'service_name';
+  const valueKey = chartConfig.valueKey || 'error_rate';
+
+  // All useMemo calls must be before conditional returns
+  const xValues = useMemo(
+    () => Array.from(new Set(rows.map((r: any) => String(r[xKey] ?? '')))).slice(0, 20),
+    [rows, xKey]
+  );
+
+  const xLabels = useMemo(() => {
+    if (xValues.length === 0) return {};
+
+    const timestamps = xValues.map((v) => new Date(v).getTime());
+    const isTimestamps =
+      timestamps.every((ts) => !Number.isNaN(ts)) && xValues.some((v) => v.includes('-'));
+
+    if (!isTimestamps) {
+      return Object.fromEntries(
+        xValues.map((x) => [x, x.length > 12 ? x.slice(0, 12) + '...' : x])
+      );
+    }
+
+    const minTime = Math.min(...timestamps);
+    const maxTime = Math.max(...timestamps);
+    const diffHours = (maxTime - minTime) / (1000 * 60 * 60);
+
+    return Object.fromEntries(
+      xValues.map((x, i) => {
+        const d = new Date(timestamps[i]!);
+        let formatted = '';
+
+        if (diffHours <= 24) {
+          formatted = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        } else if (diffHours <= 7 * 24) {
+          formatted = d.toLocaleString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+        } else {
+          formatted = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }
+
+        return [x, formatted];
+      })
+    );
+  }, [xValues]);
+
+  const { yValues, lookup, maxVal } = useMemo(() => {
+    const yVals = Array.from(new Set(rows.map((r: any) => String(r[yKey] ?? ''))));
+    const lkp: Record<string, Record<string, number>> = {};
+    for (const row of rows) {
+      const x = String(row[xKey] ?? '');
+      const y = String(row[yKey] ?? '');
+      if (!lkp[y]) lkp[y] = {};
+      lkp[y][x] = Number(row[valueKey]) || 0;
+    }
+    const max = Math.max(...rows.map((r: any) => Number(r[valueKey]) || 0), 1);
+    return { yValues: yVals, lookup: lkp, maxVal: max };
+  }, [rows, xKey, yKey, valueKey]);
+
+  // Conditional return AFTER all hooks
   if (rows.length === 0) {
     return (
       <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>
@@ -22,20 +88,6 @@ export function HeatmapRenderer({
     );
   }
 
-  const xKey = chartConfig.xKey || 'operation_name';
-  const yKey = chartConfig.yKey || 'service_name';
-  const valueKey = chartConfig.valueKey || 'error_rate';
-
-  const xValues = Array.from(new Set(rows.map((r: any) => String(r[xKey] ?? '')))).slice(0, 20);
-  const yValues = Array.from(new Set(rows.map((r: any) => String(r[yKey] ?? ''))));
-  const lookup: Record<string, Record<string, number>> = {};
-  for (const row of rows) {
-    const x = String(row[xKey] ?? '');
-    const y = String(row[yKey] ?? '');
-    if (!lookup[y]) lookup[y] = {};
-    lookup[y][x] = Number(row[valueKey]) || 0;
-  }
-  const maxVal = Math.max(...rows.map((r: any) => Number(r[valueKey]) || 0), 1);
   return (
     <div style={{ height: '100%', overflowY: 'auto' }}>
       <table style={{ borderCollapse: 'collapse', fontSize: 11, width: '100%' }}>
@@ -55,7 +107,7 @@ export function HeatmapRenderer({
                 }}
                 title={x}
               >
-                {x.slice(0, 12)}
+                {xLabels[x]}
               </th>
             ))}
           </tr>

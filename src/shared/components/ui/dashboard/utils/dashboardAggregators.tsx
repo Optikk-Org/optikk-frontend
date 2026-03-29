@@ -101,6 +101,12 @@ function isEndpointListType(value: string): value is EndpointListType {
   return value === 'requests' || value === 'errorRate' || value === 'latency' || value === 'count';
 }
 
+function splitValueUnit(str: string) {
+  const match = String(str).match(/^([+-]?[\d.,]+)\s*(.*)$/);
+  if (match) return { val: match[1], unit: match[2] };
+  return { val: str, unit: '' };
+}
+
 export function renderStatSummary(
   rawData: unknown,
   options?: {
@@ -147,15 +153,35 @@ export function renderStatSummary(
   const formatter = options?.formatter ?? (fields === defaultFields ? 'ms' : undefined);
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cells.length}, 1fr)`, gap: 12 }}>
-      {cells.map((cell) => (
-        <div key={cell.label} style={{ padding: '8px 0' }}>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{cell.label}</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>
-            {formatStatValue(formatter, cell.value)}
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+      {cells.map((cell) => {
+        const fullVal = formatStatValue(formatter, cell.value);
+        const { val, unit } = splitValueUnit(String(fullVal));
+        return (
+          <div key={cell.label} style={{ padding: '8px 0' }}>
+            <div
+              style={{
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                color: 'var(--text-muted)',
+                whiteSpace: 'nowrap',
+                marginBottom: 4,
+              }}
+            >
+              {cell.label}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: 18, fontWeight: 700, lineHeight: 1 }}>{val}</span>
+              {unit && (
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>
+                  {unit}
+                </span>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -288,7 +314,7 @@ export function buildEndpointList(endpointMetrics: any[], listType: string) {
     );
     const cleanOp = op.startsWith(`${method} `) ? op.substring(method.length + 1) : op;
     const serviceName = strValue(endpoint, ['service_name', 'serviceName']);
-    const requestCount = numValue(endpoint, ['request_count', 'requestCount']);
+    const requestCount = numValue(endpoint, ['request_count', 'requestCount', 'req_count']);
     const errorCount = numValue(endpoint, ['error_count', 'errorCount']);
     const avgLatency = numValue(endpoint, ['avg_latency', 'avgLatency']);
     return {
@@ -327,7 +353,7 @@ export function buildServiceListFromMetrics(serviceMetrics: any[], listType: str
     .map((service) => {
       const name = strValue(service, ['service_name', 'serviceName', 'service'], '');
       if (!name) return null;
-      const requestCount = numValue(service, ['request_count', 'requestCount']);
+      const requestCount = numValue(service, ['request_count', 'requestCount', 'req_count']);
       const errorCount = numValue(service, ['error_count', 'errorCount']);
       const avgLatency = numValue(service, ['avg_latency', 'avgLatency']);
       const errorRate = requestCount > 0 ? (errorCount * 100.0) / requestCount : 0;
@@ -409,7 +435,7 @@ export function buildGroupedListFromTimeseries(
       let valueTotal = 0;
 
       for (const row of groupRows) {
-        const req = numValue(row, ['request_count', 'requestCount']);
+        const req = numValue(row, ['request_count', 'requestCount', 'req_count']);
         const err = numValue(row, ['error_count', 'errorCount']);
         if (!Number.isNaN(req)) requestCount += req;
         if (!Number.isNaN(err)) errorCount += err;

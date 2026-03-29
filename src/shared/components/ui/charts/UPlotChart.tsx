@@ -213,7 +213,7 @@ export function uBars(label: string, color: string): uPlot.Series {
     stroke: color,
     fill: `${color}CC`,
     points: { show: false },
-    paths: uPlot.paths.bars!({ size: [0.6, 100], radius: 2 }),
+    paths: uPlot.paths.bars!({ size: [0.6], radius: 2 }),
   };
 }
 

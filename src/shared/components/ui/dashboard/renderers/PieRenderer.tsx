@@ -30,10 +30,21 @@ export function PieRenderer({
 
     const segments = filtered.map((row, index) => {
       const value = Number(row[valueKey]);
+      const name = String(row[labelKey] ?? `Item ${index + 1}`);
+
+      let color = getChartColor(index);
+      if (name.startsWith('2xx'))
+        color = '#10b981'; // Emerald 500 (Green)
+      else if (name.startsWith('3xx'))
+        color = '#3b82f6'; // Blue 500
+      else if (name.startsWith('4xx'))
+        color = '#ef4444'; // Red 500
+      else if (name.startsWith('5xx')) color = '#eab308'; // Yellow 500
+
       return {
-        name: String(row[labelKey] ?? `Item ${index + 1}`),
+        name,
         value: Number.isFinite(value) ? value : 0,
-        color: getChartColor(index),
+        color,
       };
     });
 
@@ -55,47 +66,18 @@ export function PieRenderer({
   const borderColor = CHART_THEME_DEFAULTS.borderColor();
 
   return (
-    <div className="flex h-full items-center gap-5 px-2 py-1">
-      <div className="flex min-w-0 flex-1 items-center justify-center">
-        <DonutChart
-          segments={chartData.segments.map((segment) => ({
-            label: segment.name,
-            value: segment.value,
-            color: segment.color,
-          }))}
-          centerValue={String(chartData.total)}
-          centerLabel={chartConfig.title ?? 'Total'}
-        />
-      </div>
-      <div className="flex min-w-[160px] flex-col gap-2 overflow-y-auto pr-2">
-        {chartData.segments.map((segment) => {
-          const percent = chartData.total > 0 ? (segment.value / chartData.total) * 100 : 0;
-          return (
-            <div
-              key={segment.name}
-              className="flex items-center gap-3 rounded-[var(--card-radius)] border px-3 py-2"
-              style={{ borderColor: `${borderColor}66` }}
-            >
-              <span
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ backgroundColor: segment.color, flexShrink: 0 }}
-              />
-              <div className="min-w-0 flex-1">
-                <div
-                  className="truncate text-[12px] font-medium"
-                  style={{ color: textPrimary }}
-                  title={segment.name}
-                >
-                  {segment.name}
-                </div>
-                <div className="text-[11px]" style={{ color: textSecondary }}>
-                  {segment.value} ({percent.toFixed(1)}%)
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+    <div className="flex h-full w-full items-center justify-center py-2">
+      <DonutChart
+        size={180}
+        strokeWidth={20}
+        segments={chartData.segments.map((segment) => ({
+          label: segment.name,
+          value: segment.value,
+          color: segment.color,
+        }))}
+        centerValue={String(chartData.total)}
+        centerLabel={chartConfig.title ?? 'Total'}
+      />
     </div>
   );
 }

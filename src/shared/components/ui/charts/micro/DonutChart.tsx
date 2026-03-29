@@ -1,3 +1,4 @@
+import { Tooltip } from '@/components/ui';
 import { CHART_THEME_DEFAULTS } from '@shared/utils/chartTheme';
 
 export interface DonutChartSegment {
@@ -51,19 +52,31 @@ export default function DonutChart({
       {safeSegments.map((segment) => {
         const segmentLength = total > 0 ? (segment.value / total) * circumference : 0;
         const circle = (
-          <circle
+          <Tooltip
             key={segment.label}
-            cx={center}
-            cy={center}
-            r={radius}
-            fill="none"
-            stroke={segment.color}
-            strokeWidth={strokeWidth}
-            strokeDasharray={`${segmentLength} ${circumference - segmentLength}`}
-            strokeDashoffset={-runningLength}
-            strokeLinecap="butt"
-            transform={`rotate(-90 ${center} ${center})`}
-          />
+            content={`${segment.label}: ${segment.value} (${total > 0 ? ((segment.value / total) * 100).toFixed(1) : 0}%)`}
+          >
+            <circle
+              cx={center}
+              cy={center}
+              r={radius}
+              fill="none"
+              stroke={segment.color}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${segmentLength} ${circumference - segmentLength}`}
+              strokeDashoffset={-runningLength}
+              strokeLinecap="butt"
+              transform={`rotate(-90 ${center} ${center})`}
+              className="cursor-pointer transition-all duration-300 hover:opacity-80"
+              style={{ strokeWidth: strokeWidth }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.strokeWidth = `${strokeWidth + 4}px`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.strokeWidth = `${strokeWidth}px`;
+              }}
+            />
+          </Tooltip>
         );
         runningLength += segmentLength;
         return circle;
@@ -81,13 +94,7 @@ export default function DonutChart({
         </text>
       ) : null}
       {centerLabel ? (
-        <text
-          x={center}
-          y={center + 16}
-          textAnchor="middle"
-          fill={labelColor}
-          fontSize="11"
-        >
+        <text x={center} y={center + 16} textAnchor="middle" fill={labelColor} fontSize="11">
           {centerLabel}
         </text>
       ) : null}

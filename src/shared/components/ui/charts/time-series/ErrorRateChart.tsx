@@ -88,7 +88,7 @@ export default memo(function ErrorRateChart({
         const alignedTimeMs = Math.floor(rowTime / stepMs) * stepMs;
         const bucketKey = tsKey(new Date(alignedTimeMs).toISOString());
 
-        const total = Number(firstValue(row, ['request_count'], 0));
+        const total = Number(firstValue(row, ['request_count', 'req_count'], 0));
         const errors = Number(firstValue(row, ['error_count'], 0));
 
         if (!tsMap[bucketKey]) {
@@ -170,7 +170,7 @@ export default memo(function ErrorRateChart({
             const alignedTimeMs = Math.floor(rowTime / stepMs) * stepMs;
             const bucketKey = tsKey(new Date(alignedTimeMs).toISOString());
 
-            const total = Number(firstValue(row, ['request_count'], 0));
+            const total = Number(firstValue(row, ['request_count', 'req_count'], 0));
             const errors = Number(firstValue(row, ['error_count'], 0));
 
             if (!tsMap[bucketKey]) {
@@ -248,14 +248,14 @@ export default memo(function ErrorRateChart({
     if (Object.keys(serviceTimeseriesMap).length > 0) {
       Object.values(serviceTimeseriesMap).forEach((rows: any) => {
         rows.forEach((r: any) => {
-          const total = Number(firstValue(r, ['request_count'], 0));
+          const total = Number(firstValue(r, ['request_count', 'req_count'], 0));
           const errors = Number(firstValue(r, ['error_count'], 0));
           if (total > 0) vals.push((errors / total) * 100);
         });
       });
     }
     (endpoints as any[]).forEach((ep) => {
-      const requestCount = Number(firstValue(ep, ['request_count'], 0));
+      const requestCount = Number(firstValue(ep, ['request_count', 'req_count'], 0));
       const errorCount = Number(firstValue(ep, ['error_count'], 0));
       const explicitRate = firstValue(ep, ['error_rate'], null);
       const rate =

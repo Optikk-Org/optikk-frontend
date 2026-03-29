@@ -264,10 +264,10 @@ function ConfigurableChartCardContent({
         }
 
         if (panelType === 'request') {
-          return numValue(d, ['request_count', 'requestCount'], 0);
+          return numValue(d, ['request_count', 'requestCount', 'req_count', 'value', 'val'], 0);
         }
         if (panelType === 'error-rate') {
-          const total = numValue(d, ['request_count', 'requestCount'], 0);
+          const total = numValue(d, ['request_count', 'requestCount', 'req_count'], 0);
           const errors = numValue(d, ['error_count', 'errorCount'], 0);
           if (total > 0) return (errors * 100.0) / total;
           return numValue(d, ['error_rate', 'errorRate'], 0);

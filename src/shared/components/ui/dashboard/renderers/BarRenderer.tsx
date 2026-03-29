@@ -43,7 +43,8 @@ export function BarRenderer({
       const xVals = labels.map((_: string, i: number) => i);
       const valArrays: (number | null)[][] = chartConfig.valueKeys.map((seriesValueKey: string) =>
         filtered.map((row) => {
-          const value = Number(row[seriesValueKey]);
+          const raw = row[seriesValueKey];
+          const value = typeof raw === 'number' ? raw : parseFloat(String(raw));
           return Number.isNaN(value) ? 0 : value;
         })
       );
@@ -84,7 +85,8 @@ export function BarRenderer({
     const color = chartConfig.color || getChartColor(0);
     const valArrays: (number | null)[][] = [
       filtered.map((row) => {
-        const value = Number(row[valueKey]);
+        const raw = row[valueKey];
+        const value = typeof raw === 'number' ? raw : parseFloat(String(raw));
         return Number.isNaN(value) ? 0 : value;
       }),
     ];

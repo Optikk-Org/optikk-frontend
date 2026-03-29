@@ -90,6 +90,10 @@ export function resolvePanelHeightClasses(
     return 'h-[440px]';
   }
 
+  if (panel?.panelType === 'table') {
+    return preset === 'breakdown' ? 'h-[360px]' : 'h-[440px]';
+  }
+
   switch (preset) {
     case 'kpi':
       return 'min-h-[120px]';
@@ -132,7 +136,8 @@ export default function DashboardPanelGrid({
           className={cn(
             'min-w-0',
             resolvePanelSpanClasses(layoutMode, panelConfig),
-            resolvePanelHeightClasses(panelConfig.layout?.preset ?? 'detail', panelConfig)
+            resolvePanelHeightClasses(panelConfig.layout?.preset ?? 'detail', panelConfig),
+            panelConfig.panelType === 'pie' ? 'md:max-w-md xl:max-w-lg' : ''
           )}
         >
           <ConfigurableChartCard
