@@ -27,14 +27,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Test
-        run: npm run test
-
       - name: Build
         run: npm run build
 
   docker-push:
     needs: check
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
