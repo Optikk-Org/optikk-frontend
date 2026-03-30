@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 
-import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboardConfig';
-
 import LatencyHistogram from '@shared/components/ui/charts/distributions/LatencyHistogram';
 import { useDashboardData } from '@shared/components/ui/dashboard/hooks/useDashboardData';
+import type { DashboardPanelRendererProps } from '@shared/components/ui/dashboard/dashboardPanelRegistry';
 
 /**
  *
@@ -11,10 +10,8 @@ import { useDashboardData } from '@shared/components/ui/dashboard/hooks/useDashb
 export function LatencyHistogramRenderer({
   chartConfig,
   dataSources,
-}: {
-  chartConfig: DashboardPanelSpec;
-  dataSources: DashboardDataSources;
-}) {
+  fillHeight = true,
+}: DashboardPanelRendererProps) {
   const { rawData } = useDashboardData(chartConfig, dataSources);
   const traces = useMemo(() => {
     const arr = Array.isArray(rawData) ? rawData : [];
@@ -39,5 +36,5 @@ export function LatencyHistogramRenderer({
       return Array(count).fill({ duration_ms: bucketMidpoint(bucket.bucket) });
     });
   }, [rawData]);
-  return <LatencyHistogram traces={traces} height={240} />;
+  return <LatencyHistogram traces={traces} fillHeight={fillHeight} />;
 }

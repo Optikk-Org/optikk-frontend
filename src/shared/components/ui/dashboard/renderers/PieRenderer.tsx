@@ -1,13 +1,11 @@
-import { useMemo } from 'react';
-
-import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboardConfig';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import DonutChart from '@shared/components/ui/charts/micro/DonutChart';
 import { getChartColor } from '@shared/utils/charting';
-import { CHART_THEME_DEFAULTS } from '@shared/utils/chartTheme';
-
 import { useDashboardData } from '../hooks/useDashboardData';
 import ChartNoDataOverlay from '@shared/components/ui/feedback/ChartNoDataOverlay';
+
+import type { DashboardPanelRendererProps } from '../dashboardPanelRegistry';
 
 /**
  *
@@ -15,10 +13,8 @@ import ChartNoDataOverlay from '@shared/components/ui/feedback/ChartNoDataOverla
 export function PieRenderer({
   chartConfig,
   dataSources,
-}: {
-  chartConfig: DashboardPanelSpec;
-  dataSources: DashboardDataSources;
-}) {
+  fillHeight: _fillHeight,
+}: DashboardPanelRendererProps) {
   const { data: rows } = useDashboardData(chartConfig, dataSources);
 
   const labelKey = chartConfig.labelKey || chartConfig.groupByKey || 'label';
@@ -57,18 +53,31 @@ export function PieRenderer({
     };
   }, [labelKey, rows, valueKey]);
 
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [donutSize, setDonutSize] = useState(180);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        const s = Math.min(width, height);
+        setDonutSize(Math.max(120, Math.min(220, Math.floor(s * 0.82))));
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   if (!chartData) {
     return <ChartNoDataOverlay />;
   }
 
-  const textPrimary = CHART_THEME_DEFAULTS.textPrimary();
-  const textSecondary = CHART_THEME_DEFAULTS.textSecondary();
-  const borderColor = CHART_THEME_DEFAULTS.borderColor();
-
   return (
-    <div className="flex h-full w-full items-center justify-center py-2">
+    <div ref={wrapRef} className="flex h-full min-h-0 w-full items-center justify-center py-2">
       <DonutChart
-        size={180}
+        size={donutSize}
         strokeWidth={20}
         segments={chartData.segments.map((segment) => ({
           label: segment.name,

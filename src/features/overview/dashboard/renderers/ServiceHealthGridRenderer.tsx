@@ -1,20 +1,17 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboardConfig';
-
 import { HealthIndicator } from '@shared/components/ui';
 import { formatNumber } from '@shared/utils/formatters';
 import { APP_COLORS } from '@config/colorLiterals';
 import { useDashboardData } from '@shared/components/ui/dashboard/hooks/useDashboardData';
+import type { DashboardPanelRendererProps } from '@shared/components/ui/dashboard/dashboardPanelRegistry';
 
 export function ServiceHealthGridRenderer({
   chartConfig,
   dataSources,
-}: {
-  chartConfig: DashboardPanelSpec;
-  dataSources: DashboardDataSources;
-}) {
+  fillHeight: _fillHeight,
+}: DashboardPanelRendererProps) {
   const navigate = useNavigate();
   const { data: services } = useDashboardData(chartConfig, dataSources);
 
@@ -34,13 +31,14 @@ export function ServiceHealthGridRenderer({
   }, [services]);
 
   return (
-    <div className="p-2">
+    <div className="h-full min-h-0 overflow-y-auto p-2">
       {serviceHealth.length > 0 ? (
         <div
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
             gap: 8,
+            alignContent: 'start',
           }}
         >
           {serviceHealth.map((service) => (

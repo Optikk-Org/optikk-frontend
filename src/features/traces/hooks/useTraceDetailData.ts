@@ -6,7 +6,9 @@ import { normalizeSpan, normalizeTraceLog, calculateTraceStats } from '../utils/
 
 export function useTraceDetailData(selectedTeamId: number | null, traceIdParam: string) {
   const [searchParams] = useSearchParams();
-  const [selectedSpanId, setSelectedSpanId] = useState<string | null>(() => searchParams.get('span') || null);
+  const [selectedSpanId, setSelectedSpanId] = useState<string | null>(
+    () => searchParams.get('span') || null
+  );
 
   // Sync span from URL on mount
   useEffect(() => {
@@ -14,24 +16,19 @@ export function useTraceDetailData(selectedTeamId: number | null, traceIdParam: 
     if (spanFromUrl) setSelectedSpanId(spanFromUrl);
   }, [searchParams]);
 
-  // Fetch spans by root span_id or trace_id fallback
   const { data: spansData, isLoading: spansLoading } = useQuery({
-    queryKey: ['span-tree', selectedTeamId, traceIdParam],
-    queryFn: async () => {
-      const bySpan = await tracesService.getSpanTree(selectedTeamId, traceIdParam);
-      if (Array.isArray(bySpan) && bySpan.length > 0) return bySpan;
-      return tracesService.getTraceSpans(selectedTeamId, traceIdParam);
-    },
+    queryKey: ['trace-spans', selectedTeamId, traceIdParam],
+    queryFn: () => tracesService.getTraceSpans(selectedTeamId, traceIdParam),
     enabled: !!selectedTeamId && !!traceIdParam,
   });
 
   const spans = useMemo(
     () => (Array.isArray(spansData) ? spansData : []).map(normalizeSpan),
-    [spansData],
+    [spansData]
   );
 
   // Resolve actual trace_id
-  const resolvedTraceId = spans.length > 0 ? (spans[0].trace_id || traceIdParam) : traceIdParam;
+  const resolvedTraceId = spans.length > 0 ? spans[0].trace_id || traceIdParam : traceIdParam;
 
   // Fetch logs
   const { data: logsData, isLoading: logsLoading } = useQuery({
@@ -42,11 +39,14 @@ export function useTraceDetailData(selectedTeamId: number | null, traceIdParam: 
 
   const traceLogs = useMemo(
     () => (Array.isArray(logsData) ? logsData : []).map(normalizeTraceLog),
-    [logsData],
+    [logsData]
   );
 
   const stats = useMemo(() => calculateTraceStats(spans), [spans]);
-  const selectedSpan = useMemo(() => spans.find((s) => s.span_id === selectedSpanId), [spans, selectedSpanId]);
+  const selectedSpan = useMemo(
+    () => spans.find((s) => s.span_id === selectedSpanId),
+    [spans, selectedSpanId]
+  );
 
   return {
     spans,

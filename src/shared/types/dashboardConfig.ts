@@ -15,13 +15,11 @@ export interface DashboardRecord {
 export type DashboardDataSourceValue = DashboardRuntimeValue | undefined;
 export type DashboardDataSources = Record<string, DashboardDataSourceValue>;
 export type DashboardExtraContext = Record<string, DashboardRuntimeValue>;
-export const DASHBOARD_SCHEMA_VERSION = 1 as const;
-export type DashboardSchemaVersion = typeof DASHBOARD_SCHEMA_VERSION;
+/** Canonical schema for newly authored pages; API may still return v1 until migrated. */
+export const DASHBOARD_SCHEMA_VERSION = 2 as const;
+export type DashboardSchemaVersion = 1 | 2;
 
 export type DashboardRenderMode = 'dashboard' | 'explorer';
-export type DashboardSectionKind = 'summary' | 'trends' | 'breakdowns' | 'details';
-export type DashboardSectionLayoutMode = 'kpi-strip' | 'two-up' | 'three-up' | 'stack';
-export type DashboardPanelPreset = 'kpi' | 'trend' | 'hero' | 'breakdown' | 'detail';
 export const DASHBOARD_PANEL_TYPES = [
   'ai-bar',
   'ai-line',
@@ -48,14 +46,38 @@ export const DASHBOARD_PANEL_TYPES = [
   'trace-waterfall',
 ] as const;
 export type DashboardPanelType = (typeof DASHBOARD_PANEL_TYPES)[number];
+export const DASHBOARD_LAYOUT_VARIANTS = [
+  'kpi',
+  'summary',
+  'standard-chart',
+  'wide-chart',
+  'ranking',
+  'summary-table',
+  'detail-table',
+  'hero',
+  'hero-map',
+  'hero-detail',
+] as const;
+export type DashboardLayoutVariant = (typeof DASHBOARD_LAYOUT_VARIANTS)[number];
+export const DASHBOARD_SECTION_TEMPLATES = [
+  'kpi-band',
+  'summary-plus-health',
+  'two-up',
+  'three-up',
+  'stacked',
+  'hero-plus-table',
+  'chart-grid-plus-details',
+  'table-stack',
+] as const;
+export type DashboardSectionTemplate = (typeof DASHBOARD_SECTION_TEMPLATES)[number];
 
 export interface DashboardLayout {
-  preset: DashboardPanelPreset;
-  h?: number;
-  x?: number;
-  y?: number;
-  w?: number;
-  colSpan?: number;
+  x: number;
+  y: number;
+  /** Grid width in columns (12-column model; must match backend layoutVariant footprint). */
+  w: number;
+  /** Grid height in rows. */
+  h: number;
 }
 
 export interface DashboardQuerySpec {
@@ -68,9 +90,8 @@ export interface DashboardSectionSpec {
   id: string;
   title: string;
   order: number;
-  kind: DashboardSectionKind;
-  layoutMode: DashboardSectionLayoutMode;
   collapsible: boolean;
+  sectionTemplate: DashboardSectionTemplate;
 }
 
 export interface DashboardStatSummaryField {
@@ -82,10 +103,11 @@ export interface DashboardStatSummaryField {
 export interface DashboardPanelSpec {
   id: string;
   panelType: DashboardPanelType;
-  sectionId?: string;
+  layoutVariant: DashboardLayoutVariant;
+  sectionId: string;
   order: number;
   query?: DashboardQuerySpec;
-  layout?: DashboardLayout;
+  layout: DashboardLayout;
   title?: string;
   description?: string;
   titleIcon?: string;

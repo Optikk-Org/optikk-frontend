@@ -7,9 +7,6 @@ import { ROUTES } from '@/shared/constants/routes';
 const OverviewHubPage = lazy(() =>
   import('./pages/OverviewHubPage').then((module) => ({ default: module.default }))
 );
-const ErrorDashboardPage = lazy(() =>
-  import('./pages/ErrorDashboardPage').then((module) => ({ default: module.default }))
-);
 const ServiceHealthGridRenderer = lazy(() =>
   import('./dashboard/renderers/ServiceHealthGridRenderer').then((module) => ({
     default: module.ServiceHealthGridRenderer,
@@ -41,7 +38,7 @@ const overviewConfig: DomainConfig = {
       group: 'observe',
     },
   ],
-  routes: [{ path: ROUTES.errors, page: ErrorDashboardPage }],
+  routes: [],
   dashboardPages: [{ pageId: 'overview', page: OverviewHubPage }],
   dashboardPanels: [
     { panelType: 'service-health-grid', kind: 'specialized', component: ServiceHealthGridRenderer },

@@ -125,7 +125,7 @@ code {
 .chart-card__title {
   display: flex;
   align-items: center;
-  min-height: 52px;
+  min-height: 48px;
   padding: var(--space-sm) var(--space-md);
   font-size: var(--text-base);
   font-weight: 600;

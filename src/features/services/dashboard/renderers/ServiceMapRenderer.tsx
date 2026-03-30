@@ -1,13 +1,12 @@
 import { useMemo } from 'react';
 
-import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboardConfig';
-
 import ServiceGraph, {
   type ServiceGraphEdge,
   type ServiceGraphNode,
 } from '@shared/components/ui/charts/specialized/ServiceGraph';
 import { useDashboardData } from '@shared/components/ui/dashboard/hooks/useDashboardData';
 import { getDashboardRecordArrayField } from '@shared/components/ui/dashboard/utils/runtimeValue';
+import type { DashboardPanelRendererProps } from '@shared/components/ui/dashboard/dashboardPanelRegistry';
 
 interface ServiceMapPayload {
   readonly nodes: readonly ServiceGraphNode[];
@@ -20,10 +19,8 @@ interface ServiceMapPayload {
 export function ServiceMapRenderer({
   chartConfig,
   dataSources,
-}: {
-  chartConfig: DashboardPanelSpec;
-  dataSources: DashboardDataSources;
-}) {
+  fillHeight: _fillHeight,
+}: DashboardPanelRendererProps) {
   const { rawData } = useDashboardData(chartConfig, dataSources);
   const payload = useMemo<ServiceMapPayload>(() => {
     const nodeRows = getDashboardRecordArrayField(rawData, 'nodes');
@@ -61,7 +58,7 @@ export function ServiceMapRenderer({
     );
   }
   return (
-    <div style={{ height: '100%' }}>
+    <div className="h-full min-h-0">
       <ServiceGraph nodes={payload.nodes} edges={payload.edges} />
     </div>
   );

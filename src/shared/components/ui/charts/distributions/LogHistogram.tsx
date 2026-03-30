@@ -1,4 +1,3 @@
-
 import { useMemo, useState } from 'react';
 import uPlot from 'uplot';
 
@@ -21,8 +20,13 @@ const LEVEL_COLORS: Record<string, string> = {
 const LEGEND_ORDER = ['ERROR', 'INFO', 'WARN', 'DEBUG', 'FATAL', 'TRACE'];
 
 const INTERVAL_MS: Record<string, number> = {
-  '30s': 30_000, '1m': 60_000, '5m': 300_000, '15m': 900_000,
-  '30m': 1_800_000, '1h': 3_600_000, '6h': 21_600_000,
+  '30s': 30_000,
+  '1m': 60_000,
+  '5m': 300_000,
+  '15m': 900_000,
+  '30m': 1_800_000,
+  '1h': 3_600_000,
+  '6h': 21_600_000,
 };
 
 function getBucketTimeValue(row: any) {
@@ -98,10 +102,19 @@ export function LogHistogramPanel({ chartConfig, dataSources, extraContext = {} 
       </div>
       {!collapsed && (
         <div className="lh-panel__body">
-          {data.length > 0
-            ? <LogHistogram data={data} height={height} startTime={startTime} endTime={endTime} interval={interval} />
-            : <div style={{ textAlign: 'center', padding: 12, color: 'var(--text-muted)' }}>No log data</div>
-          }
+          {data.length > 0 ? (
+            <LogHistogram
+              data={data}
+              height={height}
+              startTime={startTime}
+              endTime={endTime}
+              interval={interval}
+            />
+          ) : (
+            <div style={{ textAlign: 'center', padding: 12, color: 'var(--text-muted)' }}>
+              No log data
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -117,7 +130,14 @@ export function LogHistogramPanel({ chartConfig, dataSources, extraContext = {} 
  * @param root0.endTime
  * @param root0.interval
  */
-export default function LogHistogram({ data = [], height = 80, startTime, endTime, interval = '1m' }: any) {
+export default function LogHistogram({
+  data = [],
+  height = 180,
+  startTime,
+  endTime,
+  interval = '1m',
+  fillHeight = false,
+}: any) {
   const { allBuckets, seriesData, activeLevels, hasData } = useMemo(() => {
     if (!data || data.length === 0) {
       if (startTime && endTime) {
@@ -129,12 +149,18 @@ export default function LogHistogram({ data = [], height = 80, startTime, endTim
           hasData: true,
         };
       }
-      return { allBuckets: [] as number[], seriesData: [], activeLevels: [] as string[], hasData: false };
+      return {
+        allBuckets: [] as number[],
+        seriesData: [],
+        activeLevels: [] as string[],
+        hasData: false,
+      };
     }
 
     const hasLevels = data.some((d: any) => d.level);
 
-    let tStart = startTime; let tEnd = endTime;
+    let tStart = startTime;
+    let tEnd = endTime;
     if (!tStart || !tEnd) {
       const allTs = (data as any[])
         .map((d) => parseBucketMs(getBucketTimeValue(d)))
@@ -161,8 +187,8 @@ export default function LogHistogram({ data = [], height = 80, startTime, endTim
         countMap[bucketMs][lvl] = (countMap[bucketMs][lvl] || 0) + getPointCount(d);
       });
 
-      const activeLevels = LEVEL_ORDER.filter(
-        (lvl) => Object.values(countMap).some((cm) => (cm[lvl] || 0) > 0),
+      const activeLevels = LEVEL_ORDER.filter((lvl) =>
+        Object.values(countMap).some((cm) => (cm[lvl] || 0) > 0)
       );
       const levels = activeLevels.length > 0 ? activeLevels : ['INFO'];
       const seriesData = levels.map((lvl) => ({
@@ -185,11 +211,13 @@ export default function LogHistogram({ data = [], height = 80, startTime, endTim
 
     return {
       allBuckets,
-      seriesData: [{
-        level: 'INFO',
-        label: 'logs',
-        data: allBuckets.map((b) => countByBucket[b] || 0),
-      }],
+      seriesData: [
+        {
+          level: 'INFO',
+          label: 'logs',
+          data: allBuckets.map((b) => countByBucket[b] || 0),
+        },
+      ],
       activeLevels: ['INFO'],
       hasData: true,
     };
@@ -220,10 +248,7 @@ export default function LogHistogram({ data = [], height = 80, startTime, endTim
 
   const xValues = allBuckets.map((ms) => ms / 1000); // epoch seconds
 
-  const uplotData: uPlot.AlignedData = [
-    xValues,
-    ...reversedStacked,
-  ];
+  const uplotData: uPlot.AlignedData = [xValues, ...reversedStacked];
 
   const timeLabels = allBuckets.map(fmtTime);
 
@@ -254,15 +279,18 @@ export default function LogHistogram({ data = [], height = 80, startTime, endTim
     series: [
       {},
       ...reversedSeries.map((s) =>
-        uBars((s as any).label || s.level, LEVEL_COLORS[s.level] || APP_COLORS.hex_98a2b3),
+        uBars((s as any).label || s.level, LEVEL_COLORS[s.level] || APP_COLORS.hex_98a2b3)
       ),
     ],
   };
 
   return (
-    <div className="lh-chart-wrap">
-      <div style={{ height }}>
-        <UPlotChart options={opts} data={uplotData} height={height} />
+    <div className="lh-chart-wrap h-full min-h-0">
+      <div
+        className={fillHeight ? 'h-full min-h-0' : undefined}
+        style={fillHeight ? undefined : { height }}
+      >
+        <UPlotChart options={opts} data={uplotData} height={height} fillHeight={fillHeight} />
       </div>
       {legendLevels.length > 0 && (
         <div className="lh-legend">

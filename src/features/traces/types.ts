@@ -92,21 +92,7 @@ export interface RelatedTrace {
   startTime: string;
 }
 
-// ── Analytics & Comparison Types ──────────────────────────────────────────────
-
-export interface AnalyticsDimension {
-  name: string;
-  column: string;
-  description?: string;
-}
-
-export interface AnalyticsQuery {
-  dimensions: string[];
-  metrics: string[];
-  filters: Record<string, string | number | boolean | string[]>;
-  startTime: number;
-  endTime: number;
-}
+// ── Comparison Types ──────────────────────────────────────────────
 
 export interface TraceComparisonResult {
   traceA: {

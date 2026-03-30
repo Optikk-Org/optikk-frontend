@@ -1,9 +1,9 @@
-import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboardConfig';
-
 import GaugeChart from '@shared/components/ui/charts/micro/GaugeChart';
 
 import { useDashboardData } from '../hooks/useDashboardData';
 import ChartNoDataOverlay from '@shared/components/ui/feedback/ChartNoDataOverlay';
+
+import type { DashboardPanelRendererProps } from '../dashboardPanelRegistry';
 
 /**
  *
@@ -11,10 +11,8 @@ import ChartNoDataOverlay from '@shared/components/ui/feedback/ChartNoDataOverla
 export function GaugeRenderer({
   chartConfig,
   dataSources,
-}: {
-  chartConfig: DashboardPanelSpec;
-  dataSources: DashboardDataSources;
-}) {
+  fillHeight: _fillHeight,
+}: DashboardPanelRendererProps) {
   const { data: rows } = useDashboardData(chartConfig, dataSources);
   const valueKey = chartConfig.valueKey || 'value';
   const groupKey = chartConfig.groupByKey;
@@ -63,5 +61,9 @@ export function GaugeRenderer({
   }
 
   const val = Number(rows[0]?.[valueKey] ?? 0);
-  return <GaugeChart value={Math.round(val * 100)} label={chartConfig.title ?? ''} />;
+  return (
+    <div className="flex h-full min-h-0 w-full items-center justify-center">
+      <GaugeChart value={Math.round(val * 100)} label={chartConfig.title ?? ''} />
+    </div>
+  );
 }

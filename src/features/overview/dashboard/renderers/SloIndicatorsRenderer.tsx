@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 
-import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboardConfig';
-
 import { APP_COLORS } from '@config/colorLiterals';
 import { useDashboardData } from '@shared/components/ui/dashboard/hooks/useDashboardData';
+import type { DashboardPanelRendererProps } from '@shared/components/ui/dashboard/dashboardPanelRegistry';
 
 function SloGauge({
   value,
@@ -72,10 +71,8 @@ function SloGauge({
 export function SloIndicatorsRenderer({
   chartConfig,
   dataSources,
-}: {
-  chartConfig: DashboardPanelSpec;
-  dataSources: DashboardDataSources;
-}) {
+  fillHeight: _fillHeight,
+}: DashboardPanelRendererProps) {
   const { data: services } = useDashboardData(chartConfig, dataSources);
 
   const sloMetrics = useMemo(() => {
@@ -100,7 +97,7 @@ export function SloIndicatorsRenderer({
   }, [services]);
 
   return (
-    <div className="flex justify-around items-center py-2 h-full">
+    <div className="flex h-full min-h-0 items-center justify-around gap-3 px-3 py-2">
       <SloGauge
         value={sloMetrics.availability}
         label="Availability"

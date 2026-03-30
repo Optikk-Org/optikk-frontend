@@ -1,11 +1,10 @@
 import { useMemo } from 'react';
 
-import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboardConfig';
-
 import LatencyHeatmapChart, {
   type LatencyHeatmapDataPoint,
 } from '@shared/components/ui/charts/specialized/LatencyHeatmapChart';
 import { useDashboardData } from '@shared/components/ui/dashboard/hooks/useDashboardData';
+import type { DashboardPanelRendererProps } from '@shared/components/ui/dashboard/dashboardPanelRegistry';
 
 /**
  *
@@ -13,10 +12,8 @@ import { useDashboardData } from '@shared/components/ui/dashboard/hooks/useDashb
 export function LatencyHeatmapRenderer({
   chartConfig,
   dataSources,
-}: {
-  chartConfig: DashboardPanelSpec;
-  dataSources: DashboardDataSources;
-}) {
+  fillHeight: _fillHeight,
+}: DashboardPanelRendererProps) {
   const { data } = useDashboardData(chartConfig, dataSources);
   const chartData = useMemo<LatencyHeatmapDataPoint[]>(
     () =>
@@ -30,5 +27,9 @@ export function LatencyHeatmapRenderer({
     [data]
   );
 
-  return <LatencyHeatmapChart data={chartData} />;
+  return (
+    <div className="h-full min-h-0 overflow-auto">
+      <LatencyHeatmapChart data={chartData} />
+    </div>
+  );
 }

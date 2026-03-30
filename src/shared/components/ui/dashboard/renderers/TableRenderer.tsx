@@ -2,12 +2,12 @@ import { SimpleTable } from '@/components/ui';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
-import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboardConfig';
-
 import { buildInterpolatedPath } from '@shared/utils/placeholderInterpolation';
 
 import { useDashboardData } from '../hooks/useDashboardData';
 import ChartNoDataOverlay from '@shared/components/ui/feedback/ChartNoDataOverlay';
+
+import type { DashboardPanelRendererProps } from '../dashboardPanelRegistry';
 
 /**
  *
@@ -15,10 +15,8 @@ import ChartNoDataOverlay from '@shared/components/ui/feedback/ChartNoDataOverla
 export function TableRenderer({
   chartConfig,
   dataSources,
-}: {
-  chartConfig: DashboardPanelSpec;
-  dataSources: DashboardDataSources;
-}) {
+  fillHeight: _fillHeight,
+}: DashboardPanelRendererProps) {
   const { data: rows } = useDashboardData(chartConfig, dataSources);
 
   const columns = useMemo(() => {
@@ -60,12 +58,12 @@ export function TableRenderer({
     return <ChartNoDataOverlay />;
   }
   return (
-    <div style={{ height: '100%', overflow: 'auto' }}>
+    <div className="h-full min-h-0 overflow-auto">
       <SimpleTable
         dataSource={rows.map((r: any, i: number) => ({ ...r, _rowKey: r.id ?? r.key ?? i }))}
         columns={columns}
         rowKey="_rowKey"
-        size="small"
+        size="middle"
       />
     </div>
   );

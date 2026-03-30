@@ -303,22 +303,14 @@ export default memo(function LatencyChart({
 
   if (data.length === 0 && timeBuckets.length === 0) {
     return (
-      <div
-        style={{
-          height: '100%',
-          minHeight: '200px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
+      <div className="flex h-full min-h-0 items-center justify-center">
         <div style={{ color: 'var(--text-muted)' }}>No latency data in selected time range</div>
       </div>
     );
   }
 
   return (
-    <div style={{ position: 'relative', height: '100%', minHeight: fillHeight ? '100%' : '220px' }}>
+    <div className="relative h-full min-h-0">
       <ObservabilityChart
         timestamps={timestamps}
         series={chartData}

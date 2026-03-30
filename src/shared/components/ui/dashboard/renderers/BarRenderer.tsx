@@ -1,17 +1,15 @@
 import { useMemo } from 'react';
 import uPlot from 'uplot';
 
-import type {
-  DashboardPanelSpec,
-  DashboardDataSources,
-  DashboardExtraContext,
-} from '@/types/dashboardConfig';
+import type { DashboardExtraContext } from '@/types/dashboardConfig';
 
 import UPlotChart, { defaultAxes, uBars } from '@shared/components/ui/charts/UPlotChart';
 import { getChartColor } from '@shared/utils/charting';
 
 import { useDashboardData } from '../hooks/useDashboardData';
 import ChartNoDataOverlay from '@shared/components/ui/feedback/ChartNoDataOverlay';
+
+import type { DashboardPanelRendererProps } from '../dashboardPanelRegistry';
 
 /**
  *
@@ -20,11 +18,8 @@ export function BarRenderer({
   chartConfig,
   dataSources,
   extraContext,
-}: {
-  chartConfig: DashboardPanelSpec;
-  dataSources: DashboardDataSources;
-  extraContext?: DashboardExtraContext;
-}) {
+  fillHeight = false,
+}: DashboardPanelRendererProps) {
   const { data: rows } = useDashboardData(chartConfig, dataSources);
 
   const filterValue =
@@ -133,5 +128,7 @@ export function BarRenderer({
     },
   };
 
-  return <UPlotChart options={options} data={alignedData} className="w-full" />;
+  return (
+    <UPlotChart options={options} data={alignedData} className="w-full" fillHeight={fillHeight} />
+  );
 }

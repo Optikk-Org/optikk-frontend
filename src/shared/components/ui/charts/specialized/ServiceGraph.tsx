@@ -131,7 +131,7 @@ export default function ServiceGraph({ nodes = [], edges = [], onNodeClick }: Se
 
   if (!nodes.length) {
     return (
-      <div className="flex items-center justify-center min-h-[240px] text-[color:var(--literal-hex-7e8595)] text-base">
+      <div className="flex h-full min-h-0 items-center justify-center text-[color:var(--literal-hex-7e8595)] text-base">
         <p>No services to display</p>
       </div>
     );
@@ -140,7 +140,7 @@ export default function ServiceGraph({ nodes = [], edges = [], onNodeClick }: Se
   return (
     <div
       ref={containerRef}
-      className={`service-graph-container relative w-full overflow-hidden rounded-xl border border-[rgba(65,88,145,0.45)] min-h-[320px] ${expanded ? 'min-h-[70vh]' : ''}`}
+      className={`service-graph-container relative h-full min-h-0 w-full overflow-hidden rounded-xl border border-[rgba(65,88,145,0.45)] ${expanded ? 'min-h-[70vh]' : ''}`}
       style={{
         background: `
           radial-gradient(circle at 8px 8px, var(--literal-rgba-63-89-140-0p35) 1px, transparent 1px),

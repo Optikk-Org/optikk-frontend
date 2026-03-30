@@ -59,6 +59,31 @@ interface ConfigurableChartCardContentProps extends ConfigurableChartCardProps {
   titleContent: ReactNode;
 }
 
+interface DashboardCardFrameProps {
+  readonly titleContent: ReactNode;
+  readonly children: ReactNode;
+  readonly bodyClassName?: string;
+}
+
+function DashboardCardFrame({
+  titleContent,
+  children,
+  bodyClassName,
+}: DashboardCardFrameProps): JSX.Element {
+  return (
+    <Surface
+      elevation={1}
+      padding="xs"
+      className="chart-card flex h-full min-h-0 flex-col overflow-hidden"
+    >
+      <div className={cn('chart-card__title')}>{titleContent}</div>
+      <div className={cn('flex min-h-0 flex-1 flex-col overflow-hidden', bodyClassName)}>
+        {children}
+      </div>
+    </Surface>
+  );
+}
+
 function asQueueMetricsListType(value: string | undefined): QueueMetricsListType {
   switch (value) {
     case 'consumerLag':
@@ -100,7 +125,6 @@ function ConfigurableChartCardContent({
   };
 
   const panelRegistration = useDashboardPanelRegistration(panelType);
-  const titleClassName = cn('chart-card__title');
   const componentRenderer = panelRegistration?.component;
   const rawData = resolveComponentData(chartConfig, dataSources);
   const hasRenderer = Boolean(panelRegistration && componentRenderer);
@@ -173,31 +197,28 @@ function ConfigurableChartCardContent({
 
   if (error) {
     return (
-      <Surface elevation={1} padding="md" className="chart-card" style={{ height: '100%' }}>
-        <div className={titleClassName}>{chartConfig.title as string}</div>
+      <DashboardCardFrame titleContent={titleContent}>
         <ChartErrorOverlay code={error.code} message={error.message} />
-      </Surface>
+      </DashboardCardFrame>
     );
   }
 
   if (!hasRenderer) {
     console.warn(`Unknown dashboard panel type received from backend: ${panelType || '<empty>'}`);
     return (
-      <Surface elevation={1} padding="md" className="chart-card" style={{ height: '100%' }}>
-        <div className={titleClassName}>{chartConfig.title as string}</div>
+      <DashboardCardFrame titleContent={titleContent}>
         <div className="p-md text-muted">
           Unknown dashboard panel type: {panelType || '<empty>'}
         </div>
-      </Surface>
+      </DashboardCardFrame>
     );
   }
 
   if (!isLoading && hasNoData) {
     return (
-      <Surface elevation={1} padding="md" className="chart-card" style={{ height: '100%' }}>
-        <div className={titleClassName}>{chartConfig.title as string}</div>
+      <DashboardCardFrame titleContent={titleContent}>
         <ChartNoDataOverlay />
-      </Surface>
+      </DashboardCardFrame>
     );
   }
 
@@ -209,6 +230,7 @@ function ConfigurableChartCardContent({
         chartConfig={chartConfig}
         dataSources={dataSources}
         extraContext={extraContext}
+        fillHeight
       />
     );
   }
@@ -216,21 +238,16 @@ function ConfigurableChartCardContent({
   if (panelRegistration?.kind === 'specialized') {
     const SpecializedRenderer = componentRenderer as SpecializedDashboardRenderer;
     return (
-      <Surface
-        elevation={1}
-        padding="xs"
-        className="chart-card flex flex-col"
-        style={{ height: '100%', overflow: 'hidden' }}
-      >
-        <div className={titleClassName}>{titleContent}</div>
-        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+      <DashboardCardFrame titleContent={titleContent}>
+        <div className="min-h-0 flex-1 overflow-hidden">
           <SpecializedRenderer
             chartConfig={chartConfig}
             dataSources={dataSources}
             extraContext={extraContext}
+            fillHeight
           />
         </div>
-      </Surface>
+      </DashboardCardFrame>
     );
   }
   const ChartComponent = componentRenderer as ComponentType<BaseChartComponentProps>;
@@ -310,39 +327,38 @@ function ConfigurableChartCardContent({
   const showQueueList = isQueueChart && endpoints.length > 0;
 
   return (
-    <Surface
-      elevation={1}
-      padding="xs"
-      className="chart-card flex flex-col"
-      style={{ height: '100%', overflow: 'hidden' }}
-    >
-      <div className={titleClassName}>{titleContent}</div>
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, minHeight: 240, width: '100%', position: 'relative' }}>
+    <DashboardCardFrame titleContent={titleContent}>
+      <div className="flex min-h-0 flex-1 flex-col">
+        {/* Prefer chart plot area: ~60%+ of card body; list capped so rows do not dominate */}
+        <div className="relative flex min-h-[58%] min-w-0 flex-1 flex-col">
           <ChartComponent {...chartProps} />
         </div>
-        {showEndpointList && (
-          <TopEndpointsList
-            title={String(defaultListTitleForChart(chartConfig))}
-            type={endpointListType}
-            endpoints={endpoints}
-            selectedEndpoints={selectedEndpoints}
-            onToggle={toggleEndpoint}
-            drilldownRouteTemplate={chartConfig.drilldownRoute}
-          />
-        )}
-        {showQueueList && (
-          <QueueMetricsList
-            type={asQueueMetricsListType(chartConfig.listType)}
-            title={String(chartConfig.listTitle || chartConfig.listType || '')}
-            queues={endpoints}
-            selectedQueues={selectedEndpoints}
-            onToggle={toggleEndpoint}
-            drilldownRouteTemplate={chartConfig.drilldownRoute}
-          />
+        {(showEndpointList || showQueueList) && (
+          <div className="max-h-[34%] min-h-0 shrink-0 overflow-y-auto border-t border-[var(--glass-border)]/60 pt-2">
+            {showEndpointList && (
+              <TopEndpointsList
+                title={String(defaultListTitleForChart(chartConfig))}
+                type={endpointListType}
+                endpoints={endpoints}
+                selectedEndpoints={selectedEndpoints}
+                onToggle={toggleEndpoint}
+                drilldownRouteTemplate={chartConfig.drilldownRoute}
+              />
+            )}
+            {showQueueList && (
+              <QueueMetricsList
+                type={asQueueMetricsListType(chartConfig.listType)}
+                title={String(chartConfig.listTitle || chartConfig.listType || '')}
+                queues={endpoints}
+                selectedQueues={selectedEndpoints}
+                onToggle={toggleEndpoint}
+                drilldownRouteTemplate={chartConfig.drilldownRoute}
+              />
+            )}
+          </div>
         )}
       </div>
-    </Surface>
+    </DashboardCardFrame>
   );
 }
 

@@ -20,6 +20,8 @@ export function formatStatValue(formatter: string | undefined, value: unknown): 
   switch (formatter) {
     case 'ms':
       return formatDuration(typeof value === 'string' || typeof value === 'number' ? value : 0);
+    case 'ns':
+      return formatDuration((Number(value) || 0) / 1_000_000);
     case 'bytes':
       return formatBytes(Number(value) || 0);
     case 'percent1':

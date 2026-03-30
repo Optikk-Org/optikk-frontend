@@ -14,14 +14,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useResizableColumns, type ColumnWidthMap } from '@shared/hooks/useResizableColumns';
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from './table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table';
 
 type TableRowData = object;
 
@@ -36,11 +29,7 @@ export interface SimpleTableColumn<RowType extends TableRowData = TableRowData> 
   width?: number | string;
   align?: 'left' | 'center' | 'right';
   ellipsis?: boolean;
-  render?: (
-    value: unknown,
-    record: RowType,
-    index: number,
-  ) => React.ReactNode;
+  render?: (value: unknown, record: RowType, index: number) => React.ReactNode;
   sorter?: ((left: RowType, right: RowType) => number) | boolean;
   defaultSortOrder?: 'ascend' | 'descend';
   filters?: Array<{ text: string; value: unknown }>;
@@ -64,10 +53,7 @@ export interface SimpleTableProps<RowType extends TableRowData = TableRowData> {
   scroll?: { x?: number | string; y?: number | string };
   className?: string;
   rowClassName?: string | ((record: RowType, index: number) => string);
-  onRow?: (
-    record: RowType,
-    index?: number,
-  ) => React.HTMLAttributes<HTMLTableRowElement>;
+  onRow?: (record: RowType, index?: number) => React.HTMLAttributes<HTMLTableRowElement>;
 }
 
 interface ColumnMeta {
@@ -80,7 +66,7 @@ interface ColumnMeta {
 type SortableRow<RowType extends TableRowData> = Row<RowType>;
 
 function createSortingFn<RowType extends TableRowData>(
-  sorter?: SimpleTableColumn<RowType>['sorter'],
+  sorter?: SimpleTableColumn<RowType>['sorter']
 ): SortingFn<RowType> | 'auto' {
   if (typeof sorter !== 'function') {
     return 'auto';
@@ -90,9 +76,7 @@ function createSortingFn<RowType extends TableRowData>(
     sorter(rowA.original, rowB.original);
 }
 
-function toColumnId<RowType extends TableRowData>(
-  column: SimpleTableColumn<RowType>,
-): string {
+function toColumnId<RowType extends TableRowData>(column: SimpleTableColumn<RowType>): string {
   return String(column.key ?? column.dataIndex ?? '');
 }
 
@@ -173,7 +157,7 @@ function SimpleTable<RowType extends TableRowData = TableRowData>({
           } satisfies ColumnMeta,
         };
       }),
-    [incomingColumns],
+    [incomingColumns]
   );
 
   const getRowId = useMemo(() => {
@@ -182,17 +166,14 @@ function SimpleTable<RowType extends TableRowData = TableRowData>({
     }
 
     if (typeof rowKey === 'string') {
-      return (row: RowType, index: number) =>
-        String(asRowRecord(row)[rowKey] ?? index);
+      return (row: RowType, index: number) => String(asRowRecord(row)[rowKey] ?? index);
     }
 
     return (row: RowType, index: number) => String(asRowRecord(row).key ?? index);
   }, [rowKey]);
 
   const pageSize =
-    pagination && typeof pagination === 'object'
-      ? pagination.pageSize ?? 10
-      : dataSource.length;
+    pagination && typeof pagination === 'object' ? (pagination.pageSize ?? 10) : dataSource.length;
 
   const table = useReactTable({
     data: dataSource,
@@ -214,13 +195,28 @@ function SimpleTable<RowType extends TableRowData = TableRowData>({
     large: 'text-[14px]',
   };
 
+  const headRowClasses = {
+    small: 'h-8',
+    middle: 'h-9',
+    large: 'h-10',
+  };
+
+  const cellPadClasses = {
+    small: 'py-1.5',
+    middle: 'py-2',
+    large: 'py-2.5',
+  };
+
   const rows = table.getRowModel().rows;
 
   return (
     <div className={cn('w-full overflow-auto', className)}>
       <div style={scroll?.y ? { maxHeight: scroll.y, overflowY: 'auto' } : undefined}>
         <Table
-          className={cn('border-collapse table-fixed overflow-hidden rounded-[var(--card-radius)] bg-[var(--bg-secondary)]', sizeClasses[size])}
+          className={cn(
+            'border-collapse table-fixed overflow-hidden rounded-[var(--card-radius)] bg-[var(--bg-secondary)]',
+            sizeClasses[size]
+          )}
           style={scroll?.x ? { minWidth: scroll.x } : undefined}
         >
           <TableHeader>
@@ -235,8 +231,9 @@ function SimpleTable<RowType extends TableRowData = TableRowData>({
                     <TableHead
                       key={header.id}
                       className={cn(
-                        'relative h-9 border-b border-[var(--border-color)] bg-[rgba(255,255,255,0.015)] text-[11px] font-medium normal-case tracking-[0.01em] text-[var(--text-secondary)]',
-                        header.column.getCanSort() && 'cursor-pointer select-none',
+                        'relative border-b border-[var(--border-color)] bg-[rgba(255,255,255,0.015)] text-[11px] font-medium normal-case tracking-[0.01em] text-[var(--text-secondary)]',
+                        headRowClasses[size],
+                        header.column.getCanSort() && 'cursor-pointer select-none'
                       )}
                       style={{
                         width: resolvedWidth,
@@ -269,7 +266,7 @@ function SimpleTable<RowType extends TableRowData = TableRowData>({
               const rowCls =
                 typeof rowClassName === 'function'
                   ? rowClassName(row.original, row.index)
-                  : rowClassName ?? '';
+                  : (rowClassName ?? '');
               const rowProps = onRow ? onRow(row.original, row.index) : {};
 
               return (
@@ -282,7 +279,7 @@ function SimpleTable<RowType extends TableRowData = TableRowData>({
                     return (
                       <TableCell
                         key={cell.id}
-                        className={cn('py-2', meta?.ellipsis && 'max-w-0 truncate')}
+                        className={cn(cellPadClasses[size], meta?.ellipsis && 'max-w-0 truncate')}
                         style={{
                           textAlign: meta?.align ?? 'left',
                           width: resolvedWidth,

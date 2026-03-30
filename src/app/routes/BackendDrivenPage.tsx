@@ -1,13 +1,12 @@
-import { Skeleton } from '@/components/ui';
 import { Navigate, matchPath, useLocation } from 'react-router-dom';
-
-import { resolveDashboardPageAdapter } from '@/app/registry/domainRegistry';
-import { ROUTES } from '@/shared/constants/routes';
 
 import { DashboardPage, PageHeader, PageShell } from '@shared/components/ui';
 import { getDashboardIcon } from '@shared/components/ui/dashboard/utils/dashboardUtils';
-
 import { usePagesConfig } from '@shared/hooks/usePagesConfig';
+
+import { resolveDashboardPageAdapter } from '@/app/registry/domainRegistry';
+import { Skeleton } from '@/components/ui';
+import { ROUTES } from '@/shared/constants/routes';
 import type { DefaultConfigPage } from '@/types/dashboardConfig';
 
 function matchConfiguredPage(
@@ -35,38 +34,6 @@ function matchConfiguredPage(
   return null;
 }
 
-export interface ServerDrivenComponent {
-  type: string;
-  props?: Record<string, unknown>;
-  children?: ServerDrivenComponent[] | string;
-}
-
-const ServerComponentRegistry: Record<string, React.ElementType> = {
-  PageShell: PageShell,
-  PageHeader: PageHeader,
-  DashboardPage: DashboardPage,
-};
-
-export function ServerDrivenRenderer({
-  node,
-}: {
-  node: ServerDrivenComponent | string;
-}): React.ReactNode {
-  if (typeof node === 'string') return node;
-  const Component = ServerComponentRegistry[node.type];
-  if (!Component) return null;
-
-  const children = Array.isArray(node.children) ? (
-    node.children.map((child, idx) => <ServerDrivenRenderer key={idx} node={child} />)
-  ) : node.children && typeof node.children === 'object' ? (
-    <ServerDrivenRenderer node={node.children as ServerDrivenComponent} />
-  ) : (
-    node.children
-  );
-
-  return <Component {...node.props}>{children}</Component>;
-}
-
 export default function BackendDrivenPage(): JSX.Element {
   const location = useLocation();
   const { pages, isLoading, error } = usePagesConfig();
@@ -92,13 +59,6 @@ export default function BackendDrivenPage(): JSX.Element {
   }
 
   const { page: matchedPage, pathParams } = matched;
-
-  if (
-    (matchedPage.renderMode as string) === 'server-driven' &&
-    (matchedPage as any).rootComponent
-  ) {
-    return <ServerDrivenRenderer node={(matchedPage as any).rootComponent} />;
-  }
 
   if (matchedPage.renderMode !== 'dashboard') {
     return <Navigate to={matchedPage.path || pages[0]?.path || ROUTES.overview} replace />;

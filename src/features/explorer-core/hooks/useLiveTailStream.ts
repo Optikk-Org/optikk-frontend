@@ -1,4 +1,5 @@
 import { useSocketStream } from '@shared/hooks/useSocketStream';
+import { useTeamId } from '@/app/store/appStore';
 
 interface UseLiveTailStreamOptions<Item> {
   enabled: boolean;
@@ -28,11 +29,13 @@ export function useLiveTailStream<Item>({
   maxItems = 250,
   normalizeItem,
 }: UseLiveTailStreamOptions<Item>): UseLiveTailStreamResult<Item> {
+  const teamId = useTeamId();
+
   return useSocketStream<Item>({
     enabled,
     subscribeEvent,
     itemEvent,
-    params,
+    params: { teamId, ...params },
     maxItems,
     normalizeItem,
   });

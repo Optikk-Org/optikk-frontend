@@ -22,6 +22,7 @@ interface LatencyHistogramTrace {
 interface LatencyHistogramProps {
   traces?: LatencyHistogramTrace[];
   height?: number;
+  fillHeight?: boolean;
 }
 
 function bucketize(traces: LatencyHistogramTrace[]): number[] {
@@ -45,19 +46,13 @@ function bucketize(traces: LatencyHistogramTrace[]): number[] {
  */
 export default function LatencyHistogram({
   traces = [],
-  height = 120,
+  height = 180,
+  fillHeight = false,
 }: LatencyHistogramProps): JSX.Element | null {
   const counts = bucketize(traces);
+  const hasData = counts.some((count) => count > 0);
 
-  if (counts.every((c) => c === 0)) return null;
-
-  const uplotData = useMemo<uPlot.AlignedData>(
-    () => [
-      BUCKETS.map((_, i) => i),
-      counts,
-    ],
-    [counts],
-  );
+  const uplotData = useMemo<uPlot.AlignedData>(() => [BUCKETS.map((_, i) => i), counts], [counts]);
 
   const opts = useMemo<Omit<uPlot.Options, 'width' | 'height'>>(
     () => ({
@@ -81,17 +76,19 @@ export default function LatencyHistogram({
       cursor: { show: false },
       legend: { show: false },
       scales: { x: { range: (_u, min, max) => [min - 0.5, max + 0.5] as [number, number] } },
-      series: [
-        {},
-        uBars('Traces', APP_COLORS.hex_06aed5),
-      ],
+      series: [{}, uBars('Traces', APP_COLORS.hex_06aed5)],
     }),
-    [],
+    []
   );
 
+  if (!hasData) return null;
+
   return (
-    <div style={{ height }}>
-      <UPlotChart options={opts} data={uplotData} height={height} />
+    <div
+      className={fillHeight ? 'h-full min-h-0' : undefined}
+      style={fillHeight ? undefined : { height }}
+    >
+      <UPlotChart options={opts} data={uplotData} height={height} fillHeight={fillHeight} />
     </div>
   );
 }

@@ -1,12 +1,12 @@
-import { Tabs, Skeleton } from '@/components/ui';
-import { useMemo } from 'react';
-import { useParams } from 'react-router-dom';
 import { AlertCircle, LayoutDashboard } from 'lucide-react';
+import { useMemo } from 'react';
 
-import { usePageTabs } from '@shared/hooks/usePageTabs';
-import { useDashboardTabDocument } from '@shared/hooks/useDashboardTabDocument';
-import { useUrlSyncedTab } from '@shared/hooks/useUrlSyncedTab';
 import { EmptyState } from '@shared/components/ui/feedback';
+import { useDashboardTabDocument } from '@shared/hooks/useDashboardTabDocument';
+import { usePageTabs } from '@shared/hooks/usePageTabs';
+import { useUrlSyncedTab } from '@shared/hooks/useUrlSyncedTab';
+
+import { Tabs, Skeleton } from '@/components/ui';
 
 import DashboardTabContent from './DashboardTabContent';
 
@@ -115,24 +115,4 @@ export default function DashboardPage({ pageId, pathParams }: DashboardPageProps
   }
 
   return <DashboardTabContent tab={tab} pathParams={pathParams} />;
-}
-
-/**
- * Convenience wrapper for pages that derive pathParams from route params.
- * Usage: <DashboardPageWithRoute pageId="trace-detail" routeParam="traceId" />
- */
-export function DashboardPageWithRouteParam({
-  pageId,
-  routeParam,
-}: {
-  pageId: string;
-  routeParam: string;
-}) {
-  const params = useParams();
-  const pathParams = useMemo(() => {
-    const value = params[routeParam];
-    return value ? { [routeParam]: value } : undefined;
-  }, [params, routeParam]);
-
-  return <DashboardPage pageId={pageId} pathParams={pathParams} />;
 }

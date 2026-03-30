@@ -1,16 +1,11 @@
 import { useMemo } from 'react';
 import uPlot from 'uplot';
 
-import type {
-  DashboardPanelSpec,
-  DashboardDataSources,
-  DashboardExtraContext,
-} from '@/types/dashboardConfig';
-
 import { getChartColor } from '@shared/utils/charting';
 import { tsMs } from '@shared/utils/chartDataUtils';
 import UPlotChart, { defaultAxes, uLine } from '@shared/components/ui/charts/UPlotChart';
 import { useDashboardData } from '@shared/components/ui/dashboard/hooks/useDashboardData';
+import type { DashboardPanelRendererProps } from '@shared/components/ui/dashboard/dashboardPanelRegistry';
 
 /**
  *
@@ -19,11 +14,8 @@ export function AiLineRenderer({
   chartConfig,
   dataSources,
   extraContext,
-}: {
-  chartConfig: DashboardPanelSpec;
-  dataSources: DashboardDataSources;
-  extraContext?: DashboardExtraContext;
-}) {
+  fillHeight = false,
+}: DashboardPanelRendererProps) {
   const { data: rows } = useDashboardData(chartConfig, dataSources);
 
   const { alignedData, series, hasData } = useMemo(() => {
@@ -118,5 +110,7 @@ export function AiLineRenderer({
     },
   };
 
-  return <UPlotChart options={options} data={alignedData} className="w-full" />;
+  return (
+    <UPlotChart options={options} data={alignedData} className="w-full" fillHeight={fillHeight} />
+  );
 }

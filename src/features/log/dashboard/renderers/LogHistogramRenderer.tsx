@@ -1,13 +1,8 @@
 import { useMemo } from 'react';
 
-import type {
-  DashboardPanelSpec,
-  DashboardDataSources,
-  DashboardExtraContext,
-} from '@/types/dashboardConfig';
-
 import LogHistogram from '@shared/components/ui/charts/distributions/LogHistogram';
 import { useDashboardData } from '@shared/components/ui/dashboard/hooks/useDashboardData';
+import type { DashboardPanelRendererProps } from '@shared/components/ui/dashboard/dashboardPanelRegistry';
 
 /**
  *
@@ -16,11 +11,8 @@ export function LogHistogramRenderer({
   chartConfig,
   dataSources,
   extraContext,
-}: {
-  chartConfig: DashboardPanelSpec;
-  dataSources: DashboardDataSources;
-  extraContext?: DashboardExtraContext;
-}) {
+  fillHeight = true,
+}: DashboardPanelRendererProps) {
   const { rawData } = useDashboardData(chartConfig, dataSources);
   const { startTime, endTime } = extraContext || {};
   const data = useMemo(() => {
@@ -29,7 +21,7 @@ export function LogHistogramRenderer({
     return Array.isArray(arr) ? arr : [];
   }, [rawData, chartConfig.dataKey]);
   return data.length > 0 ? (
-    <LogHistogram data={data} height={240} startTime={startTime} endTime={endTime} />
+    <LogHistogram data={data} fillHeight startTime={startTime} endTime={endTime} />
   ) : (
     <div className="text-muted" style={{ textAlign: 'center', padding: 32 }}>
       No data

@@ -1,11 +1,5 @@
 import { Surface } from '@/components/ui';
 
-import type {
-  DashboardPanelSpec,
-  DashboardDataSources,
-  DashboardExtraContext,
-} from '@/types/dashboardConfig';
-
 import StatCard from '@shared/components/ui/cards/StatCard';
 
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -16,13 +10,13 @@ import {
 } from '../utils/dashboardAggregators';
 import { getDashboardIcon } from '../utils/dashboardUtils';
 
-interface StatRendererProps {
-  chartConfig: DashboardPanelSpec;
-  dataSources: DashboardDataSources;
-  extraContext?: DashboardExtraContext;
-}
+import type { DashboardPanelRendererProps } from '../dashboardPanelRegistry';
 
-export function StatCardRenderer({ chartConfig, dataSources }: StatRendererProps) {
+export function StatCardRenderer({
+  chartConfig,
+  dataSources,
+  fillHeight: _fillHeight,
+}: DashboardPanelRendererProps) {
   const { rawData } = useDashboardData(chartConfig, dataSources);
   const value = resolveFieldValue(rawData, chartConfig.valueField as string | undefined);
   const displayValue =
@@ -44,7 +38,11 @@ export function StatCardRenderer({ chartConfig, dataSources }: StatRendererProps
   );
 }
 
-export function StatSummaryRenderer({ chartConfig, dataSources }: StatRendererProps) {
+export function StatSummaryRenderer({
+  chartConfig,
+  dataSources,
+  fillHeight: _fillHeight,
+}: DashboardPanelRendererProps) {
   const { rawData } = useDashboardData(chartConfig, dataSources);
   const summaryFields = Array.isArray(chartConfig.summaryFields)
     ? (chartConfig.summaryFields as Array<{ label: string; field?: string; keys?: string[] }>)

@@ -4,18 +4,16 @@ import type {
   DashboardDataSources,
   DashboardExtraContext,
   DashboardPanelSpec,
-  DashboardSectionLayoutMode,
   DashboardSectionSpec,
   DashboardTabDocument,
 } from '@/types/dashboardConfig';
-
-import type { ApiErrorShape } from '@shared/api/api/interceptors/errorInterceptor';
 
 import { useAppStore } from '@store/appStore';
 
 import DashboardPanelGrid from './DashboardPanelGrid';
 import DashboardSection from './DashboardSection';
-import KpiStrip from './KpiStrip';
+
+import type { ApiErrorShape } from '@shared/api/api/interceptors/errorInterceptor';
 
 interface ConfigurableDashboardProps {
   config: DashboardTabDocument | null;
@@ -41,24 +39,6 @@ function sortSections(sections: DashboardSectionSpec[]): DashboardSectionSpec[] 
     }
     return left.order - right.order;
   });
-}
-
-function resolveSectionLayoutMode(section: DashboardSectionSpec): DashboardSectionLayoutMode {
-  if (section.layoutMode) {
-    return section.layoutMode;
-  }
-
-  switch (section.kind) {
-    case 'summary':
-      return 'kpi-strip';
-    case 'details':
-      return 'stack';
-    case 'breakdowns':
-      return 'three-up';
-    case 'trends':
-    default:
-      return 'two-up';
-  }
 }
 
 export default function ConfigurableDashboard({
@@ -100,28 +80,6 @@ export default function ConfigurableDashboard({
           return null;
         }
 
-        const layoutMode = resolveSectionLayoutMode(section);
-
-        const content =
-          layoutMode === 'kpi-strip' ? (
-            <KpiStrip
-              panels={sectionPanels}
-              dataSources={dataSources}
-              errors={errors}
-              isLoading={isLoading}
-              extraContext={extraContext}
-            />
-          ) : (
-            <DashboardPanelGrid
-              panels={sectionPanels}
-              layoutMode={layoutMode}
-              dataSources={dataSources}
-              errors={errors}
-              isLoading={isLoading}
-              extraContext={extraContext}
-            />
-          );
-
         const storageKey = [
           'dashboard-section',
           selectedTeamId ?? 'no-team',
@@ -132,7 +90,13 @@ export default function ConfigurableDashboard({
 
         return (
           <DashboardSection key={section.id} section={section} storageKey={storageKey}>
-            {content}
+            <DashboardPanelGrid
+              panels={sectionPanels}
+              dataSources={dataSources}
+              errors={errors}
+              isLoading={isLoading}
+              extraContext={extraContext}
+            />
           </DashboardSection>
         );
       })}

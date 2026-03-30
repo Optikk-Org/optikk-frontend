@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboardConfig';
-
 import { useDashboardData } from '../hooks/useDashboardData';
+
+import type { DashboardPanelRendererProps } from '../dashboardPanelRegistry';
 
 /**
  * Renders a latency heatmap table with intelligent date formatting on the X-axis.
@@ -10,10 +10,8 @@ import { useDashboardData } from '../hooks/useDashboardData';
 export function HeatmapRenderer({
   chartConfig,
   dataSources,
-}: {
-  chartConfig: DashboardPanelSpec;
-  dataSources: DashboardDataSources;
-}) {
+  fillHeight: _fillHeight,
+}: DashboardPanelRendererProps) {
   const { data: rows } = useDashboardData(chartConfig, dataSources);
 
   const xKey = chartConfig.xKey || 'operation_name';
@@ -89,7 +87,7 @@ export function HeatmapRenderer({
   }
 
   return (
-    <div style={{ height: '100%', overflowY: 'auto' }}>
+    <div className="h-full min-h-0 overflow-y-auto">
       <table style={{ borderCollapse: 'collapse', fontSize: 11, width: '100%' }}>
         <thead>
           <tr>

@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 import type {
   DashboardLayout,
   DashboardPanelSpec,
@@ -9,19 +11,23 @@ import type {
   DefaultConfigPage,
   DefaultConfigTab,
 } from '@/types/dashboardConfig';
-import { DASHBOARD_PANEL_TYPES, DASHBOARD_SCHEMA_VERSION } from '@/types/dashboardConfig';
+import {
+  DASHBOARD_LAYOUT_VARIANTS,
+  DASHBOARD_PANEL_TYPES,
+  DASHBOARD_SECTION_TEMPLATES,
+} from '@/types/dashboardConfig';
 
 import { API_CONFIG } from '@config/apiConfig';
-import { z } from 'zod';
 
 import api from './api';
 import { decodeApiResponse } from './utils/validate';
 
 const BASE = API_CONFIG.ENDPOINTS.V1_BASE;
 
-const dashboardSchemaVersionSchema = z.literal(
-  DASHBOARD_SCHEMA_VERSION
-) satisfies z.ZodType<DashboardSchemaVersion>;
+const dashboardSchemaVersionSchema = z.union([
+  z.literal(1),
+  z.literal(2),
+]) satisfies z.ZodType<DashboardSchemaVersion>;
 
 const pageSchema: z.ZodType<DefaultConfigPage> = z.object({
   schemaVersion: dashboardSchemaVersionSchema,
@@ -58,9 +64,8 @@ const sectionSchema: z.ZodType<DashboardSectionSpec> = z.object({
   id: z.string(),
   title: z.string(),
   order: z.number(),
-  kind: z.enum(['summary', 'trends', 'breakdowns', 'details']),
-  layoutMode: z.enum(['kpi-strip', 'two-up', 'three-up', 'stack']),
   collapsible: z.boolean(),
+  sectionTemplate: z.enum(DASHBOARD_SECTION_TEMPLATES),
 });
 
 const queryParamValueSchema = z.union([
@@ -82,12 +87,10 @@ const panelQuerySchema: z.ZodType<DashboardQuerySpec> = z
 
 const panelLayoutSchema: z.ZodType<DashboardLayout> = z
   .object({
-    preset: z.enum(['kpi', 'trend', 'hero', 'breakdown', 'detail']),
-    x: z.number().optional(),
-    y: z.number().optional(),
-    w: z.number().optional(),
-    h: z.number().optional(),
-    colSpan: z.number().optional(),
+    x: z.number(),
+    y: z.number(),
+    w: z.number().int().positive(),
+    h: z.number().int().positive(),
   })
   .strict();
 
@@ -103,6 +106,7 @@ const panelSchema: z.ZodType<DashboardPanelSpec> = z
   .object({
     id: z.string(),
     panelType: z.enum(DASHBOARD_PANEL_TYPES),
+    layoutVariant: z.enum(DASHBOARD_LAYOUT_VARIANTS),
     sectionId: z.string(),
     order: z.number(),
     query: panelQuerySchema,
@@ -178,13 +182,5 @@ const defaultConfigService = {
       context: `default config tab document for ${pageId}/${tabId}`,
       expectedType: 'object',
     });
-  },
-
-  async savePageOverride(
-    _teamId: number | null,
-    pageId: string,
-    payload: Record<string, unknown>
-  ): Promise<unknown> {
-    return api.put(`${BASE}/default-config/pages/${pageId}`, payload);
   },
 };

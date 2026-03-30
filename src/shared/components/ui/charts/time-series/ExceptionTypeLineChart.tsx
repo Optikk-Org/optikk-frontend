@@ -1,4 +1,3 @@
-
 import { useMemo, memo } from 'react';
 
 import { useChartTimeBuckets } from '@shared/hooks/useChartTimeBuckets';
@@ -32,9 +31,10 @@ export default memo(function ExceptionTypeLineChart({
 }: any) {
   const { timeBuckets } = useChartTimeBuckets();
 
-  const stepMs = timeBuckets.length >= 2
-    ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime()
-    : 60_000;
+  const stepMs =
+    timeBuckets.length >= 2
+      ? new Date(timeBuckets[1]).getTime() - new Date(timeBuckets[0]).getTime()
+      : 60_000;
 
   const chartData = useMemo(() => {
     const groupMap = serviceTimeseriesMap as Record<string, any[]>;
@@ -44,9 +44,8 @@ export default memo(function ExceptionTypeLineChart({
       return [];
     }
 
-    const activeGroups = selectedEndpoints.length > 0
-      ? groups.filter((g) => selectedEndpoints.includes(g))
-      : groups;
+    const activeGroups =
+      selectedEndpoints.length > 0 ? groups.filter((g) => selectedEndpoints.includes(g)) : groups;
 
     return activeGroups.map((exceptionType, idx) => {
       const rows = groupMap[exceptionType] || [];
@@ -75,10 +74,7 @@ export default memo(function ExceptionTypeLineChart({
     });
   }, [serviceTimeseriesMap, selectedEndpoints, timeBuckets, stepMs]);
 
-  const timestamps = useMemo(
-    () => timeBuckets.map((t) => tsMs(t) / 1000),
-    [timeBuckets],
-  );
+  const timestamps = useMemo(() => timeBuckets.map((t) => tsMs(t) / 1000), [timeBuckets]);
 
   const maxVal = useMemo(() => {
     let max = 0;
@@ -96,14 +92,14 @@ export default memo(function ExceptionTypeLineChart({
 
   if (!hasData && timeBuckets.length === 0) {
     return (
-      <div style={{ height: '100%', minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="flex h-full min-h-0 items-center justify-center">
         <div style={{ color: 'var(--text-muted)' }}>No exception data in selected time range</div>
       </div>
     );
   }
 
   return (
-    <div style={{ position: 'relative', height: '100%', minHeight: fillHeight ? '100%' : '220px' }}>
+    <div className="relative h-full min-h-0">
       <ObservabilityChart
         timestamps={timestamps}
         series={chartData}

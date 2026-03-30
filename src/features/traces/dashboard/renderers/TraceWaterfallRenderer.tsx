@@ -1,11 +1,10 @@
 import { useMemo } from 'react';
 
-import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboardConfig';
-
 import WaterfallChart, {
   type WaterfallSpan,
 } from '@shared/components/ui/charts/specialized/WaterfallChart';
 import { useDashboardData } from '@shared/components/ui/dashboard/hooks/useDashboardData';
+import type { DashboardPanelRendererProps } from '@shared/components/ui/dashboard/dashboardPanelRegistry';
 
 /**
  *
@@ -13,10 +12,8 @@ import { useDashboardData } from '@shared/components/ui/dashboard/hooks/useDashb
 export function TraceWaterfallRenderer({
   chartConfig,
   dataSources,
-}: {
-  chartConfig: DashboardPanelSpec;
-  dataSources: DashboardDataSources;
-}) {
+  fillHeight: _fillHeight,
+}: DashboardPanelRendererProps) {
   const { data: spans } = useDashboardData(chartConfig, dataSources);
   const waterfallSpans = useMemo<WaterfallSpan[]>(
     () =>
@@ -45,7 +42,7 @@ export function TraceWaterfallRenderer({
     );
   }
   return (
-    <div style={{ height: '100%', overflow: 'auto' }}>
+    <div className="h-full min-h-0 overflow-hidden">
       <WaterfallChart spans={waterfallSpans} />
     </div>
   );

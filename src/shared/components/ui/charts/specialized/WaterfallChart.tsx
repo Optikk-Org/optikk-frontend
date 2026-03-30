@@ -163,7 +163,7 @@ export default function WaterfallChart({
   const hasErrorPath = errorPathSpanIds && errorPathSpanIds.size > 0;
 
   return (
-    <div className="bg-[var(--glass-bg)] rounded-lg overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg bg-[var(--glass-bg)]">
       {/* Search + filter toolbar */}
       <div className="px-3 py-2.5 flex gap-2 items-center flex-wrap border-b border-[var(--glass-border)]">
         <Input
@@ -243,7 +243,7 @@ export default function WaterfallChart({
       </div>
 
       {/* Body */}
-      <div className="max-h-[600px] overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-[var(--scrollbar-track)] [&::-webkit-scrollbar-thumb]:bg-[var(--scrollbar-thumb)] [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb:hover]:bg-[var(--scrollbar-thumb-hover)]">
+      <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-[var(--scrollbar-track)] [&::-webkit-scrollbar-thumb]:bg-[var(--scrollbar-thumb)] [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb:hover]:bg-[var(--scrollbar-thumb-hover)]">
         {filteredTree.map((span, index) => {
           const isCritical = criticalPathSpanIds?.has(span.span_id);
           const isError = errorPathSpanIds?.has(span.span_id);

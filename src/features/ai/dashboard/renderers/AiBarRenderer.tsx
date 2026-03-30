@@ -1,24 +1,9 @@
-import type {
-  DashboardPanelSpec,
-  DashboardDataSources,
-  DashboardExtraContext,
-} from '@/types/dashboardConfig';
-
 import { BarRenderer } from '@shared/components/ui/dashboard/renderers/BarRenderer';
+import type { DashboardPanelRendererProps } from '@shared/components/ui/dashboard/dashboardPanelRegistry';
 
 /**
  *
  */
-export function AiBarRenderer({
-  chartConfig,
-  dataSources,
-  extraContext,
-}: {
-  chartConfig: DashboardPanelSpec;
-  dataSources: DashboardDataSources;
-  extraContext?: DashboardExtraContext;
-}) {
-  return (
-    <BarRenderer chartConfig={chartConfig} dataSources={dataSources} extraContext={extraContext} />
-  );
+export function AiBarRenderer(props: DashboardPanelRendererProps) {
+  return <BarRenderer {...props} />;
 }

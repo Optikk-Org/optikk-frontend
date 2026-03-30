@@ -18,6 +18,7 @@ import SpanDetailDrawer from '../../components/SpanDetailDrawer';
 import SpanKindBreakdown from '../../components/SpanKindBreakdown';
 import { useTraceDetailData } from '../../hooks/useTraceDetailData';
 import { useTraceDetailEnhanced } from '../../hooks/useTraceDetailEnhanced';
+import { useTraceFlamegraph } from '../../hooks/useTraceFlamegraph';
 import './TraceDetailPage.css';
 
 export default function TraceDetailPage() {
@@ -37,6 +38,12 @@ export default function TraceDetailPage() {
     isLoading,
     logsLoading,
   } = useTraceDetailData(selectedTeamId, traceIdParam);
+
+  const {
+    data: flamegraphData,
+    isLoading: flamegraphLoading,
+    isError: flamegraphError,
+  } = useTraceFlamegraph(traceIdParam, activeTab === 'flamegraph');
 
   const {
     criticalPathSpanIds,
@@ -77,13 +84,7 @@ export default function TraceDetailPage() {
       width: 90,
       render: (level: unknown) => (
         <Badge
-          color={
-            level === 'ERROR'
-              ? 'red'
-              : level === 'WARN'
-                ? 'orange'
-                : APP_COLORS.hex_73c991
-          }
+          color={level === 'ERROR' ? 'red' : level === 'WARN' ? 'orange' : APP_COLORS.hex_73c991}
         >
           {typeof level === 'string' && level.length > 0 ? level : 'INFO'}
         </Badge>
@@ -126,10 +127,7 @@ export default function TraceDetailPage() {
       <PageHeader
         title={`Trace: ${traceIdParam}`}
         icon={<GitBranch size={24} />}
-        breadcrumbs={[
-          { label: 'Traces', path: '/traces' },
-          { label: traceIdParam },
-        ]}
+        breadcrumbs={[{ label: 'Traces', path: '/traces' }, { label: traceIdParam }]}
         actions={
           <Button
             variant="ghost"
@@ -169,8 +167,7 @@ export default function TraceDetailPage() {
               metric={{ title: 'Errors', value: stats.errors, formatter: formatNumber }}
               visuals={{
                 icon: <AlertCircle size={20} />,
-                iconColor:
-                  stats.errors > 0 ? APP_COLORS.hex_f04438 : APP_COLORS.hex_73c991,
+                iconColor: stats.errors > 0 ? APP_COLORS.hex_f04438 : APP_COLORS.hex_73c991,
               }}
             />
             <StatCard
@@ -215,8 +212,7 @@ export default function TraceDetailPage() {
                   Trace Visualization
                 </h2>
                 <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                  Switch between timeline and flamegraph views without leaving the trace
-                  context.
+                  Switch between timeline and flamegraph views without leaving the trace context.
                 </p>
               </div>
             </div>
@@ -240,14 +236,20 @@ export default function TraceDetailPage() {
                 criticalPathSpanIds={criticalPathSpanIds}
                 errorPathSpanIds={errorPathSpanIds}
               />
+            ) : flamegraphLoading ? (
+              <div className="flex min-h-[400px] items-center justify-center">
+                <div className="ok-spinner" />
+              </div>
+            ) : flamegraphError ? (
+              <div className="rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] px-4 py-8 text-center text-sm text-[var(--text-muted)]">
+                Could not load flamegraph data for this trace.
+              </div>
+            ) : flamegraphData ? (
+              <Flamegraph data={flamegraphData} />
             ) : (
-              <Flamegraph
-                data={{
-                  name: spans[0]?.operation_name || 'root',
-                  value: stats.duration,
-                  children: [],
-                }}
-              />
+              <div className="rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] px-4 py-8 text-center text-sm text-[var(--text-muted)]">
+                No flamegraph data available for this trace.
+              </div>
             )}
           </PageSurface>
 

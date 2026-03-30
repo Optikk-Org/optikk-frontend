@@ -1,12 +1,11 @@
 import { Database } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboardConfig';
-
 import { APP_COLORS } from '@config/colorLiterals';
 import { formatDuration, formatNumber, normalizePercentage } from '@shared/utils/formatters';
 import { useDashboardData } from '@shared/components/ui/dashboard/hooks/useDashboardData';
 import { buildInterpolatedPath } from '@shared/utils/placeholderInterpolation';
+import type { DashboardPanelRendererProps } from '@shared/components/ui/dashboard/dashboardPanelRegistry';
 
 const DB_SYSTEM_META: Record<string, { label: string; color: string; gradient: string }> = {
   postgresql: {
@@ -210,10 +209,8 @@ function DbSystemCard({ system }: { system: any }) {
 export function DbSystemsRenderer({
   chartConfig,
   dataSources,
-}: {
-  chartConfig: DashboardPanelSpec;
-  dataSources: DashboardDataSources;
-}) {
+  fillHeight: _fillHeight,
+}: DashboardPanelRendererProps) {
   const { data: systems } = useDashboardData(chartConfig, dataSources);
 
   if (!systems || systems.length === 0) {
@@ -226,10 +223,12 @@ export function DbSystemsRenderer({
 
   return (
     <div
+      className="h-full min-h-0 overflow-y-auto pr-1"
       style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
         gap: 14,
+        alignContent: 'start',
       }}
     >
       {systems.map((system: any) => {

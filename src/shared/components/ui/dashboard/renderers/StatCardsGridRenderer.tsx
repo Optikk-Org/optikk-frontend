@@ -1,21 +1,19 @@
 import { Activity, AlertCircle, Clock, Zap } from 'lucide-react';
 import { useMemo } from 'react';
 
-import type { DashboardPanelSpec, DashboardDataSources } from '@/types/dashboardConfig';
-
 import { StatCardsGrid } from '@shared/components/ui';
 import { formatDuration, formatNumber } from '@shared/utils/formatters';
 import { APP_COLORS } from '@config/colorLiterals';
 
 import { useDashboardData } from '../hooks/useDashboardData';
 
+import type { DashboardPanelRendererProps } from '../dashboardPanelRegistry';
+
 export function StatCardsGridRenderer({
   chartConfig,
   dataSources,
-}: {
-  chartConfig: DashboardPanelSpec;
-  dataSources: DashboardDataSources;
-}) {
+  fillHeight: _fillHeight,
+}: DashboardPanelRendererProps) {
   const { data: services } = useDashboardData(chartConfig, dataSources);
 
   const summary = useMemo(() => {
