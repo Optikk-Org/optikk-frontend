@@ -1,0 +1,177 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import './config/themeColors.css';
+@import './shared/design-system/utilities.css';
+@import './shared/components/ui/charts/uplot.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* ── Typography scale tokens ───────────────────────────────── */
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 13px;
+  --text-lg: 15px;
+  --text-xl: 16px;
+  --text-2xl: 22px;
+  --text-3xl: 28px;
+  --text-display: 32px;
+
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  /* ── Grid gap ─────────────────────────────────────────────── */
+  --grid-gutter: 12px;
+
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  font-size: 13px;
+  line-height: var(--leading-normal);
+  font-weight: var(--font-normal);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at top left, rgba(139, 127, 255, 0.08), transparent 30%),
+    radial-gradient(circle at top right, rgba(243, 139, 107, 0.05), transparent 24%),
+    var(--bg-primary);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Code blocks */
+code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 11px;
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+/* ─── Spacing utilities ─── */
+.page-section {
+  margin-top: var(--space-md);
+}
+
+.page-section-lg {
+  margin-top: var(--space-lg);
+}
+
+.stats-row {
+  margin-bottom: var(--space-md);
+}
+
+.controls-row {
+  margin-bottom: var(--space-md);
+}
+
+/* Chart card title for Surface-based chart cards */
+/* Stat cards grid — replaces antd Row/Col */
+.stat-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--space-sm, 12px);
+  margin-bottom: var(--space-sm, 12px);
+}
+
+.chart-card__title {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.chart-card {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+}
+
+.chart-card__title-content {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs, 8px);
+  min-width: 0;
+  width: 100%;
+}
+
+.chart-card__title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 18px;
+  color: var(--text-secondary);
+}
+
+.chart-card__title-text {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chart-card__info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 16px;
+  color: var(--text-tertiary, var(--text-secondary));
+  cursor: help;
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+  margin-left: auto;
+}
+
+.chart-card__info-icon:hover {
+  opacity: 1;
+}

@@ -1,0 +1,42 @@
+import { useSocketStream } from '@shared/hooks/useSocketStream';
+import { useTeamId } from '@/app/store/appStore';
+
+interface UseLiveTailStreamOptions<Item> {
+  enabled: boolean;
+  /** Socket.io subscribe event (e.g. 'subscribe:spans', 'subscribe:logs') */
+  subscribeEvent?: string;
+  /** Socket.io item event (e.g. 'span', 'log') */
+  itemEvent?: string;
+  /** Params sent with the subscribe event */
+  params?: Record<string, unknown>;
+  maxItems?: number;
+  normalizeItem?: (value: unknown) => Item;
+}
+
+interface UseLiveTailStreamResult<Item> {
+  items: Item[];
+  status: 'idle' | 'connecting' | 'live' | 'closed' | 'error';
+  lagMs: number;
+  droppedCount: number;
+  errorMessage: string | null;
+}
+
+export function useLiveTailStream<Item>({
+  enabled,
+  subscribeEvent = 'subscribe:spans',
+  itemEvent = 'span',
+  params,
+  maxItems = 250,
+  normalizeItem,
+}: UseLiveTailStreamOptions<Item>): UseLiveTailStreamResult<Item> {
+  const teamId = useTeamId();
+
+  return useSocketStream<Item>({
+    enabled,
+    subscribeEvent,
+    itemEvent,
+    params: { teamId, ...params },
+    maxItems,
+    normalizeItem,
+  });
+}
