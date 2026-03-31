@@ -52,6 +52,16 @@ function compareTimestamp(left: unknown, right: unknown): number {
   return new Date(String(left ?? 0)).getTime() - new Date(String(right ?? 0)).getTime();
 }
 
+function formatLiveTailStatus(
+  status: 'idle' | 'connecting' | 'live' | 'closed' | 'error',
+  lagMs: number
+): string {
+  if (status === 'live') return `${Math.max(0, lagMs)}ms lag`;
+  if (status === 'closed') return 'session ended';
+  if (status === 'error') return 'stream error';
+  return 'connecting';
+}
+
 export default function LogsHubPage(): JSX.Element {
   const navigate = useNavigate();
 
@@ -97,6 +107,7 @@ export default function LogsHubPage(): JSX.Element {
     setLiveTailEnabled,
     liveTailStatus,
     liveTailLagMs,
+    liveTailDroppedCount,
   } = useLogsHubData({
     searchText,
     filters,
@@ -270,10 +281,11 @@ export default function LogsHubPage(): JSX.Element {
                 </Badge>
                 {liveTailEnabled ? (
                   <Badge variant="warning">
-                    {liveTailStatus === 'live'
-                      ? `${Math.max(0, liveTailLagMs)}ms lag`
-                      : 'connecting'}
+                    {formatLiveTailStatus(liveTailStatus, liveTailLagMs)}
                   </Badge>
+                ) : null}
+                {liveTailEnabled && liveTailDroppedCount > 0 ? (
+                  <Badge variant="error">{formatNumber(liveTailDroppedCount)} dropped</Badge>
                 ) : null}
               </div>
               <ObservabilityQueryBar

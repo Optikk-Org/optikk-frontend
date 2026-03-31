@@ -55,6 +55,16 @@ function renderTraceStatus(status: string): JSX.Element {
   return <Badge variant={variant}>{normalized}</Badge>;
 }
 
+function formatLiveTailStatus(
+  status: 'idle' | 'connecting' | 'live' | 'closed' | 'error',
+  lagMs: number
+): string {
+  if (status === 'live') return `${Math.max(0, lagMs)}ms lag`;
+  if (status === 'closed') return 'session ended';
+  if (status === 'error') return 'stream error';
+  return 'connecting';
+}
+
 function buildTraceRecordFromLiveItem(value: unknown): TraceRecord {
   const row = value as Record<string, unknown>;
   const start = new Date(String(row.timestamp ?? new Date().toISOString()));
@@ -324,8 +334,11 @@ export default function TracesPage(): JSX.Element {
               <Badge variant="info">{mode === 'all' ? 'All spans' : 'Root spans'}</Badge>
               {isLiveTail ? (
                 <Badge variant={liveTail.status === 'live' ? 'warning' : 'default'}>
-                  {liveTail.status === 'live' ? `${liveTail.lagMs}ms lag` : 'connecting'}
+                  {formatLiveTailStatus(liveTail.status, liveTail.lagMs)}
                 </Badge>
+              ) : null}
+              {isLiveTail && liveTail.droppedCount > 0 ? (
+                <Badge variant="error">{formatNumber(liveTail.droppedCount)} dropped</Badge>
               ) : null}
               <Badge variant={errorTraces > 0 ? 'error' : 'default'}>
                 {formatNumber(errorTraces)} error traces
