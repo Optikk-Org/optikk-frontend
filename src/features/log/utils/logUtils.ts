@@ -74,6 +74,13 @@ export const LOG_FILTER_FIELDS: LogFilterField[] = [
     operators: [{ key: 'equals', label: 'equals', symbol: '=' }],
   },
   {
+    key: 'environment',
+    label: 'Environment',
+    icon: '🌍',
+    group: 'Infrastructure',
+    operators: [{ key: 'equals', label: 'equals', symbol: '=' }],
+  },
+  {
     key: 'logger',
     label: 'Logger',
     icon: '📝',
@@ -112,9 +119,12 @@ export const LOG_COLUMNS: LogColumn[] = [
 ];
 
 export const LOGS_URL_FILTER_CONFIG = {
-  params: [{ key: 'search', type: 'string' as const, defaultValue: '' }],
+  params: [
+    { key: 'query', type: 'string' as const, defaultValue: '' },
+    { key: 'errorsOnly', type: 'boolean' as const, defaultValue: false },
+  ],
   syncStructuredFilters: true,
-  stripParams: ['view'],
+  stripParams: ['view', 'search'],
 };
 
 export function compileLogsStructuredFilters(
@@ -133,6 +143,7 @@ export function compileLogsStructuredFilters(
       | 'excludeHosts'
       | 'pods'
       | 'containers'
+      | 'environments'
       | 'loggers',
     value: string
   ): void => {
@@ -156,6 +167,9 @@ export function compileLogsStructuredFilters(
         break;
       case 'container':
         append('containers', filter.value);
+        break;
+      case 'environment':
+        append('environments', filter.value);
         break;
       case 'logger':
         append('loggers', filter.value);

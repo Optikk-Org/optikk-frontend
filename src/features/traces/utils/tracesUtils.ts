@@ -134,6 +134,20 @@ export const TRACE_FILTER_FIELDS: TraceFilterField[] = [
       { key: 'lt', label: 'less than', symbol: '<' },
     ],
   },
+  {
+    key: 'span_kind',
+    label: 'Span kind',
+    icon: '🧩',
+    group: 'Trace',
+    operators: [{ key: 'equals', label: 'equals', symbol: '=' }],
+  },
+  {
+    key: 'db_system',
+    label: 'DB system',
+    icon: '🗄',
+    group: 'Database',
+    operators: [{ key: 'equals', label: 'equals', symbol: '=' }],
+  },
 ];
 
 import type { TraceColumn } from '../types';
