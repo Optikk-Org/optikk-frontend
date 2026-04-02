@@ -8,6 +8,7 @@ import {
 import { createDefaultQuery, QUERY_LABELS } from '../constants/metricsExplorerConstants';
 import type {
   ChartType,
+  FormulaDefinition,
   MetricAggregation,
   MetricQueryDefinition,
   MetricSpaceAggregation,
@@ -18,6 +19,7 @@ import type {
 const URL_CONFIG: URLFilterConfig = {
   params: [
     { key: 'queries', type: 'string', defaultValue: '' },
+    { key: 'formulas', type: 'string', defaultValue: '' },
     { key: 'chartType', type: 'string', defaultValue: 'line' },
     { key: 'step', type: 'string', defaultValue: '5m' },
     { key: 'spaceAgg', type: 'string', defaultValue: 'avg' },
@@ -36,12 +38,30 @@ function encodeQueries(queries: MetricQueryDefinition[]): string {
   return serializeStateSnapshot(queries);
 }
 
+const DEFAULT_FORMULAS: FormulaDefinition[] = [];
+
+function decodeFormulas(raw: string): FormulaDefinition[] {
+  if (!raw) return DEFAULT_FORMULAS;
+  return deserializeStateSnapshot<FormulaDefinition[]>(raw, DEFAULT_FORMULAS);
+}
+
+function encodeFormulas(formulas: FormulaDefinition[]): string {
+  if (formulas.length === 0) return '';
+  return serializeStateSnapshot(formulas);
+}
+
+let formulaCounter = 0;
+
 export function useMetricsExplorer() {
   const { values, setters } = useURLFilters(URL_CONFIG);
 
   const queries = useMemo(
     () => decodeQueries(values.queries as string),
     [values.queries]
+  );
+  const formulas = useMemo(
+    () => decodeFormulas(values.formulas as string),
+    [values.formulas]
   );
   const chartType = (values.chartType as ChartType) || 'line';
   const step = (values.step as TimeStep) || '5m';
@@ -111,10 +131,37 @@ export function useMetricsExplorer() {
     [setters]
   );
 
+  const setFormulas = useCallback(
+    (next: FormulaDefinition[]) => {
+      setters.formulas(encodeFormulas(next));
+    },
+    [setters]
+  );
+
+  const addFormula = useCallback(() => {
+    formulaCounter++;
+    setFormulas([...formulas, { id: `f${formulaCounter}`, expression: '' }]);
+  }, [formulas, setFormulas]);
+
+  const removeFormula = useCallback(
+    (id: string) => {
+      setFormulas(formulas.filter((f) => f.id !== id));
+    },
+    [formulas, setFormulas]
+  );
+
+  const updateFormulaExpression = useCallback(
+    (id: string, expression: string) => {
+      setFormulas(formulas.map((f) => (f.id === id ? { ...f, expression } : f)));
+    },
+    [formulas, setFormulas]
+  );
+
   const canExecute = queries.some((q) => Boolean(q.metricName));
 
   return {
     queries,
+    formulas,
     chartType,
     step,
     spaceAgg,
@@ -126,6 +173,9 @@ export function useMetricsExplorer() {
     updateQueryMetric,
     updateQueryWhere,
     updateQueryGroupBy,
+    addFormula,
+    removeFormula,
+    updateFormulaExpression,
     setChartType,
     setStep,
     setSpaceAgg,

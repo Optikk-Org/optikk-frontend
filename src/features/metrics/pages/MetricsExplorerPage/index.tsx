@@ -14,6 +14,7 @@ import { useMetricsExplorerQuery } from '../../hooks/useMetricsExplorerQuery';
 export default function MetricsExplorerPage() {
   const {
     queries,
+    formulas,
     chartType,
     step,
     spaceAgg,
@@ -23,12 +24,15 @@ export default function MetricsExplorerPage() {
     updateQueryMetric,
     updateQueryWhere,
     updateQueryGroupBy,
+    addFormula,
+    removeFormula,
+    updateFormulaExpression,
     setChartType,
     setStep,
     setSpaceAgg,
   } = useMetricsExplorer();
 
-  const { data, isLoading, isError } = useMetricsExplorerQuery(queries, step);
+  const { data, isLoading, isError, refetch } = useMetricsExplorerQuery(queries, step, spaceAgg);
 
   const handleShare = useCallback(() => {
     navigator.clipboard.writeText(window.location.href);
@@ -52,12 +56,16 @@ export default function MetricsExplorerPage() {
         <div className="flex flex-col gap-4">
           <MetricQueryBuilder
             queries={queries}
+            formulas={formulas}
             onAddQuery={addQuery}
             onRemoveQuery={removeQuery}
             onAggregationChange={updateQueryAggregation}
             onMetricChange={updateQueryMetric}
             onWhereChange={updateQueryWhere}
             onGroupByChange={updateQueryGroupBy}
+            onAddFormula={addFormula}
+            onRemoveFormula={removeFormula}
+            onFormulaExpressionChange={updateFormulaExpression}
           />
 
           <MetricsExplorerToolbar
@@ -73,10 +81,12 @@ export default function MetricsExplorerPage() {
 
       <MetricsExplorerChart
         queries={queries}
+        formulas={formulas}
         results={data?.results}
         chartType={chartType}
         isLoading={isLoading}
         isError={isError}
+        onRetry={() => refetch()}
       />
     </PageShell>
   );

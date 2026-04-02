@@ -21,7 +21,7 @@ export interface MetricTag {
   readonly values: string[];
 }
 
-export type MetricAggregation = 'avg' | 'sum' | 'min' | 'max' | 'count' | 'p50' | 'p95' | 'p99';
+export type MetricAggregation = 'avg' | 'sum' | 'min' | 'max' | 'count' | 'p50' | 'p95' | 'p99' | 'rate';
 
 export type MetricFilterOperator = 'eq' | 'neq' | 'in' | 'not_in' | 'wildcard';
 
@@ -57,6 +57,11 @@ export interface MetricQueryResult {
 }
 
 export type MetricExplorerResults = Record<string, MetricQueryResult>;
+
+export interface FormulaDefinition {
+  readonly id: string;
+  readonly expression: string;
+}
 
 /**
  *

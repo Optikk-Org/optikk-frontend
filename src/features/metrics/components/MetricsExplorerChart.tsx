@@ -1,5 +1,6 @@
-import { BarChart3 } from 'lucide-react';
+import { AlertCircle, BarChart3, RefreshCw } from 'lucide-react';
 
+import { Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import ObservabilityChart, {
   type ObservabilityChartSeries,
@@ -8,18 +9,24 @@ import { PageSurface } from '@shared/components/ui';
 
 import { QUERY_LABEL_COLORS } from '../constants/metricsExplorerConstants';
 import { getChartColor } from '@shared/utils/charting';
-import type { ChartType, MetricExplorerResults, MetricQueryDefinition } from '../types';
+import { evaluateFormula } from '../utils/formulaEvaluator';
+import type { ChartType, FormulaDefinition, MetricExplorerResults, MetricQueryDefinition } from '../types';
+
+const FORMULA_COLOR = '#f59e0b';
 
 interface MetricsExplorerChartProps {
   readonly queries: MetricQueryDefinition[];
+  readonly formulas: FormulaDefinition[];
   readonly results: MetricExplorerResults | undefined;
   readonly chartType: ChartType;
   readonly isLoading: boolean;
   readonly isError: boolean;
+  readonly onRetry?: () => void;
 }
 
 function buildSeries(
   queries: MetricQueryDefinition[],
+  formulas: FormulaDefinition[],
   results: MetricExplorerResults,
   chartType: ChartType
 ): { timestamps: number[]; series: ObservabilityChartSeries[] } {
@@ -53,15 +60,30 @@ function buildSeries(
     }
   }
 
+  // Evaluate formulas and add as additional series.
+  for (const formula of formulas) {
+    if (!formula.expression.trim()) continue;
+    const values = evaluateFormula(formula.expression, results, timestamps);
+    allSeries.push({
+      label: `${formula.id}: ${formula.expression}`,
+      values,
+      color: FORMULA_COLOR,
+      fill: false,
+      dash: [6, 3],
+    });
+  }
+
   return { timestamps, series: allSeries };
 }
 
 export function MetricsExplorerChart({
   queries,
+  formulas,
   results,
   chartType,
   isLoading,
   isError,
+  onRetry,
 }: MetricsExplorerChartProps) {
   const hasResults = results && Object.keys(results).length > 0;
   const hasActiveQuery = queries.some((q) => q.metricName);
@@ -95,10 +117,14 @@ export function MetricsExplorerChart({
   if (isError) {
     return (
       <PageSurface padding="lg" className="min-h-[400px]">
-        <div className="flex h-[360px] items-center justify-center">
-          <div className="text-[13px] text-[var(--color-error)]">
-            Failed to load metrics data. Please try again.
-          </div>
+        <div className="flex h-[360px] flex-col items-center justify-center gap-3">
+          <AlertCircle size={32} className="text-[var(--color-error)] opacity-60" />
+          <div className="text-[13px] text-[var(--color-error)]">Failed to load metrics data</div>
+          {onRetry && (
+            <Button variant="secondary" size="sm" icon={<RefreshCw size={14} />} onClick={onRetry}>
+              Retry
+            </Button>
+          )}
         </div>
       </PageSurface>
     );
@@ -114,7 +140,7 @@ export function MetricsExplorerChart({
     );
   }
 
-  const { timestamps, series } = buildSeries(queries, results, chartType);
+  const { timestamps, series } = buildSeries(queries, formulas, results, chartType);
 
   return (
     <PageSurface

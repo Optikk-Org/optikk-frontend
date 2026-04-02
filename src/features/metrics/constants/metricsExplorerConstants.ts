@@ -26,6 +26,7 @@ export const AGGREGATION_OPTIONS: { label: string; value: MetricAggregation }[] 
   { label: 'p50', value: 'p50' },
   { label: 'p95', value: 'p95' },
   { label: 'p99', value: 'p99' },
+  { label: 'rate', value: 'rate' },
 ];
 
 export const TIME_STEP_OPTIONS: { label: string; value: TimeStep }[] = [
