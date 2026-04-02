@@ -93,7 +93,7 @@ export default function AppRoutes(): JSX.Element {
         <Route path="errors" element={<Navigate to={`${ROUTES.overview}?tab=errors`} replace />} />
         <Route
           path={toNestedRoutePath(ROUTES.latencyAlias)}
-          element={<Navigate to={`${ROUTES.metrics}?tab=latency-analysis`} replace />}
+          element={<Navigate to={`${ROUTES.overview}?tab=latency-analysis`} replace />}
         />
         <Route
           path="service-map"
