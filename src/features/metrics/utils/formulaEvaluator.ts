@@ -82,8 +82,11 @@ function parse(tokens: Token[]): Expr | null {
   function parseMulDiv(): Expr | null {
     let left = parseAtom();
     if (!left) return null;
-    while (peek()?.type === 'op' && (peek()!.value === '*' || peek()!.value === '/')) {
-      const op = consume() as { type: 'op'; value: string };
+    while (isOperator(peek(), ['*', '/'])) {
+      const op = consume();
+      if (op.type !== 'op') {
+        return left;
+      }
       const right = parseAtom();
       if (!right) return left;
       left = { kind: 'binop', op: op.value, left, right };
@@ -94,8 +97,11 @@ function parse(tokens: Token[]): Expr | null {
   function parseAddSub(): Expr | null {
     let left = parseMulDiv();
     if (!left) return null;
-    while (peek()?.type === 'op' && (peek()!.value === '+' || peek()!.value === '-')) {
-      const op = consume() as { type: 'op'; value: string };
+    while (isOperator(peek(), ['+', '-'])) {
+      const op = consume();
+      if (op.type !== 'op') {
+        return left;
+      }
       const right = parseMulDiv();
       if (!right) return left;
       left = { kind: 'binop', op: op.value, left, right };
@@ -104,6 +110,13 @@ function parse(tokens: Token[]): Expr | null {
   }
 
   return parseAddSub();
+}
+
+function isOperator(
+  token: Token | undefined,
+  values: ReadonlyArray<'+' | '-' | '*' | '/'>
+): token is Extract<Token, { type: 'op' }> {
+  return token?.type === 'op' && values.includes(token.value);
 }
 
 function evaluate(

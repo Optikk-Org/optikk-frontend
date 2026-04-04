@@ -101,7 +101,7 @@ export function MetricSelector({ value, onChange }: MetricSelectorProps) {
         <div className="max-h-[300px] overflow-y-auto p-1">
           {metrics.length === 0 && (
             <div className="px-3 py-6 text-center text-[12px] text-[var(--text-muted)]">
-              {deferredSearch ? 'No metrics found' : 'Type to search metrics'}
+              {debouncedSearch ? 'No metrics found' : 'Type to search metrics'}
             </div>
           )}
 

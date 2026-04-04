@@ -35,7 +35,7 @@ export default function MetricsExplorerPage() {
   const { data, isLoading, isError, refetch } = useMetricsExplorerQuery(queries, step, spaceAgg);
 
   const handleShare = useCallback(() => {
-    navigator.clipboard.writeText(window.location.href);
+    void navigator.clipboard.writeText(window.location.href);
     toast.success('Link copied to clipboard');
   }, []);
 
