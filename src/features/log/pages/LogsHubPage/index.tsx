@@ -377,7 +377,6 @@ export default function LogsHubPage(): JSX.Element {
       />
 
       <PageSurface padding="lg" className="relative z-[40] overflow-visible">
-        <LogsNavTabs />
         <div className="flex flex-col gap-4">
           {liveTailEnabled && liveTailErrorMessage ? (
             <div className="flex items-center gap-2 rounded-[var(--card-radius)] border border-[rgba(240,68,56,0.35)] bg-[rgba(240,68,56,0.08)] px-4 py-2.5 text-[13px] text-[var(--color-error)]">
