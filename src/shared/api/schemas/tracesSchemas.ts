@@ -32,6 +32,13 @@ export const spanRecordSchema = z
     duration_ms: z.number().default(0),
     status: z.string().default('UNSET'),
     span_kind: z.string().default(''),
+    status_message: z.string().default(''),
+    http_method: z.string().default(''),
+    http_url: z.string().default(''),
+    http_status_code: z.number().default(0),
+    host: z.string().default(''),
+    pod: z.string().default(''),
+    attributes: z.string().default(''),
   })
   .strict();
 
