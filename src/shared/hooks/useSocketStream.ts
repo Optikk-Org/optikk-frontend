@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
-import { io, type Socket } from 'socket.io-client';
 
 interface UseSocketStreamOptions<Item> {
   enabled: boolean;
-  /** The socket.io event to subscribe to (e.g. 'subscribe:spans', 'subscribe:logs') */
+  /** Subscribe op: 'subscribe:spans' | 'subscribe:logs' */
   subscribeEvent: string;
-  /** The socket.io event that delivers items (e.g. 'span', 'log') */
+  /** Item event name for routing (e.g. 'span', 'log') — must match server events */
   itemEvent: string;
-  /** Params sent with the subscribe event */
+  /** Params sent as subscribe payload (includes teamId) */
   params?: Record<string, unknown>;
   maxItems?: number;
   normalizeItem?: (value: unknown) => Item;
+  /** If provided, deduplicates items merging into the stream */
+  getItemKey?: (item: Item) => string;
+  /** If provided, inserts items ordered by timestamp (newest first) */
+  getItemTimestamp?: (item: Item) => number;
 }
 
 interface UseSocketStreamResult<Item> {
@@ -21,8 +24,18 @@ interface UseSocketStreamResult<Item> {
   errorMessage: string | null;
 }
 
-const SOCKET_PATH = '/socket.io/';
-const NAMESPACE = '/live';
+/** Native WebSocket live tail — same origin as the UI; path is proxied to the API in dev. */
+const WS_PATH = '/api/v1/ws/live';
+
+interface ServerMessage {
+  event: string;
+  data?: unknown;
+}
+
+function liveTailWebSocketUrl(): string {
+  const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  return `${proto}://${window.location.host}${WS_PATH}`;
+}
 
 export function useSocketStream<Item>({
   enabled,
@@ -31,6 +44,8 @@ export function useSocketStream<Item>({
   params,
   maxItems = 250,
   normalizeItem,
+  getItemKey,
+  getItemTimestamp,
 }: UseSocketStreamOptions<Item>): UseSocketStreamResult<Item> {
   const [items, setItems] = useState<Item[]>([]);
   const [status, setStatus] = useState<UseSocketStreamResult<Item>['status']>('idle');
@@ -38,7 +53,6 @@ export function useSocketStream<Item>({
   const [droppedCount, setDroppedCount] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Stable serialized params for effect dependency
   const paramsKey = useMemo(() => JSON.stringify(params ?? {}), [params]);
 
   useEffect(() => {
@@ -52,68 +66,98 @@ export function useSocketStream<Item>({
     }
 
     setStatus('connecting');
+    // New subscription / reconnect (paramsKey, team, etc.): do not accumulate on top of a previous buffer.
+    setItems([]);
 
-    const socket: Socket = io(NAMESPACE, {
-      path: SOCKET_PATH,
-      withCredentials: true,
-      transports: ['websocket', 'polling'],
-    });
+    const ws = new WebSocket(liveTailWebSocketUrl());
 
-    socket.on('connect', () => {
+    ws.onopen = () => {
       setStatus('live');
-      socket.emit(subscribeEvent, params ?? {});
-    });
+      ws.send(
+        JSON.stringify({
+          op: subscribeEvent,
+          payload: params ?? {},
+        })
+      );
+    };
 
-    socket.on(itemEvent, (payload: { item?: unknown; lagMs?: number; droppedCount?: number }) => {
-      if (!payload?.item) return;
+    ws.onmessage = (ev: MessageEvent<string>) => {
+      let msg: ServerMessage;
+      try {
+        msg = JSON.parse(ev.data) as ServerMessage;
+      } catch {
+        return;
+      }
 
-      setStatus('live');
-      if (payload.lagMs != null) setLagMs(payload.lagMs);
-      if (payload.droppedCount != null) setDroppedCount(payload.droppedCount);
+      const { event, data } = msg;
 
-      setItems((previous) => {
-        const nextItem = normalizeItem ? normalizeItem(payload.item) : (payload.item as Item);
-        if (nextItem === undefined) return previous;
-        return [nextItem, ...previous].slice(0, maxItems);
-      });
-    });
+      if (event === itemEvent && data && typeof data === 'object' && data !== null) {
+        const payload = data as { item?: unknown; lagMs?: number; droppedCount?: number };
+        if (!payload.item) return;
 
-    socket.on('heartbeat', (payload: { lagMs?: number; droppedCount?: number }) => {
-      if (payload?.lagMs != null) setLagMs(payload.lagMs);
-      if (payload?.droppedCount != null) setDroppedCount(payload.droppedCount);
-    });
+        setStatus('live');
+        if (payload.lagMs != null) setLagMs(payload.lagMs);
+        if (payload.droppedCount != null) setDroppedCount(payload.droppedCount);
 
-    socket.on('done', () => {
-      setStatus('closed');
-    });
+        setItems((previous) => {
+          const nextItem = normalizeItem ? normalizeItem(payload.item) : (payload.item as Item);
+          if (nextItem === undefined) return previous;
+          const cap =
+            typeof maxItems === 'number' && Number.isFinite(maxItems) && maxItems > 0
+              ? maxItems
+              : 250;
 
-    socket.on('disconnect', () => {
-      setStatus('closed');
-    });
+          if (getItemKey && getItemTimestamp) {
+            const key = getItemKey(nextItem);
+            const time = getItemTimestamp(nextItem);
 
-    socket.on('connect_error', (err) => {
+            const filtered = previous.filter((p) => getItemKey(p) !== key);
+            // findIndex where timestamp <= new time (newest first)
+            const insertIdx = filtered.findIndex((p) => getItemTimestamp(p) <= time);
+
+            if (insertIdx === -1) {
+              filtered.push(nextItem);
+            } else {
+              filtered.splice(insertIdx, 0, nextItem);
+            }
+            return filtered.slice(0, cap);
+          }
+
+          return [nextItem, ...previous].slice(0, cap);
+        });
+        return;
+      }
+
+      if (event === 'heartbeat' && data && typeof data === 'object' && data !== null) {
+        const payload = data as { lagMs?: number; droppedCount?: number };
+        if (payload.lagMs != null) setLagMs(payload.lagMs);
+        if (payload.droppedCount != null) setDroppedCount(payload.droppedCount);
+        return;
+      }
+
+      if (event === 'done') {
+        setStatus('closed');
+        return;
+      }
+
+      if (event === 'subscribeError' && data && typeof data === 'object' && data !== null) {
+        const raw = data as { message?: string };
+        setStatus('error');
+        setErrorMessage(raw.message ?? 'Subscription error');
+      }
+    };
+
+    ws.onerror = () => {
       setStatus('error');
-      setErrorMessage(err?.message ?? 'Socket connection failed');
-    });
+      setErrorMessage('WebSocket connection failed');
+    };
 
-    // Backend emits subscribeError (not "error") — Socket.IO reserves "error" for transport/protocol use.
-    socket.on('subscribeError', (payload: unknown) => {
-      const message =
-        typeof payload === 'string'
-          ? payload
-          : payload &&
-              typeof payload === 'object' &&
-              payload !== null &&
-              'message' in payload &&
-              typeof (payload as { message: unknown }).message === 'string'
-            ? (payload as { message: string }).message
-            : 'Subscription error';
-      setStatus('error');
-      setErrorMessage(message);
-    });
+    ws.onclose = () => {
+      setStatus((s) => (s === 'error' ? s : 'closed'));
+    };
 
     return () => {
-      socket.disconnect();
+      ws.close();
       setStatus('closed');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
