@@ -102,6 +102,7 @@ export interface ServiceMetricPoint extends DomainRecord {
 export interface EndpointMetricPoint extends ServiceMetricPoint {
   operation_name: string;
   http_method: string;
+  endpoint_name?: string;
 }
 
 

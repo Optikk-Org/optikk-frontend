@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import { useSearchParamsCompat as useSearchParams } from '@shared/hooks/useSearchParamsCompat';
 
+import ServiceDetailDrawer from '@/features/overview/components/ServiceDetailDrawer';
 import { DetailDrawer } from '@shared/components/ui/layout';
 
 import { clearDashboardDrawerSearch, readDashboardDrawerState } from './utils/dashboardDrawerState';
@@ -14,6 +15,7 @@ const ENTITY_LABELS: Record<string, string> = {
   kafkaTopic: 'Kafka Topic',
   node: 'Node',
   redisInstance: 'Redis Instance',
+  service: 'Service',
 };
 
 function toFieldLabel(key: string): string {
@@ -72,6 +74,23 @@ export default function DashboardEntityDrawer(): JSX.Element | null {
 
   if (!isOpen) {
     return null;
+  }
+
+  if (drawer.entity === 'service') {
+    return (
+      <ServiceDetailDrawer
+        open
+        serviceName={drawer.id ?? ''}
+        title={drawer.title}
+        initialData={drawer.data}
+        onClose={() =>
+          navigate({
+            to: location.pathname + clearDashboardDrawerSearch(location.search) as any,
+            replace: true,
+          })
+        }
+      />
+    );
   }
 
   return (

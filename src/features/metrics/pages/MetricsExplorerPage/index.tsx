@@ -2,7 +2,7 @@ import { BarChart3, Share2 } from 'lucide-react';
 import { useCallback } from 'react';
 import toast from 'react-hot-toast';
 
-import { Button } from '@/components/ui';
+import { Button } from '@shared/components/primitives/ui/button';
 import { PageHeader, PageShell, PageSurface } from '@shared/components/ui';
 
 import { MetricQueryBuilder } from '../../components/MetricQueryBuilder/MetricQueryBuilder';

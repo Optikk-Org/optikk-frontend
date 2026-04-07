@@ -11,6 +11,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useMemo, useState } from 'react';
+import { useLocation, useNavigate } from '@tanstack/react-router';
 
 import { useSearchParamsCompat as useSearchParams } from '@shared/hooks/useSearchParamsCompat';
 import { useTimeRangeQuery } from '@shared/hooks/useTimeRangeQuery';
@@ -20,6 +21,7 @@ import { layoutTopology } from './topology/layout';
 import { ServiceTopologyEdge, type TopologyEdgeData } from './topology/ServiceTopologyEdge';
 import { ServiceTopologyNode, type TopologyNodeData } from './topology/ServiceTopologyNode';
 import { TopologyToolbar } from './topology/TopologyToolbar';
+import { buildServiceDrawerSearch } from '../../components/serviceDrawerState';
 
 const nodeTypes: NodeTypes = { service: ServiceTopologyNode };
 const edgeTypes: EdgeTypes = { service: ServiceTopologyEdge };
@@ -131,6 +133,8 @@ const topologyStyles = `
 `;
 
 function TopologyCanvas() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const focusService = searchParams.get('topologyFocus') ?? '';
   const [filter, setFilter] = useState('');
@@ -148,9 +152,8 @@ function TopologyCanvas() {
   );
 
   const openService = (name: string): void => {
-    const next = new URLSearchParams(searchParams);
-    next.set('serviceName', name);
-    setSearchParams(next);
+    const search = buildServiceDrawerSearch(location.search, name);
+    navigate({ to: location.pathname + search, replace: true });
   };
 
   const setFocus = (name: string): void => {

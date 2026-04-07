@@ -124,6 +124,7 @@ const dashboardDrawerActionSchema: z.ZodType<DashboardDrawerAction> = z
       'kafkaTopic',
       'node',
       'redisInstance',
+      'service',
     ]),
     idField: z.string(),
     titleField: z.string().optional(),

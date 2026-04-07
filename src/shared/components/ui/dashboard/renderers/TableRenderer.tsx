@@ -1,4 +1,4 @@
-import { SimpleTable } from '@/components/ui';
+import { SimpleTable } from '@shared/components/primitives/ui/simple-table';
 import { useMemo } from 'react';
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 

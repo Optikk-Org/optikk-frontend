@@ -14,14 +14,11 @@ function matchConfiguredPage(
   pages: readonly DefaultConfigPage[]
 ): { page: DefaultConfigPage; pathParams?: Record<string, string> } | null {
   for (const page of pages) {
-    // Manual simple matching for dynamic backend pages
     const isMatched = pathname === page.path;
     if (!isMatched) {
       continue;
     }
 
-    // Backend pages generally don't have complex params handled here yet,
-    // but we can extract them if needed. For now, simple match.
     return { page, pathParams: undefined };
   }
 

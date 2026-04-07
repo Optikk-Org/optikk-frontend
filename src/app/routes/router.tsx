@@ -1,13 +1,16 @@
 import {
+  Navigate,
   createRootRoute,
   createRoute,
   createRouter,
   Outlet,
   redirect,
+  useParams,
 } from '@tanstack/react-router';
 import { lazy, Suspense } from 'react';
 
 import { getExplorerRoutes } from '@/app/registry/domainRegistry';
+import { buildLegacyServicePagePath } from '@/features/overview/components/serviceDrawerState';
 import { Loading, FeatureErrorBoundary } from '@/shared/components/ui/feedback';
 import { ROUTES } from '@/shared/constants/routes';
 
@@ -26,6 +29,12 @@ const InfrastructureHubPage = lazy(
 );
 const ServiceHubPage = lazy(() => import('@/features/overview/pages/ServiceHubPage'));
 const AiObservabilityPage = lazy(() => import('@/features/ai/pages/AiObservabilityPage'));
+
+function LegacyServicePathRedirect() {
+  const params = useParams({ strict: false });
+  const serviceName = typeof params.serviceName === 'string' ? params.serviceName : '';
+  return <Navigate to={serviceName ? buildLegacyServicePagePath(serviceName) : ROUTES.service} replace />;
+}
 
 function PageTransition({ children }: { children: React.ReactNode }) {
   return <div style={{ width: '100%', height: '100%' }}>{children}</div>;
@@ -71,7 +80,6 @@ const mainLayoutRoute = createRoute({
   component: () => (
     <ProtectedRoute>
       <MainLayout />
-      <Outlet />
     </ProtectedRoute>
   ),
 });
@@ -157,6 +165,12 @@ const serviceOpsRedirect = createRoute({
   loader: () => { throw redirect({ to: ROUTES.metrics, replace: true }) }
 });
 
+const legacyServicePathRedirect = createRoute({
+  getParentRoute: () => mainLayoutRoute,
+  path: '/services/$serviceName',
+  component: LegacyServicePathRedirect,
+});
+
 // Fallbacks
 const layoutFallback = createRoute({
   getParentRoute: () => mainLayoutRoute,
@@ -186,10 +200,10 @@ const routeTree = rootRoute.addChildren([
     errorsRedirect,
     ...legacyRedirects,
     serviceOpsRedirect,
+    legacyServicePathRedirect,
     layoutFallback
   ]),
   globalFallback
 ]);
 
 export const router = createRouter({ routeTree });
-

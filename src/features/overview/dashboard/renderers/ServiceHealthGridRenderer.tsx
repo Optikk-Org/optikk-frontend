@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { useLocation, useNavigate } from '@tanstack/react-router';
 
+import { buildServiceDrawerSearch } from '@/features/overview/components/serviceDrawerState';
 import { HealthIndicator } from '@shared/components/ui';
 import { formatNumber } from '@shared/utils/formatters';
 import { APP_COLORS } from '@config/colorLiterals';
@@ -13,6 +14,7 @@ export function ServiceHealthGridRenderer({
   fillHeight: _fillHeight,
 }: DashboardPanelRendererProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { data: services } = useDashboardData(chartConfig, dataSources);
 
   const serviceHealth = useMemo(() => {
@@ -25,7 +27,11 @@ export function ServiceHealthGridRenderer({
         name: s.service_name,
         status,
         requestCount,
+        errorCount,
         errorRate,
+        avgLatency: Number(s.avg_latency ?? 0),
+        p95Latency: Number(s.p95_latency ?? 0),
+        p99Latency: Number(s.p99_latency ?? 0),
       };
     });
   }, [services]);
@@ -45,7 +51,21 @@ export function ServiceHealthGridRenderer({
             <div key={service.name}>
               <div
                 className="bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg p-3 cursor-pointer transition-all duration-200 text-center hover:border-[var(--color-primary)] hover:-translate-y-px"
-                onClick={() => navigate({ to: `/services/${encodeURIComponent(service.name)}` })}
+                onClick={() =>
+                  navigate({
+                    to:
+                      location.pathname +
+                      buildServiceDrawerSearch(location.search, {
+                        name: service.name,
+                        requestCount: service.requestCount,
+                        errorCount: service.errorCount,
+                        errorRate: service.errorRate,
+                        avgLatency: service.avgLatency,
+                        p95Latency: service.p95Latency,
+                        p99Latency: service.p99Latency,
+                      }),
+                  })
+                }
               >
                 <HealthIndicator status={service.status} size={8} />
                 <div className="text-xs font-semibold text-[var(--text-primary)] mt-1.5 overflow-hidden text-ellipsis whitespace-nowrap">

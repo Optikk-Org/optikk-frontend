@@ -1,6 +1,6 @@
 import { AlertCircle, BarChart3, RefreshCw } from 'lucide-react';
 
-import { Button } from '@/components/ui';
+import { Button } from '@shared/components/primitives/ui/button';
 import { cn } from '@/lib/utils';
 import ObservabilityChart, {
   type ObservabilityChartSeries,
@@ -150,6 +150,7 @@ export function MetricsExplorerChart({
       <ObservabilityChart
         timestamps={timestamps}
         series={series}
+        type={chartType}
         height={360}
         legend
       />

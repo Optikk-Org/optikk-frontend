@@ -3,7 +3,7 @@ import uPlot from 'uplot';
 
 import { cn } from '@/lib/utils';
 
-import UPlotChart, { defaultAxes, uLine } from './UPlotChart';
+import UPlotChart, { defaultAxes, uLine, uBars } from './UPlotChart';
 
 export interface ObservabilityChartSeries {
   label: string;
@@ -18,6 +18,7 @@ export interface ObservabilityChartSeries {
 export interface ObservabilityChartProps {
   timestamps: number[];
   series: ObservabilityChartSeries[];
+  type?: 'line' | 'area' | 'bar';
   height?: number;
   fillHeight?: boolean;
   yMin?: number;
@@ -32,6 +33,7 @@ export interface ObservabilityChartProps {
 export default function ObservabilityChart({
   timestamps,
   series,
+  type = 'line',
   height = 280,
   fillHeight = false,
   yMin,
@@ -68,16 +70,19 @@ export default function ObservabilityChart({
       },
       series: [
         {},
-        ...series.map((item) =>
-          uLine(item.label, item.color, {
-            fill: item.fill,
+        ...series.map((item) => {
+          if (type === 'bar') {
+            return uBars(item.label, item.color);
+          }
+          return uLine(item.label, item.color, {
+            fill: type === 'area' || item.fill,
             dash: item.dash,
             width: item.width ?? 1.85,
-          })
-        ),
+          });
+        }),
       ],
     };
-  }, [legend, series, yAxisSize, yFormatter, yMin, yMax]);
+  }, [legend, series, yAxisSize, yFormatter, yMin, yMax, type]);
 
   const tooltipContent = useMemo(() => {
     const defaultXFormatter = (timestampSeconds: number) =>

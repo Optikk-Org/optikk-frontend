@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from '@tanstack/react-router';
-import Breadcrumbs from '@/components/ui/breadcrumb';
+import { Breadcrumbs } from '@shared/components/primitives/ui/breadcrumb';
 import { cn } from '@/lib/utils';
 import { useBreadcrumbs } from '@shared/hooks/useBreadcrumbs';
 

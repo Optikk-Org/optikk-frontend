@@ -1,4 +1,4 @@
-import { SimpleTable } from '@/components/ui';
+import { SimpleTable } from '@shared/components/primitives/ui/simple-table';
 import type {
   SimpleTableColumn,
   SimpleTableProps,

@@ -39,7 +39,7 @@ The HTTP API and dashboard JSON live in the sibling repo **`optikk-backend`** (s
 | `src/app/routes/BackendDrivenPage.tsx` | Backend-driven dashboard pages: matches URL → page config → domain adapter or generic `DashboardPage` |
 | `src/app/layout/MainLayout.tsx` | Shell layout |
 
-**Service dashboard:** `ROUTES.service` → `src/features/overview/pages/ServiceHubPage` — passes `serviceName` from the query string (`?serviceName=`) into `DashboardPage` as `pathParams` for panel `params` interpolation (`{serviceName}`). Has two tabs (URL-synced via `?view=dashboard|topology`): the default backend-driven `DashboardPage`, and a **Topology** tab — `TopologyView.tsx` + `topology/` subfolder (`api.ts`, `layout.ts` dagre LR, `ServiceTopologyNode.tsx`, `ServiceTopologyEdge.tsx`, `TopologyToolbar.tsx`) that renders an interactive runtime service map via `@xyflow/react` + `dagre`, fetching `GET /v1/services/topology`. Lazy-loaded.
+**Service page:** `ROUTES.service` → `src/features/overview/pages/ServiceHubPage` — passes `serviceName` from the query string (`?serviceName=`) into `DashboardPage` as `pathParams` for panel interpolation (`{serviceName}`). It keeps two tabs via `?view=dashboard|topology`: the backend-driven service dashboard and the existing **Topology** tab (`TopologyView.tsx` + `topology/`). Service detail is now a side drawer, not a standalone route: the overview service grid and the overview services table open `drawerEntity=service` with a frontend-owned `ServiceDetailDrawer`, which shows compact service diagnostics and links into Logs and Traces.
 
 ## Path aliases (Vite)
 
@@ -59,7 +59,7 @@ Defined in `vite.config.ts`. Common imports:
 
 All product domains are registered in **`src/app/registry/domainRegistry.ts`**. 7 domains in order:
 
-1. **overview** — Overview, Saturation, Service hub pages (3 dashboard page adapters, 6 panel renderers)
+1. **overview** — Overview, Saturation, Service detail adapter (3 dashboard page adapters, 6 panel renderers)
 2. **metrics** — Metrics Explorer, Saturation hub page, Kafka detail pages (3 panel renderers)
 3. **logs** — Log search + live tail (1 route, 1 panel renderer: `log-histogram`)
 4. **traces** — Traces explorer, detail, comparison (3 routes, 1 panel renderer: `trace-waterfall`)

@@ -28,7 +28,8 @@ export type DashboardDrawerEntity =
   | 'kafkaGroup'
   | 'kafkaTopic'
   | 'node'
-  | 'redisInstance';
+  | 'redisInstance'
+  | 'service';
 export const DASHBOARD_PANEL_TYPES = [
   'ai-bar',
   'ai-line',
