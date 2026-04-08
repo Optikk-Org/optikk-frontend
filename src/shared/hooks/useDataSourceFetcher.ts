@@ -46,6 +46,8 @@ export function useDataSourceFetcher(
 
   useInvalidateQueriesOnAppRefresh(refreshKey, 'datasource', selectedTeamId);
 
+  useInvalidateQueriesOnAppRefresh(refreshKey, 'datasource', selectedTeamId);
+
   const { startMs, endMs } = useMemo(() => {
     void refreshKey;
     const { startTime, endTime } = resolveTimeRangeBounds(timeRange);
