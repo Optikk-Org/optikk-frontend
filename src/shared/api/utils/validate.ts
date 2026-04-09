@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod";
 
 import { decodeApiResponse } from "./decode";
 
@@ -21,14 +21,12 @@ export function validateResponse<TSchema extends z.ZodTypeAny>(
   }
 
   // Only attempt recovery when ALL issues are unrecognized_keys.
-  const allUnrecognized = result.error.issues.every(
-    (issue) => issue.code === "unrecognized_keys"
-  );
+  const allUnrecognized = result.error.issues.every((issue) => issue.code === "unrecognized_keys");
 
   if (allUnrecognized && typeof value === "object" && value !== null) {
     if (import.meta.env.DEV) {
       const unknownKeys = result.error.issues.flatMap((i) =>
-        i.code === "unrecognized_keys" ? (i as any).keys as string[] : []
+        i.code === "unrecognized_keys" ? ((i as any).keys as string[]) : []
       );
       console.warn(
         "[validateResponse] API contract drift — backend returned unknown keys. Stripping and retrying.",
@@ -78,4 +76,3 @@ function stripUnknownKeys(schema: z.ZodTypeAny, value: unknown): unknown {
 }
 
 export { decodeApiResponse };
-
