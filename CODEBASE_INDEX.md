@@ -65,7 +65,8 @@ All product domains are registered in **`src/app/registry/domainRegistry.ts`**. 
 4. **traces** — Traces explorer, detail, comparison (3 routes, 1 panel renderer: `trace-waterfall`)
 5. **infrastructure** — Infrastructure hub page (1 dashboard page adapter)
 6. **ai** — AI Observability dashboard, LLM Runs, Conversations (5 routes, 1 dashboard page, 2 panel renderers: `ai-line`, `ai-bar`)
-7. **settings** — User/team settings (1 route)
+7. **alerts** — Alerts & Monitors hub, rule builder, rule detail (3 routes). Header bell polls `/api/v1/alerts/incidents`; `CreateAlertButton` is the "Create alert from this view" entry point used on MetricsExplorer and ServiceHub. Command palette contributes `Create alert`, `Go to alerts`, `Mute rule`, `Ack instance`.
+8. **settings** — User/team settings (1 route)
 
 Each feature's `index.ts` exports a **domain config**: navigation, explorer `routes`, optional `dashboardPages` and `dashboardPanels`.
 
@@ -81,6 +82,7 @@ Each feature's `index.ts` exports a **domain config**: navigation, explorer `rou
 | Area | Routes |
 |------|--------|
 | Marketing | `/login`, `/product`, `/`, `/pricing`, `/opentelemetry`, `/self-host` |
+| Alerts | `/alerts`, `/alerts/rules/new`, `/alerts/rules/:ruleId`, `/alerts/rules/:ruleId/edit` |
 | Overview | `/overview`, `/service`, `/saturation` |
 | Logs | `/logs` |
 | Traces | `/traces`, `/traces/:traceId`, `/traces/compare` |
@@ -113,6 +115,7 @@ Each feature's `index.ts` exports a **domain config**: navigation, explorer `rou
 | Traces | `traces` | TracesPage, TraceDetailPage, TraceComparisonPage | `/traces`, `/traces/:traceId`, `/traces/compare` | — | trace-waterfall |
 | Infrastructure | `infrastructure` | InfrastructureHubPage | 0 | infrastructure | — |
 | AI | `ai` | AiObservabilityPage, AiRunsExplorerPage, AiRunDetailPage, AiTraceDetailPage, AiConversationsPage, AiConversationDetailPage | `/ai-runs`, `/ai-runs/:spanId`, `/ai-traces/:traceId`, `/ai-conversations`, `/ai-conversations/:conversationId` | ai-observability | ai-line, ai-bar |
+| Alerts | `alerts` | AlertsHubPage, AlertRuleBuilderPage, AlertRuleDetailPage | `/alerts`, `/alerts/rules/new`, `/alerts/rules/$ruleId`, `/alerts/rules/$ruleId/edit` | — | — |
 | Settings | `settings` | SettingsPage (Profile, Team, Preferences tabs) | `/settings` | — | — |
 
 ### Explorer Core (`src/features/explorer-core/`)

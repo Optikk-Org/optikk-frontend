@@ -18,6 +18,9 @@ const ROUTES = {
   infrastructure: "/infrastructure",
   errors: "/errors",
   saturation: "/saturation",
+  saturationDatastoreDetail: "/saturation/datastores/$system",
+  saturationKafkaTopicDetail: "/saturation/kafka/topics/$topic",
+  saturationKafkaGroupDetail: "/saturation/kafka/groups/$groupId",
   aiObservability: "/ai-observability",
   aiRuns: "/ai-runs",
   aiRunDetail: "/ai-runs/$spanId",
@@ -25,6 +28,10 @@ const ROUTES = {
   aiConversations: "/ai-conversations",
   aiConversationDetail: "/ai-conversations/$conversationId",
   settings: "/settings",
+  alerts: "/alerts",
+  alertRuleNew: "/alerts/rules/new",
+  alertRuleDetail: "/alerts/rules/$ruleId",
+  alertRuleEdit: "/alerts/rules/$ruleId/edit",
 } as const;
 
 /**
