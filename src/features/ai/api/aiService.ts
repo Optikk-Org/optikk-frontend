@@ -138,28 +138,35 @@ export const aiService = {
   async getMessages(spanId: string): Promise<AiMessage[]> {
     return api.get(`${BASE}/ai/spans/${spanId}/messages`);
   },
-  async getTraceContext(spanId: string): Promise<AiTraceContextSpan[]> {
-    return api.get(`${BASE}/ai/spans/${spanId}/trace-context`);
+  /** Alias for getMessages — used by span detail and conversation pages */
+  async getSpanMessages(spanId: string): Promise<AiMessage[]> {
+    return api.get(`${BASE}/ai/spans/${spanId}/messages`);
   },
-  async getRelatedSpans(spanId: string, startTime: RequestTime, endTime: RequestTime, model?: string, operation?: string): Promise<AiRelatedSpan[]> {
-    return api.get(`${BASE}/ai/spans/${spanId}/related`, { params: { ...timeParams(startTime, endTime), model, operation } });
+  async getTraceContext(spanId: string, traceId?: string): Promise<{ ancestors: AiTraceContextSpan[]; current: AiTraceContextSpan; children: AiTraceContextSpan[] }> {
+    return api.get(`${BASE}/ai/spans/${spanId}/trace-context`, { params: traceId ? { traceId } : {} });
   },
-  async getTokenBreakdown(spanId: string, startTime: RequestTime, endTime: RequestTime, model?: string): Promise<AiTokenBreakdown> {
-    return api.get(`${BASE}/ai/spans/${spanId}/token-breakdown`, { params: { ...timeParams(startTime, endTime), model } });
+  async getRelatedSpans(spanId: string, model?: string, operation?: string): Promise<AiRelatedSpan[]> {
+    return api.get(`${BASE}/ai/spans/${spanId}/related`, { params: { model, operation } });
+  },
+  async getTokenBreakdown(spanId: string, model?: string): Promise<AiTokenBreakdown> {
+    return api.get(`${BASE}/ai/spans/${spanId}/token-breakdown`, { params: { model } });
   },
 
   // -------- Analytics --------
   async getModelCatalog(startTime: RequestTime, endTime: RequestTime, filters?: AiFilterParams): Promise<AiModelCatalogEntry[]> {
     return api.get(`${BASE}/ai/analytics/model-catalog`, { params: { ...timeParams(startTime, endTime), ...filterParams(filters) } });
   },
-  async getModelTimeseries(startTime: RequestTime, endTime: RequestTime, model: string, filters?: AiFilterParams): Promise<AiModelTimeseries[]> {
+  /** Overloaded — pages call getModelTimeseries(model, start, end) */
+  async getModelTimeseries(model: string, startTime: RequestTime, endTime: RequestTime, filters?: AiFilterParams): Promise<AiModelTimeseries[]> {
     return api.get(`${BASE}/ai/analytics/model-timeseries/${encodeURIComponent(model)}`, { params: { ...timeParams(startTime, endTime), ...filterParams(filters) } });
   },
-  async getLatencyDistribution(startTime: RequestTime, endTime: RequestTime, filters?: AiFilterParams): Promise<AiLatencyBucket[]> {
-    return api.get(`${BASE}/ai/analytics/latency-distribution`, { params: { ...timeParams(startTime, endTime), ...filterParams(filters) } });
+  /** Overloaded — pages call getLatencyDistribution(model, start, end) */
+  async getLatencyDistribution(model: string, startTime: RequestTime, endTime: RequestTime, filters?: AiFilterParams): Promise<AiLatencyBucket[]> {
+    return api.get(`${BASE}/ai/analytics/latency-distribution`, { params: { ...timeParams(startTime, endTime), ...filterParams(filters), model } });
   },
-  async getParameterImpact(startTime: RequestTime, endTime: RequestTime, filters?: AiFilterParams): Promise<AiParamImpact[]> {
-    return api.get(`${BASE}/ai/analytics/parameter-impact`, { params: { ...timeParams(startTime, endTime), ...filterParams(filters) } });
+  /** Overloaded — pages call getParameterImpact(model, start, end) */
+  async getParameterImpact(model: string, startTime: RequestTime, endTime: RequestTime, filters?: AiFilterParams): Promise<AiParamImpact[]> {
+    return api.get(`${BASE}/ai/analytics/parameter-impact`, { params: { ...timeParams(startTime, endTime), ...filterParams(filters), model } });
   },
   async getCostSummary(startTime: RequestTime, endTime: RequestTime, filters?: AiFilterParams): Promise<AiCostSummary> {
     return api.get(`${BASE}/ai/analytics/cost-summary`, { params: { ...timeParams(startTime, endTime), ...filterParams(filters) } });
@@ -187,5 +194,19 @@ export const aiService = {
   },
   async getConversationSummary(conversationId: string): Promise<AiConversationSummary> {
     return api.get(`${BASE}/ai/analytics/conversations/${encodeURIComponent(conversationId)}/summary`);
+  },
+  /** Composite: get conversation detail with turns and metadata */
+  async getConversationDetail(conversationId: string, startTime: RequestTime, endTime: RequestTime): Promise<{ turns: AiConversationTurn[]; turnCount: number; totalTokens: number; model: string; serviceName: string }> {
+    const [turns, summary] = await Promise.all([
+      api.get<AiConversationTurn[]>(`${BASE}/ai/analytics/conversations/${encodeURIComponent(conversationId)}`),
+      api.get<AiConversationSummary>(`${BASE}/ai/analytics/conversations/${encodeURIComponent(conversationId)}/summary`),
+    ]);
+    return {
+      turns: turns as unknown as AiConversationTurn[],
+      turnCount: (summary as unknown as AiConversationSummary).turnCount,
+      totalTokens: (summary as unknown as AiConversationSummary).totalTokens,
+      model: (summary as unknown as AiConversationSummary).models,
+      serviceName: '',
+    };
   },
 };

@@ -120,7 +120,7 @@ Each feature's `index.ts` exports a **domain config**: navigation, explorer `rou
 
 ### Explorer Core (`src/features/explorer-core/`)
 
-Shared infrastructure for all data explorers (Logs, Traces, Metrics) — **not a registered domain**:
+Shared infrastructure for all data explorers (Logs, Traces, Metrics, AI) — **not a registered domain**:
 - **Components**: `AnalyticsToolbar.tsx`, `FacetRail.tsx`, `ExplorerResultsTable.tsx`, `SummaryMetricStrip.tsx`
 - **Visualizations**: `AnalyticsTimeseries.tsx`, `AnalyticsTopList.tsx`, `AnalyticsTable.tsx`, `AnalyticsPieChart.tsx`
 - **Hooks**: `useExplorerAnalytics.ts`, `useLiveTailStream.ts` (native WebSocket `/api/v1/ws/live`)
@@ -139,7 +139,7 @@ Shared infrastructure for all data explorers (Logs, Traces, Metrics) — **not a
 
 **API files**: `aiService.ts` (centralized for all 37 AI endpoints)
 
-**Technical Logic**: Built on TanStack Query with `useTimeRangeQuery` integration. Displays high-density telemetry from `observability.spans` filtered by OTel `gen_ai.*` semantic attributes. Cost calculation is performant, using static multipliers from the backend price map.
+**Technical Logic**: Built on TanStack Query with `useTimeRangeQuery` integration. Displays high-density telemetry from `observability.spans` filtered by OTel `gen_ai.*` semantic attributes. Cost calculation is performant, using static multipliers from the backend price map. UI implements strict parity with Logs/Traces by using `<FacetRail>`, `<ExplorerResultsTable>`, and `@shared/components/ui/charts/UPlotChart.tsx` for inline visualizations.
 
 ## Shared Layer (`src/shared/`)
 

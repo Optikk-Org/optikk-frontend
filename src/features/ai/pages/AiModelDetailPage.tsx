@@ -1,73 +1,178 @@
 /**
- * Model Detail — Single model deep-dive with timeseries, latency distribution, and parameter impact.
+ * AI Model Detail — Deep-dive into a single model's performance.
+ *
+ * Improvements over previous version:
+ * - Timeseries rendered as charts (not raw tables)
+ * - Latency distribution as horizontal bar chart
+ * - Cost panel with model-specific breakdown
+ * - Error patterns for this specific model
  */
 import { useQuery } from "@tanstack/react-query";
-import { useParams, useNavigate } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useTimeRange, useTeamId, useRefreshKey } from "@app/store/appStore";
 import { resolveTimeRangeBounds } from "@/types";
 import { aiService } from "../api/aiService";
+import { AiStatCard } from "../components/AiStatCard";
+import { AiMiniChart, AiMultiSeriesChart } from "../components/AiMiniChart";
+import { formatNumber, formatMs, formatCost, formatPercent } from "../utils/formatters";
 import styles from "./AiOverviewPage.module.css";
 
 export default function AiModelDetailPage() {
-  const { modelName } = useParams({ strict: false }) as { modelName: string };
-  const model = decodeURIComponent(modelName || "");
+  const { model = "" } = useParams({ strict: false });
+  const decodedModel = decodeURIComponent(model);
   const timeRange = useTimeRange();
   const teamId = useTeamId();
   const refreshKey = useRefreshKey();
   const { startTime: startMs, endTime: endMs } = useMemo(() => resolveTimeRangeBounds(timeRange), [timeRange]);
-  const navigate = useNavigate();
 
-  const queryKeyBase = [teamId, startMs, endMs, refreshKey, model];
+  const queryBase = [teamId, decodedModel, startMs, endMs, refreshKey];
 
   const timeseries = useQuery({
-    queryKey: ["ai-model-ts", ...queryKeyBase],
-    queryFn: () => aiService.getModelTimeseries(startMs, endMs, model),
-    enabled: !!model,
+    queryKey: ["ai-model-ts", ...queryBase],
+    queryFn: () => aiService.getModelTimeseries(decodedModel, startMs, endMs),
+    enabled: !!decodedModel,
   });
 
   const latencyDist = useQuery({
-    queryKey: ["ai-latency-dist", ...queryKeyBase],
-    queryFn: () => aiService.getLatencyDistribution(startMs, endMs, { model }),
-    enabled: !!model,
+    queryKey: ["ai-model-latency-dist", ...queryBase],
+    queryFn: () => aiService.getLatencyDistribution(decodedModel, startMs, endMs),
+    enabled: !!decodedModel,
+  });
+
+  const costSummary = useQuery({
+    queryKey: ["ai-model-cost", ...queryBase],
+    queryFn: () => aiService.getCostSummary(startMs, endMs, { model: decodedModel }),
+    enabled: !!decodedModel,
+  });
+
+  const errorPatterns = useQuery({
+    queryKey: ["ai-model-errors", ...queryBase],
+    queryFn: () => aiService.getErrorPatterns(startMs, endMs, { model: decodedModel }),
+    enabled: !!decodedModel,
   });
 
   const paramImpact = useQuery({
-    queryKey: ["ai-param-impact", ...queryKeyBase],
-    queryFn: () => aiService.getParameterImpact(startMs, endMs, { model }),
-    enabled: !!model,
+    queryKey: ["ai-model-params", ...queryBase],
+    queryFn: () => aiService.getParameterImpact(decodedModel, startMs, endMs),
+    enabled: !!decodedModel,
   });
 
-  if (!model) return <div className={styles.emptyState}>No model specified.</div>;
+  // Transform timeseries for charts
+  const requestChartData = useMemo(
+    () => (timeseries.data ?? []).map((t) => ({ timestamp: t.timestamp, value: t.requestCount })),
+    [timeseries.data],
+  );
+  const latencyChartSeries = useMemo(() => [
+    { label: "Avg", data: (timeseries.data ?? []).map((t) => ({ timestamp: t.timestamp, value: t.avgLatencyMs })), color: "#6366f1" },
+    { label: "P95", data: (timeseries.data ?? []).map((t) => ({ timestamp: t.timestamp, value: t.p95LatencyMs })), color: "#f59e0b" },
+  ], [timeseries.data]);
+  const tokenChartSeries = useMemo(() => [
+    { label: "Input", data: (timeseries.data ?? []).map((t) => ({ timestamp: t.timestamp, value: t.inputTokens })), color: "#3b82f6" },
+    { label: "Output", data: (timeseries.data ?? []).map((t) => ({ timestamp: t.timestamp, value: t.outputTokens })), color: "#22c55e" },
+  ], [timeseries.data]);
+  const errorChartData = useMemo(
+    () => (timeseries.data ?? []).map((t) => ({ timestamp: t.timestamp, value: t.errorCount })),
+    [timeseries.data],
+  );
+
+  // Latency distribution histogram
+  const latencyBars = latencyDist.data ?? [];
+  const maxBucket = Math.max(...latencyBars.map((b) => b.count), 1);
+
+  // Cost summary
+  const cost = costSummary.data;
 
   return (
     <div className={styles.page}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <button onClick={() => navigate({ to: "/ai-models" as any })} style={{ background: "none", border: "none", color: "#6366f1", cursor: "pointer", fontSize: 13 }}>
-          ← Back to Catalog
-        </button>
-        <h2 style={{ color: "var(--text-primary, #e8eaf0)", fontSize: 16, fontWeight: 600, margin: 0 }}>
-          {model}
-        </h2>
+      {/* Header */}
+      <div className={styles.panel} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: 18, color: "var(--text-primary, #e8eaf0)" }}>{decodedModel}</h2>
+          <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--text-muted, #8b8fa3)" }}>
+            Model-level observability: performance, cost, and error analysis.
+          </p>
+        </div>
       </div>
 
-      {/* Timeseries overview */}
-      {timeseries.data && timeseries.data.length > 0 && (
+      {/* Cost stat cards */}
+      {cost && (
+        <div className={styles.statGrid}>
+          <AiStatCard label="Total Cost" value={formatCost(cost.totalCost)} />
+          <AiStatCard label="Avg Cost/Req" value={formatCost(cost.avgCostPerRequest)} />
+          <AiStatCard label="Total Requests" value={formatNumber(cost.requestCount)} />
+          <AiStatCard label="Input Cost" value={formatCost(cost.inputCost)} />
+          <AiStatCard label="Output Cost" value={formatCost(cost.outputCost)} />
+        </div>
+      )}
+
+      {/* Timeseries Charts */}
+      <div className={styles.gridTwo}>
         <div className={styles.panel}>
-          <h3 className={styles.panelTitle}>Performance Over Time</h3>
+          <h3 className={styles.panelTitle}>Request Rate</h3>
+          <AiMiniChart data={requestChartData} color="#6366f1" height={96} label="Requests" formatValue={formatNumber} />
+        </div>
+        <div className={styles.panel}>
+          <h3 className={styles.panelTitle}>Latency Trend</h3>
+          <AiMultiSeriesChart series={latencyChartSeries} height={96} />
+        </div>
+      </div>
+
+      <div className={styles.gridTwo}>
+        <div className={styles.panel}>
+          <h3 className={styles.panelTitle}>Token Usage</h3>
+          <AiMultiSeriesChart series={tokenChartSeries} height={96} />
+        </div>
+        <div className={styles.panel}>
+          <h3 className={styles.panelTitle}>Error Volume</h3>
+          <AiMiniChart data={errorChartData} color="#ef4444" height={96} label="Errors" formatValue={formatNumber} />
+        </div>
+      </div>
+
+      {/* Latency Distribution */}
+      <div className={styles.panel}>
+        <h3 className={styles.panelTitle}>Latency Distribution</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {latencyBars.map((bucket) => (
+            <div key={bucket.bucketMs} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ width: 80, textAlign: "right", fontSize: 11, color: "var(--text-muted, #8b8fa3)", flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
+                {formatMs(bucket.bucketMs)}
+              </span>
+              <div style={{ flex: 1, height: 10, borderRadius: 3, background: "var(--surface-2, #23263a)", overflow: "hidden" }}>
+                <div
+                  style={{
+                    width: `${(bucket.count / maxBucket) * 100}%`,
+                    height: "100%",
+                    borderRadius: 3,
+                    background: "linear-gradient(90deg, #6366f1, #818cf8)",
+                  }}
+                />
+              </div>
+              <span style={{ width: 50, fontSize: 11, color: "var(--text-secondary, #c0c4d4)", fontVariantNumeric: "tabular-nums" }}>
+                {formatNumber(bucket.count)}
+              </span>
+            </div>
+          ))}
+          {latencyBars.length === 0 && <div className={styles.emptyState} style={{ padding: 24 }}>No latency data available.</div>}
+        </div>
+      </div>
+
+      {/* Parameter Impact */}
+      {(paramImpact.data ?? []).length > 0 && (
+        <div className={styles.panel}>
+          <h3 className={styles.panelTitle}>Parameter Impact</h3>
           <div className={styles.tableWrap}>
             <table className={styles.table}>
-              <thead><tr><th>Time</th><th>Requests</th><th>Avg Latency</th><th>P95</th><th>Error %</th><th>In Tok</th><th>Out Tok</th></tr></thead>
+              <thead><tr><th>Temperature</th><th>Top P</th><th>Avg Latency</th><th>Avg Tokens</th><th>Error %</th><th>Requests</th></tr></thead>
               <tbody>
-                {timeseries.data.slice(-20).map((t, i) => (
+                {(paramImpact.data ?? []).map((p, i) => (
                   <tr key={i}>
-                    <td style={{ fontSize: 11 }}>{new Date(t.timestamp).toLocaleTimeString()}</td>
-                    <td>{t.requestCount}</td>
-                    <td>{t.avgLatencyMs.toFixed(0)}ms</td>
-                    <td>{t.p95Ms.toFixed(0)}ms</td>
-                    <td>{t.errorRate.toFixed(2)}%</td>
-                    <td>{formatNumber(t.inputTokens)}</td>
-                    <td>{formatNumber(t.outputTokens)}</td>
+                    <td className={styles.mono}>{p.temperature.toFixed(2)}</td>
+                    <td className={styles.mono}>{p.topP.toFixed(2)}</td>
+                    <td>{formatMs(p.avgLatencyMs)}</td>
+                    <td>{formatNumber(p.avgTokens)}</td>
+                    <td>{formatPercent(p.errorRate)}</td>
+                    <td>{formatNumber(p.requestCount)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -76,52 +181,28 @@ export default function AiModelDetailPage() {
         </div>
       )}
 
-      <div className={styles.gridTwo}>
-        {/* Latency Distribution */}
+      {/* Error Patterns for this model */}
+      {(errorPatterns.data ?? []).length > 0 && (
         <div className={styles.panel}>
-          <h3 className={styles.panelTitle}>Latency Distribution</h3>
-          {latencyDist.data && latencyDist.data.length > 0 ? (
-            <div style={{ display: "flex", gap: 1, height: 80, alignItems: "flex-end" }}>
-              {latencyDist.data.filter((b) => b.model === model).map((b, i) => {
-                const max = Math.max(...latencyDist.data!.filter((x) => x.model === model).map((x) => x.count), 1);
-                return <div key={i} style={{ flex: 1, height: `${(b.count / max) * 100}%`, background: "#6366f1", borderRadius: "2px 2px 0 0", minWidth: 3 }} title={`${b.bucketMs}ms: ${b.count}`} />;
-              })}
-            </div>
-          ) : (
-            <div className={styles.emptyState}>No data</div>
-          )}
+          <h3 className={styles.panelTitle}>Error Patterns</h3>
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead><tr><th>Operation</th><th>Message</th><th>Count</th><th>First Seen</th><th>Last Seen</th></tr></thead>
+              <tbody>
+                {(errorPatterns.data ?? []).map((e, i) => (
+                  <tr key={i}>
+                    <td>{e.operation}</td>
+                    <td style={{ maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis" }}>{e.statusMessage || "—"}</td>
+                    <td className={styles.errorText}>{formatNumber(e.errorCount)}</td>
+                    <td style={{ fontSize: 11 }}>{new Date(e.firstSeen).toLocaleString()}</td>
+                    <td style={{ fontSize: 11 }}>{new Date(e.lastSeen).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-
-        {/* Parameter Impact */}
-        <div className={styles.panel}>
-          <h3 className={styles.panelTitle}>Temperature Impact</h3>
-          {paramImpact.data && paramImpact.data.length > 0 ? (
-            <div className={styles.tableWrap}>
-              <table className={styles.table}>
-                <thead><tr><th>Temperature</th><th>Avg Latency</th><th>Error %</th><th>Count</th></tr></thead>
-                <tbody>
-                  {paramImpact.data.map((p, i) => (
-                    <tr key={i}>
-                      <td>{p.temperature.toFixed(1)}</td>
-                      <td>{p.avgLatency.toFixed(0)}ms</td>
-                      <td>{p.errorRate.toFixed(2)}%</td>
-                      <td>{p.count}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className={styles.emptyState}>No temperature data</div>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
-}
-
-function formatNumber(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return String(n);
 }

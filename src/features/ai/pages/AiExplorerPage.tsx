@@ -1,5 +1,9 @@
 /**
- * LLM Traces Explorer — Faceted span list with filters.
+ * LLM Traces Explorer — Faceted span list with filters, proper histogram,
+ * sort toggles, and pagination.
+ *
+ * Fully integrated with explorer-core components (FacetRail, ExplorerResultsTable)
+ * per user feedback to ensure 100% UI consistency across all domains.
  */
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -7,8 +11,17 @@ import { useState, useMemo } from "react";
 import { useTimeRange, useTeamId, useRefreshKey } from "@app/store/appStore";
 import { resolveTimeRangeBounds } from "@/types";
 import { aiService } from "../api/aiService";
-import type { AiExplorerFilterParams } from "../types";
-import styles from "./AiOverviewPage.module.css";
+import type { AiExplorerFilterParams, AiSpan } from "../types";
+import { AiStatCard } from "../components/AiStatCard";
+import { AiMiniChart } from "../components/AiMiniChart";
+import { formatNumber, formatMs } from "../utils/formatters";
+import type { SimpleTableColumn } from "@/components/ui";
+import { ExplorerResultsTable, FacetRail } from "@/features/explorer-core/components";
+import { PageHeader, PageShell, PageSurface } from "@shared/components/ui";
+import { Activity, AlertCircle, Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type SortField = "timestamp" | "duration" | "tokens";
 
 export default function AiExplorerPage() {
   const timeRange = useTimeRange();
@@ -16,7 +29,16 @@ export default function AiExplorerPage() {
   const refreshKey = useRefreshKey();
   const { startTime: startMs, endTime: endMs } = useMemo(() => resolveTimeRangeBounds(timeRange), [timeRange]);
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<AiExplorerFilterParams>({ limit: 50, offset: 0, sort: "timestamp", sortDir: "desc" });
+
+  const [filters, setFilters] = useState<AiExplorerFilterParams>({
+    limit: 50,
+    offset: 0,
+    sort: "timestamp",
+    sortDir: "desc",
+  });
+
+  const [pageSize, setPageSize] = useState(50);
+  const page = Math.floor((filters.offset || 0) / pageSize) + 1;
 
   const queryKeyBase = [teamId, startMs, endMs, refreshKey, filters];
 
@@ -41,106 +63,231 @@ export default function AiExplorerPage() {
   });
 
   const s = summary.data;
+  const histoChartData = useMemo(
+    () => (histogram.data ?? []).map((h) => ({ timestamp: h.timestamp, value: h.count })),
+    [histogram.data],
+  );
 
-  return (
-    <div className={styles.page}>
-      {/* Summary Bar */}
-      <div className={styles.statGrid}>
-        <StatCard label="Spans" value={s?.totalSpans ?? 0} />
-        <StatCard label="Errors" value={s?.errorCount ?? 0} />
-        <StatCard label="Avg Latency" value={`${(s?.avgLatencyMs ?? 0).toFixed(0)}ms`} />
-        <StatCard label="P95" value={`${(s?.p95Ms ?? 0).toFixed(0)}ms`} />
-        <StatCard label="Total Tokens" value={formatNumber(s?.totalTokens ?? 0)} />
-        <StatCard label="Models" value={s?.uniqueModels ?? 0} />
-      </div>
-
-      {/* Histogram */}
-      {histogram.data && histogram.data.length > 0 && (
-        <div className={styles.panel}>
-          <h3 className={styles.panelTitle}>Request Volume</h3>
-          <div style={{ display: "flex", gap: "1px", height: 48, alignItems: "flex-end" }}>
-            {histogram.data.map((h, i) => {
-              const max = Math.max(...histogram.data!.map((p) => p.count), 1);
-              return <div key={i} style={{ flex: 1, height: `${(h.count / max) * 100}%`, background: "#6366f1", borderRadius: "2px 2px 0 0", minWidth: 2 }} title={`${h.count} spans`} />;
-            })}
+  // ---- Columns ----
+  const columns = useMemo<SimpleTableColumn<AiSpan>[]>(
+    () => [
+      {
+        title: "Timestamp",
+        key: "timestamp",
+        dataIndex: "timestamp",
+        width: 160,
+        sorter: () => 0, // Handled server-side
+        sortOrder: filters.sort === "timestamp" ? (filters.sortDir === "asc" ? "ascend" : "descend") : null,
+        onHeaderCell: () => ({
+          onClick: () => {
+            setFilters((prev) => ({
+              ...prev,
+              offset: 0,
+              sort: "timestamp",
+              sortDir: prev.sort === "timestamp" && prev.sortDir === "desc" ? "asc" : "desc",
+            }));
+          },
+        }),
+        render: (val, row) => (
+          <div className="font-mono text-[11px] text-[var(--text-primary)]">
+            {new Date(row.timestamp).toLocaleString()}
           </div>
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className={styles.toolbar}>
-        <input
-          className={styles.searchInput}
-          placeholder="Filter by trace ID..."
-          value={filters.traceId ?? ""}
-          onChange={(e) => setFilters((p) => ({ ...p, traceId: e.target.value || undefined }))}
-        />
-        {facets.data?.models.values.slice(0, 5).map((f) => (
-          <button
-            key={f.value}
-            className={`${styles.filterChip} ${filters.model === f.value ? styles.filterChipActive : ""}`}
-            onClick={() => setFilters((p) => ({ ...p, model: p.model === f.value ? undefined : f.value }))}
-          >
-            {f.value} ({f.count})
-          </button>
-        ))}
-        <button
-          className={`${styles.filterChip} ${filters.status === "error" ? styles.filterChipActive : ""}`}
-          onClick={() => setFilters((p) => ({ ...p, status: p.status === "error" ? undefined : "error" }))}
-        >
-          Errors only
-        </button>
-      </div>
-
-      {/* Span Table */}
-      <div className={styles.panel}>
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Timestamp</th>
-                <th>Service</th>
-                <th>Model</th>
-                <th>Operation</th>
-                <th>Duration</th>
-                <th>In Tok</th>
-                <th>Out Tok</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(spans.data ?? []).map((span) => (
-                <tr key={span.spanId} className={styles.clickRow} onClick={() => navigate({ to: `/ai-explorer/${span.spanId}` as any })}>
-                  <td style={{ fontSize: 11, fontVariantNumeric: "tabular-nums" }}>{new Date(span.timestamp).toLocaleTimeString()}</td>
-                  <td>{span.serviceName}</td>
-                  <td className={styles.mono}>{span.model}</td>
-                  <td>{span.operationType || span.operationName}</td>
-                  <td>{span.durationMs.toFixed(0)}ms</td>
-                  <td>{formatNumber(span.inputTokens)}</td>
-                  <td>{formatNumber(span.outputTokens)}</td>
-                  <td>{span.hasError ? <span className={styles.errorText}>Error</span> : <span style={{ color: "#22c55e" }}>OK</span>}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {spans.data?.length === 0 && <div className={styles.emptyState}>No LLM spans found for this time range.</div>}
-        </div>
-      </div>
-    </div>
+        ),
+      },
+      {
+        title: "Operation",
+        key: "operationName",
+        dataIndex: "operationName",
+        width: 140,
+        render: (val, row) => (
+          <div className="flex flex-col gap-1">
+            <span className="font-medium text-[12.5px] text-[var(--text-primary)]">{val || "—"}</span>
+            <span className="text-[11px] text-[var(--text-muted)] truncate">{row.serviceName}</span>
+          </div>
+        ),
+      },
+      {
+        title: "Model",
+        key: "model",
+        dataIndex: "model",
+        width: 120,
+        render: (val, row) => (
+          <div className="flex flex-col gap-1">
+            <span className="font-mono text-[11.5px] text-[var(--text-secondary)]">{val || "—"}</span>
+            {row.provider && <span className="text-[10px] text-[var(--text-muted)] uppercase">{row.provider}</span>}
+          </div>
+        ),
+      },
+      {
+        title: "Duration",
+        key: "durationMs",
+        dataIndex: "durationMs",
+        width: 100,
+        sorter: () => 0,
+        sortOrder: filters.sort === "duration" ? (filters.sortDir === "asc" ? "ascend" : "descend") : null,
+        onHeaderCell: () => ({
+          onClick: () => {
+            setFilters((prev) => ({
+              ...prev,
+              offset: 0,
+              sort: "duration",
+              sortDir: prev.sort === "duration" && prev.sortDir === "desc" ? "asc" : "desc",
+            }));
+          },
+        }),
+        render: (val) => <span className="font-mono text-[12px]">{formatMs(Number(val))}</span>,
+      },
+      {
+        title: "Tokens",
+        key: "totalTokens",
+        dataIndex: "totalTokens",
+        width: 150,
+        sorter: () => 0,
+        sortOrder: filters.sort === "tokens" ? (filters.sortDir === "asc" ? "ascend" : "descend") : null,
+        onHeaderCell: () => ({
+          onClick: () => {
+            setFilters((prev) => ({
+              ...prev,
+              offset: 0,
+              sort: "tokens",
+              sortDir: prev.sort === "tokens" && prev.sortDir === "desc" ? "asc" : "desc",
+            }));
+          },
+        }),
+        render: (_, row) => (
+          <div className="flex flex-col gap-1">
+            <span className="font-mono text-[12px]">{formatNumber(row.totalTokens)}</span>
+            <div className="flex items-center gap-2 text-[10px]">
+              <span className="text-blue-400">↑{formatNumber(row.inputTokens)}</span>
+              <span className="text-green-400">↓{formatNumber(row.outputTokens)}</span>
+            </div>
+          </div>
+        ),
+      },
+      {
+        title: "Status",
+        key: "hasError",
+        dataIndex: "hasError",
+        width: 90,
+        render: (hasError, row) =>
+          hasError ? (
+            <span className="inline-flex items-center gap-1 rounded bg-[rgba(240,68,56,0.15)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--color-error)]">
+              <AlertCircle size={10} /> Err
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded bg-[rgba(34,197,94,0.15)] px-1.5 py-0.5 text-[10px] font-semibold text-green-500">
+              <Activity size={10} /> OK
+            </span>
+          ),
+      },
+    ],
+    [filters.sort, filters.sortDir]
   );
-}
 
-function StatCard({ label, value }: { label: string; value: string | number }) {
+  // ---- Facet groups ----
+  const facetGroups = useMemo(() => {
+    if (!facets.data) return [];
+    return [
+      { key: "service", label: "Service", buckets: facets.data.services.values || [] },
+      { key: "model", label: "Model", buckets: facets.data.models.values || [] },
+      { key: "provider", label: "Provider", buckets: facets.data.providers.values || [] },
+      { key: "operation", label: "Operation", buckets: facets.data.operations.values || [] },
+      { key: "finishReason", label: "Finish Reason", buckets: facets.data.finishReasons.values || [] },
+      {
+        key: "status",
+        label: "Status",
+        buckets: [
+          { value: "ok", count: (s?.totalSpans || 0) - (s?.errorCount || 0) },
+          { value: "error", count: s?.errorCount || 0 },
+        ],
+      },
+    ];
+  }, [facets.data, s]);
+
+  const activeSelections = useMemo(() => {
+    return {
+      service: filters.service || null,
+      model: filters.model || null,
+      provider: filters.provider || null,
+      operation: filters.operation || null,
+      finishReason: filters.finishReason || null,
+      status: filters.status || null,
+    };
+  }, [filters]);
+
   return (
-    <div className={styles.statCard}>
-      <div className={styles.statLabel}>{label}</div>
-      <div className={styles.statValue}>{value}</div>
-    </div>
-  );
-}
+    <PageShell>
+      <PageHeader
+        title="AI Explorer"
+        icon={<Sparkles size={22} />}
+        subtitle="Filter and explore all AI generation spans and token completions."
+      />
 
-function formatNumber(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return String(n);
+      {/* Summary Strip */}
+      <PageSurface padding="lg" className="mb-4">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "16px" }}>
+          <AiStatCard label="Spans" value={formatNumber(s?.totalSpans ?? 0)} />
+          <AiStatCard label="Errors" value={formatNumber(s?.errorCount ?? 0)} accent={s && s.errorCount > 0 ? "red" : undefined} />
+          <AiStatCard label="Avg Latency" value={formatMs(s?.avgLatencyMs ?? 0)} />
+          <AiStatCard label="P95 Latency" value={formatMs(s?.p95Ms ?? 0)} />
+          <AiStatCard label="Total Tokens" value={formatNumber(s?.totalTokens ?? 0)} />
+          <AiStatCard label="Unique Models" value={s?.uniqueModels ?? 0} />
+        </div>
+
+        {/* Histogram Chart */}
+        {histoChartData.length > 0 && (
+          <div className="mt-8">
+            <h3 className="mb-2 font-semibold text-[13px] text-[var(--text-primary)]">Request Volume</h3>
+            <AiMiniChart data={histoChartData} color="#6366f1" height={96} formatValue={formatNumber} />
+          </div>
+        )}
+      </PageSurface>
+
+      <div className="relative z-0 grid gap-4 xl:grid-cols-[240px_minmax(0,1fr)]">
+        <FacetRail
+          groups={facetGroups}
+          selected={activeSelections}
+          onSelect={(groupKey, value) => {
+            setFilters((prev) => ({
+              ...prev,
+              offset: 0,
+              [groupKey]: prev[groupKey as keyof AiExplorerFilterParams] === value ? undefined : value,
+            }));
+          }}
+        />
+
+        <ExplorerResultsTable
+          key="ai-explorer"
+          title="Spans"
+          subtitle={`${formatNumber(spans.data?.length ?? 0)} rows in view, ${formatNumber(s?.totalSpans ?? 0)} total matches`}
+          rows={spans.data ?? []}
+          columns={columns}
+          rowKey={(row) => row.spanId}
+          isLoading={spans.isLoading}
+          page={page}
+          pageSize={pageSize}
+          total={s?.totalSpans ?? 0}
+          showPagination={true}
+          onPageChange={(newPage) => {
+            setFilters((prev) => ({
+              ...prev,
+              offset: Math.max(0, (newPage - 1) * pageSize),
+            }));
+          }}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setFilters((prev) => ({
+              ...prev,
+              offset: 0,
+              limit: newSize,
+            }));
+          }}
+          onRow={(row) => ({
+            onClick: () => navigate({ to: `/ai-explorer/${encodeURIComponent(row.spanId)}` as any }),
+          })}
+          rowClassName={() => "cursor-pointer transition-colors hover:bg-[rgba(255,255,255,0.04)]"}
+        />
+      </div>
+    </PageShell>
+  );
 }

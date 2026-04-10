@@ -245,9 +245,11 @@ export interface AiLatencyBucket {
 
 export interface AiParamImpact {
   temperature: number;
-  avgLatency: number;
+  topP: number;
+  avgLatencyMs: number;
+  avgTokens: number;
   errorRate: number;
-  count: number;
+  requestCount: number;
 }
 
 export interface AiModelTimeseries {
