@@ -12,7 +12,7 @@ const CONTEXT_ITEMS = [
     id: "runs",
     label: "Runs Explorer",
     description: "Inspect individual LLM invocations and traces.",
-    href: ROUTES.aiRuns,
+    href: ROUTES.aiExplorer,
     icon: BrainCircuit,
   },
   {

@@ -65,7 +65,7 @@ export default function AiModelDetailPage() {
   );
   const latencyChartSeries = useMemo(() => [
     { label: "Avg", data: (timeseries.data ?? []).map((t) => ({ timestamp: t.timestamp, value: t.avgLatencyMs })), color: "#6366f1" },
-    { label: "P95", data: (timeseries.data ?? []).map((t) => ({ timestamp: t.timestamp, value: t.p95LatencyMs })), color: "#f59e0b" },
+    { label: "P95", data: (timeseries.data ?? []).map((t) => ({ timestamp: t.timestamp, value: t.p95Ms })), color: "#f59e0b" },
   ], [timeseries.data]);
   const tokenChartSeries = useMemo(() => [
     { label: "Input", data: (timeseries.data ?? []).map((t) => ({ timestamp: t.timestamp, value: t.inputTokens })), color: "#3b82f6" },
@@ -98,8 +98,8 @@ export default function AiModelDetailPage() {
       {/* Cost stat cards */}
       {cost && (
         <div className={styles.statGrid}>
-          <AiStatCard label="Total Cost" value={formatCost(cost.totalCost)} />
-          <AiStatCard label="Avg Cost/Req" value={formatCost(cost.avgCostPerRequest)} />
+          <AiStatCard label="Total Cost" value={formatCost(cost.totalEstimatedCost)} />
+          <AiStatCard label="Avg Cost/Req" value={formatCost(cost.costPerRequest)} />
           <AiStatCard label="Total Requests" value={formatNumber(cost.requestCount)} />
           <AiStatCard label="Input Cost" value={formatCost(cost.inputCost)} />
           <AiStatCard label="Output Cost" value={formatCost(cost.outputCost)} />

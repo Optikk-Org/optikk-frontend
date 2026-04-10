@@ -257,6 +257,7 @@ export interface AiModelTimeseries {
   requestCount: number;
   avgLatencyMs: number;
   p95Ms: number;
+  errorCount: number;
   errorRate: number;
   inputTokens: number;
   outputTokens: number;
@@ -265,8 +266,11 @@ export interface AiModelTimeseries {
 export interface AiCostSummary {
   totalEstimatedCost: number;
   costPerRequest: number;
+  requestCount: number;
   totalInputTokens: number;
   totalOutputTokens: number;
+  inputCost: number;
+  outputCost: number;
   byModel: AiModelCost[];
 }
 
