@@ -87,6 +87,7 @@ const compareEndpointRegressionSchema = z
 const deploymentCompareSchema = z
   .object({
     deployment: latestDeploymentSchema,
+    baseline_deployment: latestDeploymentSchema.optional().nullable(),
     before_window: compareWindowSchema.optional(),
     after_window: compareWindowSchema,
     has_baseline: booleanValue,

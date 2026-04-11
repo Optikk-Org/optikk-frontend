@@ -1,8 +1,6 @@
 import { type UseQueryResult, keepPreviousData, useQueries } from "@tanstack/react-query";
 import { useMemo } from "react";
 
-import { useInvalidateQueriesOnAppRefresh } from "@shared/hooks/useInvalidateQueriesOnAppRefresh";
-
 import type {
   DashboardDataSourceValue,
   DashboardDataSources,
@@ -14,9 +12,9 @@ import type { ApiErrorShape } from "@shared/api/api/interceptors/errorIntercepto
 import { toApiErrorShape } from "@shared/api/utils/errorNormalization";
 import { interpolateValue } from "@shared/utils/placeholderInterpolation";
 
-import { resolveTimeRangeBounds } from "@/types";
+import { resolveTimeRangeBounds, timeRangeQuerySegment } from "@/types";
 
-import { useRefreshKey, useTeamId, useTimeRange } from "@app/store/appStore";
+import { useTeamId, useTimeRange } from "@app/store/appStore";
 
 interface ComponentFailedRequest {
   componentIds: string[];
@@ -37,15 +35,13 @@ function buildRequestKey(
   component: DashboardPanelSpec,
   resolvedEndpoint: string,
   resolvedParams: Record<string, unknown>,
-  startMs: number,
-  endMs: number
+  rangeSegment: string
 ) {
   return JSON.stringify({
     method: component.query?.method || "GET",
     endpoint: resolvedEndpoint,
     params: resolvedParams,
-    startMs,
-    endMs,
+    rangeSegment,
   });
 }
 
@@ -58,17 +54,7 @@ export function useComponentDataFetcher(
 ): UseComponentDataFetcherResult {
   const selectedTeamId = useTeamId();
   const timeRange = useTimeRange();
-  const refreshKey = useRefreshKey();
-
-  useInvalidateQueriesOnAppRefresh(refreshKey, "component-query", selectedTeamId);
-
-  useInvalidateQueriesOnAppRefresh(refreshKey, "component-query", selectedTeamId);
-
-  const { startMs, endMs } = useMemo(() => {
-    void refreshKey;
-    const { startTime, endTime } = resolveTimeRangeBounds(timeRange);
-    return { startMs: startTime, endMs: endTime };
-  }, [refreshKey, timeRange]);
+  const rangeSegment = useMemo(() => timeRangeQuerySegment(timeRange), [timeRange]);
 
   const requestEntries = useMemo(() => {
     const entries = new Map<
@@ -94,8 +80,7 @@ export function useComponentDataFetcher(
         component,
         resolvedEndpoint,
         resolvedParams,
-        startMs,
-        endMs
+        rangeSegment
       );
 
       const current = entries.get(requestKey);
@@ -113,7 +98,7 @@ export function useComponentDataFetcher(
     });
 
     return Array.from(entries.values());
-  }, [components, endMs, pathParams, startMs]);
+  }, [components, pathParams, rangeSegment]);
 
   const results = useQueries({
     queries: requestEntries.map((entry) => ({
@@ -123,19 +108,20 @@ export function useComponentDataFetcher(
         entry.method,
         entry.endpoint,
         entry.params,
-        startMs,
-        endMs,
+        rangeSegment,
       ],
-      queryFn: () =>
-        api.request({
+      queryFn: () => {
+        const { startTime, endTime } = resolveTimeRangeBounds(timeRange);
+        return api.request({
           url: entry.endpoint,
           method: entry.method,
           params: {
-            start: startMs,
-            end: endMs,
+            start: startTime,
+            end: endTime,
             ...entry.params,
           },
-        }),
+        });
+      },
       enabled: !!selectedTeamId,
       staleTime: 0,
       gcTime: 30_000,

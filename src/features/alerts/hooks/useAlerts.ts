@@ -1,7 +1,7 @@
 // React Query hooks for the alerting feature.
 //
-// Queries use `refreshKey` in the key so the global auto-refresh bar also
-// ticks alerts pages; mutations invalidate the relevant scopes on success.
+// Global refresh bumps `refreshKey` in the app store; `QueryLifecycleBridge`
+// invalidates team-scoped queries so alerts refetch without new cache keys.
 
 import {
   keepPreviousData,
@@ -10,7 +10,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import { useRefreshKey, useTeamId } from "@store/appStore";
+import { useTeamId } from "@store/appStore";
 
 import { alertsApi } from "../api/alertsApi";
 import type {
@@ -20,27 +20,22 @@ import type {
 
 const ALERTS_SCOPE = "alerts";
 
-export function alertRuleQueryKey(id: string, refreshKey: number, teamId: number | null) {
-  return [ALERTS_SCOPE, "rule", id, teamId, refreshKey] as const;
+export function alertRuleQueryKey(id: string, teamId: number | null) {
+  return [ALERTS_SCOPE, "rule", id, teamId] as const;
 }
 
-export function alertRulesQueryKey(refreshKey: number, teamId: number | null) {
-  return [ALERTS_SCOPE, "rules", teamId, refreshKey] as const;
+export function alertRulesQueryKey(teamId: number | null) {
+  return [ALERTS_SCOPE, "rules", teamId] as const;
 }
 
-export function alertIncidentsQueryKey(
-  refreshKey: number,
-  teamId: number | null,
-  state?: string
-) {
-  return [ALERTS_SCOPE, "incidents", teamId, state ?? "all", refreshKey] as const;
+export function alertIncidentsQueryKey(teamId: number | null, state?: string) {
+  return [ALERTS_SCOPE, "incidents", teamId, state ?? "all"] as const;
 }
 
 export function useAlertRules() {
-  const refreshKey = useRefreshKey();
   const teamId = useTeamId();
   return useQuery({
-    queryKey: alertRulesQueryKey(refreshKey, teamId),
+    queryKey: alertRulesQueryKey(teamId),
     queryFn: () => alertsApi.listRules({ teamId }),
     placeholderData: keepPreviousData,
     staleTime: 0,
@@ -51,10 +46,9 @@ export function useAlertRules() {
 }
 
 export function useAlertRule(id: string | undefined) {
-  const refreshKey = useRefreshKey();
   const teamId = useTeamId();
   return useQuery({
-    queryKey: alertRuleQueryKey(id ?? "", refreshKey, teamId),
+    queryKey: alertRuleQueryKey(id ?? "", teamId),
     queryFn: () => alertsApi.getRule(id as string),
     enabled: Boolean(id),
     placeholderData: keepPreviousData,
@@ -68,11 +62,10 @@ export function useAlertIncidents(options?: {
   readonly refetchInterval?: number;
   readonly state?: "firing" | "resolved" | "all";
 }) {
-  const refreshKey = useRefreshKey();
   const teamId = useTeamId();
   const state = options?.state;
   return useQuery({
-    queryKey: alertIncidentsQueryKey(refreshKey, teamId, state),
+    queryKey: alertIncidentsQueryKey(teamId, state),
     queryFn: () => alertsApi.listIncidents({ state, teamId }),
     placeholderData: keepPreviousData,
     refetchInterval: options?.refetchInterval,
@@ -83,10 +76,9 @@ export function useAlertIncidents(options?: {
 }
 
 export function useRuleAudit(id: string | undefined) {
-  const refreshKey = useRefreshKey();
   const teamId = useTeamId();
   return useQuery({
-    queryKey: [ALERTS_SCOPE, "audit", id, teamId, refreshKey] as const,
+    queryKey: [ALERTS_SCOPE, "audit", id, teamId] as const,
     queryFn: () => alertsApi.ruleAudit(id as string),
     enabled: Boolean(id),
     placeholderData: keepPreviousData,
@@ -97,10 +89,9 @@ export function useRuleAudit(id: string | undefined) {
 }
 
 export function useSilences() {
-  const refreshKey = useRefreshKey();
   const teamId = useTeamId();
   return useQuery({
-    queryKey: [ALERTS_SCOPE, "silences", teamId, refreshKey] as const,
+    queryKey: [ALERTS_SCOPE, "silences", teamId] as const,
     queryFn: () => alertsApi.listSilences(),
     placeholderData: keepPreviousData,
     staleTime: 0,

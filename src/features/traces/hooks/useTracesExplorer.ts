@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 
 import { buildTracesExplorerQuery } from "@/features/explorer-core/utils/explorerQuery";
+import { timeRangeQuerySegment } from "@/types";
 import { useRefreshKey, useTeamId, useTimeRange } from "@app/store/appStore";
 import { useURLFilters } from "@shared/hooks/useURLFilters";
 
@@ -93,6 +94,11 @@ export function useTracesExplorer() {
   const timeRange = useTimeRange();
   const refreshKey = useRefreshKey();
 
+  const { startTime, endTime } = useMemo(
+    () => resolveTimeBounds(timeRange),
+    [timeRange, refreshKey]
+  );
+
   const {
     values: urlValues,
     setters: urlSetters,
@@ -122,8 +128,6 @@ export function useTracesExplorer() {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-
-  const { startTime, endTime } = useMemo(() => resolveTimeBounds(timeRange), [timeRange]);
 
   const explorerQuery = useMemo(
     () =>
@@ -159,22 +163,22 @@ export function useTracesExplorer() {
       "traces",
       "explorer",
       selectedTeamId,
-      startTime,
-      endTime,
+      timeRangeQuerySegment(timeRange),
       page,
       pageSize,
       explorerQuery,
-      refreshKey,
     ],
-    queryFn: () =>
-      tracesExplorerApi.query({
+    queryFn: () => {
+      const { startTime, endTime } = resolveTimeBounds(timeRange);
+      return tracesExplorerApi.query({
         startTime,
         endTime,
         limit: pageSize,
         offset: (page - 1) * pageSize,
         step: "5m",
         query: explorerQuery,
-      }),
+      });
+    },
     enabled: Boolean(selectedTeamId),
     placeholderData: (previous) => previous,
     retry: false,

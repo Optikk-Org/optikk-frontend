@@ -73,4 +73,6 @@ export interface K8sPodRestartRow {
   readonly pod_name: string;
   readonly namespace: string;
   readonly restarts: number;
+  /** Present when metrics include OTel `container.image.tag` on restart samples. */
+  readonly container_image_tag?: string;
 }

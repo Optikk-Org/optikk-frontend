@@ -11,9 +11,15 @@ interface QueryLifecycleBridgeProps {
   readonly children: ReactNode;
 }
 
+function queryKeyIncludesTeamId(key: unknown, teamId: number): boolean {
+  if (!Array.isArray(key)) return false;
+  return key.some((part) => part === teamId);
+}
+
 export default function QueryLifecycleBridge({ children }: QueryLifecycleBridgeProps): JSX.Element {
   const selectedTeamId = useAppStore((state) => state.selectedTeamId);
   const selectedTeamIds = useAppStore((state) => state.selectedTeamIds);
+  const refreshKey = useAppStore((state) => state.refreshKey);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const teamScopeKey = useMemo(
@@ -23,9 +29,9 @@ export default function QueryLifecycleBridge({ children }: QueryLifecycleBridgeP
 
   const isFirstTeamScope = useRef(true);
   const previousAuthState = useRef(isAuthenticated);
+  const previousRefreshKey = useRef<number | null>(null);
 
   useEffect(() => {
-    console.log("[QueryLifecycleBridge] Team scope changed:", teamScopeKey);
     if (isFirstTeamScope.current) {
       isFirstTeamScope.current = false;
       return;
@@ -34,8 +40,25 @@ export default function QueryLifecycleBridge({ children }: QueryLifecycleBridgeP
     void queryClient.invalidateQueries();
   }, [teamScopeKey]);
 
+  /** Manual / auto refresh: refetch in place so UI keeps showing previous data (no full blink). */
   useEffect(() => {
-    console.log("[QueryLifecycleBridge] Auth state changed:", isAuthenticated);
+    if (previousRefreshKey.current === null) {
+      previousRefreshKey.current = refreshKey;
+      return;
+    }
+    if (previousRefreshKey.current === refreshKey) {
+      return;
+    }
+    previousRefreshKey.current = refreshKey;
+    if (selectedTeamId == null) {
+      return;
+    }
+    void queryClient.invalidateQueries({
+      predicate: (q) => queryKeyIncludesTeamId(q.queryKey, selectedTeamId),
+    });
+  }, [refreshKey, selectedTeamId]);
+
+  useEffect(() => {
     if (previousAuthState.current && !isAuthenticated) {
       queryClient.clear();
     }

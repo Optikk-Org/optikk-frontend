@@ -38,6 +38,12 @@ export function resolveTimeRangeBounds(r: TimeRange): { startTime: number; endTi
   return { startTime: now - r.minutes * 60_000, endTime: now };
 }
 
+/** Stable React Query segment: relative presets stay one key while wall-clock bounds move on refetch. */
+export function timeRangeQuerySegment(r: TimeRange): string {
+  if (r.kind === "absolute") return `${r.startMs}-${r.endMs}`;
+  return r.preset;
+}
+
 /** Compute duration in ms for any TimeRange */
 export function timeRangeDurationMs(r: TimeRange): number {
   if (r.kind === "absolute") return r.endMs - r.startMs;

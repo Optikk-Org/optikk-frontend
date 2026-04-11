@@ -33,7 +33,7 @@ This skill defines the development standards and architectural patterns for the 
 - **uPlot Charts**: When data updates but the geometry/options are the same, call **`setData`** on the existing chart instance. Do **not** destroy and recreate the chart; this prevents visual flickering during auto-refresh.
 - **TanStack Query v5**: 
   - Use **`placeholderData: keepPreviousData`** (or `(p) => p`) to ensure refetches do not flash empty/loading states.
-  - Avoid putting `refreshKey` directly into `queryKey` for backend-driven panels (this blinks the grid). Use stable keys and **`useInvalidateQueriesOnAppRefresh`** instead.
+  - Avoid putting `refreshKey` into `queryKey` (blinks the UI). Use **`timeRangeQuerySegment`** + resolve bounds in **`queryFn`**; **`QueryLifecycleBridge`** invalidates team-scoped queries when `refreshKey` bumps.
 - **Auto-Refresh**: Distinguish between "Initial Fetch" (`isPending && data === undefined`) and "Background Refresh" to ensure the UI feels stable.
 
 ## Engineering Principles
@@ -90,8 +90,8 @@ export const myConfig: DomainConfig = {
 | Scope | `refreshKey` in key? | Invalidation |
 |-------|---------------------|--------------|
 | Explorer | Yes | Key change triggers refetch |
-| Dashboard component | **No** | `useInvalidateQueriesOnAppRefresh` |
-| Dashboard datasource | **No** | `useInvalidateQueriesOnAppRefresh` |
+| Dashboard component | **No** | `QueryLifecycleBridge` |
+| Dashboard datasource | **No** | `QueryLifecycleBridge` |
 
 - Always: `placeholderData: keepPreviousData`
 - Loading = `isPending && data === undefined`

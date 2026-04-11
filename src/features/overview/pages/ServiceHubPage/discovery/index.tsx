@@ -86,20 +86,51 @@ function compareRows(
 
 function DeploymentCell({
   row,
-  onOpen,
+  onOpenCompare,
+  onOpenService,
 }: {
   row: DiscoveryServiceRow;
-  onOpen: (row: DiscoveryServiceRow) => void;
+  onOpenCompare: (row: DiscoveryServiceRow) => void;
+  onOpenService: (row: DiscoveryServiceRow) => void;
 }) {
+  const cellButtonClass =
+    "w-full rounded-[var(--card-radius)] border border-[var(--border-color)] bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015))] px-2.5 py-1.5 text-left transition-colors hover:border-[rgba(124,127,242,0.45)] hover:bg-[rgba(124,127,242,0.08)]";
+
+  if (!row.latestDeployment && row.kubernetes) {
+    const k = row.kubernetes;
+    const primary =
+      k.primaryContainerImageTag && k.primaryContainerImageTag.length > 22
+        ? `${k.primaryContainerImageTag.slice(0, 20)}…`
+        : k.primaryContainerImageTag;
+
+    return (
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onOpenService(row);
+        }}
+        className={cellButtonClass}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <span className="min-w-0 truncate font-medium text-[12px] text-[var(--text-primary)]">
+            {primary ?? "Kubernetes"}
+          </span>
+          <Badge variant={DEPLOYMENT_RISK_VARIANT[row.deploymentRisk]} className="shrink-0">
+            {row.deploymentRisk}
+          </Badge>
+        </div>
+        <div className="mt-0.5 truncate text-[11px] text-[var(--text-muted)]">
+          Service · full infra in drawer
+        </div>
+      </button>
+    );
+  }
+
   if (!row.latestDeployment) {
     return (
-      <div className="rounded-[var(--card-radius)] border border-[var(--border-color)] border-dashed bg-[rgba(255,255,255,0.02)] px-3 py-2 text-left">
-        <div className="font-medium text-[12px] text-[var(--text-secondary)]">
-          No deployment metadata
-        </div>
-        <div className="mt-1 text-[11px] text-[var(--text-muted)]">
-          Telemetry has not reported a release version yet.
-        </div>
+      <div className="rounded-[var(--card-radius)] border border-[var(--border-color)] border-dashed bg-[rgba(255,255,255,0.02)] px-2.5 py-1.5 text-left">
+        <span className="text-[12px] text-[var(--text-secondary)]">No release</span>
       </div>
     );
   }
@@ -111,19 +142,21 @@ function DeploymentCell({
       type="button"
       onClick={(event) => {
         event.stopPropagation();
-        onOpen(row);
+        onOpenCompare(row);
       }}
-      className="w-full rounded-[var(--card-radius)] border border-[var(--border-color)] bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015))] px-3 py-2 text-left transition-colors hover:border-[rgba(124,127,242,0.45)] hover:bg-[rgba(124,127,242,0.08)]"
+      className={cellButtonClass}
     >
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-medium text-[var(--text-primary)]">{deployment.version}</span>
-        <Badge variant={DEPLOYMENT_RISK_VARIANT[row.deploymentRisk]}>{row.deploymentRisk}</Badge>
+      <div className="flex items-center justify-between gap-2">
+        <span className="min-w-0 truncate font-medium text-[12px] text-[var(--text-primary)]">
+          {deployment.version}
+        </span>
+        <Badge variant={DEPLOYMENT_RISK_VARIANT[row.deploymentRisk]} className="shrink-0">
+          {row.deploymentRisk}
+        </Badge>
       </div>
-      <div className="mt-1 text-[11px] text-[var(--text-secondary)]">
-        {deployment.environment || "unknown env"} • deployed{" "}
-        {formatRelativeTime(deployment.deployed_at)}
+      <div className="mt-0.5 truncate text-[11px] text-[var(--text-secondary)]">
+        {deployment.environment || "unknown"} · {formatRelativeTime(deployment.deployed_at)}
       </div>
-      <div className="mt-1 text-[11px] text-[var(--text-muted)]">Open release comparison</div>
     </button>
   );
 }
@@ -139,7 +172,8 @@ export default function DiscoveryView(): JSX.Element {
     return fetchDiscoveryRows(teamId, startTime, endTime);
   });
 
-  const rows = query.data ?? [];
+  const rows = query.data?.rows ?? [];
+  const kubernetesDataAvailable = query.data?.kubernetesDataAvailable ?? false;
 
   const filtered = useMemo(() => {
     const needle = filter.trim().toLowerCase();
@@ -165,6 +199,21 @@ export default function DiscoveryView(): JSX.Element {
       avgLatency: row.avgLatency,
       p95Latency: row.p95Latency,
       p99Latency: row.p99Latency,
+      ...(row.latestDeployment?.version ? { telemetryVersion: row.latestDeployment.version } : {}),
+      ...(row.kubernetes
+        ? {
+            kubernetes: {
+              podRestarts: row.kubernetes.podRestarts,
+              replicaDesired: row.kubernetes.replicaDesired,
+              replicaAvailable: row.kubernetes.replicaAvailable,
+              rolloutStatus: row.kubernetes.rolloutStatus,
+              namespace: row.kubernetes.namespace,
+              primaryContainerImageTag: row.kubernetes.primaryContainerImageTag,
+              restartHotPodName: row.kubernetes.restartHotPodName,
+              restartHotImageTag: row.kubernetes.restartHotImageTag,
+            },
+          }
+        : {}),
     });
     setSearchParams(new URLSearchParams(nextSearch), { replace: true });
   };
@@ -178,6 +227,20 @@ export default function DiscoveryView(): JSX.Element {
       deployedAt: row.latestDeployment.deployed_at,
       lastSeenAt: row.latestDeployment.last_seen_at,
       isActive: row.latestDeployment.is_active,
+      ...(row.kubernetes
+        ? {
+            kubernetes: {
+              podRestarts: row.kubernetes.podRestarts,
+              replicaDesired: row.kubernetes.replicaDesired,
+              replicaAvailable: row.kubernetes.replicaAvailable,
+              rolloutStatus: row.kubernetes.rolloutStatus,
+              namespace: row.kubernetes.namespace,
+              primaryContainerImageTag: row.kubernetes.primaryContainerImageTag,
+              restartHotPodName: row.kubernetes.restartHotPodName,
+              restartHotImageTag: row.kubernetes.restartHotImageTag,
+            },
+          }
+        : {}),
     });
     setSearchParams(new URLSearchParams(nextSearch), { replace: true });
   };
@@ -194,6 +257,11 @@ export default function DiscoveryView(): JSX.Element {
       render: (_value, row) => (
         <div className="flex flex-col gap-1">
           <span className="font-semibold text-[13px] text-[var(--text-primary)]">{row.name}</span>
+          {row.sources.includes("kubernetes") && !row.sources.includes("apm") ? (
+            <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-[0.08em]">
+              Kubernetes-visible workload
+            </div>
+          ) : null}
           <div className="flex flex-wrap items-center gap-2 text-[11px] text-[var(--text-muted)]">
             <span>{formatNumber(row.requestCount)} req</span>
             <span>•</span>
@@ -262,11 +330,17 @@ export default function DiscoveryView(): JSX.Element {
     {
       title: "Last Deployment",
       key: "deployment",
-      width: 280,
+      width: 200,
       sticky: "right",
       headerClassName: "border-l border-[var(--border-color)]",
       cellClassName: "border-l border-[var(--border-color)]",
-      render: (_value, row) => <DeploymentCell row={row} onOpen={openDeploymentCompare} />,
+      render: (_value, row) => (
+        <DeploymentCell
+          row={row}
+          onOpenCompare={openDeploymentCompare}
+          onOpenService={openService}
+        />
+      ),
     },
   ];
 
@@ -288,8 +362,8 @@ export default function DiscoveryView(): JSX.Element {
               Release-aware service catalog
             </h2>
             <p className="mt-2 text-[13px] text-[var(--text-secondary)] leading-6">
-              Scan health, latency, topology footprint, and the newest release for every service
-              from one dense surface.
+              Scan health, latency, topology footprint, release versions, and Kubernetes rollout
+              signals from one dense surface (single merged API).
             </p>
           </div>
 
@@ -332,6 +406,16 @@ export default function DiscoveryView(): JSX.Element {
 
       <PageSurface padding="lg">
         <div className="flex flex-col gap-4">
+          {!query.isLoading && !kubernetesDataAvailable ? (
+            <div
+              role="status"
+              className="rounded-[var(--card-radius)] border border-[var(--border-color)] border-dashed bg-[rgba(255,193,7,0.06)] px-3 py-2 text-[12px] text-[var(--text-secondary)]"
+            >
+              Kubernetes pod restart and replica fields are unavailable for this request (queries
+              failed or infra data is empty). APM and topology columns still reflect telemetry.
+            </div>
+          ) : null}
+
           <div className="flex flex-wrap items-center gap-3">
             <select
               value={healthFilter}

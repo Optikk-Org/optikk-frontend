@@ -67,11 +67,11 @@ React 19, Vite 8, TypeScript, TanStack Query v5, TanStack Router, Tailwind 3.4, 
 
 ## Global refresh / auto-refresh
 
-- **Zustand:** `src/app/store/appStore.ts` — `triggerRefresh()` increments **`refreshKey`** (also bumps on time-range changes).
+- **Zustand:** `src/app/store/appStore.ts` — `triggerRefresh()` increments **`refreshKey`** (manual/auto refresh only; time-range changes do not bump it).
 - **Persisted state:** `selectedTeamId`, `timeRange`, `autoRefreshInterval`, `theme`, `timezone`, `comparisonMode`, `viewPreferences`, `recentPages`, `recentTimeRanges`
 - **Runtime state:** `refreshKey`
-- **TanStack Query:** Many hooks include `refreshKey` in `queryKey` to force refetch when the time window is unchanged. Use **`placeholderData: keepPreviousData`** on queries so refetches do not flash empty/loading UI.
-- **Backend-driven dashboard panels** (`useComponentDataFetcher`): **do not** put `refreshKey` in `queryKey`. Use stable keys and **`useInvalidateQueriesOnAppRefresh`** to `invalidateQueries` when `refreshKey` changes. Treat **loading** as `isPending && data === undefined`.
+- **TanStack Query:** **Do not** put `refreshKey` in `queryKey` (it creates a new cache entry every tick and blinks the UI). Use **`timeRangeQuerySegment(timeRange)`** in keys and call **`resolveTimeRangeBounds(timeRange)`** inside **`queryFn`** so relative windows slide on refetch. **`QueryLifecycleBridge`** invalidates queries whose key includes the selected team id when `refreshKey` bumps. Use **`placeholderData: keepPreviousData`** where appropriate.
+- **Backend-driven dashboard panels** (`useComponentDataFetcher`): stable keys with `timeRangeQuerySegment`; treat **loading** as `isPending && data === undefined`.
 
 ## Aliases
 
@@ -124,9 +124,9 @@ export const myConfig: DomainConfig = {
 
 | Scope | Key pattern | `refreshKey` in key? | Invalidation |
 |-------|-------------|---------------------|--------------|
-| Explorer queries | `[feature, endpoint, ...params, refreshKey]` | Yes | Key change triggers refetch |
-| Dashboard component | `['component-query', teamId, endpoint, timeRange]` | **No** | `useInvalidateQueriesOnAppRefresh` |
-| Dashboard datasource | `['datasource', teamId, endpoint, timeRange]` | **No** | `useInvalidateQueriesOnAppRefresh` |
+| Explorer / hub queries | `[feature, …, teamId, timeRangeQuerySegment, …]` | **No** | `QueryLifecycleBridge` on `refreshKey` |
+| Dashboard component | `['component-query', teamId, …, timeRangeQuerySegment]` | **No** | Same |
+| Dashboard datasource | `['datasource', teamId, …, timeRangeQuerySegment]` | **No** | Same |
 
 - **Always** use `placeholderData: keepPreviousData` to prevent loading flash on refetch
 - **Loading state** = `isPending && data === undefined` (not `isLoading`)

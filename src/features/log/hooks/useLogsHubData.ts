@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
+import { timeRangeQuerySegment } from "@/types";
 import { useRefreshKey, useTeamId, useTimeRange } from "@app/store/appStore";
 
 import { useLiveTailStream } from "@/features/explorer-core/hooks/useLiveTailStream";
@@ -38,26 +39,31 @@ export function useLogsHubData({
   const refreshKey = useRefreshKey();
   const [liveTailEnabled, setLiveTailEnabled] = useState(false);
 
-  const { startTime, endTime } = useMemo(() => resolveTimeBounds(timeRange), [timeRange]);
+  const { startTime, endTime } = useMemo(
+    () => resolveTimeBounds(timeRange),
+    [timeRange, refreshKey]
+  );
 
-  const explorerQueryKey = useMemo(
+  const explorerQueryStable = useMemo(
     () => ({
-      startTime,
-      endTime,
       limit: pageSize,
       offset: (page - 1) * pageSize,
       step: DEFAULT_STEP,
       query: explorerQuery,
     }),
-    [startTime, endTime, page, pageSize, explorerQuery]
+    [page, pageSize, explorerQuery]
   );
 
   const explorerQueryFn = useQuery({
-    queryKey: ["logs", "explorer", selectedTeamId, explorerQueryKey, refreshKey],
-    queryFn: () =>
-      logsExplorerApi.query({
-        ...explorerQueryKey,
-      }),
+    queryKey: ["logs", "explorer", selectedTeamId, timeRangeQuerySegment(timeRange), explorerQueryStable],
+    queryFn: () => {
+      const { startTime: st, endTime: et } = resolveTimeBounds(timeRange);
+      return logsExplorerApi.query({
+        startTime: st,
+        endTime: et,
+        ...explorerQueryStable,
+      });
+    },
     enabled: Boolean(selectedTeamId),
     placeholderData: (previous) => previous,
     retry: false,

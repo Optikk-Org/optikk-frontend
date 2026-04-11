@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 
 import { resolveTimeBounds } from "@/features/explorer-core/utils/timeRange";
+import { timeRangeQuerySegment } from "@/types";
 import { useRefreshKey, useTeamId, useTimeRange } from "@app/store/appStore";
 import { useURLFilters } from "@shared/hooks/useURLFilters";
 
@@ -23,6 +24,11 @@ export function useLlmSessions() {
   const selectedTeamId = useTeamId();
   const timeRange = useTimeRange();
   const refreshKey = useRefreshKey();
+
+  const { startTime, endTime } = useMemo(
+    () => resolveTimeBounds(timeRange),
+    [timeRange, refreshKey]
+  );
 
   const {
     values: urlValues,
@@ -63,8 +69,6 @@ export function useLlmSessions() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
-  const { startTime, endTime } = useMemo(() => resolveTimeBounds(timeRange), [timeRange]);
-
   const explorerQuery = useMemo(
     () =>
       buildLlmExplorerQuery({
@@ -82,21 +86,21 @@ export function useLlmSessions() {
       "llm",
       "sessions",
       selectedTeamId,
-      startTime,
-      endTime,
+      timeRangeQuerySegment(timeRange),
       page,
       pageSize,
       explorerQuery,
-      refreshKey,
     ],
-    queryFn: () =>
-      llmExplorerApi.sessionsQuery({
+    queryFn: () => {
+      const { startTime, endTime } = resolveTimeBounds(timeRange);
+      return llmExplorerApi.sessionsQuery({
         startTime,
         endTime,
         limit: pageSize,
         offset: (page - 1) * pageSize,
         query: explorerQuery,
-      }),
+      });
+    },
     enabled: Boolean(selectedTeamId),
     placeholderData: (previous) => previous,
     retry: false,

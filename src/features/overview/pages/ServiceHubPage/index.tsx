@@ -71,7 +71,7 @@ export default function ServiceHubPage() {
   );
 
   const summary = useMemo(() => {
-    const rows = discoverySummaryQuery.data ?? [];
+    const rows = discoverySummaryQuery.data?.rows ?? [];
     const now = Date.now();
     const recentlyDeployed = rows.filter((row) => {
       const deployedAt = row.latestDeployment?.deployed_at;

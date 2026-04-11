@@ -16,6 +16,7 @@ import {
   type OverviewRequestRatePoint,
   metricsOverviewApi,
 } from "@/features/metrics/api/metricsOverviewApi";
+import { fetchDiscoveryRows } from "@/features/overview/pages/ServiceHubPage/discovery/api";
 import {
   type ServiceTopologyEdge,
   fetchServiceTopology,
@@ -67,6 +68,20 @@ interface ServiceSummarySnapshot {
   avgLatency: number;
   p95Latency: number;
   p99Latency: number;
+}
+
+/** Infra slice carried in drawer URL (`kubernetes` in `initialData`) or resolved from discovery cache. */
+interface KubernetesInfraSnapshot {
+  podRestarts: number;
+  replicaDesired: number;
+  replicaAvailable: number;
+  rolloutStatus: string;
+  namespace?: string;
+  primaryContainerImageTag?: string;
+  restartHotPodName?: string;
+  restartHotImageTag?: string;
+  /** Service `version` from span-based deployment correlation (not the container image tag). */
+  telemetryReleaseVersion?: string;
 }
 
 interface DependencyRow {
@@ -213,6 +228,50 @@ function buildInitialSummary(
     p95Latency: readNumber(data.p95_latency) ?? 0,
     p99Latency: readNumber(data.p99_latency) ?? 0,
   };
+}
+
+function readOptionalTrimmedString(value: unknown): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const t = value.trim();
+  return t !== "" ? t : undefined;
+}
+
+function buildKubernetesSnapshotFromInitial(
+  data: Record<string, unknown> | null | undefined
+): KubernetesInfraSnapshot | null {
+  if (!data) {
+    return null;
+  }
+  const raw = data.kubernetes;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    return null;
+  }
+  const o = raw as Record<string, unknown>;
+  const podRestarts = readNumber(o.pod_restarts) ?? readNumber(o.pod_restarts_max) ?? 0;
+  return {
+    podRestarts,
+    replicaDesired: readNumber(o.replica_desired) ?? 0,
+    replicaAvailable: readNumber(o.replica_available) ?? 0,
+    rolloutStatus: typeof o.rollout_status === "string" ? o.rollout_status : "unknown",
+    namespace: readOptionalTrimmedString(o.namespace),
+    primaryContainerImageTag: readOptionalTrimmedString(o.primary_container_image_tag),
+    restartHotPodName: readOptionalTrimmedString(o.restart_hot_pod_name),
+    restartHotImageTag: readOptionalTrimmedString(o.restart_hot_image_tag),
+    telemetryReleaseVersion: readOptionalTrimmedString(data.telemetry_version),
+  };
+}
+
+function kubernetesRolloutLabel(status: string): string {
+  switch (status) {
+    case "healthy":
+      return "Rollout healthy";
+    case "degraded":
+      return "Rollout degraded";
+    default:
+      return "Rollout status unknown";
+  }
 }
 
 function buildDependencyRows(
@@ -362,6 +421,15 @@ export default function ServiceDetailDrawer({
     { extraKeys: [serviceName], enabled: Boolean(serviceName) }
   );
 
+  const k8sFromInitial = useMemo(
+    () => buildKubernetesSnapshotFromInitial(initialData),
+    [initialData]
+  );
+
+  const discoveryForInfraQuery = useTimeRangeQuery("services-discovery", fetchDiscoveryRows, {
+    enabled: Boolean(open && serviceName && !k8sFromInitial),
+  });
+
   const initialSummary = useMemo(() => buildInitialSummary(initialData), [initialData]);
 
   const selectedServiceMetrics = useMemo(
@@ -427,6 +495,34 @@ export default function ServiceDetailDrawer({
     () => buildDependencyRows(dependenciesQuery.data?.edges ?? [], serviceName, "downstream"),
     [dependenciesQuery.data?.edges, serviceName]
   );
+
+  const kubernetesSnapshot = useMemo((): KubernetesInfraSnapshot | null => {
+    const rows = discoveryForInfraQuery.data?.rows ?? [];
+    const hit = rows.find((r) => normalizeServiceKey(r.name) === normalizedServiceName);
+    const telemetryFromDiscovery = readOptionalTrimmedString(hit?.latestDeployment?.version);
+
+    if (k8sFromInitial) {
+      return {
+        ...k8sFromInitial,
+        telemetryReleaseVersion: k8sFromInitial.telemetryReleaseVersion ?? telemetryFromDiscovery,
+      };
+    }
+    const slot = hit?.kubernetes;
+    if (!slot) {
+      return null;
+    }
+    return {
+      podRestarts: slot.podRestarts,
+      replicaDesired: slot.replicaDesired,
+      replicaAvailable: slot.replicaAvailable,
+      rolloutStatus: slot.rolloutStatus,
+      namespace: slot.namespace,
+      primaryContainerImageTag: slot.primaryContainerImageTag,
+      restartHotPodName: slot.restartHotPodName,
+      restartHotImageTag: slot.restartHotImageTag,
+      telemetryReleaseVersion: telemetryFromDiscovery,
+    };
+  }, [discoveryForInfraQuery.data?.rows, k8sFromInitial, normalizedServiceName]);
 
   const requestSparkline = useMemo(
     () => requestTrendSeries.map((point) => Number(point.request_count ?? 0)),
@@ -522,6 +618,20 @@ export default function ServiceDetailDrawer({
                   <Badge variant="default">{formatDuration(summaryMetrics.p95Latency)} p95</Badge>
                 </>
               ) : null}
+              {kubernetesSnapshot ? (
+                <Badge
+                  variant={
+                    kubernetesSnapshot.podRestarts >= 3 ||
+                    (kubernetesSnapshot.replicaDesired > 0 &&
+                      kubernetesSnapshot.replicaAvailable < kubernetesSnapshot.replicaDesired) ||
+                    kubernetesSnapshot.rolloutStatus === "degraded"
+                      ? "warning"
+                      : "default"
+                  }
+                >
+                  K8s restarts {formatNumber(kubernetesSnapshot.podRestarts)}
+                </Badge>
+              ) : null}
               <Button
                 variant="secondary"
                 size="sm"
@@ -542,6 +652,9 @@ export default function ServiceDetailDrawer({
             <div className="flex flex-wrap items-center gap-2">
               {[
                 { href: "#service-drawer-overview", label: "Overview" },
+                ...(kubernetesSnapshot
+                  ? [{ href: "#service-drawer-kubernetes", label: "Kubernetes" } as const]
+                  : []),
                 { href: "#service-drawer-endpoints", label: "Endpoints" },
                 { href: "#service-drawer-dependencies", label: "Dependencies" },
               ].map((link) => (
@@ -653,6 +766,149 @@ export default function ServiceDetailDrawer({
           {!metricsQuery.isError && !summaryLoading && !hasSummary ? (
             <div className="rounded-[var(--card-radius)] border border-[var(--border-color)] bg-[var(--bg-card)] px-4 py-3 text-[12px] text-[var(--text-muted)]">
               No service metrics were found for this service in the current time range.
+            </div>
+          ) : null}
+
+          {!k8sFromInitial && discoveryForInfraQuery.isLoading && !kubernetesSnapshot ? (
+            <div className="rounded-[var(--card-radius)] border border-[var(--border-color)] border-dashed bg-[var(--bg-card)] px-4 py-3 text-[12px] text-[var(--text-muted)]">
+              Loading Kubernetes signals…
+            </div>
+          ) : null}
+
+          {kubernetesSnapshot ? (
+            <div id="service-drawer-kubernetes" className="scroll-mt-24">
+              <DrawerSection
+                title="Kubernetes"
+                subtitle="Replica status, pod restarts, and container image tags from infra metrics (`container.image.tag` when exporters send it). Release version from traces is shown separately."
+              >
+                {kubernetesSnapshot.telemetryReleaseVersion ? (
+                  <div className="mb-3 rounded-[var(--card-radius)] border border-[var(--border-color)] bg-[rgba(255,255,255,0.02)] px-3 py-2">
+                    <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-[0.08em]">
+                      Release (telemetry)
+                    </div>
+                    <div className="mt-1 font-medium text-[13px] text-[var(--text-primary)]">
+                      {kubernetesSnapshot.telemetryReleaseVersion}
+                    </div>
+                    <div className="mt-1 text-[11px] text-[var(--text-muted)]">
+                      From span-based deployment correlation — may differ from the container image
+                      tag on the restarting pod during rollouts.
+                    </div>
+                  </div>
+                ) : null}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-[0.08em]">
+                      Pod restarts
+                    </div>
+                    <div
+                      className={`mt-1 font-semibold text-[16px] ${
+                        kubernetesSnapshot.podRestarts >= 3
+                          ? "text-[var(--color-warning)]"
+                          : "text-[var(--text-primary)]"
+                      }`}
+                    >
+                      {formatNumber(kubernetesSnapshot.podRestarts)}
+                    </div>
+                    <div className="mt-1 text-[11px] text-[var(--text-muted)]">
+                      Highest restart count on any pod mapped to this workload in the selected
+                      window.
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-[0.08em]">
+                      Replicas available / desired
+                    </div>
+                    <div
+                      className={`mt-1 font-semibold text-[16px] ${
+                        kubernetesSnapshot.replicaDesired > 0 &&
+                        kubernetesSnapshot.replicaAvailable < kubernetesSnapshot.replicaDesired
+                          ? "text-[var(--color-error)]"
+                          : "text-[var(--text-primary)]"
+                      }`}
+                    >
+                      {formatNumber(kubernetesSnapshot.replicaAvailable)} /{" "}
+                      {formatNumber(kubernetesSnapshot.replicaDesired)}
+                    </div>
+                  </div>
+                </div>
+                {kubernetesSnapshot.primaryContainerImageTag ||
+                kubernetesSnapshot.restartHotPodName ? (
+                  <div className="mt-3 space-y-2 border-[var(--border-color)] border-t pt-3">
+                    {kubernetesSnapshot.primaryContainerImageTag ? (
+                      <div>
+                        <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-[0.08em]">
+                          Dominant container image tag
+                        </div>
+                        <div className="mt-0.5 font-mono text-[12px] text-[var(--text-primary)]">
+                          {kubernetesSnapshot.primaryContainerImageTag}
+                        </div>
+                        <div className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+                          Most common tag among pods in this workload (OTel{" "}
+                          <span className="font-mono">container.image.tag</span>).
+                        </div>
+                      </div>
+                    ) : null}
+                    {kubernetesSnapshot.restartHotPodName && kubernetesSnapshot.podRestarts > 0 ? (
+                      <div>
+                        <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-[0.08em]">
+                          Pod with most restarts
+                        </div>
+                        <div className="mt-0.5 font-mono text-[12px] text-[var(--text-primary)]">
+                          {kubernetesSnapshot.restartHotPodName}
+                        </div>
+                        {kubernetesSnapshot.restartHotImageTag ? (
+                          <div className="mt-1">
+                            <span className="text-[11px] text-[var(--text-muted)]">
+                              Image tag on that pod:{" "}
+                            </span>
+                            <span className="font-mono text-[12px] text-[var(--text-primary)]">
+                              {kubernetesSnapshot.restartHotImageTag}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="mt-1 text-[11px] text-[var(--text-muted)]">
+                            Image tag not present on restart metrics for this pod.
+                          </div>
+                        )}
+                        {kubernetesSnapshot.primaryContainerImageTag &&
+                        kubernetesSnapshot.restartHotImageTag &&
+                        kubernetesSnapshot.primaryContainerImageTag !==
+                          kubernetesSnapshot.restartHotImageTag ? (
+                          <div className="mt-2 text-[11px] text-[var(--color-warning)]">
+                            Dominant tag ({kubernetesSnapshot.primaryContainerImageTag}) differs
+                            from the restarting pod ({kubernetesSnapshot.restartHotImageTag}) —
+                            typical during a rollout or stuck old revision.
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="mt-3 text-[11px] text-[var(--text-muted)]">
+                    No per-pod image tags in metrics for this workload. Ensure the collector exposes
+                    OTel <span className="font-mono">container.image.tag</span> on{" "}
+                    <span className="font-mono">k8s.container.restarts</span> samples.
+                  </div>
+                )}
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Badge
+                    variant={
+                      kubernetesSnapshot.rolloutStatus === "healthy"
+                        ? "success"
+                        : kubernetesSnapshot.rolloutStatus === "degraded"
+                          ? "warning"
+                          : "default"
+                    }
+                  >
+                    {kubernetesRolloutLabel(kubernetesSnapshot.rolloutStatus)}
+                  </Badge>
+                  {kubernetesSnapshot.namespace ? (
+                    <span className="text-[12px] text-[var(--text-muted)]">
+                      Namespace {kubernetesSnapshot.namespace}
+                    </span>
+                  ) : null}
+                </div>
+              </DrawerSection>
             </div>
           ) : null}
 

@@ -1,20 +1,30 @@
-import { metricsOverviewApi } from "@/features/metrics/api/metricsOverviewApi";
-import type { ServiceMetricPoint } from "@/features/metrics/types";
+import type { ServiceLatestDeployment } from "@/features/overview/api/deploymentsApi";
 import {
-  type ServiceLatestDeployment,
-  deploymentsApi,
-} from "@/features/overview/api/deploymentsApi";
+  type ServiceDiscoveryMergedRow,
+  serviceDiscoveryApi,
+} from "@/features/overview/api/serviceDiscoveryApi";
 import type { RequestTime } from "@/shared/api/service-types";
-import type { ServiceTopologyResponse } from "../topology/api";
-import { fetchServiceTopology } from "../topology/api";
 
 export type DiscoveryHealth = "healthy" | "degraded" | "unhealthy";
 export type DeploymentRisk = "stable" | "watch" | "critical" | "unknown";
+export type KubernetesRolloutStatus = "healthy" | "degraded" | "unknown";
 
-const RECENT_DEPLOYMENT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+export interface DiscoveryKubernetesSlot {
+  readonly namespace?: string;
+  /** Highest container restart count on any pod mapped to this workload. */
+  readonly podRestarts: number;
+  readonly replicaDesired: number;
+  readonly replicaAvailable: number;
+  readonly rolloutStatus: KubernetesRolloutStatus;
+  /** Most common `container.image.tag` among pods (when present on metrics). */
+  readonly primaryContainerImageTag?: string;
+  readonly restartHotPodName?: string;
+  readonly restartHotImageTag?: string;
+}
 
 export interface DiscoveryServiceRow {
   readonly name: string;
+  readonly sources: readonly string[];
   readonly requestCount: number;
   readonly errorCount: number;
   readonly errorRate: number;
@@ -27,106 +37,71 @@ export interface DiscoveryServiceRow {
   readonly health: DiscoveryHealth;
   readonly latestDeployment?: ServiceLatestDeployment;
   readonly deploymentRisk: DeploymentRisk;
+  readonly kubernetes?: DiscoveryKubernetesSlot;
 }
 
-function classifyHealth(errorRatePct: number): DiscoveryHealth {
-  if (errorRatePct > 5) return "unhealthy";
-  if (errorRatePct > 1) return "degraded";
-  return "healthy";
+export interface DiscoveryFetchResult {
+  readonly rows: DiscoveryServiceRow[];
+  readonly kubernetesDataAvailable: boolean;
 }
 
-function mergeRows(
-  services: ServiceMetricPoint[],
-  topology: ServiceTopologyResponse,
-  deployments: ServiceLatestDeployment[]
-): DiscoveryServiceRow[] {
-  const upstream = new Map<string, number>();
-  const downstream = new Map<string, number>();
-  for (const edge of topology.edges) {
-    downstream.set(edge.source, (downstream.get(edge.source) ?? 0) + 1);
-    upstream.set(edge.target, (upstream.get(edge.target) ?? 0) + 1);
-  }
-
-  const topoHealth = new Map<string, DiscoveryHealth>();
-  for (const node of topology.nodes) {
-    topoHealth.set(node.name, node.health);
-  }
-
-  const deploymentByService = new Map(
-    deployments.map((deployment) => [deployment.service_name.toLowerCase(), deployment] as const)
-  );
-
-  const resolveDeploymentRisk = (
-    deployment: ServiceLatestDeployment | undefined,
-    health: DiscoveryHealth,
-    errorRate: number
-  ): DeploymentRisk => {
-    if (!deployment) return "unknown";
-    const deployedAtMs = new Date(deployment.deployed_at).getTime();
-    const isRecent =
-      Number.isFinite(deployedAtMs) && Date.now() - deployedAtMs <= RECENT_DEPLOYMENT_WINDOW_MS;
-    if (!isRecent) return "stable";
-    if (health === "unhealthy" || errorRate > 5) return "critical";
-    if (health === "degraded" || errorRate > 1) return "watch";
-    return "stable";
+function mapLatestDeployment(
+  raw: NonNullable<ServiceDiscoveryMergedRow["latest_deployment"]>
+): ServiceLatestDeployment {
+  return {
+    service_name: raw.service_name,
+    version: raw.version,
+    environment: raw.environment,
+    deployed_at: raw.deployed_at,
+    last_seen_at: raw.last_seen_at,
+    is_active: raw.is_active,
   };
+}
 
-  const seen = new Set<string>();
-  const rows: DiscoveryServiceRow[] = services.map((s) => {
-    seen.add(s.service_name);
-    const errorRate = s.request_count > 0 ? (s.error_count / s.request_count) * 100 : 0;
-    const health = topoHealth.get(s.service_name) ?? classifyHealth(errorRate);
-    const latestDeployment = deploymentByService.get(s.service_name.toLowerCase());
-    return {
-      name: s.service_name,
-      requestCount: s.request_count,
-      errorCount: s.error_count,
-      errorRate,
-      avgLatency: s.avg_latency,
-      p50Latency: s.p50_latency,
-      p95Latency: s.p95_latency,
-      p99Latency: s.p99_latency,
-      upstreamCount: upstream.get(s.service_name) ?? 0,
-      downstreamCount: downstream.get(s.service_name) ?? 0,
-      health,
-      latestDeployment,
-      deploymentRisk: resolveDeploymentRisk(latestDeployment, health, errorRate),
-    };
-  });
+function mapMergedRow(row: ServiceDiscoveryMergedRow): DiscoveryServiceRow {
+  const apm = row.apm ?? undefined;
+  const k8s = row.kubernetes ?? undefined;
 
-  // Include topology-only nodes (e.g., external dependencies) for completeness.
-  for (const node of topology.nodes) {
-    if (seen.has(node.name)) continue;
-    const latestDeployment = deploymentByService.get(node.name.toLowerCase());
-    rows.push({
-      name: node.name,
-      requestCount: node.request_count,
-      errorCount: node.error_count,
-      errorRate: node.error_rate,
-      avgLatency: 0,
-      p50Latency: node.p50_latency_ms,
-      p95Latency: node.p95_latency_ms,
-      p99Latency: node.p99_latency_ms,
-      upstreamCount: upstream.get(node.name) ?? 0,
-      downstreamCount: downstream.get(node.name) ?? 0,
-      health: node.health,
-      latestDeployment,
-      deploymentRisk: resolveDeploymentRisk(latestDeployment, node.health, node.error_rate),
-    });
-  }
-
-  return rows;
+  return {
+    name: row.name,
+    sources: row.sources,
+    requestCount: apm?.request_count ?? 0,
+    errorCount: apm?.error_count ?? 0,
+    errorRate: apm?.error_rate ?? 0,
+    avgLatency: apm?.avg_latency ?? 0,
+    p50Latency: apm?.p50_latency ?? 0,
+    p95Latency: apm?.p95_latency ?? 0,
+    p99Latency: apm?.p99_latency ?? 0,
+    upstreamCount: row.topology_upstream,
+    downstreamCount: row.topology_downstream,
+    health: row.health,
+    deploymentRisk: row.deployment_risk,
+    latestDeployment: row.latest_deployment
+      ? mapLatestDeployment(row.latest_deployment)
+      : undefined,
+    kubernetes: k8s
+      ? {
+          namespace: k8s.namespace,
+          podRestarts: k8s.pod_restarts,
+          replicaDesired: k8s.replica_desired,
+          replicaAvailable: k8s.replica_available,
+          rolloutStatus: k8s.rollout_status,
+          primaryContainerImageTag: k8s.primary_container_image_tag,
+          restartHotPodName: k8s.restart_hot_pod_name,
+          restartHotImageTag: k8s.restart_hot_image_tag,
+        }
+      : undefined,
+  };
 }
 
 export async function fetchDiscoveryRows(
-  teamId: number | null,
+  _teamId: number | null,
   startTime: RequestTime,
   endTime: RequestTime
-): Promise<DiscoveryServiceRow[]> {
-  const [services, topology, deployments] = await Promise.all([
-    metricsOverviewApi.getOverviewServiceMetrics(teamId, startTime, endTime),
-    fetchServiceTopology({ startTime, endTime }),
-    deploymentsApi.getLatestByService().catch(() => []),
-  ]);
-  return mergeRows(services, topology, deployments);
+): Promise<DiscoveryFetchResult> {
+  const payload = await serviceDiscoveryApi.getDiscovery({ startTime, endTime });
+  return {
+    rows: payload.rows.map(mapMergedRow),
+    kubernetesDataAvailable: payload.kubernetes_data_available,
+  };
 }

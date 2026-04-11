@@ -145,15 +145,14 @@ export default function KubernetesTab() {
       </div>
 
       <Card padding="md" className="border-[var(--border-color)]">
-        <div className="mb-3 font-medium text-[13px] text-[var(--text-primary)]">
-          Pod restarts (top)
-        </div>
+        <div className="mb-3 font-medium text-[13px] text-[var(--text-primary)]">Pod restarts</div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[12px]">
             <thead>
               <tr className="border-[var(--border-color)] border-b text-[var(--text-muted)]">
                 <th className="py-2 pr-4">Namespace</th>
                 <th className="py-2 pr-4">Pod</th>
+                <th className="py-2 pr-4">Image tag</th>
                 <th className="py-2">Restarts</th>
               </tr>
             </thead>
@@ -167,6 +166,9 @@ export default function KubernetesTab() {
                     {r.namespace}
                   </td>
                   <td className="py-2 pr-4 font-mono text-[var(--text-primary)]">{r.pod_name}</td>
+                  <td className="py-2 pr-4 font-mono text-[var(--text-secondary)]">
+                    {r.container_image_tag ?? "—"}
+                  </td>
                   <td className="py-2">{formatNumber(r.restarts)}</td>
                 </tr>
               ))}

@@ -1,6 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { AlertTriangle, ArrowUpRight, GitBranch, GitCompare, Radar } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  ArrowUpRight,
+  GitBranch,
+  GitCompare,
+  Layers,
+  Radar,
+} from "lucide-react";
 import { useMemo } from "react";
 
 import {
@@ -12,10 +20,11 @@ import {
 } from "@/components/ui/drawer";
 import {
   type DeploymentCompareResponse,
+  type DeploymentVersionTrafficPoint,
   deploymentsApi,
 } from "@/features/overview/api/deploymentsApi";
 import { ROUTES } from "@/shared/constants/routes";
-import { useAppStore, useRefreshKey, useTeamId } from "@app/store/appStore";
+import { useAppStore, useTeamId } from "@app/store/appStore";
 import { CHART_COLORS } from "@config/constants";
 import {
   Badge,
@@ -32,7 +41,12 @@ import {
   formatRelativeTime,
   formatTimestamp,
 } from "@shared/utils/formatters";
-import { buildServiceLogsSearch, buildServiceTracesSearch } from "./serviceDrawerState";
+import {
+  buildServiceLogsSearch,
+  buildServiceTracesSearch,
+  type KubernetesInfraFromDrawer,
+  parseKubernetesInfraFromDrawerData,
+} from "./serviceDrawerState";
 
 interface DeploymentCompareDrawerProps {
   open: boolean;
@@ -212,8 +226,480 @@ function buildTimelineSeries(
   };
 }
 
+type RolloutPhase = "healthy" | "degrading" | "ramping" | "stable" | "at_risk" | "residual";
+
+/** Last N timeline buckets, RPS-weighted share % per service version (Datadog-style traffic mix). */
+function computeTrafficSharesByVersion(
+  points: readonly DeploymentVersionTrafficPoint[],
+  lastBucketCount: number
+): Map<string, number> {
+  const byTs = new Map<number, Map<string, number>>();
+  for (const p of points) {
+    const t = new Date(p.timestamp).getTime();
+    if (!Number.isFinite(t)) continue;
+    let bucket = byTs.get(t);
+    if (!bucket) {
+      bucket = new Map();
+      byTs.set(t, bucket);
+    }
+    bucket.set(p.version, (bucket.get(p.version) ?? 0) + p.rps);
+  }
+  const timestamps = [...byTs.keys()].sort((a, b) => a - b);
+  const slice = timestamps.slice(-Math.max(1, lastBucketCount));
+  const totals = new Map<string, number>();
+  let grand = 0;
+  for (const ts of slice) {
+    const m = byTs.get(ts);
+    if (!m) continue;
+    for (const [v, rps] of m) {
+      totals.set(v, (totals.get(v) ?? 0) + rps);
+      grand += rps;
+    }
+  }
+  const shares = new Map<string, number>();
+  if (grand <= 0) return shares;
+  for (const [v, total] of totals) {
+    shares.set(v, (total / grand) * 100);
+  }
+  return shares;
+}
+
+function rolloutPhaseLabel(phase: RolloutPhase): string {
+  switch (phase) {
+    case "healthy":
+      return "Healthy";
+    case "degrading":
+      return "Degrading";
+    case "ramping":
+      return "Ramping up";
+    case "stable":
+      return "Stable";
+    case "at_risk":
+      return "At risk";
+    default:
+      return "Other traffic";
+  }
+}
+
+function rolloutPhaseBadgeVariant(
+  phase: RolloutPhase
+): "success" | "warning" | "error" | "default" | "info" {
+  switch (phase) {
+    case "healthy":
+    case "stable":
+      return "success";
+    case "ramping":
+      return "info";
+    case "degrading":
+      return "error";
+    case "at_risk":
+      return "warning";
+    default:
+      return "default";
+  }
+}
+
+interface RolloutInsight {
+  baselinePhase: RolloutPhase;
+  currentPhase: RolloutPhase;
+  currentSharePct: number;
+  baselineSharePct: number;
+  counts: {
+    versionsObserved: number;
+    healthy: number;
+    degrading: number;
+    ramping: number;
+    stable: number;
+    atRisk: number;
+    residual: number;
+  };
+}
+
+function deriveRolloutInsight(
+  compare: DeploymentCompareResponse,
+  shares: Map<string, number>,
+  trafficTimelineReady: boolean
+): RolloutInsight {
+  const currentVersion = compare.deployment.version;
+  const baseline = compare.baseline_deployment;
+  const baselineVersion = baseline?.version ?? "";
+  const before = compare.summary.before;
+  const after = compare.summary.after;
+  const hasBaseline = compare.has_baseline && Boolean(before);
+
+  let baselinePhase: RolloutPhase = "stable";
+  if (hasBaseline && before) {
+    if (before.error_rate > 3) baselinePhase = "at_risk";
+    else if (before.error_rate > 1) baselinePhase = "degrading";
+    else baselinePhase = "stable";
+  }
+
+  const currentSharePct = shares.get(currentVersion) ?? 0;
+  const baselineSharePct = baselineVersion ? (shares.get(baselineVersion) ?? 0) : 0;
+
+  let currentPhase: RolloutPhase = "healthy";
+  if (!hasBaseline || !before) {
+    currentPhase = compare.deployment.is_active ? "healthy" : "stable";
+  } else if (
+    trafficTimelineReady &&
+    baselineVersion &&
+    baselineVersion !== currentVersion &&
+    currentSharePct < 28
+  ) {
+    currentPhase = "ramping";
+  } else {
+    const errDelta = after.error_rate - before.error_rate;
+    const p95b = before.p95_ms;
+    const p95a = after.p95_ms;
+    if (errDelta > 0.5 || (p95b > 0 && p95a > p95b * 1.25)) {
+      currentPhase = "degrading";
+    } else if (errDelta <= 0.2 && p95a <= p95b * 1.1) {
+      currentPhase = "healthy";
+    } else {
+      currentPhase = "at_risk";
+    }
+  }
+
+  const minShare = 0.35;
+  const versionsSeen = [...shares.entries()].filter(([, s]) => s >= minShare);
+
+  if (versionsSeen.length === 0) {
+    let healthy = 0;
+    let degrading = 0;
+    let ramping = 0;
+    let stable = 0;
+    let atRisk = 0;
+    if (hasBaseline) {
+      if (baselinePhase === "stable") stable++;
+      else if (baselinePhase === "degrading") degrading++;
+      else atRisk++;
+    }
+    if (currentPhase === "healthy") healthy++;
+    else if (currentPhase === "degrading") degrading++;
+    else if (currentPhase === "ramping") ramping++;
+    else if (currentPhase === "at_risk") atRisk++;
+    else if (currentPhase === "stable") stable++;
+
+    return {
+      baselinePhase,
+      currentPhase,
+      currentSharePct: hasBaseline ? currentSharePct : 100,
+      baselineSharePct,
+      counts: {
+        versionsObserved: hasBaseline ? 2 : 1,
+        healthy,
+        degrading,
+        ramping,
+        stable,
+        atRisk,
+        residual: 0,
+      },
+    };
+  }
+
+  const counts = {
+    versionsObserved: versionsSeen.length,
+    healthy: 0,
+    degrading: 0,
+    ramping: 0,
+    stable: 0,
+    atRisk: 0,
+    residual: 0,
+  };
+
+  for (const [v] of versionsSeen) {
+    if (baselineVersion && v === baselineVersion) {
+      if (baselinePhase === "stable") counts.stable++;
+      else if (baselinePhase === "degrading") counts.degrading++;
+      else counts.atRisk++;
+      continue;
+    }
+    if (v === currentVersion) {
+      if (currentPhase === "healthy") counts.healthy++;
+      else if (currentPhase === "degrading") counts.degrading++;
+      else if (currentPhase === "ramping") counts.ramping++;
+      else if (currentPhase === "at_risk") counts.atRisk++;
+      else counts.stable++;
+      continue;
+    }
+    counts.residual++;
+  }
+
+  return {
+    baselinePhase,
+    currentPhase,
+    currentSharePct,
+    baselineSharePct,
+    counts,
+  };
+}
+
+function RolloutLiveTracker({
+  compare,
+  timelinePoints,
+  timelineLoading,
+}: {
+  compare: DeploymentCompareResponse;
+  timelinePoints: DeploymentVersionTrafficPoint[] | undefined;
+  timelineLoading: boolean;
+}): JSX.Element {
+  const shares = useMemo(
+    () => computeTrafficSharesByVersion(timelinePoints ?? [], 12),
+    [timelinePoints]
+  );
+  const trafficTimelineReady = Boolean(timelinePoints?.length);
+  const insight = useMemo(
+    () => deriveRolloutInsight(compare, shares, trafficTimelineReady),
+    [compare, shares, trafficTimelineReady]
+  );
+  const baseline = compare.baseline_deployment;
+
+  return (
+    <Card
+      padding="lg"
+      className="border-[rgba(124,127,242,0.2)] bg-[linear-gradient(180deg,rgba(124,127,242,0.08),rgba(124,127,242,0.02))]"
+    >
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-2">
+          <Activity size={18} className="mt-0.5 shrink-0 text-[var(--color-primary)]" />
+          <div>
+            <h3 className="font-semibold text-[15px] text-[var(--text-primary)]">
+              Live rollout tracking
+            </h3>
+            <p className="mt-1 text-[12px] text-[var(--text-secondary)] leading-5">
+              Traffic-weighted view of the previous release vs this one — similar in spirit to
+              Datadog deployment tracking, using span-derived versions and RPS (not Kubernetes
+              replica counts).
+            </p>
+          </div>
+        </div>
+        {timelineLoading ? (
+          <Badge variant="default">Loading traffic mix…</Badge>
+        ) : (
+          <Badge variant="info">{insight.counts.versionsObserved} versions in mix</Badge>
+        )}
+      </div>
+
+      <div className="mb-4 flex flex-wrap gap-2">
+        <Badge variant="success">Healthy {insight.counts.healthy}</Badge>
+        <Badge variant="info">Ramping {insight.counts.ramping}</Badge>
+        <Badge variant="success">Stable {insight.counts.stable}</Badge>
+        <Badge variant="error">Degrading {insight.counts.degrading}</Badge>
+        <Badge variant="warning">At risk {insight.counts.atRisk}</Badge>
+        {insight.counts.residual > 0 ? (
+          <Badge variant="default">Other {insight.counts.residual}</Badge>
+        ) : null}
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        <div className="rounded-[var(--card-radius)] border border-[var(--border-color)] bg-[rgba(255,255,255,0.02)] p-4">
+          <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-[0.08em]">
+            Previous release
+          </div>
+          {baseline && compare.has_baseline ? (
+            <>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="font-semibold text-[16px] text-[var(--text-primary)]">
+                  {baseline.version}
+                </span>
+                <Badge variant={rolloutPhaseBadgeVariant(insight.baselinePhase)}>
+                  {rolloutPhaseLabel(insight.baselinePhase)}
+                </Badge>
+              </div>
+              <div className="mt-1 text-[12px] text-[var(--text-muted)]">
+                {baseline.environment || "unknown env"} · deployed{" "}
+                {formatRelativeTime(new Date(baseline.deployed_at).getTime())}
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-[12px]">
+                <div>
+                  <div className="text-[var(--text-muted)]">Traffic share (recent)</div>
+                  <div className="font-medium text-[var(--text-primary)]">
+                    {timelineLoading ? "—" : formatPercentage(insight.baselineSharePct)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[var(--text-muted)]">Err % (baseline window)</div>
+                  <div className="font-medium text-[var(--text-primary)]">
+                    {compare.summary.before
+                      ? formatPercentage(compare.summary.before.error_rate)
+                      : "—"}
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="mt-2 text-[12px] text-[var(--text-muted)]">
+              No earlier deployment on record for this service — nothing to compare as “old”.
+            </p>
+          )}
+        </div>
+
+        <div className="rounded-[var(--card-radius)] border border-[var(--border-color)] bg-[rgba(255,255,255,0.03)] p-4">
+          <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-[0.08em]">
+            This release
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className="font-semibold text-[16px] text-[var(--text-primary)]">
+              {compare.deployment.version}
+            </span>
+            <Badge variant={rolloutPhaseBadgeVariant(insight.currentPhase)}>
+              {rolloutPhaseLabel(insight.currentPhase)}
+            </Badge>
+          </div>
+          <div className="mt-1 text-[12px] text-[var(--text-muted)]">
+            {compare.deployment.environment || "unknown env"} · deployed{" "}
+            {formatRelativeTime(new Date(compare.deployment.deployed_at).getTime())}
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-[12px]">
+            <div>
+              <div className="text-[var(--text-muted)]">Traffic share (recent)</div>
+              <div className="font-medium text-[var(--text-primary)]">
+                {timelineLoading ? "—" : formatPercentage(insight.currentSharePct)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[var(--text-muted)]">Err % (deploy window)</div>
+              <div className="font-medium text-[var(--text-primary)]">
+                {formatPercentage(compare.summary.after.error_rate)}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 function formatWindowLabel(startMs: number, endMs: number): string {
   return `${formatTimestamp(startMs)} to ${formatTimestamp(endMs)}`;
+}
+
+function kubernetesInfraRolloutLabel(status: string): string {
+  switch (status) {
+    case "healthy":
+      return "Rollout healthy";
+    case "degraded":
+      return "Rollout degraded";
+    default:
+      return "Rollout status unknown";
+  }
+}
+
+function KubernetesInfraPanel({ k }: { k: KubernetesInfraFromDrawer }): JSX.Element {
+  const tagMismatch =
+    Boolean(k.primaryContainerImageTag) &&
+    Boolean(k.restartHotImageTag) &&
+    k.primaryContainerImageTag !== k.restartHotImageTag;
+
+  return (
+    <Card
+      padding="lg"
+      className="border-[rgba(255,255,255,0.07)] bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))]"
+    >
+      <div className="flex items-start gap-3">
+        <Layers size={18} className="mt-0.5 shrink-0 text-[var(--color-primary)]" />
+        <div className="min-w-0 flex-1">
+          <h3 className="font-semibold text-[15px] text-[var(--text-primary)]">
+            Kubernetes signals
+          </h3>
+          <p className="mt-1 text-[12px] text-[var(--text-secondary)] leading-5">
+            Replica readiness, pod restarts, and image tags from infra metrics (OTel{" "}
+            <code className="rounded bg-[var(--bg-tertiary)] px-1 text-[11px]">
+              container.image.tag
+            </code>{" "}
+            when exporters send it). This is separate from the span-derived release version.
+          </p>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div>
+              <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-[0.08em]">
+                Pod restarts
+              </div>
+              <div
+                className={`mt-1 font-semibold text-[16px] ${
+                  k.podRestarts >= 3 ? "text-[var(--color-warning)]" : "text-[var(--text-primary)]"
+                }`}
+              >
+                {formatNumber(k.podRestarts)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-[0.08em]">
+                Replicas available / desired
+              </div>
+              <div
+                className={`mt-1 font-semibold text-[16px] ${
+                  k.replicaDesired > 0 && k.replicaAvailable < k.replicaDesired
+                    ? "text-[var(--color-error)]"
+                    : "text-[var(--text-primary)]"
+                }`}
+              >
+                {formatNumber(k.replicaAvailable)} / {formatNumber(k.replicaDesired)}
+              </div>
+            </div>
+          </div>
+
+          {k.primaryContainerImageTag || k.restartHotPodName ? (
+            <div className="mt-4 space-y-2 border-[var(--border-color)] border-t pt-3">
+              {k.primaryContainerImageTag ? (
+                <div>
+                  <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-[0.08em]">
+                    Dominant container image tag
+                  </div>
+                  <div className="mt-0.5 font-mono text-[12px] text-[var(--text-primary)]">
+                    {k.primaryContainerImageTag}
+                  </div>
+                </div>
+              ) : null}
+              {k.restartHotPodName && k.podRestarts > 0 ? (
+                <div>
+                  <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-[0.08em]">
+                    Pod with most restarts
+                  </div>
+                  <div className="mt-0.5 font-mono text-[12px] text-[var(--text-primary)]">
+                    {k.restartHotPodName}
+                  </div>
+                  {k.restartHotImageTag ? (
+                    <div className="mt-1 text-[12px] text-[var(--text-secondary)]">
+                      <span className="text-[var(--text-muted)]">Image tag: </span>
+                      <span className="font-mono">{k.restartHotImageTag}</span>
+                    </div>
+                  ) : null}
+                  {tagMismatch ? (
+                    <div className="mt-2 text-[11px] text-[var(--color-warning)]">
+                      Dominant tag differs from the restarting pod — typical during rollout or a stuck
+                      revision.
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="mt-4 text-[11px] text-[var(--text-muted)]">
+              No per-pod image tags in metrics for this workload.
+            </div>
+          )}
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Badge
+              variant={
+                k.rolloutStatus === "healthy"
+                  ? "success"
+                  : k.rolloutStatus === "degraded"
+                    ? "warning"
+                    : "default"
+              }
+            >
+              {kubernetesInfraRolloutLabel(k.rolloutStatus)}
+            </Badge>
+            {k.namespace ? (
+              <span className="text-[12px] text-[var(--text-muted)]">Namespace {k.namespace}</span>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
 }
 
 export default function DeploymentCompareDrawer({
@@ -225,16 +711,18 @@ export default function DeploymentCompareDrawer({
   const navigate = useNavigate();
   const location = useLocation();
   const teamId = useTeamId();
-  const refreshKey = useRefreshKey();
   const setCustomTimeRange = useAppStore((state) => state.setCustomTimeRange);
 
   const seed = useMemo(() => parseDeploymentSeed(initialData), [initialData]);
+  const kubernetesInfra = useMemo(
+    () => parseKubernetesInfraFromDrawerData(initialData ?? null),
+    [initialData]
+  );
 
   const compareQuery = useQuery({
     queryKey: [
       "deployment-compare",
       teamId,
-      refreshKey,
       seed?.serviceName,
       seed?.version,
       seed?.environment,
@@ -254,7 +742,6 @@ export default function DeploymentCompareDrawer({
     queryKey: [
       "deployment-compare-timeline",
       teamId,
-      refreshKey,
       compareQuery.data?.deployment.service_name,
       compareQuery.data?.timeline_start_ms,
       compareQuery.data?.timeline_end_ms,
@@ -410,20 +897,28 @@ export default function DeploymentCompareDrawer({
           <div className="px-6 py-6 text-[13px] text-[var(--text-muted)]">
             Deployment metadata is missing, so the compare view cannot be opened from this link.
           </div>
-        ) : compareQuery.isLoading ? (
-          <div className="px-6 py-6 text-[13px] text-[var(--text-muted)]">
-            Loading deployment comparison…
-          </div>
-        ) : compareQuery.isError ? (
-          <div className="px-6 py-6 text-[13px] text-[var(--color-error)]">
-            Deployment comparison is unavailable right now.
-          </div>
-        ) : !compare ? (
-          <div className="px-6 py-6 text-[13px] text-[var(--text-muted)]">
-            No deployment comparison data was returned for this release.
-          </div>
         ) : (
           <div className="flex flex-col gap-5 px-6 py-5">
+            {kubernetesInfra ? <KubernetesInfraPanel k={kubernetesInfra} /> : null}
+            {compareQuery.isLoading ? (
+              <div className="text-[13px] text-[var(--text-muted)]">
+                Loading deployment comparison…
+              </div>
+            ) : compareQuery.isError ? (
+              <div className="text-[13px] text-[var(--color-error)]">
+                Deployment comparison is unavailable right now.
+              </div>
+            ) : !compare ? (
+              <div className="text-[13px] text-[var(--text-muted)]">
+                No deployment comparison data was returned for this release.
+              </div>
+            ) : (
+              <div className="flex flex-col gap-5">
+            <RolloutLiveTracker
+              compare={compare}
+              timelinePoints={timelineQuery.data}
+              timelineLoading={timelineQuery.isLoading}
+            />
             <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-5">
               <SummaryCard
                 label="Requests"
@@ -654,6 +1149,8 @@ export default function DeploymentCompareDrawer({
                 )}
               </Card>
             </div>
+              </div>
+            )}
           </div>
         )}
       </DrawerContent>

@@ -39,7 +39,7 @@ The HTTP API and dashboard JSON live in the sibling repo **`optikk-backend`** (s
 | `src/app/routes/BackendDrivenPage.tsx` | Backend-driven dashboard pages: matches URL → page config → domain adapter or generic `DashboardPage` |
 | `src/app/layout/MainLayout.tsx` | Shell layout |
 
-**Service page:** `ROUTES.service` → `src/features/overview/pages/ServiceHubPage` — fully frontend-owned, no backend default config. Two tabs via `?view=discovery|topology` (default `discovery`): the **Discovery** tab (`discovery/` — service catalog with search, health filter, sort; fetches `/overview/services` + `/services/topology`, merges client-side for upstream/downstream dep counts and health badges) and the **Topology** tab (`TopologyView.tsx` + `topology/`). Row click on Discovery opens `drawerEntity=service` with the frontend-owned `ServiceDetailDrawer`, which shows compact service diagnostics and links into Logs and Traces.
+**Service page:** `ROUTES.service` → `src/features/overview/pages/ServiceHubPage` — fully frontend-owned, no backend default config. Two tabs via `?view=discovery|topology` (default `discovery`): the **Discovery** tab (`discovery/` — service catalog with search, health filter, sort; **`GET /v1/overview/services/discovery`** via `serviceDiscoveryApi.ts` for merged APM, topology counts, deployments, and Kubernetes signals; UI shows infra-only rows when telemetry lacks a release) and the **Topology** tab (`TopologyView.tsx` + `topology/`). Row click on Discovery opens `drawerEntity=service` with the frontend-owned `ServiceDetailDrawer`, which shows compact service diagnostics and links into Logs and Traces.
 
 ## Path aliases (Vite)
 
@@ -252,7 +252,7 @@ Applies to any new package; verified for `@xyflow/react`, `dagre`, `@types/dagre
 **Selectors:** `useTimeRange()`, `useTeamId()`, `useTeamIds()`, `useRefreshKey()`, `useSidebarCollapsed()`, `useTheme()`, `useTimezone()`, `useComparisonMode()`
 
 - **`src/shared/hooks/useAutoRefresh.ts`**: Ticks the `refreshKey` at configured intervals.
-- **`src/shared/hooks/useInvalidateQueriesOnAppRefresh.ts`**: Triggers TanStack Query invalidation when the global refresh is clicked.
+- **`src/app/providers/QueryLifecycleBridge.tsx`**: When `refreshKey` bumps (manual/auto refresh), invalidates TanStack Query cache entries whose key includes the selected team id — refetch in place without new cache keys (avoids full-UI blink). Team switch / auth still clear or invalidate broadly as before.
 
 ## Live Tail Streaming
 
@@ -305,10 +305,10 @@ BackendDrivenPage (route match)
     → react-grid-layout (uses layout.w / layout.h from panel spec, 12-column model)
     → Each cell: useDashboardPanelRegistration(panelType) → resolve renderer
     → useComponentDataFetcher (batch-fetches panel data, deduplicates by endpoint)
-      → queryKey: ['component-query', teamId, method, endpoint, params, startMs, endMs]
+      → queryKey: ['component-query', teamId, method, endpoint, params, timeRangeQuerySegment]
+      → `queryFn` resolves `start`/`end` via `resolveTimeRangeBounds(timeRange)` on each fetch (sliding relative windows)
       → placeholderData: keepPreviousData
-    → useInvalidateQueriesOnAppRefresh(refreshKey, 'component-query', teamId)
-      → invalidates matching queries on manual/auto refresh
+    → `QueryLifecycleBridge` invalidates team-scoped queries when `refreshKey` bumps
 ```
 
 **Panel renderer kinds:**
@@ -322,9 +322,9 @@ BackendDrivenPage (route match)
 
 | Scope | Key pattern | `refreshKey` in key? | Invalidation strategy |
 |-------|-------------|---------------------|----------------------|
-| Explorer queries | `[feature, endpoint, ...params, refreshKey]` | Yes | Key change triggers refetch |
-| Dashboard component | `['component-query', teamId, endpoint, timeRange]` | **No** | `useInvalidateQueriesOnAppRefresh` |
-| Dashboard datasource | `['datasource', teamId, endpoint, timeRange]` | **No** | `useInvalidateQueriesOnAppRefresh` |
+| Explorer / hub queries | `[feature, …, teamId, timeRangeQuerySegment, …]` | **No** | `QueryLifecycleBridge` + stable keys; bounds resolved in `queryFn` |
+| Dashboard component | `['component-query', teamId, method, endpoint, params, timeRangeQuerySegment]` | **No** | Same |
+| Dashboard datasource | `['datasource', teamId, endpoint, timeRangeQuerySegment]` | **No** | Same |
 
 **Conventions:**
 - `placeholderData: keepPreviousData` on all queries — prevents loading flash
@@ -336,7 +336,6 @@ BackendDrivenPage (route match)
 | Hook | Purpose |
 |------|---------|
 | `useAutoRefresh` | Ticks `refreshKey` at configured interval; "Xs ago" label (throttled 5s) |
-| `useInvalidateQueriesOnAppRefresh` | Invalidates `[scope, teamId]` queries when `refreshKey` bumps |
 | `useComponentDataFetcher` | Batches dashboard panel data fetches; deduplicates identical requests |
 | `useSocketStream` | Core WebSocket client for `/api/v1/ws/live`: connection, dedup, lag tracking |
 | `useChartTimeBuckets` | Computes adaptive time buckets for chart x-axis |
@@ -359,6 +358,7 @@ BackendDrivenPage (route match)
 | Type | Location | Purpose |
 |------|----------|---------|
 | `TimeRange` | `shared/types/index.ts` | Discriminated union: `RelativeTimeRange` (`kind: 'relative'`, `preset`, `minutes`) or `AbsoluteTimeRange` (`kind: 'absolute'`, `startMs`, `endMs`) |
+| `timeRangeQuerySegment` | `shared/types/index.ts` | Stable string for React Query keys: preset for relative ranges, `startMs-endMs` for absolute — wall-clock bounds come from `resolveTimeRangeBounds` inside `queryFn` |
 | `DashboardPanelType` | `shared/types/dashboardConfig.ts` | Union of 24 panel types (matches backend `enums.go`) |
 | `DashboardLayoutVariant` | `shared/types/dashboardConfig.ts` | 10 layout presets: `kpi`, `summary`, `standard-chart`, `wide-chart`, `ranking`, `hero`, etc. |
 | `DashboardSectionTemplate` | `shared/types/dashboardConfig.ts` | 8 section layouts: `kpi-band`, `two-up`, `three-up`, `stacked`, `hero-plus-table`, etc. |

@@ -49,8 +49,7 @@ This is **mandatory**, not optional. The documentation must always reflect the c
 
 ## Key patterns
 
-- **Dashboard queries**: stable keys (no `refreshKey`), use `useInvalidateQueriesOnAppRefresh`
-- **Explorer queries**: include `refreshKey` in `queryKey`
+- **Dashboard / explorer queries**: stable keys with `timeRangeQuerySegment`; no `refreshKey` in `queryKey`; `QueryLifecycleBridge` invalidates team-scoped queries on refresh
 - **Always**: `placeholderData: keepPreviousData`; loading = `isPending && data === undefined`
 - **No cross-feature imports** — ESLint enforced; move shared code to `@shared/`
 - **No TS enums** — use `as const` + union types

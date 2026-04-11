@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { resolveTimeBounds } from "@/features/explorer-core/utils/timeRange";
-import { useRefreshKey, useTeamId, useTimeRange } from "@store/appStore";
+import { timeRangeQuerySegment } from "@/types";
+import { useTeamId, useTimeRange } from "@store/appStore";
 import { buildExplorerQueryRequest, metricsExplorerApi } from "../api/metricsExplorerApi";
 import type { MetricQueryDefinition, MetricSpaceAggregation, TimeStep } from "../types";
 
@@ -12,8 +13,6 @@ export function useMetricsExplorerQuery(
 ) {
   const selectedTeamId = useTeamId();
   const timeRange = useTimeRange();
-  const refreshKey = useRefreshKey();
-  const { startTime, endTime } = resolveTimeBounds(timeRange);
 
   const activeQueries = queries.filter((q) => q.metricName);
   const queriesHash = JSON.stringify(activeQueries);
@@ -24,16 +23,16 @@ export function useMetricsExplorerQuery(
       "explorer",
       selectedTeamId,
       queriesHash,
-      startTime,
-      endTime,
+      timeRangeQuerySegment(timeRange),
       step,
       spaceAgg,
-      refreshKey,
     ],
-    queryFn: () =>
-      metricsExplorerApi.query(
+    queryFn: () => {
+      const { startTime, endTime } = resolveTimeBounds(timeRange);
+      return metricsExplorerApi.query(
         buildExplorerQueryRequest(queries, startTime, endTime, step, spaceAgg)
-      ),
+      );
+    },
     enabled: Boolean(selectedTeamId) && activeQueries.length > 0,
     placeholderData: (previous) => previous,
     retry: false,
