@@ -1,4 +1,13 @@
-import { Activity, AlertCircle, BrainCircuit, Share2, Sparkles } from "lucide-react";
+import {
+  Activity,
+  AlertCircle,
+  BrainCircuit,
+  LayoutDashboard,
+  List,
+  RotateCcw,
+  Share2,
+  Sparkles,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -10,7 +19,6 @@ import {
   AnalyticsToolbar,
   type ExplorerVizMode,
 } from "@/features/explorer-core/components/AnalyticsToolbar";
-import { SummaryMetricStrip } from "@/features/explorer-core/components/SummaryMetricStrip";
 import { AnalyticsPieChart } from "@/features/explorer-core/components/visualizations/AnalyticsPieChart";
 import { AnalyticsTable } from "@/features/explorer-core/components/visualizations/AnalyticsTable";
 import { AnalyticsTimeseries } from "@/features/explorer-core/components/visualizations/AnalyticsTimeseries";
@@ -18,7 +26,9 @@ import { AnalyticsTopList } from "@/features/explorer-core/components/visualizat
 import { useExplorerAnalytics } from "@/features/explorer-core/hooks/useExplorerAnalytics";
 import { resolveTimeBounds } from "@/features/explorer-core/utils/timeRange";
 import { cn } from "@/lib/utils";
+import { ROUTES } from "@/shared/constants/routes";
 import type { StructuredFilter } from "@/shared/hooks/useURLFilters";
+import { useNavigate } from "@tanstack/react-router";
 import { useTimeRange } from "@app/store/appStore";
 import {
   ObservabilityDetailPanel,
@@ -34,13 +44,15 @@ import {
   formatTimestamp,
 } from "@shared/utils/formatters";
 
+import AIOverviewTab from "../../components/AIOverviewTab";
+import AIVolumeChart from "../../components/AIVolumeChart";
 import { AI_ANALYTICS_FIELDS, AI_FILTER_FIELDS, AI_METRIC_FIELDS } from "../../constants";
 import { useAICallDetail } from "../../hooks/useAICallDetail";
 import { useAIExplorer } from "../../hooks/useAIExplorer";
 import type { AICallRecord } from "../../types";
 import { formatCost } from "../../utils/costCalculator";
 
-import type { SummaryMetric } from "@/features/explorer-core/types";
+// --- Helpers ---
 
 function renderStatus(status: string) {
   const normalized = (status || "UNSET").toUpperCase();
@@ -66,7 +78,12 @@ function upsertFacetFilter(
   return [...withoutField, { field: nextField, operator: "equals", value: nextValue }];
 }
 
+// --- View tabs ---
+
+type ViewTab = "overview" | "explorer";
+
 export default function AIExplorerPage() {
+  const navigate = useNavigate();
   const timeRange = useTimeRange();
 
   const {
@@ -76,6 +93,7 @@ export default function AIExplorerPage() {
     total,
     summary,
     facets,
+    trend,
     errorRate,
     selectedProvider,
     selectedModel,
@@ -93,6 +111,7 @@ export default function AIExplorerPage() {
     clearAll,
   } = useAIExplorer();
 
+  const [activeTab, setActiveTab] = useState<ViewTab>("overview");
   const [explorerMode, setExplorerMode] = useState<"list" | "analytics">("list");
   const [vizMode, setVizMode] = useState<ExplorerVizMode>("table");
   const [groupBy, setGroupBy] = useState<string[]>(["gen_ai.request.model"]);
@@ -125,50 +144,10 @@ export default function AIExplorerPage() {
   const [selectedCall, setSelectedCall] = useState<AICallRecord | null>(null);
   const detailFields = useAICallDetail(selectedCall);
 
-  // --- Summary metrics strip ---
-  const summaryMetrics = useMemo<SummaryMetric[]>(
-    () => [
-      {
-        key: "total_calls",
-        label: "LLM Calls",
-        value: formatNumber(summary.total_calls),
-        tone: "default",
-      },
-      {
-        key: "error_rate",
-        label: "Error Rate",
-        value: `${errorRate.toFixed(1)}%`,
-        tone: errorRate > 5 ? "danger" : errorRate > 1 ? "warning" : "success",
-      },
-      {
-        key: "avg_latency",
-        label: "Avg Latency",
-        value: formatDuration(summary.avg_latency_ms),
-        tone: "default",
-      },
-      {
-        key: "p95_latency",
-        label: "P95 Latency",
-        value: formatDuration(summary.p95_latency_ms),
-        tone: summary.p95_latency_ms > 10000 ? "warning" : "default",
-      },
-      {
-        key: "total_tokens",
-        label: "Total Tokens",
-        value: formatNumber(summary.total_input_tokens + summary.total_output_tokens),
-        tone: "accent",
-      },
-      {
-        key: "estimated_cost",
-        label: "Est. Cost",
-        value: formatCost(
-          aiCalls.reduce((sum, call) => sum + call.estimated_cost, 0)
-        ),
-        tone: "accent",
-        hint: "Estimated from model pricing table",
-      },
-    ],
-    [summary, errorRate, aiCalls]
+  // --- Top model pills (quick filters) ---
+  const topModels = useMemo(
+    () => facets.ai_model.slice(0, 5),
+    [facets.ai_model]
   );
 
   // --- Table columns ---
@@ -331,182 +310,278 @@ export default function AIExplorerPage() {
       <PageHeader
         title="AI Observability"
         icon={<BrainCircuit size={22} />}
-        subtitle="Explore LLM calls — latency, tokens, cost, and errors across models and providers."
+        subtitle="Monitor LLM performance — latency, tokens, cost, and errors across models and providers."
         actions={
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<Share2 size={14} />}
-            onClick={async () => {
-              await navigator.clipboard.writeText(window.location.href);
-              toast.success("Share link copied");
-            }}
-          >
-            Share
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<RotateCcw size={14} />}
+              onClick={clearAll}
+            >
+              Reset
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<Share2 size={14} />}
+              onClick={async () => {
+                await navigator.clipboard.writeText(window.location.href);
+                toast.success("Share link copied");
+              }}
+            >
+              Share
+            </Button>
+          </div>
         }
       />
 
-      <PageSurface padding="lg" className="relative z-[40] overflow-visible">
-        <div className="flex flex-col gap-4">
-          <SummaryMetricStrip metrics={summaryMetrics} />
-
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Badge variant="info">
-                <Sparkles size={12} className="mr-1 inline" />
-                GenAI Spans
-              </Badge>
-              <Badge variant={summary.error_calls > 0 ? "error" : "default"}>
-                {formatNumber(summary.error_calls)} errors
-              </Badge>
-            </div>
-          </div>
-
-          <div className="relative z-[70] grid items-start gap-3 lg:grid-cols-[1fr]">
-            <ObservabilityQueryBar
-              fields={AI_FILTER_FIELDS}
-              filters={filters}
-              setFilters={(nextFilters: StructuredFilter[]) => {
-                setFilters(nextFilters);
-                setPage(1);
-              }}
-              onClearAll={clearAll}
-              placeholder="model:gpt-4o AND provider:openai — or use Search filter"
-              rightSlot={
-                <div
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs transition-colors",
-                    errorsOnly
-                      ? "border-[rgba(240,68,56,0.35)] bg-[rgba(240,68,56,0.08)] text-[var(--color-error)]"
-                      : "border-[var(--border-color)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)]"
-                  )}
-                >
-                  <Activity size={13} />
-                  Errors only
-                  <Switch
-                    size="sm"
-                    checked={errorsOnly}
-                    onChange={(event) => {
-                      setErrorsOnly(event.target.checked);
-                      setPage(1);
-                    }}
-                  />
-                </div>
-              }
-            />
-          </div>
-
-          <AnalyticsToolbar
-            mode={explorerMode}
-            onModeChange={setExplorerMode}
-            vizMode={vizMode}
-            onVizModeChange={setVizMode}
-            groupBy={groupBy}
-            onGroupByChange={setGroupBy}
-            aggregations={aggregations}
-            onAggregationsChange={setAggregations}
-            step={analyticsStep}
-            onStepChange={setAnalyticsStep}
-            fieldOptions={AI_ANALYTICS_FIELDS}
-            metricFields={AI_METRIC_FIELDS}
-          />
-        </div>
-      </PageSurface>
-
-      <div
-        className={cn(
-          "relative z-0 grid gap-4",
-          explorerMode === "list" ? "xl:grid-cols-[300px_minmax(0,1fr)]" : "grid-cols-1"
-        )}
-      >
-        {explorerMode === "list" ? (
-          <>
-            <FacetRail
-              groups={facetGroups}
-              selected={selectedFacetState}
-              onSelect={(groupKey, value) => {
-                if (groupKey === "ai_system") {
-                  setSelectedProvider(value);
-                  setPage(1);
-                  return;
-                }
-                if (groupKey === "ai_model") {
-                  setSelectedModel(value);
-                  setPage(1);
-                  return;
-                }
-                if (groupKey === "status") {
-                  setErrorsOnly(value === "ERROR");
-                  setPage(1);
-                  return;
-                }
-                setFilters(upsertFacetFilter(filters, groupKey, value));
-                setPage(1);
-              }}
-            />
-
-            {isError && (
-              <div className="mb-3 flex items-center gap-2 rounded-[var(--card-radius)] border border-[rgba(240,68,56,0.3)] bg-[rgba(240,68,56,0.08)] px-4 py-3 text-[var(--color-error)]">
-                <AlertCircle size={16} className="shrink-0" />
-                <span className="font-medium text-sm">Failed to load AI calls</span>
-              </div>
-            )}
-
-            <ExplorerResultsTable
-              title="AI Explorer"
-              subtitle={`${formatNumber(aiCalls.length)} rows in view, ${formatNumber(total)} total calls`}
-              rows={aiCalls}
-              columns={columns}
-              rowKey={(row) => `${row.trace_id}-${row.span_id}`}
-              isLoading={isLoading}
-              page={page}
-              pageSize={pageSize}
-              showPagination
-              total={total}
-              onPageChange={setPage}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                setPage(1);
-              }}
-              onRow={(row) => ({
-                onClick: () => setSelectedCall(row),
-              })}
-              rowClassName={(row) =>
-                cn(
-                  "cursor-pointer transition-colors hover:bg-[rgba(255,255,255,0.04)]",
-                  selectedCall?.span_id === row.span_id &&
-                    "bg-[rgba(10,174,214,0.12)] ring-1 ring-[rgba(10,174,214,0.28)] ring-inset"
-                )
-              }
-            />
-          </>
-        ) : (
-          <PageSurface padding="lg" className="min-h-[320px]">
-            {analyticsQuery.isLoading ? (
-              <div className="text-[13px] text-[var(--text-muted)]">Loading analytics...</div>
-            ) : analyticsQuery.isError ? (
-              <div className="text-[13px] text-[var(--color-error)]">Analytics request failed.</div>
-            ) : analyticsQuery.data ? (
-              <div className="space-y-4">
-                {vizMode === "timeseries" ? (
-                  <AnalyticsTimeseries result={analyticsQuery.data} />
-                ) : null}
-                {vizMode === "toplist" ? <AnalyticsTopList result={analyticsQuery.data} /> : null}
-                {vizMode === "table" || vizMode === "list" ? (
-                  <AnalyticsTable result={analyticsQuery.data} />
-                ) : null}
-                {vizMode === "piechart" ? <AnalyticsPieChart result={analyticsQuery.data} /> : null}
-              </div>
-            ) : (
-              <div className="text-[13px] text-[var(--text-muted)]">
-                Configure group by and metrics.
-              </div>
-            )}
-          </PageSurface>
-        )}
+      {/* Tab bar: Overview | Explorer */}
+      <div className="flex items-center gap-1 border-b border-[var(--border-color)] px-4">
+        <button
+          type="button"
+          onClick={() => setActiveTab("overview")}
+          className={cn(
+            "flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-[13px] font-medium transition-colors",
+            activeTab === "overview"
+              ? "border-[var(--color-primary)] text-[var(--text-primary)]"
+              : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+          )}
+        >
+          <LayoutDashboard size={14} />
+          Overview
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("explorer")}
+          className={cn(
+            "flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-[13px] font-medium transition-colors",
+            activeTab === "explorer"
+              ? "border-[var(--color-primary)] text-[var(--text-primary)]"
+              : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+          )}
+        >
+          <List size={14} />
+          Explorer
+        </button>
       </div>
 
+      {/* Overview Tab */}
+      {activeTab === "overview" && (
+        <div className="px-1 pt-4">
+          <AIOverviewTab
+            summary={summary}
+            facets={facets}
+            trend={trend}
+            calls={aiCalls}
+            isLoading={isLoading}
+          />
+        </div>
+      )}
+
+      {/* Explorer Tab */}
+      {activeTab === "explorer" && (
+        <>
+          <PageSurface padding="lg" className="relative z-[40] overflow-visible">
+            <div className="flex flex-col gap-4">
+              {/* Volume chart */}
+              <AIVolumeChart buckets={trend} isLoading={isLoading} />
+
+              {/* Status badges + top model pills */}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Badge variant="info">
+                    <Sparkles size={12} className="mr-1 inline" />
+                    GenAI Spans
+                  </Badge>
+                  <Badge variant={summary.error_calls > 0 ? "error" : "default"}>
+                    {formatNumber(summary.error_calls)} errors
+                  </Badge>
+                  <span className="text-[11px] text-[var(--text-muted)]">
+                    {formatNumber(total)} total
+                  </span>
+                </div>
+                {topModels.length > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] text-[var(--text-muted)]">Top models:</span>
+                    {topModels.map((m) => (
+                      <button
+                        type="button"
+                        key={m.value}
+                        onClick={() => {
+                          setSelectedModel(selectedModel === m.value ? null : m.value);
+                          setPage(1);
+                        }}
+                        className={cn(
+                          "rounded-md border px-2 py-0.5 font-mono text-[10px] transition-colors",
+                          selectedModel === m.value
+                            ? "border-[var(--color-primary)] bg-[rgba(10,174,214,0.12)] text-[var(--color-primary)]"
+                            : "border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--text-muted)]"
+                        )}
+                      >
+                        {m.value}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Query bar */}
+              <div className="relative z-[70] grid items-start gap-3 lg:grid-cols-[1fr]">
+                <ObservabilityQueryBar
+                  fields={AI_FILTER_FIELDS}
+                  filters={filters}
+                  setFilters={(nextFilters: StructuredFilter[]) => {
+                    setFilters(nextFilters);
+                    setPage(1);
+                  }}
+                  onClearAll={clearAll}
+                  placeholder="model:gpt-4o AND provider:openai — or use Search filter"
+                  rightSlot={
+                    <div
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs transition-colors",
+                        errorsOnly
+                          ? "border-[rgba(240,68,56,0.35)] bg-[rgba(240,68,56,0.08)] text-[var(--color-error)]"
+                          : "border-[var(--border-color)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)]"
+                      )}
+                    >
+                      <Activity size={13} />
+                      Errors only
+                      <Switch
+                        size="sm"
+                        checked={errorsOnly}
+                        onChange={(event) => {
+                          setErrorsOnly(event.target.checked);
+                          setPage(1);
+                        }}
+                      />
+                    </div>
+                  }
+                />
+              </div>
+
+              {/* Analytics toolbar */}
+              <AnalyticsToolbar
+                mode={explorerMode}
+                onModeChange={setExplorerMode}
+                vizMode={vizMode}
+                onVizModeChange={setVizMode}
+                groupBy={groupBy}
+                onGroupByChange={setGroupBy}
+                aggregations={aggregations}
+                onAggregationsChange={setAggregations}
+                step={analyticsStep}
+                onStepChange={setAnalyticsStep}
+                fieldOptions={AI_ANALYTICS_FIELDS}
+                metricFields={AI_METRIC_FIELDS}
+              />
+            </div>
+          </PageSurface>
+
+          {/* Results area */}
+          <div
+            className={cn(
+              "relative z-0 grid gap-4",
+              explorerMode === "list" ? "xl:grid-cols-[300px_minmax(0,1fr)]" : "grid-cols-1"
+            )}
+          >
+            {explorerMode === "list" ? (
+              <>
+                <FacetRail
+                  groups={facetGroups}
+                  selected={selectedFacetState}
+                  onSelect={(groupKey, value) => {
+                    if (groupKey === "ai_system") {
+                      setSelectedProvider(value);
+                      setPage(1);
+                      return;
+                    }
+                    if (groupKey === "ai_model") {
+                      setSelectedModel(value);
+                      setPage(1);
+                      return;
+                    }
+                    if (groupKey === "status") {
+                      setErrorsOnly(value === "ERROR");
+                      setPage(1);
+                      return;
+                    }
+                    setFilters(upsertFacetFilter(filters, groupKey, value));
+                    setPage(1);
+                  }}
+                />
+
+                {isError && (
+                  <div className="mb-3 flex items-center gap-2 rounded-[var(--card-radius)] border border-[rgba(240,68,56,0.3)] bg-[rgba(240,68,56,0.08)] px-4 py-3 text-[var(--color-error)]">
+                    <AlertCircle size={16} className="shrink-0" />
+                    <span className="font-medium text-sm">Failed to load AI calls</span>
+                  </div>
+                )}
+
+                <ExplorerResultsTable
+                  title="AI Explorer"
+                  subtitle={`${formatNumber(aiCalls.length)} rows in view, ${formatNumber(total)} total calls`}
+                  rows={aiCalls}
+                  columns={columns}
+                  rowKey={(row) => `${row.trace_id}-${row.span_id}`}
+                  isLoading={isLoading}
+                  page={page}
+                  pageSize={pageSize}
+                  showPagination
+                  total={total}
+                  onPageChange={setPage}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
+                    setPage(1);
+                  }}
+                  onRow={(row) => ({
+                    onClick: () => setSelectedCall(row),
+                  })}
+                  rowClassName={(row) =>
+                    cn(
+                      "cursor-pointer transition-colors hover:bg-[rgba(255,255,255,0.04)]",
+                      selectedCall?.span_id === row.span_id &&
+                        "bg-[rgba(10,174,214,0.12)] ring-1 ring-[rgba(10,174,214,0.28)] ring-inset"
+                    )
+                  }
+                />
+              </>
+            ) : (
+              <PageSurface padding="lg" className="min-h-[320px]">
+                {analyticsQuery.isLoading ? (
+                  <div className="text-[13px] text-[var(--text-muted)]">Loading analytics...</div>
+                ) : analyticsQuery.isError ? (
+                  <div className="text-[13px] text-[var(--color-error)]">
+                    Analytics request failed.
+                  </div>
+                ) : analyticsQuery.data ? (
+                  <div className="space-y-4">
+                    {vizMode === "timeseries" ? (
+                      <AnalyticsTimeseries result={analyticsQuery.data} />
+                    ) : null}
+                    {vizMode === "toplist" ? (
+                      <AnalyticsTopList result={analyticsQuery.data} />
+                    ) : null}
+                    {vizMode === "table" || vizMode === "list" ? (
+                      <AnalyticsTable result={analyticsQuery.data} />
+                    ) : null}
+                    {vizMode === "piechart" ? (
+                      <AnalyticsPieChart result={analyticsQuery.data} />
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="text-[13px] text-[var(--text-muted)]">
+                    Configure group by and metrics.
+                  </div>
+                )}
+              </PageSurface>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Detail panel (visible from explorer tab) */}
       {selectedCall ? (
         <ObservabilityDetailPanel
           title="AI Call Detail"
@@ -538,7 +613,7 @@ export default function AIExplorerPage() {
                 variant="secondary"
                 size="sm"
                 onClick={() => {
-                  window.location.href = `/traces/${selectedCall.trace_id}`;
+                  void navigate({ to: `/traces/${selectedCall.trace_id}` });
                 }}
               >
                 View full trace
@@ -547,7 +622,9 @@ export default function AIExplorerPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  window.location.href = `/logs?query=${encodeURIComponent(`trace_id:${selectedCall.trace_id}`)}`;
+                  void navigate({
+                    to: `${ROUTES.logs}?query=${encodeURIComponent(`trace_id:${selectedCall.trace_id}`)}`,
+                  });
                 }}
               >
                 Related logs
