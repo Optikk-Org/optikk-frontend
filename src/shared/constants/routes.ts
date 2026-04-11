@@ -22,6 +22,7 @@ const ROUTES = {
   saturationKafkaTopicDetail: "/saturation/kafka/topics/$topic",
   saturationKafkaGroupDetail: "/saturation/kafka/groups/$groupId",
 
+  ai: "/ai",
   settings: "/settings",
   alerts: "/alerts",
   alertRuleNew: "/alerts/rules/new",
