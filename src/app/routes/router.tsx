@@ -13,6 +13,9 @@ import { getExplorerRoutes } from "@/app/registry/domainRegistry";
 import { buildLegacyServicePagePath } from "@/features/overview/components/serviceDrawerState";
 import { FeatureErrorBoundary, Loading } from "@/shared/components/ui/feedback";
 import { ROUTES } from "@/shared/constants/routes";
+import { dynamicTo } from "@/shared/utils/navigation";
+
+import type { DashboardDrawerEntity } from "@/shared/types/dashboardConfig";
 
 import { AppContent } from "../App";
 import MainLayout from "../layout/MainLayout";
@@ -40,12 +43,12 @@ function LegacySaturationDatabaseRedirect() {
   const dbSystem = typeof params.dbSystem === "string" ? params.dbSystem : "";
   return (
     <Navigate
-      to={
+      to={dynamicTo(
         ROUTES.saturationDatastoreDetail.replace(
           "$system",
           encodeURIComponent(dbSystem || "unknown")
-        ) as any
-      }
+        )
+      )}
       replace
     />
   );
@@ -56,8 +59,8 @@ function LegacySaturationRedisRedirect() {
   const instance = typeof params.instance === "string" ? params.instance : "";
   return (
     <Navigate
-      to={ROUTES.saturationDatastoreDetail.replace("$system", "redis") as any}
-      search={instance ? ({ instance } as any) : undefined}
+      to={dynamicTo(ROUTES.saturationDatastoreDetail.replace("$system", "redis"))}
+      search={instance ? ({ instance } as Record<string, unknown>) : undefined}
       replace
     />
   );
@@ -142,12 +145,7 @@ function createProtected(
     getParentRoute: () => mainLayoutRoute,
     path: toNestedRoutePath(path),
     component: () => (
-      <FeatureErrorBoundary
-        featureName={`route:${path}`}
-        onError={(err, feature) => {
-          console.log(`[Telemetry Push] ${feature} failed:`, err);
-        }}
-      >
+      <FeatureErrorBoundary featureName={`route:${path}`}>
         <Suspense fallback={<Loading fullscreen />}>
           <PageComponent />
         </Suspense>
@@ -184,7 +182,7 @@ function createLegacyDetailRedirect(
     component: () => (
       <LegacyDashboardDetailRedirect
         parentPath={parentPath}
-        drawerEntity={drawerEntity as any}
+        drawerEntity={drawerEntity as DashboardDrawerEntity}
         paramKey={paramKey}
         tab={tab}
       />

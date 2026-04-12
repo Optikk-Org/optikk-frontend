@@ -129,6 +129,7 @@ export const myConfig: DomainConfig = {
 | Dashboard datasource | `['datasource', teamId, endpoint, timeRange]` | **No** | `useInvalidateQueriesOnAppRefresh` |
 
 - **Always** use `placeholderData: keepPreviousData` to prevent loading flash on refetch
+- **Prefer** `useStandardQuery` (`shared/hooks/useStandardQuery.ts`) over raw `useQuery` — bundles `keepPreviousData`, `staleTime: 5s`, `retry: 2` defaults
 - **Loading state** = `isPending && data === undefined` (not `isLoading`)
 - `enabled: !!selectedTeamId` — don't fire queries without a team
 - `staleTime: 0`, `gcTime: 30_000`, `retry: false`

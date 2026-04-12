@@ -19,7 +19,7 @@ import {
   type DeploymentRisk,
   type DiscoveryHealth,
   type DiscoveryServiceRow,
-  fetchDiscoveryRows,
+  getDiscoveryRows,
 } from "./api";
 
 const HEALTH_ORDER: Record<DiscoveryHealth, number> = {
@@ -136,7 +136,7 @@ export default function DiscoveryView(): JSX.Element {
   const filter = searchParams.get("serviceSearch") ?? "";
 
   const query = useTimeRangeQuery("services-discovery", async (teamId, startTime, endTime) => {
-    return fetchDiscoveryRows(teamId, startTime, endTime);
+    return getDiscoveryRows(teamId, startTime, endTime);
   });
 
   const rows = query.data ?? [];

@@ -3,6 +3,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { dynamicNavigateOptions } from "@/shared/utils/navigation";
+
 function BrandIcon() {
   return (
     <svg aria-hidden="true">
@@ -140,7 +142,7 @@ export default function MarketingNav() {
               <div
                 key={lx.label}
                 className="nav-link"
-                onClick={() => navigate({ to: lx.path as any })}
+                onClick={() => navigate(dynamicNavigateOptions(lx.path))}
               >
                 {lx.label}
                 {location.pathname === lx.path && (
@@ -241,7 +243,7 @@ export default function MarketingNav() {
                 onClick={() => {
                   setMobileMenuOpen(false);
                   if (lx.ext) window.open(lx.path, "_blank");
-                  else navigate({ to: lx.path as any });
+                  else navigate(dynamicNavigateOptions(lx.path));
                 }}
               >
                 {lx.label}

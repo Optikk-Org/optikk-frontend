@@ -18,9 +18,10 @@ import {
 } from "@/features/metrics/api/metricsOverviewApi";
 import {
   type ServiceTopologyEdge,
-  fetchServiceTopology,
+  getServiceTopology,
 } from "@/features/overview/pages/ServiceHubPage/topology/api";
 import { ROUTES } from "@/shared/constants/routes";
+import { dynamicNavigateOptions } from "@/shared/utils/navigation";
 import { Badge, Card } from "@shared/components/primitives/ui";
 import StatCard from "@shared/components/ui/cards/StatCard";
 import ErrorRateChart from "@shared/components/ui/charts/time-series/ErrorRateChart";
@@ -358,7 +359,7 @@ export default function ServiceDetailDrawer({
   const dependenciesQuery = useTimeRangeQuery(
     "service-drawer-dependencies",
     async (_teamId, startTime, endTime) =>
-      fetchServiceTopology({ startTime, endTime, service: serviceName }),
+      getServiceTopology({ startTime, endTime, service: serviceName }),
     { extraKeys: [serviceName], enabled: Boolean(serviceName) }
   );
 
@@ -449,17 +450,17 @@ export default function ServiceDetailDrawer({
   );
 
   const openTraces = (): void => {
-    navigate({
-      to: ROUTES.traces,
-      search: buildServiceTracesSearch(location.search, serviceName) as any,
-    });
+    navigate(dynamicNavigateOptions(
+      ROUTES.traces,
+      buildServiceTracesSearch(location.search, serviceName),
+    ));
   };
 
   const openLogs = (): void => {
-    navigate({
-      to: ROUTES.logs,
-      search: buildServiceLogsSearch(location.search, serviceName) as any,
-    });
+    navigate(dynamicNavigateOptions(
+      ROUTES.logs,
+      buildServiceLogsSearch(location.search, serviceName),
+    ));
   };
 
   const serviceLabel = title?.trim() || serviceName;

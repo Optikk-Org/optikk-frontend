@@ -15,6 +15,7 @@ import {
   deploymentsApi,
 } from "@/features/overview/api/deploymentsApi";
 import { ROUTES } from "@/shared/constants/routes";
+import { dynamicNavigateOptions } from "@/shared/utils/navigation";
 import { useAppStore, useRefreshKey, useTeamId } from "@app/store/appStore";
 import { CHART_COLORS } from "@config/constants";
 import {
@@ -282,13 +283,12 @@ export default function DeploymentCompareDrawer({
   const openSurface = (target: "logs" | "traces", startMs: number, endMs: number) => {
     if (!seed?.serviceName) return;
     setCustomTimeRange(startMs, endMs, "Deployment comparison");
-    navigate({
-      to: target === "logs" ? ROUTES.logs : ROUTES.traces,
-      search:
-        target === "logs"
-          ? (buildServiceLogsSearch(location.search, seed.serviceName) as any)
-          : (buildServiceTracesSearch(location.search, seed.serviceName) as any),
-    });
+    navigate(dynamicNavigateOptions(
+      target === "logs" ? ROUTES.logs : ROUTES.traces,
+      target === "logs"
+        ? buildServiceLogsSearch(location.search, seed.serviceName)
+        : buildServiceTracesSearch(location.search, seed.serviceName),
+    ));
   };
 
   const endpointColumns = useMemo<

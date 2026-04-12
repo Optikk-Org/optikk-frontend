@@ -9,7 +9,7 @@ import { CreateAlertButton } from "@/features/alerts/components/CreateAlertButto
 import DashboardEntityDrawer from "@shared/components/ui/dashboard/DashboardEntityDrawer";
 import { useTimeRangeQuery } from "@shared/hooks/useTimeRangeQuery";
 import { formatNumber } from "@shared/utils/formatters";
-import { fetchDiscoveryRows } from "./discovery/api";
+import { getDiscoveryRows } from "./discovery/api";
 
 const DiscoveryView = lazy(() => import("./discovery"));
 const TopologyView = lazy(() => import("./TopologyView"));
@@ -67,7 +67,7 @@ export default function ServiceHubPage() {
 
   const discoverySummaryQuery = useTimeRangeQuery(
     "services-discovery",
-    async (teamId, startTime, endTime) => fetchDiscoveryRows(teamId, startTime, endTime)
+    async (teamId, startTime, endTime) => getDiscoveryRows(teamId, startTime, endTime)
   );
 
   const summary = useMemo(() => {

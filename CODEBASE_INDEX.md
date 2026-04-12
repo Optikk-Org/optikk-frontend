@@ -161,6 +161,8 @@ Shared infrastructure for all data explorers (Logs, Traces, Metrics) — **not a
 | Auth | `shared/api/auth/` | Session cookies with `withCredentials: true` |
 | Entities | `shared/entities/` | Domain entity types: `log/`, `metric/`, `trace/`, `user/` |
 | Radix primitives | `shared/components/primitives/ui/` | **Import Tabs/Tooltip/Dialog/etc. from `@shared/components/primitives/ui`, NOT `@shared/components/ui`** — the latter does not re-export Radix primitives |
+| Navigation utils | `shared/utils/navigation.ts` | `dynamicNavigateOptions(to, search?)` and `dynamicTo(path)` — type-safe wrappers for TanStack Router navigation with dynamic paths; centralises the branded-string cast |
+| Standard query | `shared/hooks/useStandardQuery.ts` | `useStandardQuery(options)` — project-wide defaults: `placeholderData: keepPreviousData`, `staleTime: 5_000`, `retry: 2` |
 
 ### Adding npm packages (React 19 peer-dep gotcha)
 
@@ -330,6 +332,7 @@ BackendDrivenPage (route match)
 - `placeholderData: keepPreviousData` on all queries — prevents loading flash
 - Loading = `isPending && data === undefined` (not `isLoading`) — distinguishes initial load from background refresh
 - `enabled: !!selectedTeamId`, `staleTime: 0`, `gcTime: 30_000`, `retry: false`
+- Prefer `useStandardQuery` (`shared/hooks/useStandardQuery.ts`) over raw `useQuery` for consistent defaults
 
 ## Shared Hooks Reference (`src/shared/hooks/`)
 
@@ -353,6 +356,7 @@ BackendDrivenPage (route match)
 | `useKeyboardShortcuts` | Global keyboard shortcuts |
 | `useAuthValidation` | Validates user session on mount |
 | `useFeatureFlag` | Checks feature flag status |
+| `useStandardQuery` | Standard `useQuery` wrapper with `keepPreviousData`, `staleTime: 5s`, `retry: 2` defaults |
 
 ## Type System Reference
 
@@ -393,7 +397,7 @@ Use when a change spans frontend and API. Backend paths refer to **`optikk-backe
 | Registry / route wiring | `domainRegistry.ts`, feature `index.ts` | `internal/app/server/modules_manifest.go` |
 | Explorer APIs | Feature `api/` or `shared/api` | Matching `internal/modules/.../handler.go` |
 | Explorer analytics | `explorer-core/api/explorerAnalyticsApi.ts` | `logs/explorer/` and `traces/explorer/` (shared types in `explorer/analytics/`) |
-| Metrics Explorer | `src/features/metrics` (`metricsExplorerApi.ts`) | `internal/modules/metricsexplorer` (`/metrics/names`, `/:metricName/tags`, `/explorer/query`) |
+| Metrics Explorer | `src/features/metrics` (`metricsExplorerApi.ts` — `getMetricNames`, `getMetricTags`, `query`) | `internal/modules/metricsexplorer` (`/metrics/names`, `/:metricName/tags`, `/explorer/query`) |
 | Dashboard panels | `dashboard/renderers/`, `dashboardPanelRegistry` | `internal/infra/dashboardcfg/`, panel types in `enums.go` |
 | Dashboard config API | `defaultConfigService.ts` | `internal/infra/dashboardcfg/` |
 | Default pages | Dashboard page adapters | `internal/infra/dashboardcfg/defaults/` — embedded **overview** only; infrastructure UI is frontend-owned |
