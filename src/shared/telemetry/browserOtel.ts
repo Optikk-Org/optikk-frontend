@@ -1,5 +1,5 @@
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { resourceFromAttributes } from "@opentelemetry/resources";
+import { Resource } from "@opentelemetry/resources";
 import {
   BatchSpanProcessor,
   ParentBasedSampler,
@@ -50,7 +50,7 @@ export function initBrowserOpenTelemetry(): void {
 
   const provider = new WebTracerProvider({
     ...(sampler !== undefined ? { sampler } : {}),
-    resource: resourceFromAttributes({
+    resource: new Resource({
       [ATTR_SERVICE_NAME]: serviceName,
     }),
     spanProcessors: [new BatchSpanProcessor(exporter)],
