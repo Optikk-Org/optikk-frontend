@@ -1,4 +1,4 @@
-import { Card, Input, Select, Switch } from "@/components/ui";
+import { Card, Select, Switch } from "@/components/ui";
 import type {
   AlertRuleCondition,
   AlertRulePayload,
@@ -8,6 +8,8 @@ import type {
 import { LabeledRow } from "../components/LabeledRow";
 import { SENSITIVITY_OPTIONS, SEVERITY_OPTIONS } from "../constants";
 
+import { ThresholdFields } from "./condition/ThresholdFields";
+
 interface Props {
   payload: AlertRulePayload;
   patch: (next: Partial<AlertRulePayload>) => void;
@@ -15,9 +17,11 @@ interface Props {
 }
 
 export function AlertConditionStep({ payload, patch, patchCondition }: Props) {
+  const isSloBurn = payload.preset_kind === "slo_burn_rate";
+
   return (
     <Card className="mt-3 flex flex-col gap-4 p-4">
-      {payload.preset_kind === "slo_burn_rate" ? (
+      {isSloBurn ? (
         <LabeledRow label="Sensitivity">
           <Select
             value={payload.condition.sensitivity ?? "balanced"}
@@ -29,49 +33,7 @@ export function AlertConditionStep({ payload, patch, patchCondition }: Props) {
           />
         </LabeledRow>
       ) : (
-        <>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <LabeledRow label="Threshold">
-              <Input
-                type="number"
-                value={String(payload.condition.threshold)}
-                onChange={(e) => patchCondition({ threshold: Number(e.target.value) || 0 })}
-              />
-            </LabeledRow>
-            <LabeledRow
-              label={
-                payload.preset_kind === "http_check"
-                  ? "Check interval (minutes)"
-                  : "Window (minutes)"
-              }
-            >
-              <Input
-                type="number"
-                value={String(
-                  payload.preset_kind === "http_check"
-                    ? (payload.condition.evaluation_interval_minutes ?? 1)
-                    : (payload.condition.window_minutes ?? 5)
-                )}
-                onChange={(e) =>
-                  patchCondition(
-                    payload.preset_kind === "http_check"
-                      ? { evaluation_interval_minutes: Number(e.target.value) || 1 }
-                      : { window_minutes: Number(e.target.value) || 5 }
-                  )
-                }
-              />
-            </LabeledRow>
-          </div>
-          {payload.preset_kind !== "http_check" && (
-            <LabeledRow label="Hold time (minutes)">
-              <Input
-                type="number"
-                value={String(payload.condition.hold_minutes ?? 2)}
-                onChange={(e) => patchCondition({ hold_minutes: Number(e.target.value) || 2 })}
-              />
-            </LabeledRow>
-          )}
-        </>
+        <ThresholdFields payload={payload} patchCondition={patchCondition} />
       )}
 
       <LabeledRow label="Severity">
@@ -82,7 +44,6 @@ export function AlertConditionStep({ payload, patch, patchCondition }: Props) {
           size="sm"
         />
       </LabeledRow>
-
       <LabeledRow label="Enabled">
         <Switch
           checked={payload.enabled}

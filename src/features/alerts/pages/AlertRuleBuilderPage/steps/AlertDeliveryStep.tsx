@@ -1,8 +1,10 @@
-import { Badge, Button, Card, Input } from "@/components/ui";
+import { Button, Card, Input } from "@/components/ui";
 import type { AlertRulePayload } from "@/features/alerts/types";
 import type { UseMutationResult } from "@tanstack/react-query";
 
 import { LabeledRow } from "../components/LabeledRow";
+
+import { SlackResultCard } from "./delivery/SlackResultCard";
 
 interface SlackTestResult {
   delivered: boolean;
@@ -24,9 +26,7 @@ export function AlertDeliveryStep({ payload, patch, slackTestMut, onTestSlack }:
           <Input
             value={payload.delivery.slack_webhook_url}
             onChange={(e) =>
-              patch({
-                delivery: { ...payload.delivery, slack_webhook_url: e.target.value },
-              })
+              patch({ delivery: { ...payload.delivery, slack_webhook_url: e.target.value } })
             }
             placeholder="https://hooks.slack.com/services/..."
           />
@@ -38,31 +38,12 @@ export function AlertDeliveryStep({ payload, patch, slackTestMut, onTestSlack }:
       <LabeledRow label="Optional note">
         <textarea
           value={payload.delivery.note ?? ""}
-          onChange={(e) =>
-            patch({
-              delivery: { ...payload.delivery, note: e.target.value },
-            })
-          }
+          onChange={(e) => patch({ delivery: { ...payload.delivery, note: e.target.value } })}
           placeholder="Tell responders what to check first."
           className="min-h-[96px] rounded-[var(--card-radius)] border border-[var(--border-color)] bg-[var(--bg-secondary)] px-3 py-2 text-[13px] text-[var(--text-primary)] outline-none"
         />
       </LabeledRow>
-      {slackTestMut.data ? (
-        <Card className="border border-[var(--border-color)] bg-[var(--bg-tertiary)] p-3">
-          <div className="mb-2 flex items-center gap-2">
-            <Badge variant={slackTestMut.data.delivered ? "success" : "error"}>
-              {slackTestMut.data.delivered ? "Delivered" : "Failed"}
-            </Badge>
-            <span className="text-[12px] text-[var(--text-secondary)]">Latest Slack test</span>
-          </div>
-          <div className="font-medium text-[13px] text-[var(--text-primary)]">
-            {slackTestMut.data.notification.title}
-          </div>
-          <pre className="mt-2 whitespace-pre-wrap text-[12px] text-[var(--text-secondary)]">
-            {slackTestMut.data.notification.body}
-          </pre>
-        </Card>
-      ) : null}
+      {slackTestMut.data ? <SlackResultCard result={slackTestMut.data} /> : null}
     </Card>
   );
 }
