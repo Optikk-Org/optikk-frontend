@@ -6,7 +6,7 @@ import { TableVirtuoso } from "react-virtuoso";
 interface VirtualizedResultsTableProps<RowType extends Record<string, unknown>> {
   rows: RowType[];
   columns: SimpleTableColumn<RowType>[];
-  rowKey: keyof RowType | ((record: RowType, index?: number) => string);
+  rowKey?: keyof RowType | ((record: RowType, index?: number) => string);
   onRow?: (record: RowType, index?: number) => React.HTMLAttributes<HTMLTableRowElement>;
   rowClassName?: string | ((record: RowType, index: number) => string);
   height?: number | string;
@@ -46,6 +46,7 @@ function resolveRowKey<RowType extends Record<string, unknown>>(
   record: RowType,
   index: number
 ): string {
+  if (rowKey == null) return String(index);
   if (typeof rowKey === "function") return rowKey(record, index);
   return String(record[rowKey]);
 }
