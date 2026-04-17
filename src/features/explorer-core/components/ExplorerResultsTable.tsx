@@ -44,7 +44,15 @@ export function ExplorerResultsTable<RowType extends Record<string, unknown>>({
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="font-semibold text-[var(--text-primary)] text-sm">{title}</h3>
-          {subtitle ? <p className="mt-1 text-[var(--text-muted)] text-xs">{subtitle}</p> : null}
+          {subtitle ? (
+            <p
+              aria-live={showPagination ? undefined : "polite"}
+              aria-atomic="true"
+              className="mt-1 text-[var(--text-muted)] text-xs"
+            >
+              {subtitle}
+            </p>
+          ) : null}
         </div>
         {toolbar}
       </div>
