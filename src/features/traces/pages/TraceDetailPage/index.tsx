@@ -40,7 +40,7 @@ export default function TraceDetailPage() {
     selectedSpan,
     selectedSpanId,
     setSelectedSpanId,
-    isLoading,
+    isPending: isLoading,
     isError,
     error,
     logsLoading,

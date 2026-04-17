@@ -16,7 +16,7 @@ import { useLlmExplorer } from "../hooks/useLlmExplorer";
 export default function LlmPromptsView() {
   const teamId = useTeamId();
   const queryClient = useQueryClient();
-  const { isLoading: explorerLoading, facets } = useLlmExplorer();
+  const { isPending: explorerLoading, facets } = useLlmExplorer();
 
   const [slug, setSlug] = useState("");
   const [displayName, setDisplayName] = useState("");

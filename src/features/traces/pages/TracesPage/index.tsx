@@ -2,7 +2,7 @@ import { Activity, AlertCircle, GitBranch, GitCompare, Radio, Share2 } from "luc
 
 import { ERROR_CODE_LABELS } from "@/shared/constants/errorCodes";
 import { useNavigate } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 import { Badge, Button, Select, Switch } from "@/components/ui";
@@ -136,7 +136,7 @@ export default function TracesPage() {
   const timeRange = useTimeRange();
 
   const {
-    isLoading,
+    isPending: isLoading,
     isError,
     error,
     traces,
@@ -191,6 +191,11 @@ export default function TracesPage() {
 
   const [selectedTrace, setSelectedTrace] = useState<TraceRecord | null>(null);
   const [selectedTraceIds, setSelectedTraceIds] = useState<string[]>([]);
+
+  const handleTraceRowClick = useCallback(
+    (row: TraceRecord) => ({ onClick: () => setSelectedTrace(row) }),
+    []
+  );
   const selectedTraceIdsRef = useRef<string[]>(selectedTraceIds);
   selectedTraceIdsRef.current = selectedTraceIds;
   const [isLiveTail, setIsLiveTail] = useState(false);
@@ -562,9 +567,7 @@ export default function TracesPage() {
                 setPageSize(size);
                 setPage(1);
               }}
-              onRow={(row) => ({
-                onClick: () => setSelectedTrace(row),
-              })}
+              onRow={handleTraceRowClick}
               rowClassName={(row) =>
                 cn(
                   "cursor-pointer transition-colors hover:bg-[rgba(255,255,255,0.04)]",

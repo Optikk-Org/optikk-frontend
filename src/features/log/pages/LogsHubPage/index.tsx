@@ -3,7 +3,7 @@ import { Activity, AlertCircle, FileText, Radio, Share2 } from "lucide-react";
 import { ERROR_CODE_LABELS } from "@/shared/constants/errorCodes";
 import { ROUTES } from "@/shared/constants/routes";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
 import { Badge, Button, Switch } from "@/components/ui";
@@ -129,6 +129,11 @@ export default function LogsHubPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [selectedLog, setSelectedLog] = useState<LogRecord | null>(null);
+
+  const handleLogRowClick = useCallback(
+    (row: LogRecord) => ({ onClick: () => setSelectedLog(row) }),
+    []
+  );
 
   const [explorerMode, setExplorerMode] = useState<"list" | "analytics">("list");
   const [vizMode, setVizMode] = useState<ExplorerVizMode>("table");
@@ -563,9 +568,7 @@ export default function LogsHubPage() {
               setPageSize(size);
               setPage(1);
             }}
-            onRow={(row) => ({
-              onClick: () => setSelectedLog(row),
-            })}
+            onRow={handleLogRowClick}
             rowClassName={(row) =>
               cn(
                 "cursor-pointer transition-colors hover:bg-[rgba(255,255,255,0.04)]",

@@ -8,7 +8,7 @@ import {
   Share2,
   Sparkles,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
 import { Badge, Button, Modal, Switch } from "@/components/ui";
@@ -87,7 +87,7 @@ export default function LlmGenerationsView() {
   const timeRange = useTimeRange();
 
   const {
-    isLoading,
+    isPending: isLoading,
     isError,
     generations,
     total,
@@ -150,6 +150,11 @@ export default function LlmGenerationsView() {
 
   const [selectedGeneration, setSelectedGeneration] = useState<LlmGenerationRecord | null>(null);
   const detailFields = useLlmGenerationDetail(selectedGeneration);
+
+  const handleGenerationRowClick = useCallback(
+    (row: LlmGenerationRecord) => ({ onClick: () => setSelectedGeneration(row) }),
+    []
+  );
 
   const topModels = useMemo(() => facets.ai_model.slice(0, 5), [facets.ai_model]);
 
@@ -570,9 +575,7 @@ export default function LlmGenerationsView() {
                 setPageSize(size);
                 setPage(1);
               }}
-              onRow={(row) => ({
-                onClick: () => setSelectedGeneration(row),
-              })}
+              onRow={handleGenerationRowClick}
               rowClassName={(row) =>
                 cn(
                   "cursor-pointer transition-colors hover:bg-[rgba(255,255,255,0.04)]",

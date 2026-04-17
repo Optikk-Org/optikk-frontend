@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Activity, Cable, Database, Gauge, Search, TimerReset, Waves } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 
 import {
   Badge,
@@ -363,6 +363,48 @@ export default function SaturationPage(): JSX.Element {
   const datastoreSummary = datastoreSummaryQuery.data;
   const kafkaSummary = kafkaSummaryQuery.data;
 
+  const handleDatastoreRowClick = useCallback(
+    (row: { system: string }) => ({
+      onClick: () =>
+        navigate(dynamicNavigateOptions(
+          ROUTES.saturationDatastoreDetail.replace(
+            "$system",
+            encodeURIComponent(row.system)
+          )
+        )),
+      className: "cursor-pointer",
+    }),
+    [navigate]
+  );
+
+  const handleKafkaTopicRowClick = useCallback(
+    (row: { topic: string }) => ({
+      onClick: () =>
+        navigate(dynamicNavigateOptions(
+          ROUTES.saturationKafkaTopicDetail.replace(
+            "$topic",
+            encodeURIComponent(row.topic)
+          )
+        )),
+      className: "cursor-pointer",
+    }),
+    [navigate]
+  );
+
+  const handleKafkaGroupRowClick = useCallback(
+    (row: { consumer_group: string }) => ({
+      onClick: () =>
+        navigate(dynamicNavigateOptions(
+          ROUTES.saturationKafkaGroupDetail.replace(
+            "$groupId",
+            encodeURIComponent(row.consumer_group)
+          )
+        )),
+      className: "cursor-pointer",
+    }),
+    [navigate]
+  );
+
   return (
     <PageShell>
       <PageHeader
@@ -528,16 +570,7 @@ export default function SaturationPage(): JSX.Element {
             rowKey={(row) => row.system}
             pagination={{ pageSize: 12 }}
             scroll={{ x: 960 }}
-            onRow={(row) => ({
-              onClick: () =>
-                navigate(dynamicNavigateOptions(
-                  ROUTES.saturationDatastoreDetail.replace(
-                    "$system",
-                    encodeURIComponent(row.system)
-                  )
-                )),
-              className: "cursor-pointer",
-            })}
+            onRow={handleDatastoreRowClick}
           />
         ) : kafkaView === KAFKA_TOPICS ? (
           <SimpleTable
@@ -546,16 +579,7 @@ export default function SaturationPage(): JSX.Element {
             rowKey={(row) => row.topic}
             pagination={{ pageSize: 12 }}
             scroll={{ x: 1100 }}
-            onRow={(row) => ({
-              onClick: () =>
-                navigate(dynamicNavigateOptions(
-                  ROUTES.saturationKafkaTopicDetail.replace(
-                    "$topic",
-                    encodeURIComponent(row.topic)
-                  )
-                )),
-              className: "cursor-pointer",
-            })}
+            onRow={handleKafkaTopicRowClick}
           />
         ) : (
           <SimpleTable
@@ -564,16 +588,7 @@ export default function SaturationPage(): JSX.Element {
             rowKey={(row) => row.consumer_group}
             pagination={{ pageSize: 12 }}
             scroll={{ x: 1760 }}
-            onRow={(row) => ({
-              onClick: () =>
-                navigate(dynamicNavigateOptions(
-                  ROUTES.saturationKafkaGroupDetail.replace(
-                    "$groupId",
-                    encodeURIComponent(row.consumer_group)
-                  )
-                )),
-              className: "cursor-pointer",
-            })}
+            onRow={handleKafkaGroupRowClick}
           />
         )}
       </PageSurface>
