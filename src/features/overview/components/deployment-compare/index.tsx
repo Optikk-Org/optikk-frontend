@@ -9,6 +9,8 @@ import {
   NoDataState,
 } from "./components/DeploymentCompareStates";
 import { useDeploymentCompare } from "./hooks/useDeploymentCompare";
+import { useDeploymentImpact } from "./hooks/useDeploymentImpact";
+import { useDeploymentList } from "./hooks/useDeploymentList";
 import { useOpenSurface } from "./hooks/useOpenSurface";
 
 interface Props {
@@ -18,6 +20,14 @@ interface Props {
   initialData?: Record<string, unknown> | null;
 }
 
+interface DrawerStateProps
+  extends ReturnType<typeof useDeploymentCompare> {
+  openSurface: ReturnType<typeof useOpenSurface>;
+  impacts: ReturnType<typeof useDeploymentImpact>["impacts"];
+  impactsLoading: boolean;
+  deployments: ReturnType<typeof useDeploymentList>["deployments"];
+}
+
 function DrawerState({
   seed,
   compareQuery,
@@ -25,9 +35,10 @@ function DrawerState({
   timelineQuery,
   timeline,
   openSurface,
-}: ReturnType<typeof useDeploymentCompare> & {
-  openSurface: ReturnType<typeof useOpenSurface>;
-}) {
+  impacts,
+  impactsLoading,
+  deployments,
+}: DrawerStateProps) {
   if (!seed) return <MissingMetadataState />;
   if (compareQuery.isLoading) return <LoadingState />;
   if (compareQuery.isError) return <ErrorState />;
@@ -38,6 +49,11 @@ function DrawerState({
       onOpen={openSurface}
       timelineIsLoading={timelineQuery.isLoading}
       timeline={timeline}
+      serviceName={seed.serviceName}
+      currentVersion={seed.version}
+      impacts={impacts}
+      impactsLoading={impactsLoading}
+      deployments={deployments}
     />
   );
 }
@@ -50,6 +66,10 @@ export default function DeploymentCompareDrawer({
 }: Props): JSX.Element {
   const compareBundle = useDeploymentCompare(initialData);
   const openSurface = useOpenSurface(compareBundle.seed?.serviceName);
+  const { impacts, loading: impactsLoading } = useDeploymentImpact(
+    compareBundle.seed?.serviceName
+  );
+  const { deployments } = useDeploymentList(compareBundle.seed?.serviceName);
 
   return (
     <Drawer
@@ -64,7 +84,13 @@ export default function DeploymentCompareDrawer({
         style={{ width: "min(1120px, calc(100vw - 20px))" }}
       >
         <DeploymentCompareHeader title={title} seed={compareBundle.seed} />
-        <DrawerState {...compareBundle} openSurface={openSurface} />
+        <DrawerState
+          {...compareBundle}
+          openSurface={openSurface}
+          impacts={impacts}
+          impactsLoading={impactsLoading}
+          deployments={deployments}
+        />
       </DrawerContent>
     </Drawer>
   );

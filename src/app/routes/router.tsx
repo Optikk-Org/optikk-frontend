@@ -11,7 +11,6 @@ import type { ComponentType, ReactNode } from "react";
 import { Suspense, lazy } from "react";
 
 import { getExplorerRoutes } from "@/app/registry/domainRegistry";
-import { buildLegacyServicePagePath } from "@/features/overview/components/serviceDrawerState";
 import { FeatureErrorBoundary, Loading } from "@/shared/components/ui/feedback";
 import { ROUTES } from "@/shared/constants/routes";
 import { dynamicTo } from "@/shared/utils/navigation";
@@ -30,19 +29,15 @@ const MarketingShellLazy = lazy(() =>
 );
 const MetricsPage = lazy(() => import("@/features/metrics/pages/MetricsExplorerPage"));
 const ServiceHubPage = lazy(() => import("@/features/overview/pages/ServiceHubPage"));
+const ServicePage = lazy(
+  () => import("@/features/overview/pages/ServicePage/ServicePage")
+);
 const InfrastructureHubPage = lazy(
   () => import("@/features/infrastructure/pages/InfrastructureHubPage")
 );
 const OverviewHubPage = lazy(
   () => import("@/features/overview/pages/OverviewHubPage/OverviewHubPage")
 );
-function LegacyServicePathRedirect() {
-  const params = useParams({ strict: false });
-  const serviceName = typeof params.serviceName === "string" ? params.serviceName : "";
-  return (
-    <Navigate to={serviceName ? buildLegacyServicePagePath(serviceName) : ROUTES.service} replace />
-  );
-}
 
 function LegacySaturationDatabaseRedirect() {
   const params = useParams({ strict: false });
@@ -188,6 +183,7 @@ const protectedExplorerRoutes = getExplorerRoutes().map((route) =>
 const overviewRoute = createProtected(ROUTES.overview, OverviewHubPage);
 const infrastructureRoute = createProtected(ROUTES.infrastructure, InfrastructureHubPage);
 const serviceRoute = createProtected(ROUTES.service, ServiceHubPage);
+const serviceDetailRoute = createProtected(ROUTES.serviceDetail, ServicePage);
 // Redirects
 const logsPatternsRedirect = createProtected("/logs/patterns", () => null, ROUTES.logs);
 const logsTransactionsRedirect = createProtected("/logs/transactions", () => null, ROUTES.logs);
@@ -254,12 +250,6 @@ const legacySaturationRedisRedirect = createRoute({
   component: LegacySaturationRedisRedirect,
 });
 
-const legacyServicePathRedirect = createRoute({
-  getParentRoute: () => mainLayoutRoute,
-  path: "services/$serviceName",
-  component: LegacyServicePathRedirect,
-});
-
 // Fallbacks
 const layoutFallback = createRoute({
   getParentRoute: () => mainLayoutRoute,
@@ -286,6 +276,7 @@ const routeTree = rootRoute.addChildren([
     overviewRoute,
     infrastructureRoute,
     serviceRoute,
+    serviceDetailRoute,
     logsPatternsRedirect,
     logsTransactionsRedirect,
     errorsRedirect,
@@ -295,7 +286,6 @@ const routeTree = rootRoute.addChildren([
     legacySaturationDatabaseRedirect,
     legacySaturationRedisRedirect,
     serviceOpsRedirect,
-    legacyServicePathRedirect,
     layoutFallback,
   ]),
   globalFallback,

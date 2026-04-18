@@ -1,4 +1,4 @@
-import { ArrowUpRight, GitBranch, Server } from "lucide-react";
+import { ArrowUpRight, ExternalLink, GitBranch, Server } from "lucide-react";
 import { memo } from "react";
 
 import { Button } from "@/components/ui";
@@ -14,6 +14,7 @@ type Props = {
   summaryMetrics: ServiceSummarySnapshot | null;
   onOpenTraces: () => void;
   onOpenLogs: () => void;
+  onOpenFullView?: () => void;
 };
 
 function ServiceDrawerHeaderComponent({
@@ -21,6 +22,7 @@ function ServiceDrawerHeaderComponent({
   summaryMetrics,
   onOpenTraces,
   onOpenLogs,
+  onOpenFullView,
 }: Props) {
   return (
     <DrawerHeader className="items-start">
@@ -69,6 +71,16 @@ function ServiceDrawerHeaderComponent({
           >
             Open in Logs
           </Button>
+          {onOpenFullView ? (
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<ExternalLink size={14} />}
+              onClick={onOpenFullView}
+            >
+              Open full view
+            </Button>
+          ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {[

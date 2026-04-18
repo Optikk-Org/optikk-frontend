@@ -4,7 +4,7 @@ import { useCallback, useMemo } from "react";
 import { metricsOverviewApi } from "@/features/metrics/api/metricsOverviewApi";
 import { getServiceTopology } from "@/features/overview/pages/ServiceHubPage/topology/api";
 import { ROUTES } from "@/shared/constants/routes";
-import { dynamicNavigateOptions } from "@/shared/utils/navigation";
+import { dynamicNavigateOptions, dynamicTo } from "@/shared/utils/navigation";
 import { useTimeRangeQuery } from "@shared/hooks/useTimeRangeQuery";
 
 import { buildServiceLogsSearch, buildServiceTracesSearch } from "../../serviceDrawerState";
@@ -167,6 +167,11 @@ export function useServiceDetailDrawerModel(
     );
   }, [location.search, navigate, serviceName]);
 
+  const openFullView = useCallback((): void => {
+    const path = ROUTES.serviceDetail.replace("$serviceName", encodeURIComponent(serviceName));
+    navigate({ to: dynamicTo(path) });
+  }, [navigate, serviceName]);
+
   const serviceLabel = title?.trim() || serviceName;
   const hasSummary = Boolean(summaryMetrics);
   const summaryLoading = metricsQuery.isLoading && !summaryMetrics;
@@ -196,6 +201,7 @@ export function useServiceDetailDrawerModel(
     latencySparkline,
     openTraces,
     openLogs,
+    openFullView,
     serviceLabel,
     hasSummary,
     summaryLoading,

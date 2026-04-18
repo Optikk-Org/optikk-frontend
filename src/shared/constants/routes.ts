@@ -12,6 +12,7 @@ const ROUTES = {
   selfHost: "/self-host",
   overview: "/overview",
   service: "/service",
+  serviceDetail: "/services/$serviceName",
   logs: "/logs",
   traces: "/traces",
   traceDetail: "/traces/$traceId",

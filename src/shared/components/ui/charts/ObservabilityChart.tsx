@@ -28,6 +28,7 @@ export interface ObservabilityChartProps {
   xFormatter?: (timestampSeconds: number) => string;
   legend?: boolean;
   className?: string;
+  plugins?: uPlot.Plugin[];
 }
 
 function ObservabilityChart({
@@ -43,6 +44,7 @@ function ObservabilityChart({
   xFormatter,
   legend = false,
   className,
+  plugins,
 }: ObservabilityChartProps) {
   const alignedData = useMemo<uPlot.AlignedData>(
     () => [timestamps, ...series.map((item) => item.values)] as uPlot.AlignedData,
@@ -81,8 +83,9 @@ function ObservabilityChart({
           });
         }),
       ],
+      ...(plugins && plugins.length > 0 ? { plugins } : {}),
     };
-  }, [legend, series, yAxisSize, yFormatter, yMin, yMax, type]);
+  }, [legend, series, yAxisSize, yFormatter, yMin, yMax, type, plugins]);
 
   const tooltipContent = useMemo(() => {
     const defaultXFormatter = (timestampSeconds: number) =>
