@@ -1,7 +1,11 @@
+import DependenciesSection from "./DependenciesSection";
+import DeploymentsSection from "./DeploymentsSection";
 import ErrorsSection from "./ErrorsSection";
 import GoldenSignalsSection from "./GoldenSignalsSection";
-import PlaceholderSection from "./PlaceholderSection";
+import LogsSection from "./LogsSection";
+import ResourcesSection from "./ResourcesSection";
 import SloSection from "./SloSection";
+import TracesSection from "./TracesSection";
 
 interface ServicePageSectionsProps {
   readonly serviceName: string;
@@ -11,29 +15,13 @@ export default function ServicePageSections({ serviceName }: ServicePageSections
   return (
     <>
       <GoldenSignalsSection serviceName={serviceName} />
-      <PlaceholderSection
-        id="deployments"
-        title="Deployments"
-        hint="Release timeline and risk land in Phase 3 alongside the comparator upgrade."
-      />
-      <PlaceholderSection
-        id="dependencies"
-        title="Dependencies"
-        hint="Mini topology + top callers land next."
-      />
-      <PlaceholderSection
-        id="resources"
-        title="Resources"
-        hint="Top endpoints table lands next."
-      />
+      <DeploymentsSection serviceName={serviceName} />
+      <DependenciesSection serviceName={serviceName} />
+      <ResourcesSection serviceName={serviceName} />
       <ErrorsSection serviceName={serviceName} />
       <SloSection serviceName={serviceName} />
-      <PlaceholderSection
-        id="traces"
-        title="Traces"
-        hint="Recent error traces panel lands next."
-      />
-      <PlaceholderSection id="logs" title="Logs" hint="Correlated error logs panel lands next." />
+      <TracesSection serviceName={serviceName} />
+      <LogsSection serviceName={serviceName} />
     </>
   );
 }
