@@ -1,4 +1,5 @@
 import { tracesApi } from "@/features/traces/api/tracesApi";
+import type { TracesResponse } from "@entities/trace/model";
 import type { TraceRecord } from "@entities/trace/model";
 import { useTimeRangeQuery } from "@shared/hooks/useTimeRangeQuery";
 
@@ -7,7 +8,7 @@ export function useRecentErrorTraces(serviceName: string, limit = 10): {
   loading: boolean;
 } {
   const enabled = Boolean(serviceName);
-  const query = useTimeRangeQuery(
+  const query = useTimeRangeQuery<TracesResponse>(
     "service-page-recent-error-traces",
     (teamId, startTime, endTime) =>
       tracesApi.getTraces(teamId, startTime, endTime, {
@@ -19,8 +20,9 @@ export function useRecentErrorTraces(serviceName: string, limit = 10): {
     { extraKeys: [serviceName, limit], enabled }
   );
 
+  const traces = query.data?.traces ?? [];
   return {
-    traces: query.data?.traces ?? [],
-    loading: query.isLoading && (query.data?.traces ?? []).length === 0,
+    traces,
+    loading: query.isLoading && traces.length === 0,
   };
 }
