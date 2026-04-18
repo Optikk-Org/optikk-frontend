@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Responsive } from "react-grid-layout";
+import "react-grid-layout/css/styles.css";
 
 import type {
   DashboardDataSources,
