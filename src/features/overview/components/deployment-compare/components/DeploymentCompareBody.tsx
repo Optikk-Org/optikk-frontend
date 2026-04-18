@@ -11,10 +11,14 @@ import type { TimelineSeries } from "../types";
 
 import { DeploymentCompareAdjacentNav } from "./DeploymentCompareAdjacentNav";
 import { DeploymentCompareBaselinePicker } from "./DeploymentCompareBaselinePicker";
+import { DeploymentCompareEndpointHeatmap } from "./DeploymentCompareEndpointHeatmap";
 import { DeploymentCompareEndpoints } from "./DeploymentCompareEndpoints";
 import { DeploymentCompareErrors } from "./DeploymentCompareErrors";
 import { DeploymentCompareHealthScore } from "./DeploymentCompareHealthScore";
 import { DeploymentCompareImpact } from "./DeploymentCompareImpact";
+import { DeploymentCompareLogVolumeDiff } from "./DeploymentCompareLogVolumeDiff";
+import { DeploymentCompareRolloutProgress } from "./DeploymentCompareRolloutProgress";
+import { DeploymentCompareSampleTraces } from "./DeploymentCompareSampleTraces";
 import { DeploymentCompareSummary } from "./DeploymentCompareSummary";
 import { DeploymentCompareTimeline } from "./DeploymentCompareTimeline";
 import { DeploymentCompareWindow } from "./DeploymentCompareWindow";
@@ -82,15 +86,19 @@ function DeploymentCompareBodyComponent({
         isLoading={timelineIsLoading}
         timeline={timeline}
       />
+      <DeploymentCompareRolloutProgress compare={compare} timeline={timeline} />
       <DeploymentCompareImpact
         serviceName={serviceName}
         impacts={impacts}
         isLoading={impactsLoading}
       />
+      <DeploymentCompareEndpointHeatmap compare={compare} />
       <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <DeploymentCompareErrors compare={compare} />
         <DeploymentCompareEndpoints compare={compare} />
       </div>
+      <DeploymentCompareLogVolumeDiff compare={compare} />
+      <DeploymentCompareSampleTraces compare={compare} />
     </div>
   );
 }
