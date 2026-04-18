@@ -42,6 +42,7 @@ export default function ServiceDetailDrawer({
           summaryMetrics={model.summaryMetrics}
           onOpenTraces={model.openTraces}
           onOpenLogs={model.openLogs}
+          onOpenFullView={model.openFullView}
         />
 
         <div className="flex flex-col gap-4 px-6 py-4">

@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 
 import { Badge, SimpleTable, type SimpleTableColumn } from "@shared/components/primitives/ui";
@@ -11,10 +12,9 @@ import {
   formatRelativeTime,
 } from "@shared/utils/formatters";
 
-import {
-  buildDeploymentCompareDrawerSearch,
-  buildServiceDrawerSearch,
-} from "@/features/overview/components/serviceDrawerState";
+import { buildDeploymentCompareDrawerSearch } from "@/features/overview/components/serviceDrawerState";
+import { ROUTES } from "@/shared/constants/routes";
+import { dynamicNavigateOptions } from "@/shared/utils/navigation";
 import {
   type DeploymentRisk,
   type DiscoveryHealth,
@@ -130,6 +130,7 @@ function DeploymentCell({
 
 export default function DiscoveryView(): JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [healthFilter, setHealthFilter] = useState<"all" | DiscoveryHealth>("all");
   const [releaseFilter, setReleaseFilter] = useState<ReleaseFilter>("all");
   const [sortPreset, setSortPreset] = useState<SortPreset>("recent");
@@ -156,18 +157,13 @@ export default function DiscoveryView(): JSX.Element {
       .sort((left, right) => compareRows(sortPreset, left, right));
   }, [rows, filter, healthFilter, releaseFilter, sortPreset]);
 
-  const openService = useCallback((row: DiscoveryServiceRow): void => {
-    const nextSearch = buildServiceDrawerSearch(searchParams.toString(), {
-      name: row.name,
-      requestCount: row.requestCount,
-      errorCount: row.errorCount,
-      errorRate: row.errorRate,
-      avgLatency: row.avgLatency,
-      p95Latency: row.p95Latency,
-      p99Latency: row.p99Latency,
-    });
-    setSearchParams(new URLSearchParams(nextSearch), { replace: true });
-  }, [searchParams, setSearchParams]);
+  const openService = useCallback(
+    (row: DiscoveryServiceRow): void => {
+      const path = ROUTES.serviceDetail.replace("$serviceName", encodeURIComponent(row.name));
+      navigate(dynamicNavigateOptions(path));
+    },
+    [navigate]
+  );
 
   const handleServiceRowClick = useCallback(
     (record: DiscoveryServiceRow) => ({
