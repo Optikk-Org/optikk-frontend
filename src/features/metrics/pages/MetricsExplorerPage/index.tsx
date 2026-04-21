@@ -5,8 +5,6 @@ import toast from "react-hot-toast";
 import { Button } from "@shared/components/primitives/ui/button";
 import { PageHeader, PageShell, PageSurface } from "@shared/components/ui";
 
-import { CreateAlertButton } from "@/features/alerts/components/CreateAlertButton";
-
 import { MetricQueryBuilder } from "../../components/MetricQueryBuilder/MetricQueryBuilder";
 import { MetricsExplorerChart } from "../../components/MetricsExplorerChart";
 import { MetricsExplorerToolbar } from "../../components/MetricsExplorerToolbar";
@@ -50,7 +48,6 @@ export default function MetricsExplorerPage() {
         subtitle="Query, visualize, and compare metrics across your services."
         actions={
           <div className="flex items-center gap-2">
-            <CreateAlertButton prefill={{ presetKind: "service_error_rate" }} label="New alert" />
             <Button variant="ghost" size="sm" icon={<Share2 size={14} />} onClick={handleShare}>
               Share
             </Button>

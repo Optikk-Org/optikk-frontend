@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type {
-  AggregationSpec,
-  ExplorerVizMode,
-} from "@/features/explorer-core/components/AnalyticsToolbar";
 import { useCursorPagination } from "@/features/explorer-core/hooks/useCursorPagination";
-import { useExplorerAnalytics } from "@/features/explorer-core/hooks/useExplorerAnalytics";
-import { buildLogsExplorerQuery } from "@/features/explorer-core/utils/explorerQuery";
+import { buildLogsQueryString } from "@/features/explorer-core/utils/structuredFilterQuery";
 import { resolveTimeBounds } from "@/features/explorer-core/utils/timeRange";
 import { cn } from "@/lib/utils";
 import { useURLFilters } from "@/shared/hooks/useURLFilters";
@@ -16,10 +11,9 @@ import { PageShell } from "@shared/components/ui";
 
 import { useLogDetailFields } from "../../hooks/useLogDetailFields";
 import { useLogsHubData } from "../../hooks/useLogsHubData";
-import type { LogRecord, LogsBackendParams } from "../../types";
+import type { LogRecord } from "../../types";
 import { LOGS_URL_FILTER_CONFIG, compileLogsStructuredFilters } from "../../utils/logUtils";
 
-import { LogsHubAnalyticsSection } from "./components/LogsHubAnalyticsSection";
 import { LogsHubExplorerChrome } from "./components/LogsHubExplorerChrome";
 import { LogsHubListSection } from "./components/LogsHubListSection";
 import { LogsHubLogDetailPanel } from "./components/LogsHubLogDetailPanel";
@@ -52,54 +46,17 @@ export default function LogsHubPage() {
   const [pageSize, setPageSize] = useState(20);
   const [selectedLog, setSelectedLog] = useState<LogRecord | null>(null);
 
-  const [explorerMode, setExplorerMode] = useState<"list" | "analytics">("list");
-  const [vizMode, setVizMode] = useState<ExplorerVizMode>("table");
-  const [groupBy, setGroupBy] = useState<string[]>(["service"]);
-  const [aggregations, setAggregations] = useState<AggregationSpec[]>([
-    { function: "count", alias: "count" },
-  ]);
-  const [analyticsStep, setAnalyticsStep] = useState("5m");
-
-  const explorerQuery = useMemo(
-    () => buildLogsExplorerQuery({ filters, errorsOnly }),
+  const filterQuery = useMemo(
+    () => buildLogsQueryString({ filters, errorsOnly }),
     [filters, errorsOnly]
   );
-
-  const liveTailParams = useMemo((): LogsBackendParams => {
-    const params: LogsBackendParams = {
-      ...compileLogsStructuredFilters(filters),
-    };
-    if (errorsOnly) {
-      params.severities = [...(params.severities ?? []), "ERROR"];
-    }
-    return params;
-  }, [errorsOnly, filters]);
 
   const { startTime, endTime } = useMemo(() => resolveTimeBounds(timeRange), [timeRange]);
 
   // Reset the cursor stack whenever a filter that invalidates it changes.
   useEffect(() => {
     resetCursor();
-  }, [explorerQuery, startTime, endTime, pageSize, resetCursor]);
-
-  const analyticsEnabled =
-    explorerMode === "analytics" && groupBy.length > 0 && aggregations.length > 0;
-
-  const analyticsQuery = useExplorerAnalytics("logs", {
-    query: explorerQuery,
-    startTime,
-    endTime,
-    groupBy,
-    aggregations: aggregations.map((a) => ({
-      function: a.function,
-      field: a.field,
-      alias: a.alias || "m",
-    })),
-    vizMode: vizMode === "list" ? "table" : vizMode,
-    step: analyticsStep,
-    limit: 500,
-    enabled: analyticsEnabled,
-  });
+  }, [filterQuery, startTime, endTime, pageSize, resetCursor]);
 
   const {
     logs,
@@ -115,17 +72,10 @@ export default function LogsHubPage() {
     containerFacets,
     environmentFacets,
     scopeNameFacets,
-    liveTailEnabled,
-    setLiveTailEnabled,
-    liveTailStatus,
-    liveTailLagMs,
-    liveTailErrorMessage,
-    liveTailDroppedCount,
     errorCount,
   } = useLogsHubData({
-    explorerQuery,
+    filterQuery,
     filters,
-    liveTailParams,
     cursor,
     pageSize,
   });
@@ -150,7 +100,13 @@ export default function LogsHubPage() {
     setSelectedLog(row);
   }, []);
 
-  const columns = useLogsHubColumns(liveTailEnabled, onSelectLog);
+  const columns = useLogsHubColumns(onSelectLog);
+
+  const hasActiveFilters = filters.length > 0 || errorsOnly;
+  const onClearAllFilters = useCallback(() => {
+    clearURLFilters();
+    resetCursor();
+  }, [clearURLFilters, resetCursor]);
 
   const facetCtx: LogsFacetSelectionContext = useMemo(
     () => ({
@@ -174,63 +130,39 @@ export default function LogsHubPage() {
       <LogsHubPageHeader onCopyShareLink={onCopyShareLink} onExportViewJson={onExportViewJson} />
 
       <LogsHubExplorerChrome
-        liveTailEnabled={liveTailEnabled}
-        liveTailErrorMessage={liveTailErrorMessage}
-        liveTailStatus={liveTailStatus}
-        liveTailLagMs={liveTailLagMs}
-        liveTailDroppedCount={liveTailDroppedCount}
         errorCount={errorCount}
-        onToggleLiveTail={() => setLiveTailEnabled(!liveTailEnabled)}
         filters={filters}
         setFilters={setFilters}
         clearURLFilters={clearURLFilters}
         resetPage={resetCursor}
         errorsOnly={errorsOnly}
         setErrorsOnly={setErrorsOnly}
-        explorerMode={explorerMode}
-        setExplorerMode={setExplorerMode}
-        vizMode={vizMode}
-        setVizMode={setVizMode}
-        groupBy={groupBy}
-        setGroupBy={setGroupBy}
-        aggregations={aggregations}
-        setAggregations={setAggregations}
-        analyticsStep={analyticsStep}
-        setAnalyticsStep={setAnalyticsStep}
       />
 
-      <div
-        className={cn(
-          "relative z-0 grid gap-4",
-          explorerMode === "list" ? "xl:grid-cols-[300px_minmax(0,1fr)]" : "grid-cols-1"
-        )}
-      >
-        {explorerMode === "list" ? (
-          <LogsHubListSection
-            facetGroups={facetGroups}
-            activeSelections={activeSelections}
-            onFacetSelect={onFacetSelect}
-            logsError={logsError}
-            normalizedLogsError={normalizedLogsError}
-            logs={logs}
-            columns={columns}
-            logsLoading={logsLoading}
-            liveTailEnabled={liveTailEnabled}
-            pageSize={pageSize}
-            hasMore={hasMore}
-            hasPrev={hasPrev}
-            onNext={() => goNext(nextCursor)}
-            onPrev={goPrev}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              resetCursor();
-            }}
-            selectedLog={selectedLog}
-            onSelectLog={onSelectLog}
-          />
-        ) : (
-          <LogsHubAnalyticsSection vizMode={vizMode} analyticsQuery={analyticsQuery} />
-        )}
+      <div className={cn("relative z-0 grid gap-4", "xl:grid-cols-[300px_minmax(0,1fr)]")}>
+        <LogsHubListSection
+          facetGroups={facetGroups}
+          activeSelections={activeSelections}
+          onFacetSelect={onFacetSelect}
+          logsError={logsError}
+          normalizedLogsError={normalizedLogsError}
+          logs={logs}
+          columns={columns}
+          logsLoading={logsLoading}
+          pageSize={pageSize}
+          hasMore={hasMore}
+          hasPrev={hasPrev}
+          onNext={() => goNext(nextCursor)}
+          onPrev={goPrev}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            resetCursor();
+          }}
+          selectedLog={selectedLog}
+          onSelectLog={onSelectLog}
+          hasActiveFilters={hasActiveFilters}
+          onClearFilters={onClearAllFilters}
+        />
       </div>
 
       {selectedLog ? (

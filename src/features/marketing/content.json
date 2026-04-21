@@ -34,13 +34,13 @@
     {
       "path": "/",
       "title": "Observability for shipping teams",
-      "description": "Dense, fast, AI-aware observability workflows built for engineers who ship every day.",
+      "description": "Dense, fast observability workflows built for engineers who ship every day.",
       "sections": [
         {
           "kind": "hero",
           "eyebrow": "Platform",
           "title": "Observability that keeps up with you.",
-          "body": "Logs, traces, metrics, and LLM generations in one dense surface. Shaped around the keyboard-first workflows engineers actually use — not screenshots of competitor dashboards.",
+          "body": "Logs, traces, and metrics in one dense surface. Shaped around the keyboard-first workflows engineers actually use — not screenshots of competitor dashboards.",
           "primaryCta": { "label": "Sign in", "path": "/login" },
           "secondaryCta": { "label": "See pricing", "path": "/pricing" }
         },
@@ -63,11 +63,11 @@
           "kind": "feature-grid",
           "title": "What you get",
           "items": [
-            { "icon": "logs", "title": "Logs that scale", "body": "Virtualised explorer with live tail, server-side facets, and boolean filters. Click a value, never leave the page." },
+            { "icon": "logs", "title": "Logs that scale", "body": "Virtualised explorer with server-side facets and boolean filters. Click a value, never leave the page." },
             { "icon": "traces", "title": "Fast traces", "body": "Flamegraphs, service maps, and span detail without waiting on re-renders. Critical-path highlighting built in." },
             { "icon": "metrics", "title": "Metric queries", "body": "Aggregations, formulas, and time-series tuned with uPlot. Pan a month of data without drops." },
-            { "icon": "llm", "title": "AI workflows", "body": "First-class LLM generations, sessions, prompts, datasets, and evals — not bolted on after the fact." },
-            { "icon": "alerts", "title": "Actionable alerts", "body": "Rule builder, silences, and routing that stay readable at a thousand rules and still dispatch in seconds." },
+            { "icon": "server", "title": "Infrastructure signals", "body": "Hosts, Kubernetes, JVM, and datastore telemetry with the same dense tables and charts as the rest of the product." },
+            { "icon": "grid", "title": "Saturation & Kafka", "body": "Database and broker health in one place — slow queries, connections, topics, and consumer groups." },
             { "icon": "otel", "title": "OTLP native", "body": "Send from anything that speaks OpenTelemetry. No agents. No vendor SDKs. No lock-in." }
           ]
         },
@@ -92,7 +92,7 @@
     },
     {
       "path": "/features",
-      "title": "A tighter surface for logs, traces, metrics, and AI",
+      "title": "A tighter surface for logs, traces, and metrics",
       "description": "Keep the Datadog-grade density. Remove the sprawl. Make the happy path obvious.",
       "sections": [
         {
@@ -109,8 +109,8 @@
             { "icon": "search", "title": "Structured log search", "body": "Server-side facets, regex, booleans. Click a value to pivot — no second click, no modal." },
             { "icon": "traces", "title": "Flamegraph + span table", "body": "Correlate a slow span with its logs in one click. Critical-path spans are highlighted automatically." },
             { "icon": "metrics", "title": "Formula-driven charts", "body": "Aggregate, ratio, threshold — inline. No nested editors. No JSON spelunking." },
-            { "icon": "llm", "title": "Generation explorer", "body": "Dataset runs, eval scores, and prompt revisions side-by-side. Diff two runs in seconds." },
-            { "icon": "alerts", "title": "Silences that make sense", "body": "Scope by service, instance, or arbitrary label. Expire automatically. Audit every mute." },
+            { "icon": "server", "title": "Service discovery", "body": "Fleet health, topology, and release-aware drilldowns without leaving the services hub." },
+            { "icon": "grid", "title": "Datastore saturation", "body": "Connections, latency, slow queries, and volume — scoped per engine with consistent navigation." },
             { "icon": "link", "title": "URL-shareable state", "body": "Paste a link, land on the exact view — filters, time range, drawer selection, and all." }
           ]
         },
@@ -130,30 +130,29 @@
     {
       "path": "/pricing",
       "title": "Predictable pricing for engineering teams",
-      "description": "Usage-aware pricing for infrastructure telemetry and LLM workloads. No per-seat games.",
+      "description": "Usage-aware pricing for infrastructure telemetry. No per-seat games.",
       "sections": [
         {
           "kind": "hero",
           "eyebrow": "Pricing",
           "title": "Pay for what you ingest. Nothing else.",
-          "body": "No per-seat games. No mystery add-ons. One price for telemetry volume, one for LLM generations. Everything else — unlimited.",
+          "body": "No per-seat games. No mystery add-ons. One price for telemetry volume. Everything else — unlimited.",
           "primaryCta": { "label": "Sign in", "path": "/login" },
           "secondaryCta": { "label": "Talk to us", "path": "/self-host" }
         },
         {
           "kind": "metrics-strip",
           "items": [
-            { "value": "2", "label": "meters", "caption": "telemetry GB, LLM generations" },
+            { "value": "1", "label": "meter", "caption": "telemetry GB (compressed)" },
             { "value": "∞", "label": "users per team", "caption": "roles included" },
             { "value": "90 d", "label": "default retention", "caption": "extend per tier" }
           ]
         },
         {
           "kind": "feature-grid",
-          "title": "Two meters. That's it.",
+          "title": "One meter. That's it.",
           "items": [
             { "icon": "metrics", "title": "Telemetry GB", "body": "Logs, traces, and metrics billed by compressed ingest. Same rate across all three types — no category games." },
-            { "icon": "llm", "title": "LLM generations", "body": "Per-generation billing for AI workloads. Dataset evaluations and eval scores are included." },
             { "icon": "workspace", "title": "Unlimited users", "body": "Invite the whole team. Roles, audit logs, and SSO in every tier from day one." }
           ]
         },
@@ -161,9 +160,8 @@
           "kind": "faq",
           "title": "Pricing FAQ",
           "items": [
-            { "q": "Is there a free tier?", "a": "Yes — for evaluation workloads, with the same feature set as paid tiers. Ingest up to 5 GB and 5k generations per month before moving to metered billing." },
+            { "q": "Is there a free tier?", "a": "Yes — for evaluation workloads, with the same feature set as paid tiers. Ingest up to 5 GB per month before moving to metered billing." },
             { "q": "Do you charge per seat?", "a": "No. Every tier includes unlimited users, roles, and audit logs." },
-            { "q": "What counts as an LLM generation?", "a": "A single completion call. Streaming partials are rolled up into one generation, so streamed responses don't cost more." },
             { "q": "Can I self-host?", "a": "Yes — see the Self-host page. Commercial license available for teams with egress, compliance, or data-residency constraints." },
             { "q": "How is ingest measured?", "a": "Compressed bytes over the wire, calculated at the collector. Same number you'll see in your OTel export logs." }
           ]
@@ -187,7 +185,7 @@
           "title": "What keeps the UI fast",
           "items": [
             { "icon": "metrics", "title": "uPlot everywhere", "body": "No heavy chart runtime. 60 fps panning at 10k points per series, with flicker-free refreshes via setData()." },
-            { "icon": "logs", "title": "Virtualised explorers", "body": "Live-tail and paginated views render only visible rows. Page sizes of 500+ without DOM pollution." },
+            { "icon": "logs", "title": "Virtualised explorers", "body": "Paginated views render only visible rows. Page sizes of 500+ without DOM pollution." },
             { "icon": "bolt", "title": "Query-standard defaults", "body": "One wrapper for staleTime, retry, and keepPreviousData. No flashing skeletons on refresh." },
             { "icon": "shield", "title": "Feature isolation", "body": "ESLint-enforced. No cross-feature imports. Shared code lives in @shared. Regressions caught in PR." },
             { "icon": "grid", "title": "Module-owned dashboards", "body": "Every domain registers its own panels. Adding a panel is one TSX file, not a plumbing exercise." },

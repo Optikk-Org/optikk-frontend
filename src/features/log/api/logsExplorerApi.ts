@@ -100,11 +100,11 @@ export const logsExplorerApi = {
     cursor?: string;
     direction?: string;
   }): Promise<LogsExplorerResponse> {
-    const response = await api.post(`${BASE}/logs/explorer/query`, body);
+    const response = await api.post(`${BASE}/logs/query`, body);
     const parsed = decodeApiResponse(logsExplorerSchema, response, {
-      context: "logs explorer",
+      context: "logs query",
       expectedType: "object",
-      message: "Invalid logs explorer response",
+      message: "Invalid logs query response",
     });
     return {
       ...parsed,

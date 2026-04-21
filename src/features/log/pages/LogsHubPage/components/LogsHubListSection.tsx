@@ -1,4 +1,4 @@
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Inbox } from "lucide-react";
 import { memo, useCallback } from "react";
 
 import type { SimpleTableColumn } from "@/components/ui";
@@ -22,7 +22,6 @@ type Props = {
   logs: LogRecord[];
   columns: SimpleTableColumn<LogRecord>[];
   logsLoading: boolean;
-  liveTailEnabled: boolean;
   pageSize: number;
   hasMore: boolean;
   hasPrev: boolean;
@@ -31,7 +30,14 @@ type Props = {
   onPageSizeChange: (size: number) => void;
   selectedLog: LogRecord | null;
   onSelectLog: (row: LogRecord) => void;
+  /** True when any filter (structured filter or errors-only toggle) is active. */
+  hasActiveFilters: boolean;
+  onClearFilters: () => void;
 };
+
+function hasFacetData(groups: FacetGroup[]): boolean {
+  return groups.some((group) => group.buckets.some((bucket) => bucket.count > 0));
+}
 
 function LogsHubListSectionComponent({
   facetGroups,
@@ -42,7 +48,6 @@ function LogsHubListSectionComponent({
   logs,
   columns,
   logsLoading,
-  liveTailEnabled,
   pageSize,
   hasMore,
   hasPrev,
@@ -51,14 +56,49 @@ function LogsHubListSectionComponent({
   onPageSizeChange,
   selectedLog,
   onSelectLog,
+  hasActiveFilters,
+  onClearFilters,
 }: Props) {
   const handleRow = useCallback(
     (row: LogRecord) => ({ onClick: () => onSelectLog(row) }),
     [onSelectLog]
   );
+
+  const showFacets = hasFacetData(facetGroups);
+  const emptyState = (
+    <div className="flex flex-col items-center gap-2 rounded-[var(--card-radius)] border border-dashed border-[var(--border-color)] bg-[var(--bg-tertiary)] px-6 py-10 text-center">
+      <Inbox size={20} className="text-[var(--text-muted)]" />
+      {hasActiveFilters ? (
+        <>
+          <p className="font-medium text-[var(--text-primary)] text-sm">No logs match current filters</p>
+          <p className="max-w-md text-[12px] text-[var(--text-muted)]">
+            Clear filters or broaden the time range to see more logs.
+          </p>
+          <button
+            type="button"
+            onClick={onClearFilters}
+            className="mt-1 text-[12px] text-[var(--color-primary)] hover:underline"
+          >
+            Clear filters
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="font-medium text-[var(--text-primary)] text-sm">No logs in this window</p>
+          <p className="max-w-md text-[12px] text-[var(--text-muted)]">
+            Check that your OTLP producer is writing logs to this team, or widen the time range.
+            Raw logs have a 1-hour TTL in local dev; rollups retain 90 days.
+          </p>
+        </>
+      )}
+    </div>
+  );
+
   return (
     <>
-      <FacetRail groups={facetGroups} selected={activeSelections} onSelect={onFacetSelect} />
+      {showFacets ? (
+        <FacetRail groups={facetGroups} selected={activeSelections} onSelect={onFacetSelect} />
+      ) : null}
 
       {logsError && normalizedLogsError ? (
         <div className="mb-3 flex items-center gap-2 rounded-[var(--card-radius)] border border-[rgba(240,68,56,0.3)] bg-[rgba(240,68,56,0.08)] px-4 py-3 text-[var(--color-error)]">
@@ -73,29 +113,20 @@ function LogsHubListSectionComponent({
       ) : null}
 
       <ExplorerResultsTable
-        key={liveTailEnabled ? "logs-live-tail" : "logs-explorer"}
-        title="Logs Explorer"
-        subtitle={
-          liveTailEnabled
-            ? `${formatNumber(logs.length)} live tail rows`
-            : `${formatNumber(logs.length)} rows in view${hasMore ? " — more available" : ""}`
-        }
+        title="Logs"
+        subtitle={`${formatNumber(logs.length)} rows in view${hasMore ? " — more available" : ""}`}
         rows={logs}
         columns={columns}
         rowKey={(row) => logRowKey(row)}
         isLoading={logsLoading}
-        pagination={
-          liveTailEnabled
-            ? undefined
-            : {
-                hasMore,
-                hasPrev,
-                onNext,
-                onPrev,
-                pageSize,
-                onPageSizeChange,
-              }
-        }
+        pagination={{
+          hasMore,
+          hasPrev,
+          onNext,
+          onPrev,
+          pageSize,
+          onPageSizeChange,
+        }}
         onRow={handleRow}
         rowClassName={(row) =>
           cn(
@@ -104,6 +135,7 @@ function LogsHubListSectionComponent({
               "bg-[rgba(10,174,214,0.12)] ring-1 ring-[rgba(10,174,214,0.28)] ring-inset"
           )
         }
+        emptyState={emptyState}
       />
     </>
   );

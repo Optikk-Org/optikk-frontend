@@ -57,11 +57,11 @@ export const explorerAnalyticsApi = {
     scope: "logs" | "traces",
     body: ExplorerAnalyticsRequest
   ): Promise<ExplorerAnalyticsResult> {
-    const response = await api.post(`${BASE}/explorer/${scope}/analytics`, body);
+    const response = await api.post(`${BASE}/${scope}/analytics`, body);
     return decodeApiResponse(analyticsResultSchema, response, {
-      context: `explorer analytics (${scope})`,
+      context: `${scope} analytics`,
       expectedType: "object",
-      message: "Invalid explorer analytics response",
+      message: `Invalid ${scope} analytics response`,
     });
   },
 };

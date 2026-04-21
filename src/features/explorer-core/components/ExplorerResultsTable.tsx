@@ -22,13 +22,15 @@ interface ExplorerResultsTableProps<RowType extends Record<string, unknown>> {
   columns: SimpleTableColumn<RowType>[];
   rowKey: SimpleTableProps<RowType>["rowKey"];
   isLoading?: boolean;
-  /** Cursor pagination config. Omit to disable the pager (e.g. live tail buffer). */
+  /** Cursor pagination config. Omit to disable the pager. */
   pagination?: CursorPaginationConfig;
   onRow?: SimpleTableProps<RowType>["onRow"];
   rowClassName?: SimpleTableProps<RowType>["rowClassName"];
   toolbar?: React.ReactNode;
   /** Opt-in virtualization. Automatic when pager is omitted and rows exceed the threshold. */
   virtualized?: boolean;
+  /** Rendered in place of the table (and pagination) when rows is empty and not loading. */
+  emptyState?: React.ReactNode;
 }
 
 const VIRTUALIZE_AUTO_THRESHOLD = 50;
@@ -45,8 +47,10 @@ export function ExplorerResultsTable<RowType extends Record<string, unknown>>({
   rowClassName,
   toolbar,
   virtualized,
+  emptyState,
 }: ExplorerResultsTableProps<RowType>): JSX.Element {
   const useVirtual = virtualized ?? (!pagination && rows.length > VIRTUALIZE_AUTO_THRESHOLD);
+  const showEmptyState = !isLoading && emptyState !== undefined && rows.length === 0;
 
   return (
     <PageSurface padding="lg" className="min-h-0 w-full min-w-0">
@@ -66,9 +70,11 @@ export function ExplorerResultsTable<RowType extends Record<string, unknown>>({
         {toolbar}
       </div>
 
-      <FeatureErrorBoundary featureName={`explorer-results-table:${title}`}>
+      <FeatureErrorBoundary featureName={`results-table:${title}`}>
         {isLoading ? (
           <Skeleton paragraph={{ rows: 8 }} />
+        ) : showEmptyState ? (
+          emptyState
         ) : useVirtual ? (
           <VirtualizedResultsTable
             rows={rows}
@@ -90,7 +96,7 @@ export function ExplorerResultsTable<RowType extends Record<string, unknown>>({
         )}
       </FeatureErrorBoundary>
 
-      {pagination ? (
+      {pagination && !showEmptyState ? (
         <div className="mt-3 border-[var(--border-color)] border-t px-1 pt-3">
           <CursorPagination
             hasMore={pagination.hasMore}

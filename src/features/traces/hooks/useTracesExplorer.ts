@@ -1,8 +1,8 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { buildTracesExplorerQuery } from "@/features/explorer-core/utils/explorerQuery";
 import { useCursorPagination } from "@/features/explorer-core/hooks/useCursorPagination";
+import { buildTracesQueryString } from "@/features/explorer-core/utils/structuredFilterQuery";
 import { useRefreshKey, useTeamId, useTimeRange } from "@app/store/appStore";
 import { useURLFilters } from "@shared/hooks/useURLFilters";
 
@@ -10,7 +10,6 @@ import { resolveTimeBounds } from "@/features/explorer-core/utils/timeRange";
 
 import { tracesExplorerApi } from "../api/tracesExplorerApi";
 
-import type { TracesBackendParams } from "../api/tracesApi";
 import type { TraceExplorerFacets, TraceSummary } from "../types";
 
 const EMPTY_TRACE_FACETS: TraceExplorerFacets = {
@@ -41,53 +40,6 @@ const TRACES_URL_FILTER_CONFIG = {
   syncStructuredFilters: true,
   stripParams: ["view", "search"],
 };
-
-function compileStructuredFilters(
-  filters: Array<{ field: string; operator: string; value: string }>
-): Partial<TracesBackendParams & { mode?: string; search?: string }> {
-  const compiled: Partial<TracesBackendParams & { mode?: string; search?: string }> = {};
-
-  for (const filter of filters) {
-    switch (filter.field) {
-      case "trace_id":
-        compiled.traceId = filter.value;
-        break;
-      case "operation_name":
-        compiled.operationName = filter.value;
-        break;
-      case "status":
-        compiled.status = filter.value;
-        break;
-      case "service_name":
-        compiled.services = [filter.value];
-        break;
-      case "http_method":
-        compiled.httpMethod = filter.value;
-        break;
-      case "http_status":
-        compiled.httpStatusCode = filter.value;
-        break;
-      case "duration_ms":
-        if (filter.operator === "gt") {
-          compiled.minDuration = Number(filter.value);
-        }
-        if (filter.operator === "lt") {
-          compiled.maxDuration = Number(filter.value);
-        }
-        break;
-      case "span_kind":
-        compiled.spanKind = filter.value;
-        break;
-      case "db_system":
-        compiled.dbSystem = filter.value;
-        break;
-      default:
-        break;
-    }
-  }
-
-  return compiled;
-}
 
 export function useTracesExplorer() {
   const selectedTeamId = useTeamId();
@@ -127,9 +79,9 @@ export function useTracesExplorer() {
 
   const { startTime, endTime } = useMemo(() => resolveTimeBounds(timeRange), [timeRange]);
 
-  const explorerQuery = useMemo(
+  const filterQuery = useMemo(
     () =>
-      buildTracesExplorerQuery({
+      buildTracesQueryString({
         filters,
         errorsOnly,
         selectedService,
@@ -139,36 +91,18 @@ export function useTracesExplorer() {
 
   useEffect(() => {
     resetCursor();
-  }, [explorerQuery, startTime, endTime, pageSize, selectedTeamId, resetCursor]);
-
-  /** Params for live tail socket (legacy shape). */
-  const backendParams = useMemo((): TracesBackendParams & { mode?: string } => {
-    const params: TracesBackendParams & { mode?: string } = {
-      limit: pageSize,
-      mode,
-      ...compileStructuredFilters(filters),
-    };
-
-    if (errorsOnly) {
-      params.status = "ERROR";
-    }
-    if (selectedService) {
-      params.services = [selectedService];
-    }
-
-    return params;
-  }, [errorsOnly, filters, mode, pageSize, selectedService]);
+  }, [filterQuery, startTime, endTime, pageSize, selectedTeamId, resetCursor]);
 
   const { data, isPending, isError, error } = useQuery({
     queryKey: [
       "traces",
-      "explorer",
+      "hub",
       selectedTeamId,
       startTime,
       endTime,
       cursor,
       pageSize,
-      explorerQuery,
+      filterQuery,
       refreshKey,
     ],
     queryFn: () =>
@@ -177,7 +111,7 @@ export function useTracesExplorer() {
         endTime,
         limit: pageSize,
         step: "5m",
-        query: explorerQuery,
+        query: filterQuery,
         cursor: cursor || undefined,
       }),
     enabled: Boolean(selectedTeamId),
@@ -241,8 +175,7 @@ export function useTracesExplorer() {
     filters,
     startTime,
     endTime,
-    backendParams,
-    explorerQuery,
+    filterQuery,
     setSelectedService,
     setErrorsOnly,
     setMode,

@@ -82,11 +82,11 @@ export const tracesExplorerApi = {
     query: string;
     cursor?: string;
   }): Promise<TracesExplorerResponse> {
-    const response = await api.post(`${BASE}/traces/explorer/query`, body);
+    const response = await api.post(`${BASE}/traces/query`, body);
     const parsed = decodeApiResponse(tracesExplorerSchema, response, {
-      context: "traces explorer",
+      context: "traces query",
       expectedType: "object",
-      message: "Invalid traces explorer response",
+      message: "Invalid traces query response",
     });
 
     const facets: TraceExplorerFacets = {

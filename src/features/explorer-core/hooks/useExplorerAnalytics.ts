@@ -13,7 +13,7 @@ export function useExplorerAnalytics(
   const { enabled: enabledOverride, ...body } = params;
 
   return useQuery({
-    queryKey: ["explorer", "analytics", scope, selectedTeamId, body, refreshKey],
+    queryKey: ["observability", "analytics", scope, selectedTeamId, body, refreshKey],
     queryFn: () => explorerAnalyticsApi.query(scope, body),
     enabled: Boolean(selectedTeamId) && enabledOverride !== false,
     placeholderData: keepPreviousData,

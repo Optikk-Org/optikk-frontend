@@ -4,7 +4,6 @@ import type {
   ExplorerVizMode,
 } from "@/features/explorer-core/components/AnalyticsToolbar";
 import { useExplorerAnalytics } from "@/features/explorer-core/hooks/useExplorerAnalytics";
-import { useLiveTailStream } from "@/features/explorer-core/hooks/useLiveTailStream";
 import { resolveTimeBounds } from "@/features/explorer-core/utils/timeRange";
 import { cn } from "@/lib/utils";
 import { useTimeRange } from "@app/store/appStore";
@@ -21,11 +20,9 @@ import { TracesDetailPanel } from "./components/TracesDetailPanel";
 import { TracesExplorerChrome } from "./components/TracesExplorerChrome";
 import { TracesListSection } from "./components/TracesListSection";
 import { TracesPageHeader } from "./components/TracesPageHeader";
-import { TRACES_LIVE_TAIL_MAX_ROWS } from "./constants";
 import { type TracesFacetSelectionContext, handleTracesFacetSelect } from "./facetSelection";
 import { useTracesFacetModel } from "./hooks/useTracesFacetModel";
 import { useTracesTableColumns } from "./hooks/useTracesTableColumns";
-import { buildTraceRecordFromLiveItem } from "./utils";
 
 export default function TracesPage() {
   const timeRange = useTimeRange();
@@ -37,7 +34,7 @@ export default function TracesPage() {
     traces,
     errorTraces,
     facets,
-    explorerQuery,
+    filterQuery,
     selectedService,
     errorsOnly,
     mode,
@@ -47,7 +44,6 @@ export default function TracesPage() {
     onNext,
     onPrev,
     filters,
-    backendParams,
     setSelectedService,
     setErrorsOnly,
     setMode,
@@ -71,7 +67,7 @@ export default function TracesPage() {
     explorerMode === "analytics" && groupBy.length > 0 && aggregations.length > 0;
 
   const analyticsQuery = useExplorerAnalytics("traces", {
-    query: explorerQuery,
+    query: filterQuery,
     startTime,
     endTime,
     groupBy,
@@ -90,35 +86,11 @@ export default function TracesPage() {
   const [selectedTraceIds, setSelectedTraceIds] = useState<string[]>([]);
   const selectedTraceIdsRef = useRef<string[]>(selectedTraceIds);
   selectedTraceIdsRef.current = selectedTraceIds;
-  const [isLiveTail, setIsLiveTail] = useState(false);
   const normalizedError = useMemo(() => (error ? toApiErrorShape(error) : null), [error]);
 
   const detailFields = useTraceDetailFields(selectedTrace);
 
-  const liveTail = useLiveTailStream<TraceRecord>({
-    enabled: isLiveTail,
-    subscribeEvent: "subscribe:spans",
-    itemEvent: "span",
-    maxItems: TRACES_LIVE_TAIL_MAX_ROWS,
-    params: {
-      services: backendParams.services,
-      status: backendParams.status,
-      search: backendParams.search,
-      spanKind: backendParams.spanKind,
-      operationName: backendParams.operationName,
-      httpMethod: backendParams.httpMethod,
-    },
-    getItemKey: (t) => `${t.trace_id}-${t.span_id}`,
-    getItemTimestamp: (t) => new Date(String(t.start_time ?? 0)).getTime(),
-    normalizeItem: buildTraceRecordFromLiveItem,
-  });
-
-  const renderedTraces = useMemo(
-    () => (isLiveTail ? liveTail.items.slice(0, TRACES_LIVE_TAIL_MAX_ROWS) : traces),
-    [isLiveTail, liveTail.items, traces]
-  );
-
-  const columns = useTracesTableColumns(isLiveTail, selectedTraceIdsRef, setSelectedTraceIds);
+  const columns = useTracesTableColumns(selectedTraceIdsRef, setSelectedTraceIds);
 
   const { facetGroups, selectedFacetState } = useTracesFacetModel(
     facets,
@@ -157,16 +129,6 @@ export default function TracesPage() {
     setSelectedTrace(row);
   }, []);
 
-  const liveTailChrome = useMemo(
-    () => ({
-      status: liveTail.status,
-      lagMs: liveTail.lagMs,
-      droppedCount: liveTail.droppedCount,
-      errorMessage: liveTail.errorMessage,
-    }),
-    [liveTail.droppedCount, liveTail.errorMessage, liveTail.lagMs, liveTail.status]
-  );
-
   return (
     <PageShell>
       <TracesPageHeader />
@@ -175,10 +137,7 @@ export default function TracesPage() {
         mode={mode}
         modeOptions={modeOptions}
         onModeChange={(value) => setMode(value)}
-        isLiveTail={isLiveTail}
-        liveTail={liveTailChrome}
         errorTraces={errorTraces}
-        onToggleLiveTail={() => setIsLiveTail(!isLiveTail)}
         filters={filters}
         setFilters={setFilters}
         clearAll={clearAll}
@@ -210,10 +169,9 @@ export default function TracesPage() {
             onFacetSelect={onFacetSelect}
             isError={isError}
             normalizedError={normalizedError}
-            renderedTraces={renderedTraces}
+            renderedTraces={traces}
             columns={columns}
             isLoading={isLoading}
-            isLiveTail={isLiveTail}
             pageSize={pageSize}
             hasMore={hasMore}
             hasPrev={hasPrev}

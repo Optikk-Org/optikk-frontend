@@ -188,8 +188,6 @@ const serviceDetailRoute = createProtected(ROUTES.serviceDetail, ServicePage);
 const logsPatternsRedirect = createProtected("/logs/patterns", () => null, ROUTES.logs);
 const logsTransactionsRedirect = createProtected("/logs/transactions", () => null, ROUTES.logs);
 const errorsRedirect = createProtected("/errors", () => null, `${ROUTES.overview}?tab=errors`);
-const aiLegacyRedirect = createProtected("/ai", () => null, ROUTES.llmOverview);
-const llmRootRedirect = createProtected("/llm", () => null, ROUTES.llmOverview);
 
 // Legacy dashboard detail redirects
 function createLegacyDetailRedirect(
@@ -280,8 +278,6 @@ const routeTree = rootRoute.addChildren([
     logsPatternsRedirect,
     logsTransactionsRedirect,
     errorsRedirect,
-    aiLegacyRedirect,
-    llmRootRedirect,
     ...legacyRedirects,
     legacySaturationDatabaseRedirect,
     legacySaturationRedisRedirect,

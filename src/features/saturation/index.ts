@@ -4,9 +4,9 @@ import { lazy } from "react";
 import type { DomainConfig } from "@/app/registry/domainRegistry";
 import { ROUTES } from "@/shared/constants/routes";
 
-const SaturationPage = lazy(() =>
-  import("./pages/SaturationPage").then((module) => ({ default: module.default }))
-);
+// Eager import: the route uses Suspense with a fullscreen Loading fallback; lazy() for this page
+// can strand users on "Loading..." if the chunk never resolves (dev/HMR or failed network load).
+import SaturationPage from "./pages/SaturationPage";
 const DatastoreDetailPage = lazy(() =>
   import("./pages/DatastoreDetailPage").then((module) => ({ default: module.default }))
 );

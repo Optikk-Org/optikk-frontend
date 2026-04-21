@@ -12,7 +12,6 @@ import {
   snapshotToJson,
 } from "@shared/observability/shareableView";
 
-import { CreateAlertButton } from "@/features/alerts/components/CreateAlertButton";
 import { ROUTES } from "@/shared/constants/routes";
 import { useTimeRange } from "@app/store/appStore";
 
@@ -97,10 +96,6 @@ export default function InfrastructureHubPage() {
             <Button variant="ghost" size="sm" onClick={onExportInfraJson}>
               Export JSON
             </Button>
-            <CreateAlertButton
-              prefill={{ presetKind: "service_error_rate" }}
-              label="Create alert from infra"
-            />
           </div>
         }
       />

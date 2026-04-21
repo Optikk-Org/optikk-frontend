@@ -25,7 +25,7 @@ export function useTraceDetailActions({
     [setSelectedSpanId]
   );
 
-  const openInLogExplorer = useCallback(() => {
+  const openInLogs = useCallback(() => {
     const { startTime, endTime } = getTimeRange();
     const fromMs = traceTimeBounds.startMs ?? Number(startTime);
     const toMs = traceTimeBounds.endMs ?? Number(endTime);
@@ -40,5 +40,5 @@ export function useTraceDetailActions({
 
   const goBack = useCallback(() => navigate({ to: "/traces" }), [navigate]);
 
-  return { handleSpanClick, openInLogExplorer, goBack };
+  return { handleSpanClick, openInLogs, goBack };
 }

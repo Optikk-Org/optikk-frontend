@@ -10,7 +10,7 @@ function TracesPageHeaderComponent() {
     <PageHeader
       title="Traces"
       icon={<GitBranch size={22} />}
-      subtitle="Search, compare, and pivot across traces without leaving the explorer workflow."
+      subtitle="Search, compare, and pivot across traces in one place."
       actions={
         <Button
           variant="ghost"

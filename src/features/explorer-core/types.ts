@@ -17,15 +17,6 @@ export interface FacetGroup {
   buckets: FacetBucket[];
 }
 
-export interface LiveTailEnvelope<Item> {
-  item?: Item;
-  lagMs?: number;
-  droppedCount?: number;
-  status?: string;
-  reason?: string;
-  message?: string;
-}
-
 export interface PremiumMotionTokens {
   readonly enterDuration: number;
   readonly exitDuration: number;

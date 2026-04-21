@@ -3,7 +3,6 @@ import { Activity, ArrowDownRight, ArrowUpRight, LayoutDashboard } from "lucide-
 import { Suspense, lazy, useMemo, useState } from "react";
 
 import { Skeleton, Surface } from "@/components/ui";
-import { metricsOverviewApi } from "@/features/metrics/api/metricsOverviewApi";
 import type { ServiceMetricPoint } from "@/features/metrics/types";
 import { buildServiceDrawerSearch } from "@/features/overview/components/serviceDrawerState";
 import { overviewHubApi } from "@/features/overview/api/overviewHubApi";
@@ -52,22 +51,26 @@ export default function SummaryTab() {
     { staleTime: OVERVIEW_QUERY_STALE_MS }
   );
 
-  // Defer the three chart timeseries until the chart section scrolls into view.
-  // Saves 3 requests + bundle-parse cost from the critical path; KPI cards paint first.
+  // Defer the combined chart timeseries until the chart section scrolls into view.
+  // One request replaces the former rr/er/p95 trio — backend returns all three
+  // metrics per (time_bucket, service) in one rollup scan.
   const { ref: chartsRef, inView: chartsInView } = useInView<HTMLDivElement>();
   const chartOpts = { staleTime: OVERVIEW_QUERY_STALE_MS, enabled: chartsInView };
-  const rrQ = useTimeRangeQuery("overview-hub-rr", metricsOverviewApi.getOverviewRequestRate, chartOpts);
-  const erQ = useTimeRangeQuery("overview-hub-er", metricsOverviewApi.getOverviewErrorRate, chartOpts);
-  const p95Q = useTimeRangeQuery("overview-hub-p95", metricsOverviewApi.getOverviewP95Latency, chartOpts);
+  const chartQ = useTimeRangeQuery(
+    "overview-hub-charts",
+    (_team, start, end) => overviewHubApi.getChartMetrics(start, end),
+    chartOpts
+  );
 
   const summary = batchQ.data?.summary;
   const totalReq = num(summary?.total_requests);
   const errCount = num(summary?.error_count);
   const errPct = totalReq > 0 ? (errCount / totalReq) * 100 : 0;
 
-  const rrRows = useMemo(() => mapRequestRateRows(rrQ.data ?? []), [rrQ.data]);
-  const erRows = useMemo(() => mapErrorRateRows(erQ.data ?? []), [erQ.data]);
-  const p95Rows = useMemo(() => mapP95Rows(p95Q.data ?? []), [p95Q.data]);
+  const chartData = chartQ.data ?? [];
+  const rrRows = useMemo(() => mapRequestRateRows(chartData), [chartData]);
+  const erRows = useMemo(() => mapErrorRateRows(chartData), [chartData]);
+  const p95Rows = useMemo(() => mapP95Rows(chartData), [chartData]);
 
   const rrMap = useMemo(() => groupTimeseries(rrRows, "service_name"), [rrRows]);
   const erMap = useMemo(() => groupTimeseries(erRows, "service_name"), [erRows]);
@@ -187,7 +190,7 @@ export default function SummaryTab() {
         <div ref={chartsRef} className="grid grid-cols-1 gap-3 lg:grid-cols-3">
           <HubChartCard title="Request rate">
             <Suspense fallback={chartFallback()}>
-              {rrRows.length === 0 && !rrQ.isPending ? (
+              {rrRows.length === 0 && !chartQ.isPending ? (
                 <ChartNoDataOverlay />
               ) : (
                 <RequestChart
@@ -204,7 +207,7 @@ export default function SummaryTab() {
           </HubChartCard>
           <HubChartCard title="Error rate">
             <Suspense fallback={chartFallback()}>
-              {erRows.length === 0 && !erQ.isPending ? (
+              {erRows.length === 0 && !chartQ.isPending ? (
                 <ChartNoDataOverlay />
               ) : (
                 <ErrorRateChart
@@ -219,7 +222,7 @@ export default function SummaryTab() {
           </HubChartCard>
           <HubChartCard title="P95 latency">
             <Suspense fallback={chartFallback()}>
-              {p95Rows.length === 0 && !p95Q.isPending ? (
+              {p95Rows.length === 0 && !chartQ.isPending ? (
                 <ChartNoDataOverlay />
               ) : (
                 <LatencyChart
@@ -228,6 +231,7 @@ export default function SummaryTab() {
                   selectedEndpoints={[]}
                   fillHeight
                   height={220}
+                  valueKey="p95"
                 />
               )}
             </Suspense>

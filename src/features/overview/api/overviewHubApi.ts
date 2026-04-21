@@ -83,6 +83,15 @@ export type OverviewBatchSummary = {
   services: ServiceMetricPoint[];
 };
 
+export type ChartMetricsPoint = {
+  timestamp: string;
+  service_name?: string;
+  request_count: number;
+  error_count: number;
+  error_rate: number;
+  p95: number;
+};
+
 export const overviewHubApi = {
   getOverviewSummary(startTime: RequestTime, endTime: RequestTime): Promise<OverviewGlobalSummary> {
     return getJson("/overview/summary", startTime, endTime);
@@ -94,6 +103,16 @@ export const overviewHubApi = {
    */
   getBatchSummary(startTime: RequestTime, endTime: RequestTime): Promise<OverviewBatchSummary> {
     return getJson("/overview/batch-summary", startTime, endTime);
+  },
+
+  /**
+   * Combined below-fold chart payload: request rate + error rate + p95 latency
+   * per (time_bucket, service_name) in one response. Replaces three separate
+   * endpoints that each ran their own ClickHouse query against the same
+   * spans_rollup scan.
+   */
+  getChartMetrics(startTime: RequestTime, endTime: RequestTime): Promise<ChartMetricsPoint[]> {
+    return getJson("/overview/chart-metrics", startTime, endTime);
   },
 
   getRedSummary(startTime: RequestTime, endTime: RequestTime): Promise<RedSummary> {

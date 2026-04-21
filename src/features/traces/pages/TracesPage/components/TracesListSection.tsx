@@ -21,7 +21,6 @@ type Props = {
   renderedTraces: TraceRecord[];
   columns: SimpleTableColumn<TraceRecord>[];
   isLoading: boolean;
-  isLiveTail: boolean;
   pageSize: number;
   hasMore: boolean;
   hasPrev: boolean;
@@ -41,7 +40,6 @@ function TracesListSectionComponent({
   renderedTraces,
   columns,
   isLoading,
-  isLiveTail,
   pageSize,
   hasMore,
   hasPrev,
@@ -72,24 +70,20 @@ function TracesListSectionComponent({
       ) : null}
 
       <ExplorerResultsTable
-        title="Trace Explorer"
+        title="Traces"
         subtitle={`${formatNumber(renderedTraces.length)} rows in view${hasMore ? " — more available" : ""}`}
         rows={renderedTraces}
         columns={columns}
         rowKey={(row) => row.trace_id}
         isLoading={isLoading}
-        pagination={
-          isLiveTail
-            ? undefined
-            : {
-                hasMore,
-                hasPrev,
-                onNext,
-                onPrev,
-                pageSize,
-                onPageSizeChange,
-              }
-        }
+        pagination={{
+          hasMore,
+          hasPrev,
+          onNext,
+          onPrev,
+          pageSize,
+          onPageSizeChange,
+        }}
         onRow={handleRow}
         rowClassName={(row) =>
           cn(

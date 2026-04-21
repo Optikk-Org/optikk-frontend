@@ -172,19 +172,3 @@ export const DEMO_TRACE = {
     { name: "notify.enqueue", service: "notify-worker", startMs: 308, durMs: 8, depth: 1, critical: false },
   ] as readonly DemoSpan[],
 } as const;
-
-export interface DemoLlmRun {
-  readonly model: string;
-  readonly prompt: string;
-  readonly tokens: number;
-  readonly latencyMs: number;
-  readonly costCents: number;
-  readonly evalScore: number;
-}
-
-export const DEMO_LLM_RUNS: readonly DemoLlmRun[] = [
-  { model: "claude-sonnet-4-6", prompt: "Summarize the attached incident report…", tokens: 2840, latencyMs: 1420, costCents: 1.8, evalScore: 0.92 },
-  { model: "gpt-4o-mini", prompt: "Classify this support ticket (billing / bug / feature)…", tokens: 612, latencyMs: 380, costCents: 0.11, evalScore: 0.87 },
-  { model: "claude-haiku-4-5", prompt: "Extract entities from customer email…", tokens: 940, latencyMs: 510, costCents: 0.24, evalScore: 0.94 },
-  { model: "claude-opus-4-7", prompt: "Draft a change plan for the payments refactor…", tokens: 4210, latencyMs: 3880, costCents: 4.6, evalScore: 0.96 },
-] as const;

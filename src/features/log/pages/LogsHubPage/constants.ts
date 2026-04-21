@@ -1,8 +1,3 @@
-export const LOG_METRIC_FIELDS = [
-  { value: "duration", label: "duration (logs)" },
-  { value: "body", label: "body" },
-];
-
 export const LOG_LEVEL_SORT_ORDER: Record<string, number> = {
   TRACE: 0,
   DEBUG: 1,

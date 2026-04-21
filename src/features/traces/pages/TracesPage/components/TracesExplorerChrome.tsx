@@ -1,7 +1,7 @@
-import { Activity, AlertCircle, Radio } from "lucide-react";
+import { Activity } from "lucide-react";
 import { memo } from "react";
 
-import { Badge, Button, Select, Switch } from "@/components/ui";
+import { Badge, Select, Switch } from "@/components/ui";
 import type { SelectOption } from "@/components/ui";
 import {
   type AggregationSpec,
@@ -16,25 +16,14 @@ import { formatNumber } from "@shared/utils/formatters";
 import { TRACE_FILTER_FIELDS } from "../../../utils/tracesUtils";
 
 import { TRACE_METRIC_FIELDS } from "../constants";
-import { formatLiveTailStatus } from "../utils";
 
 type ExplorerMode = "list" | "analytics";
-
-type LiveTailState = {
-  status: "idle" | "connecting" | "live" | "closed" | "error";
-  lagMs: number;
-  droppedCount: number;
-  errorMessage: string | null;
-};
 
 type Props = {
   mode: string;
   modeOptions: SelectOption[];
   onModeChange: (value: string) => void;
-  isLiveTail: boolean;
-  liveTail: LiveTailState;
   errorTraces: number;
-  onToggleLiveTail: () => void;
   filters: StructuredFilter[];
   setFilters: (next: StructuredFilter[]) => void;
   clearAll: () => void;
@@ -57,10 +46,7 @@ function TracesExplorerChromeComponent({
   mode,
   modeOptions,
   onModeChange,
-  isLiveTail,
-  liveTail,
   errorTraces,
-  onToggleLiveTail,
   filters,
   setFilters,
   clearAll,
@@ -81,37 +67,12 @@ function TracesExplorerChromeComponent({
   return (
     <PageSurface padding="lg" className="relative z-[40] overflow-visible">
       <div className="flex flex-col gap-4">
-        {isLiveTail && liveTail.errorMessage ? (
-          <div className="flex items-center gap-2 rounded-[var(--card-radius)] border border-[rgba(240,68,56,0.35)] bg-[rgba(240,68,56,0.08)] px-4 py-2.5 text-[13px] text-[var(--color-error)]">
-            <AlertCircle size={16} className="shrink-0" />
-            <span className="font-medium">Live tail disconnected</span>
-            <span className="opacity-90">{liveTail.errorMessage}</span>
-          </div>
-        ) : null}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Badge variant="info">{mode === "all" ? "All spans" : "Root spans"}</Badge>
-            {isLiveTail ? (
-              <Badge variant={liveTail.status === "live" ? "warning" : "default"}>
-                {formatLiveTailStatus(liveTail.status, liveTail.lagMs)}
-              </Badge>
-            ) : null}
-            {isLiveTail && liveTail.droppedCount > 0 ? (
-              <Badge variant="error">{formatNumber(liveTail.droppedCount)} dropped</Badge>
-            ) : null}
             <Badge variant={errorTraces > 0 ? "error" : "default"}>
               {formatNumber(errorTraces)} error traces
             </Badge>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant={isLiveTail ? "primary" : "secondary"}
-              size="sm"
-              icon={<Radio size={14} />}
-              onClick={onToggleLiveTail}
-            >
-              {isLiveTail ? "Stop live tail" : "Start live tail"}
-            </Button>
           </div>
         </div>
 
