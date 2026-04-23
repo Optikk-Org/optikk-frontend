@@ -25,19 +25,7 @@ const ROUTES = {
   saturationKafkaTopicDetail: "/saturation/kafka/topics/$topic",
   saturationKafkaGroupDetail: "/saturation/kafka/groups/$groupId",
 
-  llmOverview: "/llm/overview",
-  llmTraces: "/llm/traces",
-  llmGenerations: "/llm/generations",
-  llmSessions: "/llm/sessions",
-  llmScores: "/llm/scores",
-  llmPrompts: "/llm/prompts",
-  llmDatasets: "/llm/datasets",
-  llmSettings: "/llm/settings",
   settings: "/settings",
-  alerts: "/alerts",
-  alertRuleNew: "/alerts/rules/new",
-  alertRuleDetail: "/alerts/rules/$ruleId",
-  alertRuleEdit: "/alerts/rules/$ruleId/edit",
 } as const;
 
 /**

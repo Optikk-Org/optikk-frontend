@@ -12,7 +12,6 @@ import {
   snapshotToJson,
 } from "@shared/observability/shareableView";
 
-import { CreateAlertButton } from "@/features/alerts/components/CreateAlertButton";
 import {
   OVERVIEW_HUB_TAB,
   OVERVIEW_URL_TAB,
@@ -60,18 +59,6 @@ function parseTab(raw: string | null): OverviewHubTabId {
   return OVERVIEW_HUB_TAB.summary;
 }
 
-function alertEntryForTab(tab: OverviewHubTabId): {
-  presetKind: "service_error_rate" | "slo_burn_rate";
-} | null {
-  if (tab === OVERVIEW_HUB_TAB.errors || tab === OVERVIEW_HUB_TAB.apm) {
-    return { presetKind: "service_error_rate" };
-  }
-  if (tab === OVERVIEW_HUB_TAB.slo) {
-    return { presetKind: "slo_burn_rate" };
-  }
-  return null;
-}
-
 export default function OverviewHubPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const timeRange = useTimeRange();
@@ -109,8 +96,6 @@ export default function OverviewHubPage() {
     toast.success("View JSON copied");
   };
 
-  const alertEntry = alertEntryForTab(activeTab);
-
   return (
     <PageShell>
       <PageHeader
@@ -125,12 +110,6 @@ export default function OverviewHubPage() {
             <Button variant="ghost" size="sm" onClick={onExportJson}>
               Export JSON
             </Button>
-            {alertEntry ? (
-              <CreateAlertButton
-                prefill={{ presetKind: alertEntry.presetKind }}
-                label="Create alert from this view"
-              />
-            ) : null}
           </div>
         }
       />

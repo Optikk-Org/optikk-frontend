@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Tabs } from "@/components/ui";
 import {
   DemoKpiStrip,
-  DemoLlmRuns,
   DemoLogsList,
   DemoServicesGrid,
   DemoTimeseriesChart,
@@ -17,13 +16,12 @@ export interface ProductDemoSection {
   readonly body?: string;
 }
 
-type DemoTabId = "services" | "logs" | "traces" | "llm";
+type DemoTabId = "services" | "logs" | "traces";
 
 const TAB_ITEMS = [
   { key: "services", label: "Services" },
   { key: "logs", label: "Logs" },
   { key: "traces", label: "Traces" },
-  { key: "llm", label: "LLM" },
 ] as const;
 
 function ServicesPanel() {
@@ -59,7 +57,7 @@ function LogsPanel() {
     <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4">
       <div className="mb-3 flex items-baseline justify-between">
         <div className="font-medium text-[13px] text-[var(--text-secondary)]">
-          Live tail — last minute
+          Recent log lines
         </div>
         <span className="font-mono text-[11px] text-[var(--text-muted)]">
           service:* level:(ERROR OR WARN OR INFO)
@@ -77,17 +75,6 @@ function TracesPanel() {
         Flamegraph — critical path highlighted
       </div>
       <DemoTraceFlamegraph />
-    </div>
-  );
-}
-
-function LlmPanel() {
-  return (
-    <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4">
-      <div className="mb-3 font-medium text-[13px] text-[var(--text-secondary)]">
-        Recent generations with eval scores
-      </div>
-      <DemoLlmRuns />
     </div>
   );
 }
@@ -115,7 +102,6 @@ export function ProductDemo({ eyebrow, title, body }: ProductDemoSection) {
         {active === "services" ? <ServicesPanel /> : null}
         {active === "logs" ? <LogsPanel /> : null}
         {active === "traces" ? <TracesPanel /> : null}
-        {active === "llm" ? <LlmPanel /> : null}
       </div>
       <div className="marketing-product-demo-footnote">
         Frozen snapshot — no live API calls from this page.

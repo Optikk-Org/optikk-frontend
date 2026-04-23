@@ -11,7 +11,7 @@ function TraceDetailHeaderActionsComponent({ onOpenInLogs, onBack }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Button variant="secondary" size="sm" icon={<FileText size={16} />} onClick={onOpenInLogs}>
-        Open in log explorer
+        Open in logs
       </Button>
       <Button variant="ghost" size="sm" icon={<ArrowLeft size={16} />} onClick={onBack}>
         Back to Traces

@@ -28,7 +28,7 @@ export default function TraceDetailPage() {
         breadcrumbs={[{ label: "Traces", path: "/traces" }, { label: traceIdParam }]}
         actions={
           <TraceDetailHeaderActions
-            onOpenInLogs={actions.openInLogExplorer}
+            onOpenInLogs={actions.openInLogs}
             onBack={actions.goBack}
           />
         }

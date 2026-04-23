@@ -38,6 +38,10 @@ export default defineConfig(({ mode }) => {
         { find: "@utils", replacement: path.resolve(__dirname, "./src/shared/utils") },
         { find: "@services", replacement: path.resolve(__dirname, "./src/shared/api") },
         { find: "@store", replacement: path.resolve(__dirname, "./src/app/store") },
+        {
+          find: "@/features/explorer-core",
+          replacement: path.resolve(__dirname, "./src/features/explorer"),
+        },
         { find: "@", replacement: path.resolve(__dirname, "./src") },
       ],
     },

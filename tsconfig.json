@@ -44,10 +44,11 @@
       "@components/*": ["src/shared/components/*"],
       "@/components/*": ["src/shared/components/primitives/*"],
       "@/components/ui/*": ["src/shared/components/primitives/ui/*"],
+      "@/features/explorer-core/*": ["src/features/explorer/*"],
       "@/hooks/*": ["src/shared/hooks/*"],
     }
   },
   "include": ["src"],
-  "exclude": ["src/test_zod_schema.ts"],
+  "exclude": ["src/test_zod_schema.ts", "src/app/auth/pages/Pricing"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

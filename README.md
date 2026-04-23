@@ -1,104 +1,112 @@
-# Optikk Lens Frontend (React/Vite)
+# Optikk Frontend
 
-Optikk Lens Frontend is a modern, high-performance single-page application (SPA) providing real-time visualization for the Optikk observability platform. Built on React 19 and Vite, it offers an industry-leading experience for monitoring traces, logs, and metrics with a focus on ease of use and AI/LLM integration.
+Optikk Frontend is the React/Vite application for the Optikk product UI. It contains the authenticated observability app, the marketing site, frontend-owned hub pages, shared dashboard/rendering infrastructure, and browser telemetry wiring.
 
-## Core Architecture
+## Current stack
 
-The frontend is architected as a feature-based modular system designed for scalability, performance, and developer efficiency.
+- React 19
+- TypeScript
+- Vite 8
+- TanStack Router
+- TanStack Query
+- Zustand
+- Tailwind CSS
+- Biome
+- Playwright and Vitest
 
-### Technology Stack & Tools
+See [package.json](/Users/ramantayal/Desktop/pro/optikk-frontend/package.json) for the current scripts and dependency versions.
 
-- **React 19 & TypeScript**: Core UI library and type-safe development using native ref prop and `use()`.
-- **Vite 8**: Next-generation frontend tooling and fast dev server.
-- **TanStack Router**: Type-safe routing for nested and dynamic route management.
-- **Tailwind CSS**: Utility-first styling for bespoke and responsive UI design.
-- **Zustand 5**: Atomic state management for global app state with optimized selectors.
-- **TanStack Query 5**: Powering the asynchronous data tier with intelligent caching and automated refetching.
-- **Playwright**: Comprehensive E2E testing framework for UI reliability.
+## App shape
 
-### Architectural Patterns
+The application has two broad surfaces:
 
-- **Feature-Based Organization**: Code is grouped by domain (e.g., `src/features/traces`, `src/features/log`) rather than by technical type. Each feature encapsulates its own components, hooks, types, and logic.
-- **Centralized Design System**: Shared UI primitives and high-level components are maintained in `src/design-system` and `src/shared/components`.
-- **API Integration Layer**: All network requests are abstracted into services within `src/shared/api`, providing a unified interface for data fetching and error handling.
-- **Reactive State**: Using Zustand for ephemeral app state and TanStack Query for server-side state, ensuring the UI is always in sync with the backend.
+- marketing routes rendered under a dedicated marketing layout
+- authenticated product routes rendered inside the main app shell
 
-## Project Structure
+### Key app entrypoints
+
+- [src/main.tsx](/Users/ramantayal/Desktop/pro/optikk-frontend/src/main.tsx): bootstrap
+- [src/app/App.tsx](/Users/ramantayal/Desktop/pro/optikk-frontend/src/app/App.tsx): root app providers
+- [src/app/routes/router.tsx](/Users/ramantayal/Desktop/pro/optikk-frontend/src/app/routes/router.tsx): route table
+- [src/app/registry/domainRegistry.ts](/Users/ramantayal/Desktop/pro/optikk-frontend/src/app/registry/domainRegistry.ts): domain registration for product features
+- [vite.config.ts](/Users/ramantayal/Desktop/pro/optikk-frontend/vite.config.ts): aliases, dev proxy, build chunking
+
+## Current feature layout
 
 ```text
 optikk-frontend/
-├── src/
-│   ├── app/                 # Routing, layout, and app-level providers
-│   ├── features/            # Feature-specific modules (Traces, Logs, Metrics, etc.)
-│   ├── shared/              # Reusable hooks, utilities, and API clients
-│   ├── design-system/       # Shared UI primitives based on AntD and Tailwind
-│   ├── config/              # App-level constants, colors, and icons
-│   ├── store/               # Global Zustand stores
-│   └── main.tsx             # Application mount point
-├── public/                  # Static assets
-├── playwright/              # E2E test suites
-└── vite.config.ts           # Build and proxy configuration
+├── src/app/           # Bootstrap, routing, providers, shell
+├── src/features/      # Product and marketing features
+├── src/shared/        # Shared api, ui, hooks, entities, telemetry, utils
+├── src/config/        # App config constants
+├── src/tests/         # Test setup and e2e coverage
+└── docs/              # Cross-repo and implementation docs
 ```
 
-## Local Development
+Current feature directories under `src/features`:
 
-### 1. Prerequisites
+- `overview`
+- `saturation`
+- `metrics`
+- `log`
+- `traces`
+- `infrastructure`
+- `settings`
+- `marketing`
+- `explorer-core` as shared explorer infrastructure
 
-This repo uses **Yarn Classic** (lockfile v1), pinned via **`packageManager`** in `package.json`. Enable Corepack once (ships with Node 18+), then use `yarn`:
+## Product routing
+
+The route table in [src/app/routes/router.tsx](/Users/ramantayal/Desktop/pro/optikk-frontend/src/app/routes/router.tsx) shows the current product direction:
+
+- `/overview`: frontend-owned overview hub
+- `/infrastructure`: frontend-owned infrastructure hub
+- `/service`: service hub
+- `/service/:serviceName`: service detail page
+- explorer-style routes contributed by the domain registry for metrics, logs, traces, saturation, and settings
+- marketing pages under their own layout
+
+The frontend now owns much more of the page composition than earlier versions of the project. Backend APIs provide data; page structure and interaction logic largely live here.
+
+## Shared layers
+
+- `src/shared/api/`: HTTP client, auth integration, decode boundary
+- `src/shared/components/`: reusable UI and dashboard building blocks
+- `src/shared/entities/`: shared domain models
+- `src/shared/observability/`: deep links and share/export helpers
+- `src/shared/telemetry/`: browser OpenTelemetry bootstrap
+
+## Local development
+
+### Prerequisites
+
+- Node 18+
+- Corepack enabled
+- running local Optikk backend on `http://localhost:19090` unless overridden
+
+### Install and run
 
 ```bash
 corepack enable
-```
-
-You'll need a running Optikk Backend and infrastructure (MariaDB, ClickHouse, etc.). Use the central deployment guide:
-👉 [**Full Stack Local Deployment Guide**](../deploy/README.md)
-
-### 2. Setup
-
-```bash
-# Install dependencies
 yarn install
-
-# Start the dev server
 yarn dev
 ```
 
-The dev server usually runs at `http://localhost:3000` (or `5173`). It is configured to proxy `/api/*` requests to your local backend automatically.
+The Vite dev server runs on `http://localhost:3000` by default and proxies `/api` to the backend. WebSocket proxying is enabled for live features.
 
-**Live tail (WebSocket):** The app opens a WebSocket to the same origin at **`/api/v1/ws/live`** (session cookies). The Vite dev server proxies **`/api`** to the backend with **`ws: true`**, so live tail works in dev without extra paths. If you change the backend URL, set `VITE_DEV_BACKEND_URL` in `.env`.
+If the backend is on a different origin, set `VITE_DEV_BACKEND_URL`.
 
-**Production / separate UI host:** Proxy **`/api`** to the Optikk backend with HTTP/1.1 and WebSocket upgrade support (live tail uses the same `/api` prefix). Example (nginx):
-
-```nginx
-location /api/ {
-  proxy_pass http://optikk_backend;
-  proxy_http_version 1.1;
-  proxy_set_header Host $host;
-  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-  proxy_set_header Upgrade $http_upgrade;
-  proxy_set_header Connection "upgrade";
-}
-```
-
-### 3. Build & CI
+## Quality commands
 
 ```bash
-# Type checking
 yarn type-check
-
-# Linting
 yarn lint
-
-# Production build
 yarn build
-
-# Preview build
-yarn preview
+yarn ci
 ```
 
-## Key Features
+## Related docs
 
-- **Distributed Tracing Explorer**: Interactive waterfall charts with critical path analysis.
-- **Advanced Log Management**: Full-text search with structured attribute filtering.
-- **Multi-tenant Dashboarding**: Dynamic layouts and charts configured via the backend.
-- **AI Monitoring**: Specialized views for tracking LLM tokens, costs, and token-level telemetry.
+- Codebase map: [CODEBASE_INDEX.md](/Users/ramantayal/Desktop/pro/optikk-frontend/CODEBASE_INDEX.md)
+- Telemetry contracts: [docs/telemetry-contracts.md](/Users/ramantayal/Desktop/pro/optikk-frontend/docs/telemetry-contracts.md)
+- Backend sibling repo: [../optikk-backend/README.md](/Users/ramantayal/Desktop/pro/optikk-backend/README.md)

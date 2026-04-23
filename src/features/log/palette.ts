@@ -4,7 +4,7 @@ export const logsPaletteActions: PaletteAction[] = [
   {
     id: "nav.logs",
     label: "Go to Logs",
-    keywords: ["logs", "search", "tail", "events"],
+    keywords: ["logs", "search", "explorer", "events"],
     group: "navigation",
     hotkey: "g l",
     perform: ({ navigate }) => {

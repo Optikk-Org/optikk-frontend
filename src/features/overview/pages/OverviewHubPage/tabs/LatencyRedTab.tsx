@@ -143,6 +143,7 @@ export default function LatencyRedTab() {
                   selectedEndpoints={[]}
                   fillHeight
                   height={220}
+                  valueKey="p95"
                 />
               )}
             </Suspense>
