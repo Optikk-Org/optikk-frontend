@@ -4,6 +4,7 @@ import { PageSurface } from "@shared/components/ui";
 import type Flamegraph from "@shared/components/ui/charts/specialized/Flamegraph";
 import WaterfallChart from "@shared/components/ui/charts/specialized/WaterfallChart";
 
+import { useTracesStore } from "../../../store/tracesStore";
 import { FlamegraphBody } from "./visualization/FlamegraphBody";
 import { VisualizationHeader } from "./visualization/VisualizationHeader";
 import { VisualizationTabs, type TabKey } from "./visualization/VisualizationTabs";
@@ -23,6 +24,12 @@ interface Props {
 
 function TraceDetailVisualizationComponent(props: Props) {
   const { activeTab, onActiveTabChange } = props;
+  const search = useTracesStore((s) => s.waterfallSearch);
+  const setSearch = useTracesStore((s) => s.setWaterfallSearch);
+  const errorsOnly = useTracesStore((s) => s.waterfallErrorsOnly);
+  const setErrorsOnly = useTracesStore((s) => s.setWaterfallErrorsOnly);
+  const collapsed = useTracesStore((s) => s.collapsedSpanIds);
+  const toggleCollapsed = useTracesStore((s) => s.toggleCollapsedSpan);
   return (
     <PageSurface>
       <VisualizationHeader />
@@ -34,6 +41,12 @@ function TraceDetailVisualizationComponent(props: Props) {
           selectedSpanId={props.selectedSpanId}
           criticalPathSpanIds={props.criticalPathSpanIds}
           errorPathSpanIds={props.errorPathSpanIds}
+          search={search}
+          onSearchChange={setSearch}
+          errorsOnly={errorsOnly}
+          onErrorsOnlyChange={setErrorsOnly}
+          collapsedSpanIds={collapsed}
+          onToggleCollapse={toggleCollapsed}
         />
       ) : (
         <FlamegraphBody

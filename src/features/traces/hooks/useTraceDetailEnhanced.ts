@@ -185,6 +185,12 @@ export function useTraceDetailEnhanced(
       dbStatement: spanAttributesData.db_statement,
       dbStatementNormalized: spanAttributesData.db_statement_normalized,
       attributes: spanAttributesData.attributes,
+      links: spanAttributesData.links?.map((l) => ({
+        traceId: l.trace_id,
+        spanId: l.span_id,
+        traceState: l.trace_state,
+        attributes: l.attributes,
+      })),
     };
   }, [spanAttributesData]);
 
