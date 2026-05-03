@@ -1,82 +1,92 @@
 import type { ColumnDef } from "@/features/explorer/types/results";
+import { HighlightedText } from "@shared/components/primitives/HighlightedText";
 
 import type { LogRecord } from "../../types/log";
 import { severityColor, severityStyle } from "../../utils/severity";
 
-/** Converts the typed LogRecord registry into ColumnDef cells. Keys match
- *  the `key` used in DEFAULT_LOG_COLUMNS and ALL_LOG_COLUMNS so toggling via
- *  `useExplorerColumns` works without a separate mapping table. */
-export const LOG_COLUMN_DEFS: readonly ColumnDef<LogRecord>[] = [
-  {
-    key: "timestamp",
-    label: "Time",
-    width: 180,
-    render: (row) => (
-      <span className="font-mono text-xs text-[var(--text-secondary)]">
-        {formatTs(row.timestamp)}
-      </span>
-    ),
-  },
-  {
-    key: "service",
-    label: "Service",
-    width: 160,
-    render: (row) => <span className="truncate text-sm">{row.service_name}</span>,
-  },
-  {
-    key: "severity",
-    label: "Severity",
-    width: 84,
-    render: (row) => <SeverityBadge bucket={row.severity_bucket} />,
-  },
-  {
-    key: "severity_bucket",
-    label: "Severity #",
-    width: 90,
-    render: (row) => (
-      <span className="font-mono text-xs text-[var(--text-secondary)]">{row.severity_bucket}</span>
-    ),
-  },
-  {
-    key: "host",
-    label: "Host",
-    width: 160,
-    render: (row) => <span className="truncate text-xs">{row.host ?? ""}</span>,
-  },
-  {
-    key: "pod",
-    label: "Pod",
-    width: 160,
-    render: (row) => <span className="truncate text-xs">{row.pod ?? ""}</span>,
-  },
-  {
-    key: "container",
-    label: "Container",
-    width: 140,
-    render: (row) => <span className="truncate text-xs">{row.container ?? ""}</span>,
-  },
-  {
-    key: "environment",
-    label: "Env",
-    width: 100,
-    render: (row) => <span className="truncate text-xs">{row.environment ?? ""}</span>,
-  },
-  {
-    key: "body",
-    label: "Body",
-    render: (row) => <span className="truncate text-sm">{row.body}</span>,
-  },
-  {
-    key: "trace_id",
-    label: "Trace",
-    width: 140,
-    render: (row) => (
-      <span className="truncate font-mono text-xs text-[var(--text-tertiary)]">
-        {(row.trace_id ?? "").slice(0, 12)}
-      </span>
-    ),
-  },
-];
+/**
+ * Factory for the typed log column defs. Pass the active free-text search
+ * term so the body cell can underline matches inline (Datadog parity).
+ * Keys match `DEFAULT_LOG_COLUMNS` / `ALL_LOG_COLUMNS` so toggling via
+ * `useExplorerColumns` keeps working.
+ */
+export function buildLogColumns(searchTerm: string | undefined): readonly ColumnDef<LogRecord>[] {
+  return [
+    {
+      key: "timestamp",
+      label: "Time",
+      width: 180,
+      render: (row) => (
+        <span className="font-mono text-xs text-[var(--text-secondary)]">
+          {formatTs(row.timestamp)}
+        </span>
+      ),
+    },
+    {
+      key: "service",
+      label: "Service",
+      width: 160,
+      render: (row) => <span className="truncate text-sm">{row.service_name}</span>,
+    },
+    {
+      key: "severity",
+      label: "Severity",
+      width: 84,
+      render: (row) => <SeverityBadge bucket={row.severity_bucket} />,
+    },
+    {
+      key: "severity_bucket",
+      label: "Severity #",
+      width: 90,
+      render: (row) => (
+        <span className="font-mono text-xs text-[var(--text-secondary)]">
+          {row.severity_bucket}
+        </span>
+      ),
+    },
+    {
+      key: "host",
+      label: "Host",
+      width: 160,
+      render: (row) => <span className="truncate text-xs">{row.host ?? ""}</span>,
+    },
+    {
+      key: "pod",
+      label: "Pod",
+      width: 160,
+      render: (row) => <span className="truncate text-xs">{row.pod ?? ""}</span>,
+    },
+    {
+      key: "container",
+      label: "Container",
+      width: 140,
+      render: (row) => <span className="truncate text-xs">{row.container ?? ""}</span>,
+    },
+    {
+      key: "environment",
+      label: "Env",
+      width: 100,
+      render: (row) => <span className="truncate text-xs">{row.environment ?? ""}</span>,
+    },
+    {
+      key: "body",
+      label: "Body",
+      render: (row) => (
+        <HighlightedText className="truncate text-sm" text={row.body} match={searchTerm} />
+      ),
+    },
+    {
+      key: "trace_id",
+      label: "Trace",
+      width: 140,
+      render: (row) => (
+        <span className="truncate font-mono text-xs text-[var(--text-tertiary)]">
+          {(row.trace_id ?? "").slice(0, 12)}
+        </span>
+      ),
+    },
+  ];
+}
 
 function SeverityBadge({ bucket }: { bucket: number }) {
   const style = severityStyle(bucket);
@@ -91,7 +101,6 @@ function SeverityBadge({ bucket }: { bucket: number }) {
 }
 
 function formatTs(ts: string): string {
-  // Backend sends RFC3339-nano; show HH:MM:SS.mmm for compactness.
   try {
     const d = new Date(ts);
     if (Number.isNaN(d.getTime())) return ts;

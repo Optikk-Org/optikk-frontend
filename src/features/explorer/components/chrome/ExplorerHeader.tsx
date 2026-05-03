@@ -1,7 +1,6 @@
 import { forwardRef, memo, type ReactNode } from "react";
 
-import type { ExplorerFilter, ExplorerMode } from "../../types/filters";
-import { ExplorerModeToggle } from "./ExplorerModeToggle";
+import type { ExplorerFilter } from "../../types/filters";
 import { ExplorerSearchBar } from "./ExplorerSearchBar";
 import { ExplorerSearchBarDsl } from "./ExplorerSearchBarDsl";
 import { ExplorerTimePicker } from "./ExplorerTimePicker";
@@ -12,9 +11,10 @@ interface Props {
   readonly filters: readonly ExplorerFilter[];
   readonly onChangeFilters: (next: readonly ExplorerFilter[]) => void;
   readonly onSubmitFreeText: (text: string) => void;
-  readonly mode: ExplorerMode;
-  readonly onModeChange: (next: ExplorerMode) => void;
   readonly kpiStrip?: ReactNode;
+  /** Slot rendered between the search bar and the time picker. Used for
+   * scope-specific affordances (Saved Views, Share, etc). */
+  readonly actions?: ReactNode;
   readonly searchPlaceholder?: string;
   /** "dsl" renders the Datadog-style parsed query bar; "classic" keeps the chip builder. */
   readonly variant?: SearchBarVariant;
@@ -28,8 +28,8 @@ export const ExplorerHeader = memo(
           <div className="min-w-0 flex-1">
             <SearchBar props={props} inputRef={ref} />
           </div>
+          {props.actions ? <div className="flex items-center gap-2">{props.actions}</div> : null}
           <ExplorerTimePicker />
-          <ExplorerModeToggle mode={props.mode} onChange={props.onModeChange} />
         </div>
         {props.kpiStrip ? <div>{props.kpiStrip}</div> : null}
       </header>
